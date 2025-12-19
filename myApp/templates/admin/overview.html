@@ -1,0 +1,214 @@
+{% extends 'admin/base.html' %}
+
+{% block content %}
+<div class="w-full max-w-[1600px] mx-auto">
+    <!-- Clean Header -->
+    <div class="mb-8 sm:mb-10">
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-deep-charcoal mb-3 tracking-[-0.02em]">
+            Dashboard
+        </h1>
+        <p class="text-base sm:text-lg text-deep-charcoal/60 font-light">Real-time insights and action items</p>
+    </div>
+    
+    <!-- Clean KPI Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 mb-8 sm:mb-10">
+        <div class="rounded-2xl bg-white p-6 sm:p-7 border border-muted-taupe/20 shadow-sm hover:shadow-md transition">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 rounded-xl bg-green-50 border border-green-200 grid place-items-center">
+                    <i class="fas fa-user-plus text-green-600"></i>
+                </div>
+                <span class="text-xs px-3 py-1.5 rounded-full bg-green-50 text-green-700 border border-green-200 font-medium">Today</span>
+            </div>
+            <div class="text-xs uppercase tracking-wider text-deep-charcoal/50 mb-2 font-medium">New Students Today</div>
+            <div class="text-3xl sm:text-4xl font-extralight text-deep-charcoal mb-2">{{ new_students_today }}</div>
+            <div class="text-sm text-deep-charcoal/60 font-medium">New registrations</div>
+        </div>
+        
+        <div class="rounded-2xl bg-white p-6 sm:p-7 border border-muted-taupe/20 shadow-sm hover:shadow-md transition">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 rounded-xl bg-blue-50 border border-blue-200 grid place-items-center">
+                    <i class="fas fa-dollar-sign text-blue-600"></i>
+                </div>
+                <span class="text-xs px-3 py-1.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200 font-medium">This Month</span>
+            </div>
+            <div class="text-xs uppercase tracking-wider text-deep-charcoal/50 mb-2 font-medium">Revenue This Month</div>
+            <div class="text-3xl sm:text-4xl font-extralight text-deep-charcoal mb-2">${{ revenue_this_month|floatformat:0 }}</div>
+            <div class="text-sm text-deep-charcoal/60 font-medium">Total revenue</div>
+        </div>
+        
+        <div class="rounded-2xl bg-white p-6 sm:p-7 border border-muted-taupe/20 shadow-sm hover:shadow-md transition">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 rounded-xl bg-purple-50 border border-purple-200 grid place-items-center">
+                    <i class="fas fa-graduation-cap text-purple-600"></i>
+                </div>
+                <span class="text-xs px-3 py-1.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 font-medium">{{ completion_rate|floatformat:0 }}%</span>
+            </div>
+            <div class="text-xs uppercase tracking-wider text-deep-charcoal/50 mb-2 font-medium">Course Completion Rate</div>
+            <div class="text-3xl sm:text-4xl font-extralight text-deep-charcoal mb-2">{{ completion_rate|floatformat:0 }}%</div>
+            <div class="text-sm text-deep-charcoal/60 font-medium">Overall completion</div>
+        </div>
+        
+        <div class="rounded-2xl bg-white p-6 sm:p-7 border border-muted-taupe/20 shadow-sm hover:shadow-md transition">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 rounded-xl bg-orange-50 border border-orange-200 grid place-items-center">
+                    <i class="fas fa-users text-orange-600"></i>
+                </div>
+                <span class="text-xs px-3 py-1.5 rounded-full bg-orange-50 text-orange-700 border border-orange-200 font-medium">Live</span>
+            </div>
+            <div class="text-xs uppercase tracking-wider text-deep-charcoal/50 mb-2 font-medium">Active Learners (24h)</div>
+            <div class="text-3xl sm:text-4xl font-extralight text-deep-charcoal mb-2">{{ active_learners }}</div>
+            <div class="text-sm text-deep-charcoal/60 font-medium">Learning now</div>
+        </div>
+        
+        <div class="rounded-2xl bg-white p-6 sm:p-7 border border-muted-taupe/20 shadow-sm hover:shadow-md transition">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-200 grid place-items-center">
+                    <i class="fas fa-check-circle text-indigo-600"></i>
+                </div>
+                <span class="text-xs px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200 font-medium">{{ quiz_pass_rate|floatformat:0 }}%</span>
+            </div>
+            <div class="text-xs uppercase tracking-wider text-deep-charcoal/50 mb-2 font-medium">Quiz Pass Rate</div>
+            <div class="text-3xl sm:text-4xl font-extralight text-deep-charcoal mb-2">{{ quiz_pass_rate|floatformat:0 }}%</div>
+            <div class="text-sm text-deep-charcoal/60 font-medium">First attempt</div>
+        </div>
+        
+        <div class="rounded-2xl bg-white p-6 sm:p-7 {% if support_flags > 0 %}border-2 border-red-200{% else %}border border-muted-taupe/20{% endif %} shadow-sm hover:shadow-md transition">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 rounded-xl {% if support_flags > 0 %}bg-red-50 border-2 border-red-200{% else %}bg-green-50 border border-green-200{% endif %} grid place-items-center">
+                    <i class="fas {% if support_flags > 0 %}fa-exclamation-triangle text-red-600{% else %}fa-check text-green-600{% endif %}"></i>
+                </div>
+                <span class="text-xs px-3 py-1.5 rounded-full {% if support_flags > 0 %}bg-red-50 text-red-700 border-2 border-red-200{% else %}bg-green-50 text-green-700 border border-green-200{% endif %} font-medium">{{ support_flags }}</span>
+            </div>
+            <div class="text-xs uppercase tracking-wider text-deep-charcoal/50 mb-2 font-medium">Support Flags</div>
+            <div class="text-3xl sm:text-4xl font-extralight text-deep-charcoal mb-2">{{ support_flags }}</div>
+            <div class="text-sm {% if support_flags > 0 %}text-red-600{% else %}text-green-600{% endif %} font-medium">
+                {% if support_flags > 0 %}Requires attention{% else %}All clear{% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Clean Action Center -->
+    {% if action_items %}
+    <div class="rounded-2xl bg-white p-6 sm:p-8 border border-muted-taupe/20 shadow-sm mb-8 sm:mb-10">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+            <div>
+                <h2 class="text-2xl sm:text-3xl font-extralight text-deep-charcoal mb-2">Action Center</h2>
+                <p class="text-sm sm:text-base text-deep-charcoal/60 font-light">Items requiring your attention</p>
+            </div>
+            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 text-red-700 border-2 border-red-200 text-sm font-medium">
+                <i class="fas fa-exclamation-circle"></i>
+                <span>{{ action_items|length }} item{{ action_items|length|pluralize }}</span>
+            </span>
+        </div>
+        
+        <div class="space-y-4">
+            {% for item in action_items %}
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl 
+                {% if item.color == 'red' %}bg-red-50/30 border-2 border-red-200/50 hover:border-red-300
+                {% elif item.color == 'yellow' %}bg-yellow-50/30 border-2 border-yellow-200/50 hover:border-yellow-300
+                {% else %}bg-orange-50/30 border-2 border-orange-200/50 hover:border-orange-300{% endif %} transition">
+                <div class="flex items-center gap-4 flex-1 min-w-0">
+                    <div class="w-12 h-12 rounded-xl 
+                        {% if item.color == 'red' %}bg-red-100 border-2 border-red-300
+                        {% elif item.color == 'yellow' %}bg-yellow-100 border-2 border-yellow-300
+                        {% else %}bg-orange-100 border-2 border-orange-300{% endif %} grid place-items-center shrink-0">
+                        <i class="fas {{ item.icon }} 
+                            {% if item.color == 'red' %}text-red-600
+                            {% elif item.color == 'yellow' %}text-yellow-600
+                            {% else %}text-orange-600{% endif %}"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <div class="text-base sm:text-lg font-medium text-deep-charcoal mb-1">{{ item.title }}</div>
+                        <div class="text-sm text-deep-charcoal/70">{{ item.description }}</div>
+                    </div>
+                </div>
+                <button class="w-full sm:w-auto px-6 py-3 bg-deep-charcoal text-white rounded-xl text-sm font-medium hover:opacity-90 transition">
+                    Review
+                    <i class="fas fa-arrow-right ml-2"></i>
+                </button>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Clean Insights Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+        <!-- Course Popularity -->
+        <div class="rounded-2xl bg-white p-6 sm:p-8 border border-muted-taupe/20 shadow-sm">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 rounded-xl bg-deep-charcoal/10 border border-muted-taupe/20 grid place-items-center">
+                    <i class="fas fa-chart-bar text-muted-taupe"></i>
+                </div>
+                <h3 class="text-xl sm:text-2xl font-extralight text-deep-charcoal">Course Popularity</h3>
+            </div>
+            <div class="space-y-5">
+                {% for course in popular_courses %}
+                {% with max_enrolled=popular_courses.0.enrolled_count %}
+                <div>
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm sm:text-base font-medium text-deep-charcoal">{{ course.title|truncatechars:30 }}</span>
+                        <span class="text-lg sm:text-xl font-extralight text-deep-charcoal">{{ course.enrolled_count }}</span>
+                    </div>
+                    <div class="h-2.5 bg-warm-sand/50 rounded-full overflow-hidden">
+                        <div class="h-full bg-deep-charcoal rounded-full transition-all duration-500" style="width: {% widthratio course.enrolled_count max_enrolled 100 %}%"></div>
+                    </div>
+                </div>
+                {% endwith %}
+                {% empty %}
+                <p class="text-deep-charcoal/60 text-center py-4">No course data yet</p>
+                {% endfor %}
+            </div>
+        </div>
+        
+        <!-- Conversion Funnel -->
+        <div class="rounded-2xl bg-white p-6 sm:p-8 border border-muted-taupe/20 shadow-sm">
+            <div class="flex items-center gap-3 mb-6">
+                <div class="w-10 h-10 rounded-xl bg-deep-charcoal/10 border border-muted-taupe/20 grid place-items-center">
+                    <i class="fas fa-funnel-dollar text-muted-taupe"></i>
+                </div>
+                <h3 class="text-xl sm:text-2xl font-extralight text-deep-charcoal">Conversion Funnel</h3>
+            </div>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between p-4 rounded-xl bg-warm-sand/20 border border-muted-taupe/20 hover:bg-warm-sand/30 transition">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-deep-charcoal/10 border border-muted-taupe/20 grid place-items-center">
+                            <i class="fas fa-clipboard-check text-muted-taupe text-sm"></i>
+                        </div>
+                        <span class="text-sm sm:text-base font-medium text-deep-charcoal">Placement Tests</span>
+                    </div>
+                    <span class="text-lg sm:text-xl font-extralight text-deep-charcoal">{{ placement_tests_taken }}</span>
+                </div>
+                <div class="flex items-center justify-between p-4 rounded-xl bg-warm-sand/20 border border-muted-taupe/20 hover:bg-warm-sand/30 transition">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-deep-charcoal/10 border border-muted-taupe/20 grid place-items-center">
+                            <i class="fas fa-shopping-cart text-muted-taupe text-sm"></i>
+                        </div>
+                        <span class="text-sm sm:text-base font-medium text-deep-charcoal">Purchases</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-lg sm:text-xl font-extralight text-deep-charcoal">{{ purchases }}</span>
+                        {% if placement_tests_taken > 0 %}
+                        <span class="text-xs text-deep-charcoal/60 ml-2">({% widthratio purchases placement_tests_taken 100 %}%)</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="flex items-center justify-between p-4 rounded-xl bg-warm-sand/20 border border-muted-taupe/20 hover:bg-warm-sand/30 transition">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-deep-charcoal/10 border border-muted-taupe/20 grid place-items-center">
+                            <i class="fas fa-check-circle text-muted-taupe text-sm"></i>
+                        </div>
+                        <span class="text-sm sm:text-base font-medium text-deep-charcoal">Completions</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-lg sm:text-xl font-extralight text-deep-charcoal">{{ completions }}</span>
+                        {% if purchases > 0 %}
+                        <span class="text-xs text-deep-charcoal/60 ml-2">({% widthratio completions purchases 100 %}%)</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

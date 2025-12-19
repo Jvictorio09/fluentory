@@ -1,0 +1,84 @@
+<nav class="bg-white border-b border-muted-taupe/20 sticky top-0 z-50 w-full">
+    <div class="px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3 sm:gap-6">
+        <div class="flex items-center gap-3 sm:gap-6 flex-1 min-w-0">
+            <!-- Mobile menu button -->
+            <button id="mobile-menu-button" class="lg:hidden text-deep-charcoal p-2 -ml-2">
+                <i class="fas fa-bars text-xl"></i>
+            </button>
+            
+            <a href="{% url 'student_home' %}" class="text-xl sm:text-2xl font-semibold text-deep-charcoal shrink-0">Fluentory</a>
+            
+            <div class="hidden md:flex items-center gap-3 flex-1 max-w-md min-w-0">
+                <form action="{% url 'student_courses' %}" method="GET" class="relative flex-1 w-full">
+                    <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-muted-taupe text-sm"></i>
+                    <input type="text" name="search" placeholder="Search courses..." class="w-full pl-10 pr-4 py-2 rounded-xl border border-muted-taupe/20 bg-soft-ivory/50 focus:outline-none focus:ring-2 focus:ring-muted-taupe/30 text-sm">
+                </form>
+            </div>
+        </div>
+        
+        <div class="flex items-center gap-2 sm:gap-4 shrink-0">
+            <div class="flex items-center gap-1 sm:gap-2 text-deep-charcoal cursor-pointer hover:opacity-70 transition">
+                <i class="fas fa-globe text-sm sm:text-base"></i>
+                <span class="text-xs sm:text-sm hidden sm:inline">{{ request.user.profile.preferred_language|upper|default:'EN' }}</span>
+            </div>
+            
+            <button class="relative text-deep-charcoal hover:opacity-70 transition" id="notifications-btn">
+                <i class="fas fa-bell text-base sm:text-lg"></i>
+                <span class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+            </button>
+            
+            <!-- User Dropdown -->
+            <div class="relative" id="user-dropdown">
+                <button class="flex items-center gap-2 cursor-pointer hover:opacity-80 transition" onclick="toggleUserMenu()">
+                    <div class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-warm-sand border border-muted-taupe/20 grid place-items-center overflow-hidden">
+                        {% if request.user.profile.avatar %}
+                        <img src="{{ request.user.profile.avatar.url }}" alt="" class="w-full h-full object-cover">
+                        {% else %}
+                        <i class="fas fa-user text-xs text-muted-taupe"></i>
+                        {% endif %}
+                    </div>
+                    <span class="hidden sm:inline text-sm text-deep-charcoal">{{ request.user.first_name|default:request.user.username }}</span>
+                    <i class="fas fa-chevron-down text-xs text-deep-charcoal/60 hidden sm:inline"></i>
+                </button>
+                
+                <!-- Dropdown Menu -->
+                <div id="user-menu" class="hidden absolute right-0 top-full mt-2 w-48 bg-white rounded-xl border border-muted-taupe/20 shadow-lg py-2 z-50">
+                    <div class="px-4 py-2 border-b border-muted-taupe/10">
+                        <div class="font-medium text-deep-charcoal">{{ request.user.first_name }} {{ request.user.last_name }}</div>
+                        <div class="text-xs text-deep-charcoal/60">{{ request.user.email }}</div>
+                    </div>
+                    <a href="{% url 'student_home' %}" class="block px-4 py-2 text-sm text-deep-charcoal hover:bg-warm-sand/20 transition">
+                        <i class="fas fa-home w-4 mr-2"></i> Dashboard
+                    </a>
+                    <a href="{% url 'student_settings' %}" class="block px-4 py-2 text-sm text-deep-charcoal hover:bg-warm-sand/20 transition">
+                        <i class="fas fa-cog w-4 mr-2"></i> Settings
+                    </a>
+                    <a href="{% url 'student_certificates' %}" class="block px-4 py-2 text-sm text-deep-charcoal hover:bg-warm-sand/20 transition">
+                        <i class="fas fa-certificate w-4 mr-2"></i> Certificates
+                    </a>
+                    <div class="border-t border-muted-taupe/10 mt-2 pt-2">
+                        <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition">
+                            <i class="fas fa-sign-out-alt w-4 mr-2"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
+
+<script>
+function toggleUserMenu() {
+    const menu = document.getElementById('user-menu');
+    menu.classList.toggle('hidden');
+}
+
+// Close menu when clicking outside
+document.addEventListener('click', function(e) {
+    const dropdown = document.getElementById('user-dropdown');
+    const menu = document.getElementById('user-menu');
+    if (dropdown && !dropdown.contains(e.target)) {
+        menu.classList.add('hidden');
+    }
+});
+</script>

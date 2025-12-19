@@ -1,0 +1,71 @@
+<!-- Mobile Menu Button (visible on small screens) -->
+<button id="mobile-menu-toggle" class="lg:hidden fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-deep-charcoal text-white shadow-lg grid place-items-center">
+    <i class="fas fa-bars text-xl"></i>
+</button>
+
+<!-- Mobile Menu Overlay -->
+<div id="mobile-menu" class="lg:hidden fixed inset-0 bg-black/50 z-50 hidden">
+    <div class="absolute right-0 top-0 h-full w-64 bg-white shadow-xl">
+        <div class="p-6">
+            <div class="flex items-center justify-between mb-6">
+                <span class="text-xl font-semibold text-deep-charcoal">Menu</span>
+                <button id="mobile-menu-close" class="w-8 h-8 rounded-full bg-warm-sand/30 grid place-items-center">
+                    <i class="fas fa-times text-deep-charcoal"></i>
+                </button>
+            </div>
+            
+            <nav class="space-y-2">
+                <a href="/student/" class="flex items-center gap-3 px-4 py-3 rounded-xl text-deep-charcoal hover:bg-warm-sand/30 transition">
+                    <i class="fas fa-home w-5"></i>
+                    <span>Home</span>
+                </a>
+                
+                <a href="/student/courses/" class="flex items-center gap-3 px-4 py-3 rounded-xl text-deep-charcoal hover:bg-warm-sand/30 transition">
+                    <i class="fas fa-book w-5"></i>
+                    <span>Courses</span>
+                </a>
+                
+                <a href="/student/placement/" class="flex items-center gap-3 px-4 py-3 rounded-xl text-deep-charcoal hover:bg-warm-sand/30 transition">
+                    <i class="fas fa-clipboard-check w-5"></i>
+                    <span>Placement Test</span>
+                </a>
+                
+                <a href="/student/learning/" class="flex items-center gap-3 px-4 py-3 rounded-xl text-deep-charcoal hover:bg-warm-sand/30 transition">
+                    <i class="fas fa-graduation-cap w-5"></i>
+                    <span>My Learning</span>
+                </a>
+                
+                <a href="/student/certificates/" class="flex items-center gap-3 px-4 py-3 rounded-xl text-deep-charcoal hover:bg-warm-sand/30 transition">
+                    <i class="fas fa-certificate w-5"></i>
+                    <span>Certificates</span>
+                </a>
+                
+                <a href="/student/settings/" class="flex items-center gap-3 px-4 py-3 rounded-xl text-deep-charcoal hover:bg-warm-sand/30 transition">
+                    <i class="fas fa-cog w-5"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+        </div>
+    </div>
+</div>
+
+<script>
+    const menuToggle = document.getElementById('mobile-menu-toggle');
+    const menuClose = document.getElementById('mobile-menu-close');
+    const mobileMenu = document.getElementById('mobile-menu');
+    
+    menuToggle?.addEventListener('click', () => {
+        mobileMenu?.classList.remove('hidden');
+    });
+    
+    menuClose?.addEventListener('click', () => {
+        mobileMenu?.classList.add('hidden');
+    });
+    
+    mobileMenu?.addEventListener('click', (e) => {
+        if (e.target === mobileMenu) {
+            mobileMenu.classList.add('hidden');
+        }
+    });
+</script>
+

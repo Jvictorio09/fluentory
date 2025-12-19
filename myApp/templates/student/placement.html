@@ -1,0 +1,60 @@
+{% extends 'student/base.html' %}
+
+{% block content %}
+<div class="p-4 sm:p-6 lg:p-8 xl:p-10 max-w-4xl mx-auto w-full">
+    <div class="text-center mb-6 sm:mb-8 lg:mb-10">
+        <div class="inline-flex items-center gap-2 bg-deep-charcoal/8 px-4 py-2 rounded-full text-xs uppercase tracking-wider text-deep-charcoal mb-6">
+            <i class="fas fa-clipboard-check text-muted-taupe"></i>
+            <span>AI Placement Test</span>
+        </div>
+        
+        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-light text-deep-charcoal mb-3 sm:mb-4">Find Your Starting Point</h1>
+        <p class="text-base sm:text-lg text-deep-charcoal/70 max-w-2xl mx-auto px-4">
+            Take a quick assessment to get personalized course recommendations tailored to your current level and goals.
+        </p>
+    </div>
+    
+    <div class="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-8 border border-muted-taupe/20 shadow-sm">
+        <div class="mb-6 sm:mb-8">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-sm text-deep-charcoal/70">Question 1 of 10</span>
+                <span class="text-sm text-deep-charcoal/70">Estimated time: 5-10 minutes</span>
+            </div>
+            <div class="h-2 bg-warm-sand rounded-full overflow-hidden">
+                <div class="h-full bg-deep-charcoal rounded-full" style="width: 10%"></div>
+            </div>
+        </div>
+        
+        <div class="mb-8">
+            <h2 class="text-2xl font-light text-deep-charcoal mb-6">What is your primary learning goal?</h2>
+            
+            <div class="space-y-3">
+                <button class="w-full text-left p-5 rounded-xl border-2 border-muted-taupe/20 hover:border-deep-charcoal/40 transition">
+                    <div class="font-medium text-deep-charcoal mb-1">Career advancement</div>
+                    <div class="text-sm text-deep-charcoal/70">I want to improve my skills for my current job or prepare for a new role</div>
+                </button>
+                
+                <button class="w-full text-left p-5 rounded-xl border-2 border-muted-taupe/20 hover:border-deep-charcoal/40 transition">
+                    <div class="font-medium text-deep-charcoal mb-1">Personal growth</div>
+                    <div class="text-sm text-deep-charcoal/70">I'm learning for personal interest and self-improvement</div>
+                </button>
+                
+                <button class="w-full text-left p-5 rounded-xl border-2 border-muted-taupe/20 hover:border-deep-charcoal/40 transition">
+                    <div class="font-medium text-deep-charcoal mb-1">Academic preparation</div>
+                    <div class="text-sm text-deep-charcoal/70">I need to prepare for exams or academic requirements</div>
+                </button>
+            </div>
+        </div>
+        
+        <div class="flex justify-between">
+            <button class="px-6 py-3 text-deep-charcoal border border-muted-taupe/20 rounded-xl hover:bg-warm-sand/30 transition" disabled>
+                Previous
+            </button>
+            <button class="px-6 py-3 bg-deep-charcoal text-white rounded-xl font-medium hover:opacity-90 transition">
+                Next Question
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

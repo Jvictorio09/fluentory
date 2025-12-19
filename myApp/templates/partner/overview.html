@@ -1,0 +1,109 @@
+{% extends 'partner/base.html' %}
+
+{% block content %}
+<div class="w-full">
+    <div class="mb-6 sm:mb-8">
+        <h1 class="text-2xl sm:text-3xl font-light text-deep-charcoal mb-2">Partner Overview</h1>
+        <p class="text-sm sm:text-base text-deep-charcoal/70">Track your cohorts, performance, and growth</p>
+    </div>
+    
+    <!-- KPI Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
+        <div class="bg-white rounded-xl p-4 sm:p-6 border border-muted-taupe/20 shadow-sm">
+            <div class="text-xs sm:text-sm text-deep-charcoal/60 mb-1">Enrolled Students</div>
+            <div class="text-2xl sm:text-3xl font-light text-deep-charcoal">342</div>
+            <div class="text-xs text-green-600 mt-2">+24 this month</div>
+        </div>
+        
+        <div class="bg-white rounded-xl p-4 sm:p-6 border border-muted-taupe/20 shadow-sm">
+            <div class="text-xs sm:text-sm text-deep-charcoal/60 mb-1">Active Learners</div>
+            <div class="text-2xl sm:text-3xl font-light text-deep-charcoal">287</div>
+            <div class="text-xs text-deep-charcoal/60 mt-2">84% active rate</div>
+        </div>
+        
+        <div class="bg-white rounded-xl p-4 sm:p-6 border border-muted-taupe/20 shadow-sm">
+            <div class="text-xs sm:text-sm text-deep-charcoal/60 mb-1">Completion Rate</div>
+            <div class="text-2xl sm:text-3xl font-light text-deep-charcoal">72%</div>
+            <div class="text-xs text-green-600 mt-2">Above average</div>
+        </div>
+        
+        <div class="bg-white rounded-xl p-4 sm:p-6 border border-muted-taupe/20 shadow-sm">
+            <div class="text-xs sm:text-sm text-deep-charcoal/60 mb-1">Certificates Earned</div>
+            <div class="text-2xl sm:text-3xl font-light text-deep-charcoal">198</div>
+            <div class="text-xs text-deep-charcoal/60 mt-2">This quarter</div>
+        </div>
+    </div>
+    
+    <!-- Action Panel -->
+    <div class="bg-white rounded-xl p-4 sm:p-6 border border-muted-taupe/20 shadow-sm mb-6 sm:mb-8">
+        <h2 class="text-lg sm:text-xl font-medium text-deep-charcoal mb-4 sm:mb-6">Action Panel</h2>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <div class="p-4 rounded-lg bg-warm-sand/20 border border-muted-taupe/20">
+                <div class="flex items-center gap-3 mb-2">
+                    <i class="fas fa-exclamation-circle text-orange-600"></i>
+                    <span class="font-medium text-deep-charcoal">12 students inactive</span>
+                </div>
+                <p class="text-sm text-deep-charcoal/70">No activity in 7+ days</p>
+            </div>
+            
+            <div class="p-4 rounded-lg bg-warm-sand/20 border border-muted-taupe/20">
+                <div class="flex items-center gap-3 mb-2">
+                    <i class="fas fa-flag-checkered text-blue-600"></i>
+                    <span class="font-medium text-deep-charcoal">3 cohorts at milestone</span>
+                </div>
+                <p class="text-sm text-deep-charcoal/70">Ready for next phase</p>
+            </div>
+            
+            <div class="p-4 rounded-lg bg-warm-sand/20 border border-muted-taupe/20">
+                <div class="flex items-center gap-3 mb-2">
+                    <i class="fas fa-chart-line text-green-600"></i>
+                    <span class="font-medium text-deep-charcoal">Promo performing well</span>
+                </div>
+                <p class="text-sm text-deep-charcoal/70">+15% conversion this week</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Cohort Overview -->
+    <div class="bg-white rounded-xl p-4 sm:p-6 border border-muted-taupe/20 shadow-sm">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+            <h2 class="text-lg sm:text-xl font-medium text-deep-charcoal">My Cohorts</h2>
+            <button class="w-full sm:w-auto px-4 py-2 bg-deep-charcoal text-white rounded-lg text-sm hover:opacity-90 transition">
+                <i class="fas fa-plus mr-2"></i>Create Cohort
+            </button>
+        </div>
+        
+        <div class="space-y-3 sm:space-y-4">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 p-3 sm:p-4 rounded-lg border border-muted-taupe/20 hover:bg-warm-sand/10 transition">
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm sm:text-base font-medium text-deep-charcoal mb-1">Fluentory Dubai Jan 2026</div>
+                    <div class="text-xs sm:text-sm text-deep-charcoal/70">45 students • Started Jan 15</div>
+                </div>
+                <div class="flex items-center gap-4 sm:gap-6 w-full sm:w-auto justify-between sm:justify-end">
+                    <div class="text-right">
+                        <div class="text-sm font-medium text-deep-charcoal">68%</div>
+                        <div class="text-xs text-deep-charcoal/60">Progress</div>
+                    </div>
+                    <i class="fas fa-chevron-right text-muted-taupe"></i>
+                </div>
+            </div>
+            
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 p-3 sm:p-4 rounded-lg border border-muted-taupe/20 hover:bg-warm-sand/10 transition">
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm sm:text-base font-medium text-deep-charcoal mb-1">Corporate Training Q1</div>
+                    <div class="text-xs sm:text-sm text-deep-charcoal/70">128 students • Started Feb 1</div>
+                </div>
+                <div class="flex items-center gap-4 sm:gap-6 w-full sm:w-auto justify-between sm:justify-end">
+                    <div class="text-right">
+                        <div class="text-sm font-medium text-deep-charcoal">42%</div>
+                        <div class="text-xs text-deep-charcoal/60">Progress</div>
+                    </div>
+                    <i class="fas fa-chevron-right text-muted-taupe"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

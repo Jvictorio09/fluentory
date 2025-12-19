@@ -1,0 +1,39 @@
+{% extends 'student/base.html' %}
+
+{% block content %}
+<div class="p-4 sm:p-6 lg:p-8 xl:p-10 w-full">
+    <div class="mb-6 sm:mb-8">
+        <h1 class="text-2xl sm:text-3xl font-light text-deep-charcoal mb-2">My Certificates</h1>
+        <p class="text-sm sm:text-base text-deep-charcoal/70">Verified credentials you can share globally</p>
+    </div>
+    
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+        {% for i in "123456"|make_list %}
+        <div class="bg-white rounded-2xl p-6 border border-muted-taupe/20 shadow-sm">
+            <div class="h-32 bg-gradient-to-br from-warm-sand to-[#E0D5C5] rounded-xl mb-4 relative">
+                <div class="absolute bottom-3 right-3 w-12 h-12 bg-white rounded-lg border border-muted-taupe/20"></div>
+            </div>
+            
+            <h3 class="text-lg font-medium text-deep-charcoal mb-2">Introduction to Data Science</h3>
+            <p class="text-sm text-deep-charcoal/70 mb-4">Earned on January 15, 2026</p>
+            
+            <div class="flex items-center gap-2 mb-4">
+                <span class="text-xs px-3 py-1 rounded-full bg-green-50 text-green-700 border border-green-200">
+                    <i class="fas fa-check-circle mr-1"></i>Verified
+                </span>
+            </div>
+            
+            <div class="flex gap-3">
+                <button class="flex-1 px-4 py-2 border border-muted-taupe/20 rounded-xl text-sm text-deep-charcoal hover:bg-warm-sand/30 transition">
+                    <i class="fas fa-download mr-2"></i>Download
+                </button>
+                <button class="flex-1 px-4 py-2 bg-deep-charcoal text-white rounded-xl text-sm hover:opacity-90 transition">
+                    <i class="fab fa-linkedin mr-2"></i>Share
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+

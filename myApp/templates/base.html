@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Fluentory - The Modern Way To Learn Globally{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'warm-sand': '#E8E0D5',
+                        'soft-ivory': '#F5F3EF',
+                        'muted-taupe': '#B8A99A',
+                        'deep-charcoal': '#2C2C2C',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Only minimal custom CSS for scroll behavior */
+        .navbar-scrolled {
+            background-color: #F5F3EF;
+            border-bottom: 1px solid #B8A99A;
+        }
+    </style>
+</head>
+<body class="bg-warm-sand text-deep-charcoal font-sans">
+    {% include 'partials/announcement_bar.html' %}
+    {% include 'partials/navbar.html' %}
+    
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    
+    {% include 'partials/footer.html' %}
+    
+    <script>
+        // Navbar scroll behavior
+        window.addEventListener('scroll', () => {
+            const navbar = document.querySelector('.navbar');
+            if (window.scrollY > 100) {
+                navbar.classList.add('navbar-scrolled');
+            } else {
+                navbar.classList.remove('navbar-scrolled');
+            }
+        });
+
+        // FAQ Accordion functionality
+        const faqData = [
+            {
+                question: "How does the placement test work?",
+                description: "The test adapts to your answers to estimate your level fast—then recommends the best starting course, so you learn efficiently instead of guessing where to begin.",
+                tags: ["5–10 minutes", "Instant placement", "Saves time"]
+            },
+            {
+                question: "Are certificates internationally recognized?",
+                description: "Yes, all Fluentory certificates include QR code verification that can be instantly verified by employers and institutions worldwide. Each certificate is securely stored and can be shared digitally.",
+                tags: ["QR verification", "Global recognition", "Employer-ready"]
+            },
+            {
+                question: "Can I learn in my own language?",
+                description: "Absolutely. Fluentory supports multiple languages, and our AI tutor can assist you in your preferred language, making learning more accessible and comfortable.",
+                tags: ["Multi-language", "AI translation", "Comfortable learning"]
+            },
+            {
+                question: "Is this suitable for beginners?",
+                description: "Yes, Fluentory is designed for learners at all levels. Our placement test ensures you start at the right level, and our courses range from beginner to advanced.",
+                tags: ["All levels", "Smart placement", "Progressive learning"]
+            },
+            {
+                question: "What makes Fluentory different?",
+                description: "Fluentory focuses on outcomes, not just content. We place you correctly, guide you with milestones, and certify you with verifiable proof. It's learning designed for real-world results.",
+                tags: ["Outcome-focused", "Verifiable proof", "Real results"]
+            }
+        ];
+
+        document.querySelectorAll('.faq-accordion-item').forEach((item, index) => {
+            const toggle = item.querySelector('.faq-toggle');
+            const content = item.querySelector('.faq-content');
+            const icon = item.querySelector('.faq-icon i');
+            
+            // Set first item as active by default
+            if (index === 0) {
+                item.classList.add('bg-white/70', 'border-muted-taupe/25');
+                item.classList.remove('bg-white/60', 'border-muted-taupe/20');
+                content.classList.remove('hidden');
+            }
+            
+            toggle.addEventListener('click', () => {
+                const isActive = !content.classList.contains('hidden');
+                
+                // Close all items
+                document.querySelectorAll('.faq-accordion-item').forEach(otherItem => {
+                    const otherContent = otherItem.querySelector('.faq-content');
+                    const otherIcon = otherItem.querySelector('.faq-icon i');
+                    const otherToggle = otherItem.querySelector('.faq-toggle');
+                    
+                    otherContent.classList.add('hidden');
+                    otherIcon.classList.remove('fa-minus');
+                    otherIcon.classList.add('fa-plus');
+                    otherItem.classList.remove('bg-white/70', 'border-muted-taupe/25', 'shadow-[0_18px_55px_rgba(0,0,0,0.07)]');
+                    otherItem.classList.add('bg-white/60', 'border-muted-taupe/20');
+                    otherItem.querySelector('.faq-icon').classList.remove('bg-deep-charcoal', 'text-soft-ivory');
+                    otherItem.querySelector('.faq-icon').classList.add('bg-white/50', 'border-muted-taupe/20', 'text-deep-charcoal/70');
+                });
+                
+                // If clicking the active item, close it. Otherwise, open the clicked item
+                if (!isActive) {
+                    // Open clicked item
+                    content.classList.remove('hidden');
+                    icon.classList.remove('fa-plus');
+                    icon.classList.add('fa-minus');
+                    item.classList.remove('bg-white/60', 'border-muted-taupe/20');
+                    item.classList.add('bg-white/70', 'border-muted-taupe/25', 'shadow-[0_18px_55px_rgba(0,0,0,0.07)]');
+                    item.querySelector('.faq-icon').classList.remove('bg-white/50', 'border-muted-taupe/20', 'text-deep-charcoal/70');
+                    item.querySelector('.faq-icon').classList.add('bg-deep-charcoal', 'text-soft-ivory');
+                    
+                    // Update preview panel
+                    updateFaqPreview(index);
+                }
+            });
+        });
+        
+        function updateFaqPreview(index) {
+            const data = faqData[index];
+            const previewTitle = document.querySelector('.faq-preview-title');
+            const previewDescription = document.querySelector('.faq-preview-description');
+            const previewTags = document.querySelector('.faq-preview-tags');
+            
+            if (previewTitle) previewTitle.textContent = data.question;
+            if (previewDescription) previewDescription.textContent = data.description;
+            if (previewTags) {
+                previewTags.innerHTML = data.tags.map(tag => 
+                    `<span class="text-xs px-3 py-2 rounded-full bg-deep-charcoal/6 text-deep-charcoal/70 border border-muted-taupe/15">${tag}</span>`
+                ).join('');
+            }
+        }
+
+        // Certificate verification (demo)
+        document.querySelector('.btn-verify')?.addEventListener('click', () => {
+            const badge = document.querySelector('.verified-badge');
+            if (badge) {
+                badge.classList.remove('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

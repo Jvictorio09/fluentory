@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Fluentory - Admin{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'warm-sand': '#E8E0D5',
+                        'soft-ivory': '#F5F3EF',
+                        'muted-taupe': '#B8A99A',
+                        'deep-charcoal': '#2C2C2C',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-soft-ivory text-deep-charcoal font-sans">
+    {% include 'admin/partials/navbar.html' %}
+    
+    <div class="flex min-h-[calc(100vh-4rem)] relative">
+        {% include 'admin/partials/sidebar.html' %}
+        
+        <main class="flex-1 w-full lg:ml-64 p-6 sm:p-8 lg:p-10 xl:p-12">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>
+
