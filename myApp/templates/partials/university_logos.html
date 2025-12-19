@@ -1,14 +1,169 @@
-<section class="bg-soft-ivory py-20">
-    <div class="w-full m-0 p-0 text-center">
-        <p class="text-sm text-muted-taupe uppercase tracking-widest mb-12">Trusted by learners worldwide</p>
-        <div class="grid grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-8 md:gap-12 lg:gap-16 items-center px-8 lg:px-20">
-            <img src="https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/https://coursera_assets.s3.amazonaws.com/images/94d374b55f8a5d9bfbaaf42a578f7ac5.png?auto=format%2Ccompress&dpr=1" alt="University" class="w-full h-auto max-h-[60px] md:max-h-[80px] lg:max-h-[120px] object-contain hover:scale-105 transition-transform">
-            <img src="https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/https://coursera_assets.s3.amazonaws.com/images/2fe47744cde1a0e41e409bf488e98027.png?auto=format%2Ccompress&dpr=1" alt="University" class="w-full h-auto max-h-[120px] object-contain hover:scale-105 transition-transform">
-            <img src="https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/https://coursera_assets.s3.amazonaws.com/images/f93d412349e801238d46a2b167695c43.png?auto=format%2Ccompress&dpr=1" alt="University" class="w-full h-auto max-h-[120px] object-contain hover:scale-105 transition-transform">
-            <img src="https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/https://coursera_assets.s3.amazonaws.com/images/e6636c6b8d2d141cbee6bf14f4b3d185.png?auto=format%2Ccompress&dpr=1" alt="University" class="w-full h-auto max-h-[120px] object-contain hover:scale-105 transition-transform">
-            <img src="https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/https://coursera_assets.s3.amazonaws.com/images/3c51760da56b41955094211c3a4cd179.png?auto=format%2Ccompress&dpr=1" alt="University" class="w-full h-auto max-h-[120px] object-contain hover:scale-105 transition-transform">
-            <img src="https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/https://coursera_assets.s3.amazonaws.com/images/c5ee723406a053a78a85bc35f5b50681.png?auto=format%2Ccompress&dpr=1" alt="University" class="w-full h-auto max-h-[120px] object-contain hover:scale-105 transition-transform">
-            <img src="https://d3njjcbhbojbot.cloudfront.net/api/utilities/v1/imageproxy/https://coursera_assets.s3.amazonaws.com/images/87602a05d6b80695359dc331f2a745a6.png?auto=format%2Ccompress&dpr=1" alt="University" class="w-full h-auto max-h-[120px] object-contain hover:scale-105 transition-transform">
+{% load static %}
+
+<section class="relative overflow-hidden bg-soft-ivory" id="outcomes">
+  <!-- Background Image -->
+  <div class="absolute inset-0">
+    <img
+      src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=2400&q=80"
+      alt=""
+      class="w-full h-full object-cover opacity-25"
+      loading="lazy"
+    />
+    <div class="absolute inset-0 bg-gradient-to-b from-soft-ivory/90 via-soft-ivory/80 to-soft-ivory/90"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.5),transparent_70%)]"></div>
+  </div>
+  
+  <!-- Animated glow blobs -->
+  <div class="absolute top-0 right-0 w-[500px] h-[500px] bg-accent-gold/5 rounded-full blur-[100px] animate-pulse" style="animation-duration: 7s;"></div>
+  <div class="absolute bottom-0 left-0 w-[400px] h-[400px] bg-muted-taupe/8 rounded-full blur-[90px] animate-pulse" style="animation-duration: 9s; animation-delay: 1s;"></div>
+  <!-- Trusted By Section -->
+  <div class="py-6 lg:py-8 relative z-10">
+    <div class="max-w-6xl mx-auto px-6">
+      <p class="text-center text-[11px] tracking-[0.28em] uppercase text-deep-charcoal/50 mb-3">
+        Trusted by learners worldwide
+      </p>
+      
+      <!-- Logo Container -->
+      <div class="relative py-3">
+        <!-- Soft edge fades -->
+        <div class="pointer-events-none absolute inset-y-0 left-0 w-28 bg-gradient-to-r from-soft-ivory to-transparent z-10"></div>
+        <div class="pointer-events-none absolute inset-y-0 right-0 w-28 bg-gradient-to-l from-soft-ivory to-transparent z-10"></div>
+
+        <!-- Logo Row -->
+        <div class="flex items-center gap-8 justify-center flex-wrap">
+          <div class="trusted-logo"><img class="trusted-img" src="{% static 'img/logos/illinois.png' %}" alt="Illinois"></div>
+          <div class="trusted-logo"><img class="trusted-img" src="{% static 'img/logos/duke.png' %}" alt="Duke"></div>
+          <div class="trusted-logo"><img class="trusted-img" src="{% static 'img/logos/google.png' %}" alt="Google"></div>
+          <div class="trusted-logo"><img class="trusted-img" src="{% static 'img/logos/michigan.png' %}" alt="Michigan"></div>
+          <div class="trusted-logo"><img class="trusted-img" src="{% static 'img/logos/ibm.png' %}" alt="IBM"></div>
+          <div class="trusted-logo"><img class="trusted-img" src="{% static 'img/logos/vanderbilt.png' %}" alt="Vanderbilt"></div>
+          <div class="trusted-logo"><img class="trusted-img" src="{% static 'img/logos/johnshopkins.png' %}" alt="Johns Hopkins"></div>
         </div>
+      </div>
     </div>
+  </div>
+
+  <!-- Outcomes Section -->
+  <div class="relative bg-deep-charcoal py-6 lg:py-8 overflow-hidden">
+    <!-- Background Image for Outcomes -->
+    <div class="absolute inset-0">
+      <img
+        src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=2400&q=80"
+        alt=""
+        class="w-full h-full object-cover opacity-15"
+        loading="lazy"
+      />
+      <div class="absolute inset-0 bg-gradient-to-b from-deep-charcoal/95 via-deep-charcoal/90 to-deep-charcoal/95"></div>
+    </div>
+    
+    <div class="max-w-6xl mx-auto px-6 relative z-10">
+      <!-- Header -->
+      <div class="mb-5">
+        <p class="text-white/60 text-xs tracking-[0.22em] uppercase mb-1">Outcomes</p>
+        <h3 class="text-white text-2xl md:text-3xl font-semibold mb-1.5">
+          Designed for measurable progress.
+        </h3>
+        <p class="text-white/60 max-w-xl text-sm">
+          Placement-based learning, milestone quizzes, verified certificates — built to help learners finish strong.
+        </p>
+      </div>
+
+      <!-- Outcome Cards with Icons -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-4">
+        <div class="outcome-card">
+          <div class="flex items-center gap-2.5 mb-1.5">
+            <i class="fas fa-chart-line text-accent-gold text-base"></i>
+            <p class="text-white/60 text-[11px] tracking-[0.2em] uppercase">Outcome</p>
+          </div>
+          <p class="text-white font-medium text-sm">Faster Progress</p>
+        </div>
+        <div class="outcome-card">
+          <div class="flex items-center gap-2.5 mb-1.5">
+            <i class="fas fa-brain text-accent-gold text-base"></i>
+            <p class="text-white/60 text-[11px] tracking-[0.2em] uppercase">Outcome</p>
+          </div>
+          <p class="text-white font-medium text-sm">Smarter Learning</p>
+        </div>
+        <div class="outcome-card">
+          <div class="flex items-center gap-2.5 mb-1.5">
+            <i class="fas fa-award text-accent-gold text-base"></i>
+            <p class="text-white/60 text-[11px] tracking-[0.2em] uppercase">Outcome</p>
+          </div>
+          <p class="text-white font-medium text-sm">Verified Proof</p>
+        </div>
+        <div class="outcome-card">
+          <div class="flex items-center gap-2.5 mb-1.5">
+            <i class="fas fa-globe-americas text-accent-gold text-base"></i>
+            <p class="text-white/60 text-[11px] tracking-[0.2em] uppercase">Outcome</p>
+          </div>
+          <p class="text-white font-medium text-sm">Global Access</p>
+        </div>
+      </div>
+
+      <!-- Testimonial and CTAs -->
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-white/10">
+        <div class="inline-flex items-center gap-2.5 rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5">
+          <span class="text-white/70 text-xs">★ 4.8</span>
+          <span class="text-white/50 text-xs">Average satisfaction</span>
+          <span class="text-white/30 hidden sm:inline">•</span>
+          <span class="text-white/60 text-xs">"Clear path, real progress."</span>
+        </div>
+
+        <div class="flex gap-2.5">
+          <a href="{% url 'login' %}?next={% url 'student_placement' %}" class="rounded-full bg-accent-gold text-deep-charcoal px-4 py-1.5 text-xs font-medium hover:bg-accent-gold/90 transition shadow-[0_4px_12px_rgba(201,169,97,0.25)]">
+            Take Placement Test
+          </a>
+          <a href="#courses" class="rounded-full border border-white/15 text-white px-4 py-1.5 text-xs font-medium hover:bg-white/5 hover:border-accent-gold/40 transition smooth-scroll">
+            Browse Courses
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+  <!-- Logo Styles -->
+  <style>
+    /* reusable Tailwind-ish component classes */
+    .trusted-logo {
+      width: 150px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.55);
+      border: 1px solid rgba(0,0,0,0.06);
+      box-shadow: 0 10px 22px rgba(0,0,0,0.06);
+      transition: transform 220ms ease, box-shadow 220ms ease, background 220ms ease;
+      will-change: transform;
+    }
+    .trusted-logo:hover {
+      transform: scale(1.08);
+      background: rgba(255,255,255,0.92);
+      box-shadow: 0 18px 40px rgba(0,0,0,0.14);
+      z-index: 5;
+    }
+    .trusted-img {
+      max-width: 80%;
+      max-height: 55%;
+      opacity: 0.92;
+      transition: opacity 220ms ease;
+    }
+    .trusted-logo:hover .trusted-img {
+      opacity: 1;
+    }
+    .outcome-card {
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.04);
+      padding: 14px;
+      transition: transform 220ms ease, background 220ms ease, border-color 220ms ease;
+    }
+    .outcome-card:hover {
+      transform: translateY(-2px);
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(201,169,97,0.3);
+    }
+  </style>
 </section>

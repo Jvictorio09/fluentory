@@ -732,6 +732,7 @@ class SiteSettings(models.Model):
     # Hero content
     hero_headline = models.CharField(max_length=200, default='The Modern Way To Learn Globally.')
     hero_subheadline = models.TextField(default='Placement-based learning. Milestone quizzes. Verified certification. Built for outcomes.')
+    hero_background_image = models.ImageField(upload_to='site/hero/', blank=True, null=True, help_text='Background image for hero section')
     
     # Stats (displayed on landing)
     total_lessons_completed = models.PositiveIntegerField(default=120000)
@@ -742,6 +743,13 @@ class SiteSettings(models.Model):
     announcement_text = models.CharField(max_length=200, blank=True)
     announcement_link = models.URLField(blank=True)
     show_announcement = models.BooleanField(default=True)
+    
+    # Section Images
+    how_it_works_image = models.ImageField(upload_to='site/sections/', blank=True, null=True, help_text='Image for How It Works section')
+    ai_tutor_image = models.ImageField(upload_to='site/sections/', blank=True, null=True, help_text='Image for AI Tutor section')
+    certificates_image = models.ImageField(upload_to='site/sections/', blank=True, null=True, help_text='Image for Certificates section')
+    pricing_image = models.ImageField(upload_to='site/sections/', blank=True, null=True, help_text='Image for Pricing section')
+    faq_video_thumbnail = models.ImageField(upload_to='site/sections/', blank=True, null=True, help_text='Video thumbnail for FAQ section')
     
     # Contact
     support_email = models.EmailField(default='support@fluentory.com')
@@ -763,6 +771,93 @@ class SiteSettings(models.Model):
     def get_settings(cls):
         settings, _ = cls.objects.get_or_create(pk=1)
         return settings
+
+
+# ============================================
+# MEDIA MANAGEMENT
+# ============================================
+
+class Media(models.Model):
+    MEDIA_TYPE_CHOICES = [
+        ('image', 'Image'),
+        ('video', 'Video'),
+        ('document', 'Document'),
+    ]
+    
+    CATEGORY_CHOICES = [
+        ('course', 'Course'),
+        ('logo', 'Logo'),
+        ('avatar', 'Avatar'),
+        ('certificate', 'Certificate'),
+        ('faq', 'FAQ'),
+        ('general', 'General'),
+    ]
+    
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    file = models.ImageField(upload_to='media/%Y/%m/')
+    media_type = models.CharField(max_length=20, choices=MEDIA_TYPE_CHOICES, default='image')
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='general')
+    
+    # Metadata
+    alt_text = models.CharField(max_length=200, blank=True, help_text='For accessibility and SEO')
+    tags = models.CharField(max_length=500, blank=True, help_text='Comma-separated tags')
+    
+    # Dimensions (auto-filled on save)
+    width = models.PositiveIntegerField(null=True, blank=True)
+    height = models.PositiveIntegerField(null=True, blank=True)
+    file_size = models.PositiveIntegerField(null=True, blank=True, help_text='Size in bytes')
+    
+    # Usage tracking
+    usage_count = models.PositiveIntegerField(default=0, help_text='Number of times used')
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='uploaded_media')
+    
+    class Meta:
+        verbose_name = 'Media'
+        verbose_name_plural = 'Media'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return self.title
+    
+    def save(self, *args, **kwargs):
+        # Auto-fill dimensions and file size if image
+        if self.file and self.media_type == 'image':
+            try:
+                from PIL import Image
+                import os
+                
+                # Get file size
+                if self.file:
+                    self.file_size = self.file.size
+                    
+                    # Get image dimensions
+                    img = Image.open(self.file)
+                    self.width, self.height = img.size
+            except Exception:
+                pass
+        
+        super().save(*args, **kwargs)
+    
+    def get_file_size_display(self):
+        """Return human-readable file size"""
+        if not self.file_size:
+            return 'Unknown'
+        for unit in ['B', 'KB', 'MB', 'GB']:
+            if self.file_size < 1024.0:
+                return f"{self.file_size:.1f} {unit}"
+            self.file_size /= 1024.0
+        return f"{self.file_size:.1f} TB"
+    
+    def get_tags_list(self):
+        """Return tags as a list"""
+        if not self.tags:
+            return []
+        return [tag.strip() for tag in self.tags.split(',') if tag.strip()]
 
 
 # ============================================

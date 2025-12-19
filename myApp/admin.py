@@ -5,7 +5,7 @@ from .models import (
     Quiz, Question, Answer, Enrollment, LessonProgress, QuizAttempt,
     Certificate, PlacementTest, TutorConversation, TutorMessage,
     Partner, Cohort, CohortMembership, Payment, Review, FAQ,
-    Notification, SiteSettings
+    Notification, SiteSettings, Media
 )
 
 
@@ -357,9 +357,72 @@ class NotificationAdmin(admin.ModelAdmin):
 class SiteSettingsAdmin(admin.ModelAdmin):
     list_display = ['site_name', 'tagline', 'support_email']
     
+    fieldsets = (
+        ('Basic Info', {
+            'fields': ('site_name', 'tagline')
+        }),
+        ('Hero Section', {
+            'fields': ('hero_headline', 'hero_subheadline', 'hero_background_image')
+        }),
+        ('Section Images', {
+            'fields': ('how_it_works_image', 'ai_tutor_image', 'certificates_image', 'pricing_image', 'faq_video_thumbnail'),
+            'description': 'Upload images for each section of the landing page'
+        }),
+        ('Stats', {
+            'fields': ('total_lessons_completed', 'average_satisfaction', 'countries_count')
+        }),
+        ('Announcement Bar', {
+            'fields': ('announcement_text', 'announcement_link', 'show_announcement')
+        }),
+        ('Contact & Social', {
+            'fields': ('support_email', 'linkedin_url', 'instagram_url', 'facebook_url', 'twitter_url')
+        }),
+    )
+    
     def has_add_permission(self, request):
         # Only allow one instance
         return not SiteSettings.objects.exists()
     
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+# ============================================
+# MEDIA ADMIN
+# ============================================
+
+@admin.register(Media)
+class MediaAdmin(admin.ModelAdmin):
+    list_display = ['title', 'media_type', 'category', 'file_size_display', 'usage_count', 'created_at', 'created_by']
+    list_filter = ['media_type', 'category', 'created_at']
+    search_fields = ['title', 'description', 'alt_text', 'tags']
+    readonly_fields = ['width', 'height', 'file_size', 'usage_count', 'created_at', 'updated_at']
+    
+    fieldsets = (
+        ('Basic Info', {
+            'fields': ('title', 'description', 'file')
+        }),
+        ('Classification', {
+            'fields': ('media_type', 'category')
+        }),
+        ('Metadata', {
+            'fields': ('alt_text', 'tags')
+        }),
+        ('File Information', {
+            'fields': ('width', 'height', 'file_size', 'usage_count'),
+            'classes': ('collapse',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at', 'created_by'),
+            'classes': ('collapse',)
+        }),
+    )
+    
+    def file_size_display(self, obj):
+        return obj.get_file_size_display()
+    file_size_display.short_description = 'File Size'
+    
+    def save_model(self, request, obj, form, change):
+        if not change:  # New object
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)

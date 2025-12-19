@@ -15,16 +15,103 @@
                         'soft-ivory': '#F5F3EF',
                         'muted-taupe': '#B8A99A',
                         'deep-charcoal': '#2C2C2C',
+                        'accent-gold': '#C9A961',
                     }
                 }
             }
         }
     </script>
     <style>
-        /* Only minimal custom CSS for scroll behavior */
+        /* Navbar scroll behavior */
         .navbar-scrolled {
-            background-color: #F5F3EF;
-            border-bottom: 1px solid #B8A99A;
+            background-color: rgba(245, 243, 239, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(184, 169, 154, 0.2);
+        }
+        
+        /* Noise texture for premium feel */
+        .noise-texture {
+            position: relative;
+        }
+        .noise-texture::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.03'/%3E%3C/svg%3E");
+            pointer-events: none;
+            mix-blend-mode: overlay;
+        }
+        
+        /* Logo contrast enhancement */
+        .navbar img[alt*="Fluentory"] {
+            filter: contrast(1.1) brightness(0.95);
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+        
+        /* Scroll margin for sections to prevent cutting off content */
+        section[id] {
+            scroll-margin-top: 92px;
+        }
+        
+        /* Chatbot button animation */
+        @keyframes pulse-ring {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.5);
+                opacity: 0;
+            }
+        }
+        
+        .chatbot-btn {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-8px);
+            }
+        }
+        
+        .chatbot-btn .animate-ping {
+            animation: pulse-ring 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        
+        /* Back to top button fade in/out */
+        .back-to-top-btn {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        
+        .back-to-top-btn.hidden {
+            opacity: 0;
+            transform: translateY(10px);
+            pointer-events: none;
+        }
+        
+        .back-to-top-btn:not(.hidden) {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Shimmer animation for modern glass effects */
+        @keyframes shimmer {
+            0% {
+                transform: translateX(-100%) translateY(0);
+            }
+            100% {
+                transform: translateX(100%) translateY(0);
+            }
+        }
+        
+        .animate-\[shimmer_3s_infinite\] {
+            animation: shimmer 3s infinite;
         }
     </style>
 </head>
@@ -37,6 +124,67 @@
     </main>
     
     {% include 'partials/footer.html' %}
+    
+    <!-- Chatbot Modal -->
+    <div id="chatbot-modal" class="hidden fixed inset-0 z-[9999] items-center justify-center bg-black/50 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 max-h-[80vh] flex flex-col">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between p-5 border-b border-muted-taupe/20">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-accent-gold/20 flex items-center justify-center">
+                        <i class="fas fa-comments text-accent-gold"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-deep-charcoal font-semibold">AI Tutor</h3>
+                        <p class="text-xs text-deep-charcoal/60">Ask me anything about learning</p>
+                    </div>
+                </div>
+                <button id="chatbot-close" class="text-deep-charcoal/60 hover:text-deep-charcoal transition" aria-label="Close">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Chat Messages Area -->
+            <div class="flex-1 overflow-y-auto p-5 space-y-4 bg-soft-ivory/50">
+                <div class="flex items-start gap-3">
+                    <div class="w-8 h-8 rounded-full bg-accent-gold/20 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-robot text-accent-gold text-sm"></i>
+                    </div>
+                    <div class="bg-white rounded-xl px-4 py-3 shadow-sm border border-muted-taupe/10">
+                        <p class="text-sm text-deep-charcoal">Hello! I'm your AI tutor. How can I help you today?</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Input Area -->
+            <div class="p-5 border-t border-muted-taupe/20">
+                <div class="flex gap-2">
+                    <input type="text" id="chatbot-input" placeholder="Type your message..." class="flex-1 px-4 py-3 rounded-xl border border-muted-taupe/30 bg-white text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-accent-gold/40 text-sm" />
+                    <button id="chatbot-send" class="bg-accent-gold text-deep-charcoal px-5 py-3 rounded-xl hover:bg-accent-gold/90 transition font-medium">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <p class="text-xs text-deep-charcoal/50 mt-2 text-center">
+                    <a href="{% url 'login' %}" class="text-accent-gold hover:underline">Sign in</a> to access full AI tutor features
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Floating Action Buttons -->
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col gap-3 items-center">
+        <!-- Back to Top Button -->
+        <button id="back-to-top" class="back-to-top-btn hidden bg-deep-charcoal text-white w-14 h-14 rounded-full shadow-[0_8px_25px_rgba(44,44,44,0.3)] hover:bg-accent-gold hover:shadow-[0_8px_25px_rgba(201,169,97,0.4)] transition-all duration-300 flex items-center justify-center group" aria-label="Back to top">
+            <i class="fas fa-arrow-up text-lg group-hover:translate-y-[-2px] transition-transform"></i>
+        </button>
+        
+        <!-- Chatbot Button -->
+        <button id="chatbot-trigger" class="chatbot-btn bg-accent-gold text-deep-charcoal w-16 h-16 rounded-full shadow-[0_8px_25px_rgba(201,169,97,0.4)] hover:bg-accent-gold/90 hover:shadow-[0_12px_35px_rgba(201,169,97,0.5)] transition-all duration-300 flex items-center justify-center group relative cursor-pointer border-0" aria-label="Chat with AI Tutor" type="button">
+            <i class="fas fa-comments text-xl group-hover:scale-110 transition-transform"></i>
+            <!-- Pulsing animation ring -->
+            <span class="absolute inset-0 rounded-full bg-accent-gold/30 animate-ping"></span>
+        </button>
+    </div>
     
     <script>
         // Navbar scroll behavior
@@ -147,6 +295,286 @@
                 badge.classList.remove('hidden');
             }
         });
+
+        // Smooth scroll for anchor links
+        document.querySelectorAll('a.smooth-scroll, a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                const href = this.getAttribute('href');
+                // Only handle hash links that start with # (not Django template URLs)
+                if (href && href.startsWith('#') && !href.includes('{%')) {
+                    const targetId = href.substring(1);
+                    // Skip empty hash
+                    if (!targetId) return;
+                    
+                    const targetElement = document.getElementById(targetId);
+                    
+                    if (targetElement) {
+                        e.preventDefault();
+                        const navbarHeight = document.querySelector('.navbar')?.offsetHeight || 72;
+                        // Add extra offset for better spacing (navbar + 20px breathing room)
+                        const offset = navbarHeight + 20;
+                        const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - offset;
+                        
+                        window.scrollTo({
+                            top: Math.max(0, targetPosition),
+                            behavior: 'smooth'
+                        });
+                    }
+                }
+            });
+        });
+
+        // Language selector functionality
+        const languageSelector = document.getElementById('language-selector');
+        if (languageSelector) {
+            // Keep dropdown open on hover
+            languageSelector.addEventListener('mouseenter', function() {
+                const dropdown = this.querySelector('.absolute');
+                if (dropdown) {
+                    dropdown.classList.remove('opacity-0', 'invisible');
+                    dropdown.classList.add('opacity-100', 'visible');
+                }
+            });
+
+            languageSelector.addEventListener('mouseleave', function() {
+                const dropdown = this.querySelector('.absolute');
+                if (dropdown) {
+                    dropdown.classList.add('opacity-0', 'invisible');
+                    dropdown.classList.remove('opacity-100', 'visible');
+                }
+            });
+
+            // Handle language selection
+            document.querySelectorAll('.language-option').forEach(option => {
+                option.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const lang = this.getAttribute('data-lang');
+                    const code = this.getAttribute('data-code');
+                    
+                    // Update the displayed language code
+                    const currentLangElement = document.getElementById('current-language');
+                    if (currentLangElement) {
+                        currentLangElement.textContent = code;
+                    }
+                    
+                    // Store language preference in localStorage
+                    localStorage.setItem('preferred-language', lang);
+                    
+                    // Here you could add logic to change the page language
+                    // For now, we'll just update the display and store the preference
+                    console.log('Language changed to:', lang);
+                    
+                    // Close dropdown after selection
+                    const dropdown = languageSelector.querySelector('.absolute');
+                    if (dropdown) {
+                        dropdown.classList.add('opacity-0', 'invisible');
+                        dropdown.classList.remove('opacity-100', 'visible');
+                    }
+                });
+            });
+        }
+
+        // Load saved language preference on page load
+        const savedLang = localStorage.getItem('preferred-language');
+        if (savedLang) {
+            const langOption = document.querySelector(`.language-option[data-lang="${savedLang}"]`);
+            if (langOption) {
+                const code = langOption.getAttribute('data-code');
+                const currentLangElement = document.getElementById('current-language');
+                if (currentLangElement) {
+                    currentLangElement.textContent = code;
+                }
+            }
+        }
+
+        // Back to Top Button Functionality
+        const backToTopBtn = document.getElementById('back-to-top');
+        
+        // Show/hide button based on scroll position
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                backToTopBtn.classList.remove('hidden');
+            } else {
+                backToTopBtn.classList.add('hidden');
+            }
+        });
+        
+        // Smooth scroll to top
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // Chatbot Button Functionality
+        const chatbotBtn = document.getElementById('chatbot-trigger');
+        const chatbotModal = document.getElementById('chatbot-modal');
+        const chatbotClose = document.getElementById('chatbot-close');
+        
+        if (chatbotBtn && chatbotModal) {
+            chatbotBtn.addEventListener('click', () => {
+                chatbotModal.classList.remove('hidden');
+                chatbotModal.classList.add('flex');
+            });
+        }
+        
+        if (chatbotClose) {
+            chatbotClose.addEventListener('click', () => {
+                chatbotModal.classList.add('hidden');
+                chatbotModal.classList.remove('flex');
+            });
+        }
+        
+        // Close modal when clicking outside
+        if (chatbotModal) {
+            chatbotModal.addEventListener('click', (e) => {
+                if (e.target === chatbotModal) {
+                    chatbotModal.classList.add('hidden');
+                    chatbotModal.classList.remove('flex');
+                }
+            });
+        }
+        
+        // Chatbot send message functionality
+        const chatbotInput = document.getElementById('chatbot-input');
+        const chatbotSend = document.getElementById('chatbot-send');
+        const chatbotMessages = chatbotModal?.querySelector('.space-y-4');
+        
+        function addMessage(text, isUser = false) {
+            if (!chatbotMessages) return;
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `flex items-start gap-3 ${isUser ? 'flex-row-reverse' : ''}`;
+            messageDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-full ${isUser ? 'bg-deep-charcoal' : 'bg-accent-gold/20'} flex items-center justify-center flex-shrink-0">
+                    <i class="fas ${isUser ? 'fa-user' : 'fa-robot'} ${isUser ? 'text-white' : 'text-accent-gold'} text-sm"></i>
+                </div>
+                <div class="bg-white rounded-xl px-4 py-3 shadow-sm border border-muted-taupe/10 max-w-[80%]">
+                    <p class="text-sm text-deep-charcoal">${text}</p>
+                </div>
+            `;
+            chatbotMessages.appendChild(messageDiv);
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+        }
+        
+        function sendMessage() {
+            if (chatbotInput && chatbotInput.value.trim()) {
+                const message = chatbotInput.value.trim();
+                addMessage(message, true);
+                chatbotInput.value = '';
+                
+                // Simulate AI response (replace with actual API call later)
+                setTimeout(() => {
+                    addMessage("I'm here to help! For full AI tutor features, please sign in to your account.");
+                }, 500);
+            }
+        }
+        
+        if (chatbotSend) {
+            chatbotSend.addEventListener('click', sendMessage);
+        }
+        
+        if (chatbotInput) {
+            chatbotInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+        }
+        
+        // Section fade in/out on scroll using Tailwind classes
+        function initSectionFade() {
+            const sections = document.querySelectorAll('main > section');
+            if (sections.length === 0) return;
+            
+            // Initialize sections with Tailwind classes
+            sections.forEach((section, index) => {
+                // Add transition classes to all sections
+                section.classList.add('transition-all', 'duration-500', 'ease-out');
+                
+                // First section (hero) should be visible immediately
+                if (index === 0) {
+                    section.classList.add('opacity-100', 'translate-y-0');
+                } else {
+                    // Other sections start faded out
+                    section.classList.add('opacity-0', 'translate-y-5');
+                }
+            });
+            
+            // Intersection Observer for fade in/out when section enters/leaves viewport
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px 0px -10% 0px', // Trigger when section is 10% from bottom
+                threshold: 0.1
+            };
+            
+            let lastScrollY = window.scrollY;
+            
+            const observer = new IntersectionObserver((entries) => {
+                const currentScrollY = window.scrollY;
+                const scrollDirection = currentScrollY > lastScrollY ? 'down' : 'up';
+                
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        // Section is entering or in viewport - fade in
+                        entry.target.classList.remove('opacity-0', 'translate-y-5');
+                        entry.target.classList.add('opacity-100', 'translate-y-0');
+                    } else {
+                        // Section is leaving viewport - fade out
+                        const rect = entry.boundingClientRect;
+                        
+                        // Fade out when scrolling up and section is above viewport
+                        if (scrollDirection === 'up' && rect.bottom < 0) {
+                            entry.target.classList.remove('opacity-100', 'translate-y-0');
+                            entry.target.classList.add('opacity-0', 'translate-y-5');
+                        }
+                        // Fade out when scrolling down and section is below viewport
+                        else if (scrollDirection === 'down' && rect.top > window.innerHeight) {
+                            entry.target.classList.remove('opacity-100', 'translate-y-0');
+                            entry.target.classList.add('opacity-0', 'translate-y-5');
+                        }
+                    }
+                });
+                
+                lastScrollY = currentScrollY;
+            }, observerOptions);
+            
+            // Observe all sections except the first one
+            sections.forEach((section, index) => {
+                if (index > 0) {
+                    observer.observe(section);
+                }
+            });
+            
+            // Track scroll direction for observer
+            window.addEventListener('scroll', () => {
+                lastScrollY = window.scrollY;
+            }, { passive: true });
+            
+            // Check sections already in viewport on load
+            setTimeout(() => {
+                sections.forEach((section, index) => {
+                    if (index > 0) {
+                        const rect = section.getBoundingClientRect();
+                        const viewportBottom = window.innerHeight;
+                        // If section is already visible on load, fade it in
+                        if (rect.top < viewportBottom && rect.bottom > 0) {
+                            section.classList.remove('opacity-0', 'translate-y-5');
+                            section.classList.add('opacity-100', 'translate-y-0');
+                        }
+                    }
+                });
+            }, 100);
+        }
+        
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initSectionFade);
+        } else {
+            // DOM already loaded, run immediately
+            initSectionFade();
+        }
     </script>
 </body>
 </html>

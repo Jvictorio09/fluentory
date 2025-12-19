@@ -1,0 +1,226 @@
+{% extends 'admin/base.html' %}
+
+{% block content %}
+<div class="w-full max-w-[900px] mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-deep-charcoal mb-3 tracking-[-0.02em]">
+            Add New Media
+        </h1>
+        <p class="text-base sm:text-lg text-deep-charcoal/60 font-light">Upload images, videos, or documents to your media library</p>
+    </div>
+    
+    <!-- Form -->
+    <div class="bg-white rounded-2xl border border-muted-taupe/20 shadow-sm p-8">
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Upload Method Toggle -->
+            <div class="flex gap-4 mb-6">
+                <button type="button" onclick="showUploadMethod('file')" id="btn-file" class="px-6 py-3 bg-deep-charcoal text-white rounded-xl font-medium hover:bg-accent-gold transition-all">
+                    <i class="fas fa-upload mr-2"></i> Upload File
+                </button>
+                <button type="button" onclick="showUploadMethod('url')" id="btn-url" class="px-6 py-3 bg-white border border-muted-taupe/30 text-deep-charcoal rounded-xl font-medium hover:bg-warm-sand/30 transition-all">
+                    <i class="fas fa-link mr-2"></i> From Cloudinary URL
+                </button>
+            </div>
+            
+            <!-- File Upload Method -->
+            <div id="upload-file" class="upload-method">
+                <label class="block text-sm font-semibold text-deep-charcoal mb-3">
+                    <i class="fas fa-upload text-accent-gold"></i> Upload File
+                </label>
+                <div class="border-2 border-dashed border-muted-taupe/30 rounded-xl p-8 text-center hover:border-accent-gold/50 transition-colors">
+                    <input type="file" name="file" accept="image/*,video/*,.pdf,.doc,.docx" class="hidden" id="file-input" onchange="previewFile(this)">
+                    <label for="file-input" class="cursor-pointer">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-muted-taupe mb-4"></i>
+                        <p class="text-deep-charcoal font-medium mb-2">Click to upload or drag and drop</p>
+                        <p class="text-sm text-deep-charcoal/60">PNG, JPG, GIF, MP4, PDF up to 10MB</p>
+                        <p class="text-xs text-accent-gold mt-2">Files will be uploaded to Cloudinary automatically</p>
+                    </label>
+                    <div id="file-preview" class="mt-4 hidden">
+                        <img id="preview-image" src="" alt="Preview" class="max-w-full max-h-64 mx-auto rounded-lg">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- URL Upload Method -->
+            <div id="upload-url" class="upload-method hidden">
+                <label class="block text-sm font-semibold text-deep-charcoal mb-3">
+                    <i class="fas fa-link text-accent-gold"></i> Cloudinary Image URL
+                </label>
+                <div class="space-y-4">
+                    <input type="url" name="image_url" id="image-url-input" placeholder="https://res.cloudinary.com/your-cloud/image/upload/v1234567890/image.jpg" class="w-full px-4 py-3 rounded-xl border border-muted-taupe/30 bg-white text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-accent-gold/40" onchange="previewUrlImage(this)">
+                    <div class="bg-warm-sand/20 rounded-xl p-4 border border-muted-taupe/20">
+                        <p class="text-sm text-deep-charcoal/70 mb-2">
+                            <i class="fas fa-info-circle text-accent-gold"></i> 
+                            <strong>How to get Cloudinary URL:</strong>
+                        </p>
+                        <ol class="text-xs text-deep-charcoal/60 space-y-1 ml-4 list-decimal">
+                            <li>Go to your <a href="https://cloudinary.com/console" target="_blank" class="text-accent-gold hover:underline">Cloudinary Console</a></li>
+                            <li>Upload an image or copy an existing image URL</li>
+                            <li>Paste the full Cloudinary URL here (e.g., https://res.cloudinary.com/...)</li>
+                        </ol>
+                    </div>
+                    <div id="url-preview" class="hidden mt-4">
+                        <label class="block text-sm font-semibold text-deep-charcoal mb-2">Preview</label>
+                        <img id="url-preview-image" src="" alt="Preview" class="max-w-full max-h-64 mx-auto rounded-lg border border-muted-taupe/20">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Title -->
+            <div>
+                <label for="title" class="block text-sm font-semibold text-deep-charcoal mb-2">
+                    Title <span class="text-red-500">*</span>
+                </label>
+                <input type="text" id="title" name="title" required class="w-full px-4 py-3 rounded-xl border border-muted-taupe/30 bg-white text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-accent-gold/40" placeholder="Enter media title">
+            </div>
+            
+            <!-- Description -->
+            <div>
+                <label for="description" class="block text-sm font-semibold text-deep-charcoal mb-2">
+                    Description
+                </label>
+                <textarea id="description" name="description" rows="4" class="w-full px-4 py-3 rounded-xl border border-muted-taupe/30 bg-white text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-accent-gold/40" placeholder="Enter media description"></textarea>
+            </div>
+            
+            <!-- Media Type & Category -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                    <label for="media_type" class="block text-sm font-semibold text-deep-charcoal mb-2">
+                        Media Type <span class="text-red-500">*</span>
+                    </label>
+                    <select id="media_type" name="media_type" required class="w-full px-4 py-3 rounded-xl border border-muted-taupe/30 bg-white text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-accent-gold/40">
+                        {% for value, label in media_types %}
+                        <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="category" class="block text-sm font-semibold text-deep-charcoal mb-2">
+                        Category <span class="text-red-500">*</span>
+                    </label>
+                    <select id="category" name="category" required class="w-full px-4 py-3 rounded-xl border border-muted-taupe/30 bg-white text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-accent-gold/40">
+                        {% for value, label in categories %}
+                        <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Alt Text -->
+            <div>
+                <label for="alt_text" class="block text-sm font-semibold text-deep-charcoal mb-2">
+                    Alt Text (for accessibility & SEO)
+                </label>
+                <input type="text" id="alt_text" name="alt_text" class="w-full px-4 py-3 rounded-xl border border-muted-taupe/30 bg-white text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-accent-gold/40" placeholder="Describe the image for screen readers">
+            </div>
+            
+            <!-- Tags -->
+            <div>
+                <label for="tags" class="block text-sm font-semibold text-deep-charcoal mb-2">
+                    Tags (comma-separated)
+                </label>
+                <input type="text" id="tags" name="tags" class="w-full px-4 py-3 rounded-xl border border-muted-taupe/30 bg-white text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-accent-gold/40" placeholder="e.g., course, thumbnail, hero">
+                <p class="text-xs text-deep-charcoal/60 mt-2">Separate multiple tags with commas</p>
+            </div>
+            
+            <!-- Actions -->
+            <div class="flex gap-4 pt-4 border-t border-muted-taupe/20">
+                <button type="submit" class="flex-1 px-6 py-3 bg-deep-charcoal text-white rounded-xl font-semibold hover:bg-accent-gold transition-all">
+                    <i class="fas fa-upload mr-2"></i> Upload Media
+                </button>
+                <a href="/admin/media/" class="px-6 py-3 bg-white border border-muted-taupe/30 text-deep-charcoal rounded-xl font-semibold hover:bg-warm-sand/30 transition-all">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+let currentMethod = 'file';
+
+function showUploadMethod(method) {
+    currentMethod = method;
+    
+    // Hide all upload methods
+    document.querySelectorAll('.upload-method').forEach(el => el.classList.add('hidden'));
+    
+    // Show selected method
+    document.getElementById(`upload-${method}`).classList.remove('hidden');
+    
+    // Update button styles
+    document.getElementById('btn-file').classList.toggle('bg-deep-charcoal', method === 'file');
+    document.getElementById('btn-file').classList.toggle('text-white', method === 'file');
+    document.getElementById('btn-file').classList.toggle('bg-white', method !== 'file');
+    document.getElementById('btn-file').classList.toggle('border', method !== 'file');
+    document.getElementById('btn-file').classList.toggle('text-deep-charcoal', method !== 'file');
+    
+    document.getElementById('btn-url').classList.toggle('bg-deep-charcoal', method === 'url');
+    document.getElementById('btn-url').classList.toggle('text-white', method === 'url');
+    document.getElementById('btn-url').classList.toggle('bg-white', method !== 'url');
+    document.getElementById('btn-url').classList.toggle('border', method !== 'url');
+    document.getElementById('btn-url').classList.toggle('text-deep-charcoal', method !== 'url');
+    
+    // Clear required attribute based on method
+    const fileInput = document.getElementById('file-input');
+    const urlInput = document.getElementById('image-url-input');
+    
+    if (method === 'file') {
+        fileInput.setAttribute('required', 'required');
+        urlInput.removeAttribute('required');
+    } else {
+        urlInput.setAttribute('required', 'required');
+        fileInput.removeAttribute('required');
+    }
+}
+
+function previewFile(input) {
+    const file = input.files[0];
+    const preview = document.getElementById('file-preview');
+    const previewImage = document.getElementById('preview-image');
+    
+    if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImage.src = e.target.result;
+            preview.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    } else {
+        preview.classList.add('hidden');
+    }
+}
+
+function previewUrlImage(input) {
+    const url = input.value.trim();
+    const preview = document.getElementById('url-preview');
+    const previewImage = document.getElementById('url-preview-image');
+    
+    if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+        previewImage.src = url;
+        preview.classList.remove('hidden');
+    } else {
+        preview.classList.add('hidden');
+    }
+}
+
+// Validate form before submit
+document.querySelector('form').addEventListener('submit', function(e) {
+    if (currentMethod === 'file' && !document.getElementById('file-input').files.length) {
+        e.preventDefault();
+        alert('Please select a file to upload or switch to URL upload method.');
+        return false;
+    }
+    if (currentMethod === 'url' && !document.getElementById('image-url-input').value.trim()) {
+        e.preventDefault();
+        alert('Please enter a Cloudinary URL or switch to file upload method.');
+        return false;
+    }
+});
+</script>
+{% endblock %}
+

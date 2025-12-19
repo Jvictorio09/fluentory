@@ -1,79 +1,194 @@
-<section class="bg-soft-ivory py-32" id="courses">
-    <div class="max-w-[1600px] mx-auto px-8 lg:px-20">
-        <div class="flex justify-between items-center mb-16">
-            <h2 class="text-[3.5rem] font-extralight text-deep-charcoal tracking-[-1px]">Featured Programs</h2>
-            <div class="flex gap-3">
-                <a href="#" class="px-5 py-2.5 rounded-full bg-white border border-muted-taupe text-deep-charcoal no-underline text-sm hover:bg-deep-charcoal hover:text-white transition-all">Beginner</a>
-                <a href="#" class="px-5 py-2.5 rounded-full bg-white border border-muted-taupe text-deep-charcoal no-underline text-sm hover:bg-deep-charcoal hover:text-white transition-all">Intermediate</a>
-                <a href="#" class="px-5 py-2.5 rounded-full bg-white border border-muted-taupe text-deep-charcoal no-underline text-sm hover:bg-deep-charcoal hover:text-white transition-all">Advanced</a>
-                <a href="#" class="px-5 py-2.5 rounded-full bg-white border border-muted-taupe text-deep-charcoal no-underline text-sm hover:bg-deep-charcoal hover:text-white transition-all">Business</a>
-                <a href="#" class="px-5 py-2.5 rounded-full bg-white border border-muted-taupe text-deep-charcoal no-underline text-sm hover:bg-deep-charcoal hover:text-white transition-all">Language</a>
+<section class="relative bg-gradient-to-br from-soft-ivory to-warm-sand py-12 lg:py-16 overflow-hidden" id="courses">
+    <!-- Background Image -->
+    <div class="absolute inset-0">
+      <img
+        src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=2400&q=80"
+        alt=""
+        class="w-full h-full object-cover opacity-25"
+        loading="lazy"
+      />
+      <div class="absolute inset-0 bg-gradient-to-b from-soft-ivory/85 via-soft-ivory/80 to-warm-sand/85"></div>
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.6),transparent_70%)]"></div>
+    </div>
+    
+    <!-- Animated background depth layers -->
+    <div class="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-accent-gold/5 blur-[100px] animate-pulse" style="animation-duration: 7s;"></div>
+    <div class="absolute bottom-0 left-0 w-[500px] h-[500px] rounded-full bg-muted-taupe/8 blur-[90px] animate-pulse" style="animation-duration: 9s; animation-delay: 1s;"></div>
+    
+    <div class="max-w-[1600px] mx-auto px-8 lg:px-20 relative z-10">
+        <!-- Header with improved spacing -->
+        <div class="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-8 mb-12">
+            <div>
+                <h2 class="text-[3.6rem] sm:text-[4rem] lg:text-[4.2rem] font-extralight text-deep-charcoal tracking-[-1px] mb-3">Featured Programs</h2>
+                <p class="text-lg text-deep-charcoal/70 font-light">Discover courses designed for measurable outcomes</p>
+            </div>
+            <!-- Enhanced filter buttons -->
+            <div class="flex flex-wrap gap-3">
+                <a href="#" class="px-6 py-3 rounded-full bg-deep-charcoal text-white no-underline text-sm font-medium shadow-[0_6px_20px_rgba(44,44,44,0.25)] hover:bg-accent-gold hover:shadow-[0_6px_20px_rgba(201,169,97,0.35)] transition-all duration-300 transform hover:scale-105">Beginner</a>
+                <a href="#" class="px-6 py-3 rounded-full bg-white/80 border-2 border-white/60 backdrop-blur-md text-deep-charcoal no-underline text-sm font-medium shadow-[0_4px_15px_rgba(0,0,0,0.08)] hover:bg-white hover:border-accent-gold/40 hover:shadow-[0_6px_20px_rgba(0,0,0,0.12)] transition-all duration-300">Intermediate</a>
+                <a href="#" class="px-6 py-3 rounded-full bg-white/80 border-2 border-white/60 backdrop-blur-md text-deep-charcoal no-underline text-sm font-medium shadow-[0_4px_15px_rgba(0,0,0,0.08)] hover:bg-white hover:border-accent-gold/40 hover:shadow-[0_6px_20px_rgba(0,0,0,0.12)] transition-all duration-300">Advanced</a>
+                <a href="#" class="px-6 py-3 rounded-full bg-white/80 border-2 border-white/60 backdrop-blur-md text-deep-charcoal no-underline text-sm font-medium shadow-[0_4px_15px_rgba(0,0,0,0.08)] hover:bg-white hover:border-accent-gold/40 hover:shadow-[0_6px_20px_rgba(0,0,0,0.12)] transition-all duration-300">Business</a>
+                <a href="#" class="px-6 py-3 rounded-full bg-white/80 border-2 border-white/60 backdrop-blur-md text-deep-charcoal no-underline text-sm font-medium shadow-[0_4px_15px_rgba(0,0,0,0.08)] hover:bg-white hover:border-accent-gold/40 hover:shadow-[0_6px_20px_rgba(0,0,0,0.12)] transition-all duration-300">Language</a>
             </div>
         </div>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            <div class="bg-white rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all">
-                <div class="h-60 bg-gradient-to-br from-warm-sand to-[#E0D5C5] relative">
-                    <div class="absolute top-4 right-4 bg-deep-charcoal text-white px-4 py-2 rounded-full text-xs font-medium">30-sec preview</div>
+        <!-- Enhanced course cards grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <!-- Course Card 1 -->
+            <div class="group relative bg-white/70 border-2 border-white/60 backdrop-blur-xl rounded-[2rem] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.12)] hover:-translate-y-3 hover:shadow-[0_28px_80px_rgba(0,0,0,0.18)] hover:border-accent-gold/30 transition-all duration-500 hover:scale-[1.02]">
+                <!-- Inner glow -->
+                <div class="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent pointer-events-none"></div>
+                
+                <!-- Image section with enhanced preview badge -->
+                <div class="relative h-64 overflow-hidden">
+                    <img
+                        src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=800&q=80"
+                        alt="Data Science"
+                        class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        loading="lazy"
+                    />
+                    <div class="absolute inset-0 bg-gradient-to-t from-deep-charcoal/20 to-transparent"></div>
+                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.2),transparent_70%)]"></div>
+                    <div class="absolute top-5 right-5 bg-deep-charcoal/95 backdrop-blur-md text-white px-5 py-2.5 rounded-full text-xs font-semibold shadow-[0_8px_20px_rgba(0,0,0,0.25)] border border-white/20 z-10">30-sec preview</div>
                 </div>
-                <div class="p-8">
-                    <div class="flex justify-between items-start mb-4">
-                        <h3 class="text-2xl font-normal text-deep-charcoal flex-1">Introduction to Data Science</h3>
-                        <span class="px-3 py-1 rounded text-xs uppercase bg-muted-taupe text-white">Beginner</span>
+                
+                <!-- Content section -->
+                <div class="relative z-10 p-8">
+                    <div class="flex justify-between items-start mb-5">
+                        <h3 class="text-2xl font-semibold text-deep-charcoal flex-1 pr-4 leading-tight">Introduction to Data Science</h3>
+                        <span class="px-4 py-1.5 rounded-full text-xs uppercase font-semibold bg-accent-gold/15 border border-accent-gold/30 text-deep-charcoal whitespace-nowrap">Beginner</span>
                     </div>
-                    <p class="text-deep-charcoal mb-6 leading-relaxed">Master the fundamentals of data analysis and visualization with hands-on projects and real-world applications.</p>
-                    <div class="flex gap-6 mb-6 text-sm text-muted-taupe">
-                        <span class="flex items-center gap-1"><i class="fas fa-clock"></i> 40 hours</span>
-                        <span class="flex items-center gap-1"><i class="fas fa-layer-group"></i> Beginner</span>
-                        <span class="flex items-center gap-1"><i class="fas fa-play-circle"></i> Preview</span>
+                    <p class="text-deep-charcoal/80 mb-7 leading-relaxed font-light text-base">Master the fundamentals of data analysis and visualization with hands-on projects and real-world applications.</p>
+                    
+                    <!-- Metrics with icons -->
+                    <div class="flex flex-wrap gap-5 mb-7 text-sm text-deep-charcoal/70">
+                        <span class="flex items-center gap-2 font-medium">
+                            <i class="fas fa-clock text-accent-gold"></i>
+                            <span>40 hours</span>
+                        </span>
+                        <span class="flex items-center gap-2 font-medium">
+                            <i class="fas fa-layer-group text-accent-gold"></i>
+                            <span>Beginner</span>
+                        </span>
+                        <span class="flex items-center gap-2 font-medium">
+                            <i class="fas fa-play-circle text-accent-gold"></i>
+                            <span>Preview</span>
+                        </span>
                     </div>
-                    <div class="flex justify-between items-center pt-6 border-t border-muted-taupe/20">
-                        <span class="text-2xl font-medium text-deep-charcoal">$299</span>
-                        <a href="#" class="text-deep-charcoal no-underline font-medium border-b-2 border-deep-charcoal pb-0.5">View Program</a>
+                    
+                    <!-- Price and CTA -->
+                    <div class="flex justify-between items-center pt-6 border-t-2 border-white/50">
+                        <span class="text-3xl font-semibold text-deep-charcoal">$299</span>
+                        <a href="#" class="text-deep-charcoal no-underline font-semibold border-b-2 border-accent-gold/50 hover:border-accent-gold pb-1 transition-colors group-hover:gap-2 inline-flex items-center gap-1.5">
+                            View Program
+                            <i class="fas fa-arrow-right text-xs opacity-70 group-hover:translate-x-1 group-hover:opacity-100 transition-all"></i>
+                        </a>
                     </div>
                 </div>
             </div>
             
-            <div class="bg-white rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all">
-                <div class="h-60 bg-gradient-to-br from-warm-sand to-[#E0D5C5] relative">
-                    <div class="absolute top-4 right-4 bg-deep-charcoal text-white px-4 py-2 rounded-full text-xs font-medium">30-sec preview</div>
+            <!-- Course Card 2 -->
+            <div class="group relative bg-white/70 border-2 border-white/60 backdrop-blur-xl rounded-[2rem] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.12)] hover:-translate-y-3 hover:shadow-[0_28px_80px_rgba(0,0,0,0.18)] hover:border-accent-gold/30 transition-all duration-500 hover:scale-[1.02]">
+                <!-- Inner glow -->
+                <div class="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent pointer-events-none"></div>
+                
+                <!-- Image section -->
+                <div class="relative h-64 overflow-hidden">
+                    <img
+                        src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80"
+                        alt="Web Development"
+                        class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        loading="lazy"
+                    />
+                    <div class="absolute inset-0 bg-gradient-to-t from-deep-charcoal/20 to-transparent"></div>
+                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.2),transparent_70%)]"></div>
+                    <div class="absolute top-5 right-5 bg-deep-charcoal/95 backdrop-blur-md text-white px-5 py-2.5 rounded-full text-xs font-semibold shadow-[0_8px_20px_rgba(0,0,0,0.25)] border border-white/20 z-10">30-sec preview</div>
                 </div>
-                <div class="p-8">
-                    <div class="flex justify-between items-start mb-4">
-                        <h3 class="text-2xl font-normal text-deep-charcoal flex-1">Advanced Web Development</h3>
-                        <span class="px-3 py-1 rounded text-xs uppercase bg-muted-taupe text-white">Intermediate</span>
+                
+                <!-- Content section -->
+                <div class="relative z-10 p-8">
+                    <div class="flex justify-between items-start mb-5">
+                        <h3 class="text-2xl font-semibold text-deep-charcoal flex-1 pr-4 leading-tight">Advanced Web Development</h3>
+                        <span class="px-4 py-1.5 rounded-full text-xs uppercase font-semibold bg-accent-gold/15 border border-accent-gold/30 text-deep-charcoal whitespace-nowrap">Intermediate</span>
                     </div>
-                    <p class="text-deep-charcoal mb-6 leading-relaxed">Build modern web applications with industry best practices, frameworks, and deployment strategies.</p>
-                    <div class="flex gap-6 mb-6 text-sm text-muted-taupe">
-                        <span class="flex items-center gap-1"><i class="fas fa-clock"></i> 60 hours</span>
-                        <span class="flex items-center gap-1"><i class="fas fa-layer-group"></i> Intermediate</span>
-                        <span class="flex items-center gap-1"><i class="fas fa-play-circle"></i> Preview</span>
+                    <p class="text-deep-charcoal/80 mb-7 leading-relaxed font-light text-base">Build modern web applications with industry best practices, frameworks, and deployment strategies.</p>
+                    
+                    <!-- Metrics -->
+                    <div class="flex flex-wrap gap-5 mb-7 text-sm text-deep-charcoal/70">
+                        <span class="flex items-center gap-2 font-medium">
+                            <i class="fas fa-clock text-accent-gold"></i>
+                            <span>60 hours</span>
+                        </span>
+                        <span class="flex items-center gap-2 font-medium">
+                            <i class="fas fa-layer-group text-accent-gold"></i>
+                            <span>Intermediate</span>
+                        </span>
+                        <span class="flex items-center gap-2 font-medium">
+                            <i class="fas fa-play-circle text-accent-gold"></i>
+                            <span>Preview</span>
+                        </span>
                     </div>
-                    <div class="flex justify-between items-center pt-6 border-t border-muted-taupe/20">
-                        <span class="text-2xl font-medium text-deep-charcoal">$499</span>
-                        <a href="#" class="text-deep-charcoal no-underline font-medium border-b-2 border-deep-charcoal pb-0.5">View Program</a>
+                    
+                    <!-- Price and CTA -->
+                    <div class="flex justify-between items-center pt-6 border-t-2 border-white/50">
+                        <span class="text-3xl font-semibold text-deep-charcoal">$499</span>
+                        <a href="#" class="text-deep-charcoal no-underline font-semibold border-b-2 border-accent-gold/50 hover:border-accent-gold pb-1 transition-colors group-hover:gap-2 inline-flex items-center gap-1.5">
+                            View Program
+                            <i class="fas fa-arrow-right text-xs opacity-70 group-hover:translate-x-1 group-hover:opacity-100 transition-all"></i>
+                        </a>
                     </div>
                 </div>
             </div>
             
-            <div class="bg-white rounded-xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.08)] hover:-translate-y-1 hover:shadow-[0_8px_30px_rgba(0,0,0,0.12)] transition-all">
-                <div class="h-60 bg-gradient-to-br from-warm-sand to-[#E0D5C5] relative">
-                    <div class="absolute top-4 right-4 bg-deep-charcoal text-white px-4 py-2 rounded-full text-xs font-medium">30-sec preview</div>
+            <!-- Course Card 3 -->
+            <div class="group relative bg-white/70 border-2 border-white/60 backdrop-blur-xl rounded-[2rem] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.12)] hover:-translate-y-3 hover:shadow-[0_28px_80px_rgba(0,0,0,0.18)] hover:border-accent-gold/30 transition-all duration-500 hover:scale-[1.02]">
+                <!-- Inner glow -->
+                <div class="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent pointer-events-none"></div>
+                
+                <!-- Image section -->
+                <div class="relative h-64 overflow-hidden">
+                    <img
+                        src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?auto=format&fit=crop&w=800&q=80"
+                        alt="Machine Learning"
+                        class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        loading="lazy"
+                    />
+                    <div class="absolute inset-0 bg-gradient-to-t from-deep-charcoal/20 to-transparent"></div>
+                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.2),transparent_70%)]"></div>
+                    <div class="absolute top-5 right-5 bg-deep-charcoal/95 backdrop-blur-md text-white px-5 py-2.5 rounded-full text-xs font-semibold shadow-[0_8px_20px_rgba(0,0,0,0.25)] border border-white/20 z-10">30-sec preview</div>
                 </div>
-                <div class="p-8">
-                    <div class="flex justify-between items-start mb-4">
-                        <h3 class="text-2xl font-normal text-deep-charcoal flex-1">Machine Learning Mastery</h3>
-                        <span class="px-3 py-1 rounded text-xs uppercase bg-muted-taupe text-white">Advanced</span>
+                
+                <!-- Content section -->
+                <div class="relative z-10 p-8">
+                    <div class="flex justify-between items-start mb-5">
+                        <h3 class="text-2xl font-semibold text-deep-charcoal flex-1 pr-4 leading-tight">Machine Learning Mastery</h3>
+                        <span class="px-4 py-1.5 rounded-full text-xs uppercase font-semibold bg-accent-gold/15 border border-accent-gold/30 text-deep-charcoal whitespace-nowrap">Advanced</span>
                     </div>
-                    <p class="text-deep-charcoal mb-6 leading-relaxed">Deep dive into machine learning algorithms, neural networks, and real-world AI applications.</p>
-                    <div class="flex gap-6 mb-6 text-sm text-muted-taupe">
-                        <span class="flex items-center gap-1"><i class="fas fa-clock"></i> 80 hours</span>
-                        <span class="flex items-center gap-1"><i class="fas fa-layer-group"></i> Advanced</span>
-                        <span class="flex items-center gap-1"><i class="fas fa-play-circle"></i> Preview</span>
+                    <p class="text-deep-charcoal/80 mb-7 leading-relaxed font-light text-base">Deep dive into machine learning algorithms, neural networks, and real-world AI applications.</p>
+                    
+                    <!-- Metrics -->
+                    <div class="flex flex-wrap gap-5 mb-7 text-sm text-deep-charcoal/70">
+                        <span class="flex items-center gap-2 font-medium">
+                            <i class="fas fa-clock text-accent-gold"></i>
+                            <span>80 hours</span>
+                        </span>
+                        <span class="flex items-center gap-2 font-medium">
+                            <i class="fas fa-layer-group text-accent-gold"></i>
+                            <span>Advanced</span>
+                        </span>
+                        <span class="flex items-center gap-2 font-medium">
+                            <i class="fas fa-play-circle text-accent-gold"></i>
+                            <span>Preview</span>
+                        </span>
                     </div>
-                    <div class="flex justify-between items-center pt-6 border-t border-muted-taupe/20">
-                        <span class="text-2xl font-medium text-deep-charcoal">$799</span>
-                        <a href="#" class="text-deep-charcoal no-underline font-medium border-b-2 border-deep-charcoal pb-0.5">View Program</a>
+                    
+                    <!-- Price and CTA -->
+                    <div class="flex justify-between items-center pt-6 border-t-2 border-white/50">
+                        <span class="text-3xl font-semibold text-deep-charcoal">$799</span>
+                        <a href="#" class="text-deep-charcoal no-underline font-semibold border-b-2 border-accent-gold/50 hover:border-accent-gold pb-1 transition-colors group-hover:gap-2 inline-flex items-center gap-1.5">
+                            View Program
+                            <i class="fas fa-arrow-right text-xs opacity-70 group-hover:translate-x-1 group-hover:opacity-100 transition-all"></i>
+                        </a>
                     </div>
                 </div>
             </div>

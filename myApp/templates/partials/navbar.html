@@ -1,24 +1,57 @@
-<nav class="navbar sticky top-0 bg-transparent py-6 z-[1000] transition-colors duration-300">
-    <div class="max-w-[1600px] mx-auto px-8 lg:px-20 flex justify-between items-center">
-        <div class="flex flex-col">
-            <a href="/" class="text-3xl font-semibold text-deep-charcoal no-underline tracking-tight">Fluentory</a>
-            <span class="text-xs text-muted-taupe uppercase tracking-wider mt-1">Global Learning Platform</span>
+<nav class="navbar sticky top-0 bg-white/40 backdrop-blur-md z-[1000] transition-all duration-300 border-b border-transparent" style="height: 72px; min-height: 72px; max-height: 72px;">
+    <div class="max-w-[1600px] mx-auto px-8 lg:px-20 h-full flex items-center relative">
+        <!-- Logo Container - Left side -->
+        <div class="flex items-center" style="height: 56px; max-height: 56px; min-width: 0;">
+            <a href="/" class="inline-flex items-center h-full hover:opacity-90 transition-opacity" style="line-height: 0;">
+                <img 
+                    src="https://res.cloudinary.com/dkjtfjnlf/image/upload/v1766150311/fluentory_-_branding-05_bdghfn.png" 
+                    alt="Fluentory - Global Learning Platform" 
+                    class="w-auto object-contain"
+                    style="max-height: 56px; height: 56px; width: auto; display: block;"
+                    loading="eager"
+                />
+            </a>
         </div>
         
-        <div class="hidden lg:flex gap-10">
-            <a href="#courses" class="text-deep-charcoal no-underline text-[0.95rem] font-normal hover:opacity-70 transition-opacity">Courses</a>
-            <a href="#outcomes" class="text-deep-charcoal no-underline text-[0.95rem] font-normal hover:opacity-70 transition-opacity">Outcomes</a>
-            <a href="#proof" class="text-deep-charcoal no-underline text-[0.95rem] font-normal hover:opacity-70 transition-opacity">Proof</a>
-            <a href="#pricing" class="text-deep-charcoal no-underline text-[0.95rem] font-normal hover:opacity-70 transition-opacity">Pricing</a>
+        <!-- Navigation Links - Centered -->
+        <div class="hidden lg:flex gap-10 items-center h-full absolute left-1/2 transform -translate-x-1/2">
+            <a href="#courses" class="text-deep-charcoal no-underline text-sm font-normal relative group transition-colors hover:text-accent-gold flex items-center h-full smooth-scroll">
+                <span>Courses</span>
+                <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-accent-gold transition-all duration-300 group-hover:w-full"></span>
+            </a>
+            <a href="#outcomes" class="text-deep-charcoal no-underline text-sm font-normal relative group transition-colors hover:text-accent-gold flex items-center h-full smooth-scroll">
+                <span>Outcomes</span>
+                <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-accent-gold transition-all duration-300 group-hover:w-full"></span>
+            </a>
+            <a href="#proof" class="text-deep-charcoal no-underline text-sm font-normal relative group transition-colors hover:text-accent-gold flex items-center h-full smooth-scroll">
+                <span>Proof</span>
+                <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-accent-gold transition-all duration-300 group-hover:w-full"></span>
+            </a>
+            <a href="#pricing" class="text-deep-charcoal no-underline text-sm font-normal relative group transition-colors hover:text-accent-gold flex items-center h-full smooth-scroll">
+                <span>Pricing</span>
+                <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-accent-gold transition-all duration-300 group-hover:w-full"></span>
+            </a>
         </div>
         
-        <div class="flex items-center gap-6">
-            <div class="text-deep-charcoal text-lg cursor-pointer flex items-center gap-2">
-                <i class="fas fa-globe"></i>
-                <span>EN</span>
+        <!-- Right Side Actions -->
+        <div class="flex items-center gap-4 h-full ml-auto">
+            <div class="relative group" id="language-selector">
+                <div class="text-deep-charcoal text-base cursor-pointer flex items-center gap-2 hover:text-accent-gold transition-colors">
+                    <i class="fas fa-globe text-sm"></i>
+                    <span class="text-sm" id="current-language">EN</span>
+                    <i class="fas fa-chevron-down text-xs ml-1"></i>
+                </div>
+                <div class="absolute right-0 top-full mt-2 w-40 bg-white rounded-xl shadow-lg border border-muted-taupe/20 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                    <a href="#" class="language-option block px-4 py-2.5 text-sm text-deep-charcoal hover:bg-accent-gold/10 hover:text-accent-gold transition-colors rounded-t-xl" data-lang="en" data-code="EN">English</a>
+                    <a href="#" class="language-option block px-4 py-2.5 text-sm text-deep-charcoal hover:bg-accent-gold/10 hover:text-accent-gold transition-colors" data-lang="es" data-code="ES">Español</a>
+                    <a href="#" class="language-option block px-4 py-2.5 text-sm text-deep-charcoal hover:bg-accent-gold/10 hover:text-accent-gold transition-colors rounded-b-xl" data-lang="fr" data-code="FR">Français</a>
+                </div>
             </div>
-            <a href="#login" class="text-deep-charcoal no-underline text-[0.95rem] font-normal hover:opacity-70 transition-opacity">Login</a>
-            <a href="#placement" class="bg-deep-charcoal text-white py-2 px-7 rounded-none no-underline text-sm font-medium hover:opacity-90 transition-opacity">Take Placement Test</a>
+            <a href="{% url 'login' %}" class="text-deep-charcoal no-underline text-[0.95rem] font-normal relative group transition-colors hover:text-accent-gold flex items-center h-full">
+                <span>Login</span>
+                <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-accent-gold transition-all duration-300 group-hover:w-full"></span>
+            </a>
+            <a href="{% url 'login' %}?next={% url 'student_placement' %}" class="bg-deep-charcoal text-white px-6 py-2 rounded-xl no-underline text-sm font-medium shadow-[0_8px_25px_rgba(44,44,44,0.25)] hover:bg-accent-gold hover:shadow-[0_8px_25px_rgba(201,169,97,0.35)] transition-all duration-300 flex items-center" style="height: 40px; line-height: 1;">Take Placement Test</a>
         </div>
     </div>
 </nav>

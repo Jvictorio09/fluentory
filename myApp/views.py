@@ -17,7 +17,7 @@ from .models import (
     Quiz, Question, Answer, Enrollment, LessonProgress, QuizAttempt,
     Certificate, PlacementTest, TutorConversation, TutorMessage,
     Partner, Cohort, CohortMembership, Payment, Review, FAQ,
-    Notification, SiteSettings
+    Notification, SiteSettings, Media
 )
 
 
@@ -931,6 +931,219 @@ def admin_payments(request):
         'payments': payments,
     }
     return render(request, 'admin/payments.html', context)
+
+
+# ============================================
+# MEDIA MANAGEMENT VIEWS
+# ============================================
+
+@login_required
+@role_required(['admin'])
+def admin_media(request):
+    """Admin media management - list all media"""
+    media_list = Media.objects.select_related('created_by').order_by('-created_at')
+    
+    # Filters
+    category = request.GET.get('category')
+    media_type = request.GET.get('media_type')
+    search = request.GET.get('search')
+    
+    if category:
+        media_list = media_list.filter(category=category)
+    if media_type:
+        media_list = media_list.filter(media_type=media_type)
+    if search:
+        media_list = media_list.filter(
+            Q(title__icontains=search) | 
+            Q(description__icontains=search) | 
+            Q(tags__icontains=search) |
+            Q(alt_text__icontains=search)
+        )
+    
+    paginator = Paginator(media_list, 24)
+    page = request.GET.get('page', 1)
+    media_list = paginator.get_page(page)
+    
+    context = {
+        'media_list': media_list,
+        'categories': Media.CATEGORY_CHOICES,
+        'media_types': Media.MEDIA_TYPE_CHOICES,
+        'current_category': category,
+        'current_media_type': media_type,
+        'current_search': search,
+    }
+    return render(request, 'admin/media.html', context)
+
+
+@login_required
+@role_required(['admin'])
+def admin_media_add(request):
+    """Add new media - supports file upload or Cloudinary URL"""
+    if request.method == 'POST':
+        try:
+            # Check if uploading from URL (Cloudinary)
+            image_url = request.POST.get('image_url', '').strip()
+            
+            if image_url:
+                # Upload from URL to Cloudinary
+                try:
+                    import requests
+                    from django.core.files.base import ContentFile
+                    from django.core.files.images import ImageFile
+                    from .cloudinary_helper import upload_image_from_url
+                    
+                    folder = f"media/{request.POST.get('category', 'general')}"
+                    result = upload_image_from_url(image_url, folder=folder)
+                    
+                    if result['success']:
+                        # Download the image and create a file object for Django
+                        img_response = requests.get(result['secure_url'], timeout=30)
+                        img_response.raise_for_status()
+                        
+                        # Create Media object
+                        media = Media(
+                            title=request.POST.get('title', 'Image from URL'),
+                            description=request.POST.get('description', ''),
+                            media_type=request.POST.get('media_type', 'image'),
+                            category=request.POST.get('category', 'general'),
+                            alt_text=request.POST.get('alt_text', ''),
+                            tags=request.POST.get('tags', ''),
+                            created_by=request.user,
+                            width=result.get('width'),
+                            height=result.get('height'),
+                            file_size=result.get('bytes'),
+                        )
+                        
+                        # Save the image file (will upload to Cloudinary via storage backend)
+                        file_extension = result.get('format', 'jpg')
+                        img_file = ContentFile(img_response.content)
+                        media.file.save(f"{media.title}.{file_extension}", img_file, save=False)
+                        media.save()
+                        
+                        messages.success(request, f'Media "{media.title}" uploaded from Cloudinary successfully!')
+                    else:
+                        messages.error(request, f'Error uploading from URL: {result.get("error")}')
+                        return redirect('admin_media_add')
+                except Exception as e:
+                    messages.error(request, f'Error processing Cloudinary URL: {str(e)}')
+                    return redirect('admin_media_add')
+            else:
+                # Regular file upload (will use Cloudinary storage automatically)
+                media = Media(
+                    title=request.POST.get('title', ''),
+                    description=request.POST.get('description', ''),
+                    file=request.FILES.get('file'),
+                    media_type=request.POST.get('media_type', 'image'),
+                    category=request.POST.get('category', 'general'),
+                    alt_text=request.POST.get('alt_text', ''),
+                    tags=request.POST.get('tags', ''),
+                    created_by=request.user
+                )
+                media.save()
+                messages.success(request, f'Media "{media.title}" uploaded successfully!')
+            
+            return redirect('admin_media')
+        except Exception as e:
+            messages.error(request, f'Error uploading media: {str(e)}')
+    
+    context = {
+        'categories': Media.CATEGORY_CHOICES,
+        'media_types': Media.MEDIA_TYPE_CHOICES,
+    }
+    return render(request, 'admin/media_add.html', context)
+
+
+@login_required
+@role_required(['admin'])
+def admin_media_edit(request, media_id):
+    """Edit media details"""
+    media = get_object_or_404(Media, id=media_id)
+    
+    if request.method == 'POST':
+        try:
+            media.title = request.POST.get('title', media.title)
+            media.description = request.POST.get('description', media.description)
+            media.media_type = request.POST.get('media_type', media.media_type)
+            media.category = request.POST.get('category', media.category)
+            media.alt_text = request.POST.get('alt_text', media.alt_text)
+            media.tags = request.POST.get('tags', media.tags)
+            
+            # Handle file replacement
+            if request.FILES.get('file'):
+                media.file = request.FILES.get('file')
+            
+            media.save()
+            messages.success(request, f'Media "{media.title}" updated successfully!')
+            return redirect('admin_media')
+        except Exception as e:
+            messages.error(request, f'Error updating media: {str(e)}')
+    
+    context = {
+        'media': media,
+        'categories': Media.CATEGORY_CHOICES,
+        'media_types': Media.MEDIA_TYPE_CHOICES,
+    }
+    return render(request, 'admin/media_edit.html', context)
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def admin_media_delete(request, media_id):
+    """Delete media"""
+    media = get_object_or_404(Media, id=media_id)
+    title = media.title
+    
+    try:
+        # Delete the file from storage
+        if media.file:
+            media.file.delete()
+        media.delete()
+        messages.success(request, f'Media "{title}" deleted successfully!')
+    except Exception as e:
+        messages.error(request, f'Error deleting media: {str(e)}')
+    
+    return redirect('admin_media')
+
+
+@login_required
+@role_required(['admin'])
+def admin_site_images(request):
+    """Manage images for all site sections"""
+    settings = SiteSettings.get_settings()
+    
+    if request.method == 'POST':
+        try:
+            # Update hero background
+            if request.FILES.get('hero_background_image'):
+                settings.hero_background_image = request.FILES.get('hero_background_image')
+            
+            # Update section images
+            if request.FILES.get('how_it_works_image'):
+                settings.how_it_works_image = request.FILES.get('how_it_works_image')
+            if request.FILES.get('ai_tutor_image'):
+                settings.ai_tutor_image = request.FILES.get('ai_tutor_image')
+            if request.FILES.get('certificates_image'):
+                settings.certificates_image = request.FILES.get('certificates_image')
+            if request.FILES.get('pricing_image'):
+                settings.pricing_image = request.FILES.get('pricing_image')
+            if request.FILES.get('faq_video_thumbnail'):
+                settings.faq_video_thumbnail = request.FILES.get('faq_video_thumbnail')
+            
+            settings.save()
+            messages.success(request, 'Site images updated successfully!')
+            return redirect('admin_site_images')
+        except Exception as e:
+            messages.error(request, f'Error updating images: {str(e)}')
+    
+    # Get all media for reference
+    all_media = Media.objects.filter(media_type='image').order_by('-created_at')[:20]
+    
+    context = {
+        'settings': settings,
+        'all_media': all_media,
+    }
+    return render(request, 'admin/site_images.html', context)
 
 
 # ============================================
