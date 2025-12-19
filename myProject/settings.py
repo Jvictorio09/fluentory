@@ -89,8 +89,16 @@ DATABASE_URL = os.getenv('DATABASE_URL')
 
 if DATABASE_URL:
     # Use PostgreSQL if DATABASE_URL is provided
+    db_config = dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+    # Add connection pool settings and retry logic
+    db_config['OPTIONS'] = {
+        'connect_timeout': 10,
+        'options': '-c statement_timeout=30000'  # 30 second query timeout
+    }
+    # Enable connection pooling
+    db_config['CONN_MAX_AGE'] = 600
     DATABASES = {
-        'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+        'default': db_config
     }
 else:
     # Fallback to SQLite for local development if DATABASE_URL is not set

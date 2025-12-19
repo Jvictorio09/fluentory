@@ -1,0 +1,174 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="w-full max-w-[900px] mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-deep-charcoal mb-3 tracking-[-0.02em]">
+            Edit Media
+        </h1>
+        <p class="text-base sm:text-lg text-deep-charcoal/60 font-light">Update media details and metadata</p>
+    </div>
+    
+    <!-- Form -->
+    <div class="bg-white rounded-2xl border border-muted-taupe/20 shadow-sm p-8">
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Current File Preview -->
+            <div>
+                <label class="block text-sm font-semibold text-deep-charcoal mb-3">
+                    <i class="fas fa-image text-accent-gold"></i> Current File
+                </label>
+                <div class="border-2 border-muted-taupe/20 rounded-xl p-6 bg-warm-sand/10">
+                    {% if media.media_type == 'image' %}
+                    <img src="{{ media.file.url }}" alt="{{ media.alt_text|default:media.title }}" class="max-w-full max-h-64 mx-auto rounded-lg mb-4">
+                    {% else %}
+                    <div class="text-center py-8">
+                        <i class="fas fa-file text-6xl text-muted-taupe mb-4"></i>
+                        <p class="text-deep-charcoal font-medium">{{ media.file.name }}</p>
+                    </div>
+                    {% endif %}
+                    <div class="text-center">
+                        <a href="{{ media.file.url }}" target="_blank" class="inline-flex items-center gap-2 text-accent-gold hover:underline">
+                            <i class="fas fa-external-link-alt"></i>
+                            <span>View Full Size</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Replace File -->
+            <div>
+                <label for="file" class="block text-sm font-semibold text-deep-charcoal mb-3">
+                    <i class="fas fa-sync text-accent-gold"></i> Replace File (optional)
+                </label>
+                <div class="border-2 border-dashed border-muted-taupe/30 rounded-xl p-6 text-center hover:border-accent-gold/50 transition-colors">
+                    <input type="file" name="file" accept="image/*,video/*,.pdf,.doc,.docx" class="hidden" id="file-input" onchange="previewFile(this)">
+                    <label for="file-input" class="cursor-pointer">
+                        <i class="fas fa-cloud-upload-alt text-3xl text-muted-taupe mb-3"></i>
+                        <p class="text-deep-charcoal font-medium mb-2">Click to upload new file</p>
+                        <p class="text-sm text-deep-charcoal/60">Leave empty to keep current file</p>
+                    </label>
+                    <div id="file-preview" class="mt-4 hidden">
+                        <img id="preview-image" src="" alt="Preview" class="max-w-full max-h-64 mx-auto rounded-lg">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Title -->
+            <div>
+                <label for="title" class="block text-sm font-semibold text-deep-charcoal mb-2">
+                    Title <span class="text-red-500">*</span>
+                </label>
+                <input type="text" id="title" name="title" value="{{ media.title }}" required class="w-full px-4 py-3 rounded-xl border border-muted-taupe/30 bg-white text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-accent-gold/40">
+            </div>
+            
+            <!-- Description -->
+            <div>
+                <label for="description" class="block text-sm font-semibold text-deep-charcoal mb-2">
+                    Description
+                </label>
+                <textarea id="description" name="description" rows="4" class="w-full px-4 py-3 rounded-xl border border-muted-taupe/30 bg-white text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-accent-gold/40">{{ media.description }}</textarea>
+            </div>
+            
+            <!-- Media Type & Category -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                    <label for="media_type" class="block text-sm font-semibold text-deep-charcoal mb-2">
+                        Media Type <span class="text-red-500">*</span>
+                    </label>
+                    <select id="media_type" name="media_type" required class="w-full px-4 py-3 rounded-xl border border-muted-taupe/30 bg-white text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-accent-gold/40">
+                        {% for value, label in media_types %}
+                        <option value="{{ value }}" {% if media.media_type == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label for="category" class="block text-sm font-semibold text-deep-charcoal mb-2">
+                        Category <span class="text-red-500">*</span>
+                    </label>
+                    <select id="category" name="category" required class="w-full px-4 py-3 rounded-xl border border-muted-taupe/30 bg-white text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-accent-gold/40">
+                        {% for value, label in categories %}
+                        <option value="{{ value }}" {% if media.category == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Alt Text -->
+            <div>
+                <label for="alt_text" class="block text-sm font-semibold text-deep-charcoal mb-2">
+                    Alt Text (for accessibility & SEO)
+                </label>
+                <input type="text" id="alt_text" name="alt_text" value="{{ media.alt_text }}" class="w-full px-4 py-3 rounded-xl border border-muted-taupe/30 bg-white text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-accent-gold/40">
+            </div>
+            
+            <!-- Tags -->
+            <div>
+                <label for="tags" class="block text-sm font-semibold text-deep-charcoal mb-2">
+                    Tags (comma-separated)
+                </label>
+                <input type="text" id="tags" name="tags" value="{{ media.tags }}" class="w-full px-4 py-3 rounded-xl border border-muted-taupe/30 bg-white text-deep-charcoal focus:outline-none focus:ring-2 focus:ring-accent-gold/40">
+                <p class="text-xs text-deep-charcoal/60 mt-2">Separate multiple tags with commas</p>
+            </div>
+            
+            <!-- Metadata Display -->
+            <div class="bg-warm-sand/20 rounded-xl p-6 border border-muted-taupe/20">
+                <h3 class="font-semibold text-deep-charcoal mb-4">File Information</h3>
+                <div class="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="text-deep-charcoal/60">File Size:</span>
+                        <span class="font-medium text-deep-charcoal ml-2">{{ media.get_file_size_display }}</span>
+                    </div>
+                    {% if media.width and media.height %}
+                    <div>
+                        <span class="text-deep-charcoal/60">Dimensions:</span>
+                        <span class="font-medium text-deep-charcoal ml-2">{{ media.width }} × {{ media.height }}px</span>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <span class="text-deep-charcoal/60">Uploaded:</span>
+                        <span class="font-medium text-deep-charcoal ml-2">{{ media.created_at|date:"M d, Y" }}</span>
+                    </div>
+                    <div>
+                        <span class="text-deep-charcoal/60">Usage Count:</span>
+                        <span class="font-medium text-deep-charcoal ml-2">{{ media.usage_count }} time{{ media.usage_count|pluralize }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="flex gap-4 pt-4 border-t border-muted-taupe/20">
+                <button type="submit" class="flex-1 px-6 py-3 bg-deep-charcoal text-white rounded-xl font-semibold hover:bg-accent-gold transition-all">
+                    <i class="fas fa-save mr-2"></i> Save Changes
+                </button>
+                <a href="{% url 'dashboard:media' %}" class="px-6 py-3 bg-white border border-muted-taupe/30 text-deep-charcoal rounded-xl font-semibold hover:bg-warm-sand/30 transition-all">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function previewFile(input) {
+    const file = input.files[0];
+    const preview = document.getElementById('file-preview');
+    const previewImage = document.getElementById('preview-image');
+    
+    if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            previewImage.src = e.target.result;
+            preview.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    } else {
+        preview.classList.add('hidden');
+    }
+}
+</script>
+{% endblock %}
+

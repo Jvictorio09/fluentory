@@ -1,0 +1,23 @@
+<nav class="fixed top-0 left-0 right-0 h-16 bg-white border-b border-muted-taupe/20 z-50 flex items-center justify-between px-6">
+    <div class="flex items-center gap-4">
+        <a href="{% url 'dashboard:overview' %}" class="text-xl font-light text-deep-charcoal">
+            Fluentory <span class="text-muted-taupe">Dashboard</span>
+        </a>
+        <span class="text-xs px-2 py-1 rounded-full bg-accent-gold/10 text-accent-gold border border-accent-gold/20">
+            Admin
+        </span>
+    </div>
+    
+    <div class="flex items-center gap-4">
+        <a href="{% url 'home' %}" class="text-sm text-deep-charcoal/70 hover:text-deep-charcoal transition">
+            <i class="fas fa-globe mr-2"></i>View Site
+        </a>
+        <a href="/django-admin/" class="text-sm text-deep-charcoal/70 hover:text-deep-charcoal transition" title="Technical Admin">
+            <i class="fas fa-cog mr-2"></i>Django Admin
+        </a>
+        <div class="w-8 h-8 rounded-full bg-warm-sand border border-muted-taupe/20 flex items-center justify-center">
+            <i class="fas fa-user text-muted-taupe text-sm"></i>
+        </div>
+    </div>
+</nav>
+

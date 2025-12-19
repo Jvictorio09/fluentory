@@ -1,0 +1,57 @@
+<aside class="hidden lg:block fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white border-r border-muted-taupe/20 overflow-y-auto z-40">
+    <nav class="p-6 space-y-6">
+        <!-- Core -->
+        <div>
+            <div class="text-xs uppercase tracking-wider text-deep-charcoal/50 mb-3 px-2 font-medium">Core</div>
+            <div class="space-y-1">
+                <a href="{% url 'dashboard:overview' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-deep-charcoal bg-warm-sand/20 font-medium transition text-sm">
+                    <i class="fas fa-chart-line w-4"></i>
+                    <span>Overview</span>
+                </a>
+                <a href="{% url 'dashboard:users' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-deep-charcoal/70 hover:bg-warm-sand/15 hover:text-deep-charcoal transition text-sm font-light">
+                    <i class="fas fa-users w-4"></i>
+                    <span>Users</span>
+                </a>
+                <a href="{% url 'dashboard:courses' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-deep-charcoal/70 hover:bg-warm-sand/15 hover:text-deep-charcoal transition text-sm font-light">
+                    <i class="fas fa-book w-4"></i>
+                    <span>Courses</span>
+                </a>
+                <a href="{% url 'dashboard:payments' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-deep-charcoal/70 hover:bg-warm-sand/15 hover:text-deep-charcoal transition text-sm font-light">
+                    <i class="fas fa-credit-card w-4"></i>
+                    <span>Payments</span>
+                </a>
+                <a href="{% url 'dashboard:media' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-deep-charcoal/70 hover:bg-warm-sand/15 hover:text-deep-charcoal transition text-sm font-light">
+                    <i class="fas fa-images w-4"></i>
+                    <span>Media Library</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Content -->
+        <div>
+            <div class="text-xs uppercase tracking-wider text-deep-charcoal/50 mb-3 px-2 font-medium">Content</div>
+            <div class="space-y-1">
+                <a href="{% url 'dashboard:hero' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-deep-charcoal/70 hover:bg-warm-sand/15 hover:text-deep-charcoal transition text-sm font-light">
+                    <i class="fas fa-home w-4"></i>
+                    <span>Hero Section</span>
+                </a>
+                <a href="{% url 'dashboard:site_images' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-deep-charcoal/70 hover:bg-warm-sand/15 hover:text-deep-charcoal transition text-sm font-light">
+                    <i class="fas fa-palette w-4"></i>
+                    <span>Site Images</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- System -->
+        <div>
+            <div class="text-xs uppercase tracking-wider text-deep-charcoal/50 mb-3 px-2 font-medium">System</div>
+            <div class="space-y-1">
+                <a href="/django-admin/" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-deep-charcoal/70 hover:bg-warm-sand/15 hover:text-deep-charcoal transition text-sm font-light">
+                    <i class="fas fa-cog w-4"></i>
+                    <span>Django Admin</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+</aside>
+

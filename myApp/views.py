@@ -5,10 +5,12 @@ from django.contrib.auth.models import User
 from django.contrib import messages
 from django.http import JsonResponse
 from django.db.models import Count, Avg, Sum, Q
+from django.db import connection, transaction
 from django.utils import timezone
 from django.views.decorators.http import require_POST, require_GET
 from django.core.paginator import Paginator
 from django.conf import settings
+from django.db.utils import OperationalError, DatabaseError
 import json
 import openai
 
@@ -30,13 +32,32 @@ def get_site_settings():
     return SiteSettings.get_settings()
 
 
+def get_or_create_profile(user):
+    """Get or create a user profile. Auto-creates profile if missing."""
+    if not hasattr(user, 'profile'):
+        # Auto-create profile with default role
+        # If user is superuser/staff, make them admin
+        default_role = 'admin' if (user.is_superuser or user.is_staff) else 'student'
+        UserProfile.objects.create(user=user, role=default_role)
+        user.refresh_from_db()
+    return user.profile
+
+
 def role_required(allowed_roles):
-    """Decorator to check user role"""
+    """Decorator to check user role. Allows superusers/admins even without profile."""
     def decorator(view_func):
         def wrapper(request, *args, **kwargs):
             if not request.user.is_authenticated:
                 return redirect('login')
-            if hasattr(request.user, 'profile') and request.user.profile.role in allowed_roles:
+            
+            # Allow superusers/staff to access admin views even without profile
+            if 'admin' in allowed_roles and (request.user.is_superuser or request.user.is_staff):
+                return view_func(request, *args, **kwargs)
+            
+            # Get or create profile
+            profile = get_or_create_profile(request.user)
+            
+            if profile.role in allowed_roles:
                 return view_func(request, *args, **kwargs)
             messages.error(request, 'You do not have permission to access this page.')
             return redirect('home')
@@ -161,12 +182,16 @@ def logout_view(request):
 
 def redirect_by_role(user):
     """Redirect user based on their role"""
-    if hasattr(user, 'profile'):
-        role = user.profile.role
-        if role == 'admin':
-            return redirect('admin_overview')
-        elif role == 'partner':
-            return redirect('partner_overview')
+    # Allow superusers/staff to access admin dashboard
+    if user.is_superuser or user.is_staff:
+        return redirect('dashboard:overview')
+    
+    profile = get_or_create_profile(user)
+    role = profile.role
+    if role == 'admin':
+        return redirect('dashboard:overview')
+    elif role == 'partner':
+        return redirect('partner_overview')
     return redirect('student_home')
 
 
@@ -178,74 +203,104 @@ def redirect_by_role(user):
 def student_home(request):
     """Student dashboard"""
     user = request.user
-    profile = user.profile
     
-    # Update streak
-    profile.update_streak()
-    
-    # Current enrollment (continue learning)
-    current_enrollment = Enrollment.objects.filter(
-        user=user,
-        status='active'
-    ).select_related('course', 'current_lesson', 'current_module').first()
-    
-    # All active enrollments
-    enrollments = Enrollment.objects.filter(
-        user=user,
-        status__in=['active', 'completed']
-    ).select_related('course').order_by('-enrolled_at')[:5]
-    
-    # Recommended courses (not enrolled)
-    enrolled_course_ids = Enrollment.objects.filter(user=user).values_list('course_id', flat=True)
-    recommended_courses = Course.objects.filter(
-        status='published'
-    ).exclude(
-        id__in=enrolled_course_ids
-    ).order_by('-enrolled_count')[:6]
-    
-    # Placement test result
-    placement_test = PlacementTest.objects.filter(user=user).order_by('-taken_at').first()
-    
-    # Upcoming milestones
-    if current_enrollment:
-        upcoming_quiz = Quiz.objects.filter(
-            course=current_enrollment.course,
-            quiz_type__in=['module', 'final']
+    try:
+        # Ensure database connection is alive
+        connection.ensure_connection()
+        
+        profile = get_or_create_profile(user)
+        
+        # Update streak
+        try:
+            profile.update_streak()
+        except (OperationalError, DatabaseError):
+            # If connection fails, refresh and retry
+            connection.close()
+            connection.ensure_connection()
+            profile.refresh_from_db()
+            profile.update_streak()
+        
+        # Current enrollment (continue learning)
+        current_enrollment = Enrollment.objects.filter(
+            user=user,
+            status='active'
+        ).select_related('course', 'current_lesson', 'current_module').first()
+        
+        # All active enrollments
+        enrollments = Enrollment.objects.filter(
+            user=user,
+            status__in=['active', 'completed']
+        ).select_related('course').order_by('-enrolled_at')[:5]
+        
+        # Recommended courses (not enrolled)
+        enrolled_course_ids = Enrollment.objects.filter(user=user).values_list('course_id', flat=True)
+        recommended_courses = Course.objects.filter(
+            status='published'
         ).exclude(
-            attempts__user=user,
-            attempts__passed=True
-        ).first()
-    else:
-        upcoming_quiz = None
+            id__in=enrolled_course_ids
+        ).order_by('-enrolled_count')[:6]
+        
+        # Placement test result
+        placement_test = PlacementTest.objects.filter(user=user).order_by('-taken_at').first()
+        
+        # Upcoming milestones
+        if current_enrollment:
+            upcoming_quiz = Quiz.objects.filter(
+                course=current_enrollment.course,
+                quiz_type__in=['module', 'final']
+            ).exclude(
+                attempts__user=user,
+                attempts__passed=True
+            ).first()
+        else:
+            upcoming_quiz = None
+        
+        # Certificates
+        certificates_count = Certificate.objects.filter(user=user).count()
+        
+        # Learning stats this week
+        week_start = timezone.now().date() - timezone.timedelta(days=7)
+        week_learning_minutes = LessonProgress.objects.filter(
+            enrollment__user=user,
+            started_at__date__gte=week_start
+        ).aggregate(total=Sum('time_spent'))['total'] or 0
+        
+        # Notifications (unread)
+        notifications = Notification.objects.filter(
+            user=user,
+            is_read=False
+        ).order_by('-created_at')[:5]
+        
+        context = {
+            'profile': profile,
+            'current_enrollment': current_enrollment,
+            'enrollments': enrollments,
+            'recommended_courses': recommended_courses,
+            'placement_test': placement_test,
+            'upcoming_quiz': upcoming_quiz,
+            'certificates_count': certificates_count,
+            'week_learning_minutes': week_learning_minutes // 60,  # Convert to hours
+            'notifications': notifications,
+        }
+        return render(request, 'student/home.html', context)
     
-    # Certificates
-    certificates_count = Certificate.objects.filter(user=user).count()
-    
-    # Learning stats this week
-    week_start = timezone.now().date() - timezone.timedelta(days=7)
-    week_learning_minutes = LessonProgress.objects.filter(
-        enrollment__user=user,
-        started_at__date__gte=week_start
-    ).aggregate(total=Sum('time_spent'))['total'] or 0
-    
-    # Notifications (unread)
-    notifications = Notification.objects.filter(
-        user=user,
-        is_read=False
-    ).order_by('-created_at')[:5]
-    
-    context = {
-        'profile': profile,
-        'current_enrollment': current_enrollment,
-        'enrollments': enrollments,
-        'recommended_courses': recommended_courses,
-        'placement_test': placement_test,
-        'upcoming_quiz': upcoming_quiz,
-        'certificates_count': certificates_count,
-        'week_learning_minutes': week_learning_minutes // 60,  # Convert to hours
-        'notifications': notifications,
-    }
-    return render(request, 'student/home.html', context)
+    except (OperationalError, DatabaseError) as e:
+        # Handle database connection errors gracefully
+        connection.close()
+        messages.error(request, 'Database connection error. Please try again.')
+        # Return a simplified context with empty data
+        context = {
+            'profile': get_or_create_profile(user),
+            'current_enrollment': None,
+            'enrollments': [],
+            'recommended_courses': [],
+            'placement_test': None,
+            'upcoming_quiz': None,
+            'certificates_count': 0,
+            'week_learning_minutes': 0,
+            'notifications': [],
+        }
+        return render(request, 'student/home.html', context)
 
 
 @login_required
@@ -432,7 +487,7 @@ def student_certificates(request):
 def student_settings(request):
     """Student settings page"""
     user = request.user
-    profile = user.profile
+    profile = get_or_create_profile(user)
     
     if request.method == 'POST':
         # Update user info
@@ -547,7 +602,8 @@ def mark_lesson_complete(request):
     progress.mark_complete()
     
     # Update user streak
-    request.user.profile.update_streak()
+    profile = get_or_create_profile(request.user)
+    profile.update_streak()
     
     return JsonResponse({
         'success': True,

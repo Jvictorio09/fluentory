@@ -1,5 +1,5 @@
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from myApp import views
@@ -40,17 +40,9 @@ urlpatterns = [
     # Certificate verification (public)
     path('verify/<uuid:certificate_id>/', views.verify_certificate, name='verify_certificate'),
     
-    # Custom Admin Panel
-    path('admin/dashboard/', views.admin_overview, name='admin_overview'),
-    path('admin/', views.admin_overview, name='admin_redirect'),
-    path('admin/users/', views.admin_users, name='admin_users'),
-    path('admin/courses/', views.admin_courses, name='admin_courses'),
-    path('admin/payments/', views.admin_payments, name='admin_payments'),
-    path('admin/media/', views.admin_media, name='admin_media'),
-    path('admin/media/add/', views.admin_media_add, name='admin_media_add'),
-    path('admin/media/<int:media_id>/edit/', views.admin_media_edit, name='admin_media_edit'),
-    path('admin/media/<int:media_id>/delete/', views.admin_media_delete, name='admin_media_delete'),
-    path('admin/site-images/', views.admin_site_images, name='admin_site_images'),
+    # Custom Admin Dashboard (User-facing admin tool)
+    # Django Admin is at /django-admin/ for technical users
+    path('dashboard/', include('myApp.dashboard_urls')),
     
     # Partner routes
     path('partner/', views.partner_overview, name='partner_overview'),

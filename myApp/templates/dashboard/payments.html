@@ -1,0 +1,129 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="w-full max-w-[1600px] mx-auto">
+    <!-- Header -->
+    <div class="mb-8 sm:mb-10">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-deep-charcoal mb-3 tracking-[-0.02em]">
+                    Payment Management
+                </h1>
+                <p class="text-base sm:text-lg text-deep-charcoal/60 font-light">View and manage all payments</p>
+            </div>
+        </div>
+        
+        <!-- Filters -->
+        <div class="flex flex-wrap gap-4 mb-6">
+            <form method="get" class="flex flex-wrap gap-4 items-end">
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-deep-charcoal/60 mb-2 font-medium">Status</label>
+                    <select name="status" class="px-4 py-2.5 rounded-xl border border-muted-taupe/30 bg-white text-deep-charcoal text-sm focus:outline-none focus:ring-2 focus:ring-accent-gold/40">
+                        <option value="">All Status</option>
+                        <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Completed</option>
+                        <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+                        <option value="failed" {% if request.GET.status == 'failed' %}selected{% endif %}>Failed</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-deep-charcoal/60 mb-2 font-medium">Search</label>
+                    <input type="text" name="search" value="{{ request.GET.search }}" placeholder="Search payments..." class="px-4 py-2.5 rounded-xl border border-muted-taupe/30 bg-white text-deep-charcoal text-sm focus:outline-none focus:ring-2 focus:ring-accent-gold/40">
+                </div>
+                <button type="submit" class="px-6 py-2.5 bg-deep-charcoal text-white rounded-xl hover:bg-accent-gold transition font-medium">
+                    <i class="fas fa-search mr-2"></i>Filter
+                </button>
+                <a href="{% url 'dashboard:payments' %}" class="px-6 py-2.5 bg-warm-sand/50 text-deep-charcoal rounded-xl hover:bg-warm-sand transition font-medium">
+                    <i class="fas fa-times mr-2"></i>Clear
+                </a>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Payments Table -->
+    <div class="bg-white rounded-2xl border border-muted-taupe/20 shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-warm-sand/30 border-b border-muted-taupe/20">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-deep-charcoal">User</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-deep-charcoal">Course</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-deep-charcoal">Amount</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-deep-charcoal">Status</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-deep-charcoal">Date</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-deep-charcoal">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-muted-taupe/10">
+                    {% for payment in payments %}
+                    <tr class="hover:bg-warm-sand/10 transition">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-full bg-warm-sand border border-muted-taupe/20 flex items-center justify-center">
+                                    <i class="fas fa-user text-muted-taupe"></i>
+                                </div>
+                                <div>
+                                    <div class="font-medium text-deep-charcoal">{{ payment.user.get_full_name|default:payment.user.username }}</div>
+                                    <div class="text-sm text-deep-charcoal/60">{{ payment.user.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm font-medium text-deep-charcoal">{{ payment.course.title|default:"N/A" }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-semibold text-deep-charcoal">${{ payment.amount|floatformat:2 }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if payment.status == 'completed' %}
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200">Completed</span>
+                            {% elif payment.status == 'pending' %}
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-yellow-50 text-yellow-700 border border-yellow-200">Pending</span>
+                            {% elif payment.status == 'failed' %}
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-200">Failed</span>
+                            {% else %}
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-gray-50 text-gray-700 border border-gray-200">{{ payment.status|title }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-deep-charcoal/70">{{ payment.created_at|date:"M d, Y" }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <a href="/django-admin/myApp/payment/{{ payment.id }}/change/" class="text-accent-gold hover:text-deep-charcoal transition" title="Edit in Django Admin">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-deep-charcoal/60">
+                            <i class="fas fa-credit-card text-4xl mb-4 text-muted-taupe"></i>
+                            <p>No payments found</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if payments.has_other_pages %}
+        <div class="px-6 py-4 border-t border-muted-taupe/20 flex items-center justify-between">
+            <div class="text-sm text-deep-charcoal/60">
+                Showing {{ payments.start_index }} to {{ payments.end_index }} of {{ payments.paginator.count }} payments
+            </div>
+            <div class="flex gap-2">
+                {% if payments.has_previous %}
+                <a href="?page={{ payments.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="px-4 py-2 rounded-xl border border-muted-taupe/30 text-deep-charcoal hover:bg-warm-sand transition">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+                {% endif %}
+                {% if payments.has_next %}
+                <a href="?page={{ payments.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="px-4 py-2 rounded-xl border border-muted-taupe/30 text-deep-charcoal hover:bg-warm-sand transition">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
