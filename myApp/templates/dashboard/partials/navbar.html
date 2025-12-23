@@ -1,22 +1,26 @@
-<nav class="fixed top-0 left-0 right-0 h-16 bg-white border-b border-muted-taupe/20 z-50 flex items-center justify-between px-6">
+<nav class="fixed top-0 left-0 right-0 h-16 bg-[#04363a]/70 backdrop-blur-xl border-b border-[#254346]/60 z-50 flex items-center justify-between px-6 animate-fade-in shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
     <div class="flex items-center gap-4">
-        <a href="{% url 'dashboard:overview' %}" class="text-xl font-light text-deep-charcoal">
-            Fluentory <span class="text-muted-taupe">Dashboard</span>
+        <a href="{% url 'dashboard:overview' %}" class="flex items-center gap-3 group animate-slide-in-left">
+            <img src="https://res.cloudinary.com/dkjtfjnlf/image/upload/v1766498125/Fluentory-Trsp-LS_xlra0r.png" 
+                 alt="Fluentory Logo" 
+                 class="h-[110px] w-auto transition-transform duration-300 group-hover:scale-105" />
         </a>
-        <span class="text-xs px-2 py-1 rounded-full bg-accent-gold/10 text-accent-gold border border-accent-gold/20">
+        <span class="text-xs px-3 py-1.5 rounded-full bg-[#82C293]/20 border border-[#82C293]/30 text-[#82C293] font-medium animate-scale-in hover:bg-[#82C293]/30 hover:border-[#82C293]/50 transition-all duration-300">
             Admin
         </span>
     </div>
     
-    <div class="flex items-center gap-4">
-        <a href="{% url 'home' %}" class="text-sm text-deep-charcoal/70 hover:text-deep-charcoal transition">
-            <i class="fas fa-globe mr-2"></i>View Site
+    <div class="flex items-center gap-4 animate-slide-in-right">
+        <a href="{% url 'home' %}" class="text-sm text-white/80 hover:text-[#82C293] transition-all duration-300 flex items-center gap-2 group hover:scale-105">
+            <i class="fas fa-globe transition-transform duration-300 group-hover:rotate-12"></i>
+            <span>View Site</span>
         </a>
-        <a href="/django-admin/" class="text-sm text-deep-charcoal/70 hover:text-deep-charcoal transition" title="Technical Admin">
-            <i class="fas fa-cog mr-2"></i>Django Admin
+        <a href="/django-admin/" class="text-sm text-white/80 hover:text-[#82C293] transition-all duration-300 flex items-center gap-2 group hover:scale-105" title="Technical Admin">
+            <i class="fas fa-cog transition-transform duration-300 group-hover:rotate-90"></i>
+            <span>Django Admin</span>
         </a>
-        <div class="w-8 h-8 rounded-full bg-warm-sand border border-muted-taupe/20 flex items-center justify-center">
-            <i class="fas fa-user text-muted-taupe text-sm"></i>
+        <div class="w-8 h-8 rounded-full bg-[#254346]/70 border border-white/10 flex items-center justify-center hover:bg-[#82C293]/20 hover:border-[#82C293]/40 transition-all duration-300 cursor-pointer group hover:scale-110">
+            <i class="fas fa-user text-white/70 text-sm group-hover:text-[#82C293] transition-colors duration-300"></i>
         </div>
     </div>
 </nav>

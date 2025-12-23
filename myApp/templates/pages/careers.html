@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Careers - Fluentory{% endblock %}
+
+{% block content %}
+<section class="relative py-24 bg-[#000000] overflow-hidden">
+    <!-- Background gradient splashes in corners -->
+    <div class="absolute inset-0">
+      <div class="absolute top-0 left-0 w-[600px] h-[600px] bg-[radial-gradient(circle_at_0%_0%,rgba(0,101,95,0.12),transparent_70%)]"></div>
+      <div class="absolute bottom-0 right-0 w-[600px] h-[600px] bg-[radial-gradient(circle_at_100%_100%,rgba(130,194,147,0.10),transparent_70%)]"></div>
+    </div>
+    
+    <div class="max-w-6xl mx-auto px-8 relative z-10">
+        <div class="text-center mb-16 animate-fade-in-up">
+            <h1 class="text-5xl md:text-6xl font-extralight mb-6 text-white tracking-[-2px]">Join Our Team</h1>
+            <p class="text-xl text-[#82C293] max-w-2xl mx-auto">Help us shape the future of online learning</p>
+        </div>
+        
+        <!-- Main Content Card -->
+        <div class="relative bg-[#04363a]/70 backdrop-blur-xl rounded-3xl p-12 shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-white/10 animate-fade-in-up stagger-1">
+            <!-- Inner glow -->
+            <div class="absolute inset-0 rounded-3xl bg-gradient-to-br from-[#82C293]/10 to-transparent pointer-events-none"></div>
+            
+            <div class="grid md:grid-cols-2 gap-12 items-center mb-12 relative z-10">
+                <div class="animate-slide-in-left stagger-2">
+                    <div class="relative rounded-2xl overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.4)]">
+                        <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&h=600&fit=crop" 
+                             alt="Work Environment" 
+                             class="rounded-2xl w-full h-full object-cover" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#04363a]/30 to-transparent"></div>
+                    </div>
+                </div>
+                <div class="animate-slide-in-right stagger-2">
+                    <h2 class="text-3xl font-light mb-4 text-white">Why Work With Us</h2>
+                    <p class="text-white/80 leading-relaxed mb-4">
+                        At Fluentory, we're building something meaningful. We're a team of passionate educators, 
+                        developers, and innovators working together to revolutionize online learning.
+                    </p>
+                    <ul class="space-y-3 text-white/80">
+                        <li class="flex items-start gap-3 animate-fade-in stagger-3">
+                            <i class="fas fa-check-circle text-[#82C293] mt-1"></i>
+                            <span>Competitive salary and benefits</span>
+                        </li>
+                        <li class="flex items-start gap-3 animate-fade-in stagger-4">
+                            <i class="fas fa-check-circle text-[#82C293] mt-1"></i>
+                            <span>Flexible remote work options</span>
+                        </li>
+                        <li class="flex items-start gap-3 animate-fade-in stagger-5">
+                            <i class="fas fa-check-circle text-[#82C293] mt-1"></i>
+                            <span>Professional development opportunities</span>
+                        </li>
+                        <li class="flex items-start gap-3 animate-fade-in stagger-5">
+                            <i class="fas fa-check-circle text-[#82C293] mt-1"></i>
+                            <span>Impactful work that changes lives</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-12 items-center relative z-10">
+                <div class="order-2 md:order-1 animate-slide-in-right stagger-3">
+                    <h2 class="text-3xl font-light mb-4 text-white">Open Positions</h2>
+                    <div class="space-y-4">
+                        <div class="bg-[#254346]/50 p-6 rounded-xl border border-[#254346]/60 backdrop-blur-md animate-fade-in stagger-4">
+                            <h3 class="text-xl font-semibold mb-2 text-white">Senior Full-Stack Developer</h3>
+                            <p class="text-white/70 mb-3">Build the next generation of learning platforms</p>
+                            <span class="inline-block px-4 py-2 bg-[#82C293]/20 border border-[#82C293]/30 text-[#82C293] rounded-full text-sm">Remote</span>
+                        </div>
+                        <div class="bg-[#254346]/50 p-6 rounded-xl border border-[#254346]/60 backdrop-blur-md animate-fade-in stagger-5">
+                            <h3 class="text-xl font-semibold mb-2 text-white">Content Strategist</h3>
+                            <p class="text-white/70 mb-3">Shape our educational content and curriculum</p>
+                            <span class="inline-block px-4 py-2 bg-[#82C293]/20 border border-[#82C293]/30 text-[#82C293] rounded-full text-sm">Hybrid</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="order-1 md:order-2 animate-slide-in-left stagger-3">
+                    <div class="relative rounded-2xl overflow-hidden shadow-[0_15px_40px_rgba(0,0,0,0.4)]">
+                        <img src="https://images.unsplash.com/photo-1552664730-d307ca884978?w=800&h=600&fit=crop" 
+                             alt="Team Collaboration" 
+                             class="rounded-2xl w-full h-full object-cover" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#04363a]/30 to-transparent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

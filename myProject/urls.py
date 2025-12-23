@@ -11,6 +11,16 @@ urlpatterns = [
     # Landing page
     path('', views.home, name='home'),
     
+    # Static pages
+    path('about/', views.about_page, name='about'),
+    path('careers/', views.careers_page, name='careers'),
+    path('blog/', views.blog_page, name='blog'),
+    path('help-center/', views.help_center_page, name='help_center'),
+    path('contact/', views.contact_page, name='contact'),
+    path('privacy/', views.privacy_page, name='privacy'),
+    path('terms/', views.terms_page, name='terms'),
+    path('cookies/', views.cookies_page, name='cookies'),
+    
     # Authentication
     path('login/', views.login_view, name='login'),
     path('signup/', views.signup_view, name='signup'),

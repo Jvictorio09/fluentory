@@ -1,49 +1,42 @@
-<section id="pricing" class="relative overflow-hidden bg-gradient-to-br from-warm-sand to-[#E0D5C5] py-12 lg:py-16">
-    <!-- Background Image -->
+<section id="pricing" class="relative overflow-hidden bg-[#000000] py-12 lg:py-16">
+    <!-- Background gradient -->
     <div class="absolute inset-0">
-      <img
-        src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=2400&q=80"
-        alt=""
-        class="w-full h-full object-cover opacity-25"
-        loading="lazy"
-      />
-      <div class="absolute inset-0 bg-gradient-to-b from-white/20 via-warm-sand/60 to-[#E0D5C5]/75"></div>
-      <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_10%,rgba(255,255,255,0.8),transparent_60%)]"></div>
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_10%,rgba(130,194,147,0.12),rgba(0,101,95,0.08),transparent_60%)]"></div>
     </div>
     
     <!-- Animated enhanced background layers for depth -->
-    <div class="absolute -top-28 -right-28 w-[560px] h-[560px] rounded-full bg-muted-taupe/15 blur-[95px] animate-pulse" style="animation-duration: 6s;"></div>
-    <div class="absolute -bottom-28 -left-28 w-[560px] h-[560px] rounded-full bg-muted-taupe/12 blur-[95px] animate-pulse" style="animation-duration: 8s; animation-delay: 1s;"></div>
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-accent-gold/5 blur-[120px] animate-pulse" style="animation-duration: 10s; animation-delay: 2s;"></div>
+    <div class="absolute -top-28 -right-28 w-[560px] h-[560px] rounded-full bg-[#82C293]/10 blur-[95px] animate-pulse" style="animation-duration: 6s;"></div>
+    <div class="absolute -bottom-28 -left-28 w-[560px] h-[560px] rounded-full bg-[#00655F]/8 blur-[95px] animate-pulse" style="animation-duration: 8s; animation-delay: 1s;"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-[#82C293]/5 blur-[120px] animate-pulse" style="animation-duration: 10s; animation-delay: 2s;"></div>
   
     <div class="max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-16 relative z-10">
       <!-- Enhanced Header -->
       <div class="text-center mb-12">
         <!-- Eyebrow with accent -->
-        <div class="inline-flex items-center gap-2 bg-accent-gold/15 border border-accent-gold/25 px-5 py-2.5 rounded-full text-xs uppercase tracking-wider text-deep-charcoal mb-8 font-medium">
-          <i class="fas fa-tag text-accent-gold"></i>
+        <div class="inline-flex items-center gap-2 bg-[#b8c943]/20 border border-[#b8c943]/30 px-5 py-2.5 rounded-full text-xs uppercase tracking-wider text-[#b8c943] mb-8 font-medium">
+          <i class="fas fa-tag text-[#b8c943]"></i>
           <span>Pricing</span>
         </div>
   
         <!-- Headline with improved spacing -->
-        <h2 class="text-[3rem] sm:text-[3.8rem] lg:text-[4.2rem] font-extralight mb-6 text-deep-charcoal tracking-[-1px] leading-[1.05]">
+        <h2 class="text-[3rem] sm:text-[3.8rem] lg:text-[4.2rem] font-extralight mb-6 text-white tracking-[-1px] leading-[1.05]">
           Simple, Global, Confident
         </h2>
   
         <!-- Description with better spacing -->
-        <p class="text-base sm:text-lg text-deep-charcoal/85 font-light max-w-[720px] mx-auto mb-12">
+        <p class="text-base sm:text-lg text-[#82C293] font-light max-w-[720px] mx-auto mb-12">
           Choose a plan that matches your pace. Upgrade anytime—your progress stays with you.
         </p>
   
         <!-- Enhanced currency segmented control -->
-        <div class="inline-flex items-center gap-1.5 rounded-2xl bg-white/50 border-2 border-white/60 backdrop-blur-xl p-1.5 shadow-[0_15px_40px_rgba(0,0,0,0.10)]">
-          <button class="px-6 py-3 rounded-xl bg-deep-charcoal text-white text-sm font-semibold shadow-[0_6px_18px_rgba(44,44,44,0.25)]">
+        <div class="inline-flex items-center gap-1.5 rounded-2xl bg-[#04363a]/70 border-2 border-[#254346]/60 backdrop-blur-xl p-1.5 shadow-[0_15px_40px_rgba(0,0,0,0.4)]" id="currency-selector">
+          <button type="button" data-currency="USD" class="currency-btn px-6 py-3 rounded-xl bg-gradient-to-r from-[#00655F] to-[#82C293] text-white text-sm font-semibold shadow-[0_6px_18px_rgba(0,101,95,0.4)] cursor-pointer border-0">
             USD
           </button>
-          <button class="px-6 py-3 rounded-xl text-deep-charcoal/80 text-sm font-medium hover:bg-white/60 hover:text-deep-charcoal transition-all">
+          <button type="button" data-currency="EUR" class="currency-btn px-6 py-3 rounded-xl text-white/80 text-sm font-medium hover:bg-[#254346]/60 hover:text-white transition-all cursor-pointer border-0">
             EUR
           </button>
-          <button class="px-6 py-3 rounded-xl text-deep-charcoal/80 text-sm font-medium hover:bg-white/60 hover:text-deep-charcoal transition-all">
+          <button type="button" data-currency="GBP" class="currency-btn px-6 py-3 rounded-xl text-white/80 text-sm font-medium hover:bg-[#254346]/60 hover:text-white transition-all cursor-pointer border-0">
             GBP
           </button>
         </div>
@@ -53,159 +46,159 @@
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
   
         <!-- Starter -->
-        <div class="group relative rounded-[2rem] bg-white/50 border-2 border-white/60 backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,0,0,0.12)] p-9 sm:p-10 hover:-translate-y-3 hover:shadow-[0_28px_80px_rgba(0,0,0,0.18)] hover:border-accent-gold/30 transition-all duration-500 overflow-hidden hover:scale-[1.02]">
+        <div class="group relative rounded-[2rem] bg-[#04363a]/70 border-2 border-[#254346]/60 backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,0,0,0.5)] p-9 sm:p-10 hover:-translate-y-3 hover:shadow-[0_28px_80px_rgba(130,194,147,0.2)] hover:border-[#82C293]/30 transition-all duration-500 overflow-hidden hover:scale-[1.02]">
           <!-- Inner glow -->
-          <div class="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent pointer-events-none"></div>
+          <div class="absolute inset-0 bg-gradient-to-br from-[#82C293]/10 to-transparent pointer-events-none"></div>
           
           <div class="relative z-10 flex items-start justify-between gap-4 mb-7">
             <div>
-              <h3 class="text-2xl sm:text-2xl font-semibold text-deep-charcoal mb-1">Starter</h3>
-              <p class="text-sm text-deep-charcoal/75 font-light">For casual learners</p>
+              <h3 class="text-2xl sm:text-2xl font-semibold text-white mb-1">Starter</h3>
+              <p class="text-sm text-white/75 font-light">For casual learners</p>
             </div>
-            <span class="text-xs uppercase tracking-wider bg-accent-gold/15 border border-accent-gold/25 text-deep-charcoal px-4 py-2 rounded-full font-semibold">
+            <span class="text-xs uppercase tracking-wider bg-[#b8c943]/20 border border-[#b8c943]/30 text-[#b8c943] px-4 py-2 rounded-full font-semibold">
               Basic
             </span>
           </div>
   
           <div class="relative z-10 mb-8">
             <div class="flex items-end gap-2 mb-2">
-              <div class="text-5xl font-extralight text-deep-charcoal">$29</div>
-              <div class="text-base text-deep-charcoal/70 pb-1.5">/mo</div>
+              <div class="text-5xl font-extralight text-white price-amount" data-usd="29" data-eur="27" data-gbp="23">$29</div>
+              <div class="text-base text-white/70 pb-1.5">/mo</div>
             </div>
-            <div class="text-xs text-deep-charcoal/70 uppercase tracking-wider font-medium">Billed monthly</div>
+            <div class="text-xs text-white/70 uppercase tracking-wider font-medium">Billed monthly</div>
           </div>
   
           <ul class="relative z-10 space-y-4 mb-10">
-            <li class="flex items-start gap-3.5 text-deep-charcoal">
-              <i class="fas fa-check text-accent-gold mt-0.5 text-sm"></i>
+            <li class="flex items-start gap-3.5 text-white">
+              <i class="fas fa-check text-[#82C293] mt-0.5 text-sm"></i>
               <span class="font-light">Access to all courses</span>
             </li>
-            <li class="flex items-start gap-3.5 text-deep-charcoal">
-              <i class="fas fa-check text-accent-gold mt-0.5 text-sm"></i>
+            <li class="flex items-start gap-3.5 text-white">
+              <i class="fas fa-check text-[#82C293] mt-0.5 text-sm"></i>
               <span class="font-light">AI Tutor support</span>
             </li>
-            <li class="flex items-start gap-3.5 text-deep-charcoal">
-              <i class="fas fa-check text-accent-gold mt-0.5 text-sm"></i>
+            <li class="flex items-start gap-3.5 text-white">
+              <i class="fas fa-check text-[#82C293] mt-0.5 text-sm"></i>
               <span class="font-light">Progress tracking</span>
             </li>
-            <li class="flex items-start gap-3.5 text-deep-charcoal">
-              <i class="fas fa-check text-accent-gold mt-0.5 text-sm"></i>
+            <li class="flex items-start gap-3.5 text-white">
+              <i class="fas fa-check text-[#82C293] mt-0.5 text-sm"></i>
               <span class="font-light">Community access</span>
             </li>
           </ul>
   
           <a href="#"
-             class="relative z-10 inline-flex w-full items-center justify-center gap-2.5 rounded-2xl bg-deep-charcoal text-white px-6 py-4.5 no-underline font-semibold shadow-[0_14px_35px_rgba(0,0,0,0.2)] hover:bg-accent-gold hover:shadow-[0_14px_35px_rgba(201,169,97,0.35)] transition-all duration-300 transform hover:scale-[1.02]">
+             class="relative z-10 inline-flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-[#00655F] to-[#82C293] text-white px-6 py-4.5 no-underline font-semibold shadow-[0_14px_35px_rgba(0,101,95,0.4)] hover:shadow-[0_14px_35px_rgba(130,194,147,0.5)] transition-all duration-300 transform hover:scale-[1.02]">
             Get Started
             <i class="fas fa-arrow-right text-white/80 text-sm group-hover:translate-x-1 transition-transform"></i>
           </a>
         </div>
   
         <!-- Professional (Featured) -->
-        <div class="relative rounded-[2rem] p-[2px] bg-gradient-to-br from-accent-gold/40 via-accent-gold/20 to-muted-taupe/30 shadow-[0_28px_90px_rgba(0,0,0,0.15)]">
+        <div class="relative rounded-[2rem] p-[2px] bg-gradient-to-br from-[#82C293]/40 via-[#82C293]/20 to-[#254346]/30 shadow-[0_28px_90px_rgba(130,194,147,0.3)]">
           <!-- Enhanced badge -->
           <div class="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
-            <div class="inline-flex items-center gap-2 bg-accent-gold text-deep-charcoal px-5 py-2 rounded-full text-xs uppercase tracking-wider font-semibold shadow-[0_12px_30px_rgba(201,169,97,0.35)] border-2 border-white/50">
-              <i class="fas fa-star"></i>
+            <div class="inline-flex items-center gap-2 bg-[#f8da03] text-[#04363a] px-5 py-2 rounded-full text-xs uppercase tracking-wider font-semibold shadow-[0_12px_30px_rgba(248,218,3,0.35)] border-2 border-white/50">
+              <i class="fas fa-star text-[#04363a]"></i>
               Most Popular
             </div>
           </div>
   
-          <div class="group rounded-[2rem] bg-deep-charcoal text-white p-9 sm:p-10 backdrop-blur-xl hover:-translate-y-3 transition-all duration-500 relative overflow-hidden hover:scale-[1.02]">
+          <div class="group rounded-[2rem] bg-[#04363a] text-white p-9 sm:p-10 backdrop-blur-xl hover:-translate-y-3 transition-all duration-500 relative overflow-hidden hover:scale-[1.02]">
             <!-- Inner glow -->
-            <div class="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none"></div>
+            <div class="absolute inset-0 bg-gradient-to-br from-[#82C293]/10 to-transparent pointer-events-none"></div>
             
             <div class="relative z-10 flex items-start justify-between gap-4 mb-7 pt-2">
               <div>
                 <h3 class="text-2xl sm:text-2xl font-semibold text-white mb-1">Professional</h3>
                 <p class="text-sm text-white/75 font-light">For serious learners</p>
               </div>
-              <span class="text-xs uppercase tracking-wider bg-accent-gold/20 border border-accent-gold/30 text-accent-gold px-4 py-2 rounded-full font-semibold">
+              <span class="text-xs uppercase tracking-wider bg-[#f8da03]/20 border border-[#f8da03]/30 text-[#f8da03] px-4 py-2 rounded-full font-semibold">
                 Best value
               </span>
             </div>
   
             <div class="relative z-10 mb-8">
               <div class="flex items-end gap-2 mb-2">
-                <div class="text-5xl font-extralight text-white">$79</div>
+                <div class="text-5xl font-extralight text-white price-amount" data-usd="79" data-eur="73" data-gbp="62">$79</div>
                 <div class="text-base text-white/75 pb-1.5">/mo</div>
               </div>
-              <div class="text-xs text-accent-gold/90 uppercase tracking-wider font-semibold">Includes certificates</div>
+              <div class="text-xs text-[#f8da03]/90 uppercase tracking-wider font-semibold">Includes certificates</div>
             </div>
   
             <ul class="relative z-10 space-y-4 mb-10">
               <li class="flex items-start gap-3.5 text-white">
-                <i class="fas fa-check text-accent-gold mt-0.5 text-sm"></i>
+                <i class="fas fa-check text-[#82C293] mt-0.5 text-sm"></i>
                 <span class="font-light">Everything in Starter</span>
               </li>
               <li class="flex items-start gap-3.5 text-white">
-                <i class="fas fa-check text-accent-gold mt-0.5 text-sm"></i>
+                <i class="fas fa-check text-[#82C293] mt-0.5 text-sm"></i>
                 <span class="font-light">Verified certificates</span>
               </li>
               <li class="flex items-start gap-3.5 text-white">
-                <i class="fas fa-check text-accent-gold mt-0.5 text-sm"></i>
+                <i class="fas fa-check text-[#82C293] mt-0.5 text-sm"></i>
                 <span class="font-light">Priority support</span>
               </li>
               <li class="flex items-start gap-3.5 text-white">
-                <i class="fas fa-check text-accent-gold mt-0.5 text-sm"></i>
+                <i class="fas fa-check text-[#82C293] mt-0.5 text-sm"></i>
                 <span class="font-light">Advanced analytics</span>
               </li>
             </ul>
   
             <a href="#"
-               class="relative z-10 inline-flex w-full items-center justify-center gap-2.5 rounded-2xl bg-accent-gold text-deep-charcoal px-6 py-4.5 no-underline font-semibold shadow-[0_14px_35px_rgba(201,169,97,0.35)] hover:bg-accent-gold/90 hover:shadow-[0_18px_45px_rgba(201,169,97,0.45)] transition-all duration-300 transform hover:scale-[1.02]">
+               class="relative z-10 inline-flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-[#00655F] to-[#82C293] text-white px-6 py-4.5 no-underline font-semibold shadow-[0_14px_35px_rgba(0,101,95,0.4)] hover:shadow-[0_18px_45px_rgba(130,194,147,0.5)] transition-all duration-300 transform hover:scale-[1.02]">
               Get Started
-              <i class="fas fa-arrow-right text-deep-charcoal/70 text-sm group-hover:translate-x-1 transition-transform"></i>
+              <i class="fas fa-arrow-right text-white/80 text-sm group-hover:translate-x-1 transition-transform"></i>
             </a>
   
-            <div class="relative z-10 mt-6 pt-6 border-t-2 border-white/15 text-accent-gold/90 text-sm flex items-center justify-center gap-2.5 font-medium">
-              <i class="fas fa-gift"></i>
+            <div class="relative z-10 mt-6 pt-6 border-t-2 border-white/15 text-[#f8da03]/90 text-sm flex items-center justify-center gap-2.5 font-medium">
+              <i class="fas fa-gift text-[#f8da03]"></i>
               <span>Gift a Course available</span>
             </div>
           </div>
         </div>
   
         <!-- Enterprise -->
-        <div class="group relative rounded-[2rem] bg-white/50 border-2 border-white/60 backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,0,0,0.12)] p-9 sm:p-10 hover:-translate-y-3 hover:shadow-[0_28px_80px_rgba(0,0,0,0.18)] hover:border-accent-gold/30 transition-all duration-500 overflow-hidden hover:scale-[1.02]">
+        <div class="group relative rounded-[2rem] bg-[#254346]/70 border-2 border-[#254346]/60 backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,0,0,0.5)] p-9 sm:p-10 hover:-translate-y-3 hover:shadow-[0_28px_80px_rgba(130,194,147,0.2)] hover:border-[#82C293]/30 transition-all duration-500 overflow-hidden hover:scale-[1.02]">
           <!-- Inner glow -->
-          <div class="absolute inset-0 bg-gradient-to-br from-white/30 to-transparent pointer-events-none"></div>
+          <div class="absolute inset-0 bg-gradient-to-br from-[#82C293]/10 to-transparent pointer-events-none"></div>
           
           <div class="relative z-10 flex items-start justify-between gap-4 mb-7">
             <div>
-              <h3 class="text-2xl sm:text-2xl font-semibold text-deep-charcoal mb-1">Enterprise</h3>
-              <p class="text-sm text-deep-charcoal/75 font-light">For teams & institutions</p>
+              <h3 class="text-2xl sm:text-2xl font-semibold text-white mb-1">Enterprise</h3>
+              <p class="text-sm text-white/75 font-light">For teams & institutions</p>
             </div>
-            <span class="text-xs uppercase tracking-wider bg-accent-gold/15 border border-accent-gold/25 text-deep-charcoal px-4 py-2 rounded-full font-semibold">
+            <span class="text-xs uppercase tracking-wider bg-[#369dbf]/20 border border-[#369dbf]/30 text-[#369dbf] px-4 py-2 rounded-full font-semibold">
               Custom
             </span>
           </div>
   
           <div class="relative z-10 mb-8">
-            <div class="text-5xl font-extralight text-deep-charcoal mb-2">Custom</div>
-            <div class="text-xs text-deep-charcoal/70 uppercase tracking-wider font-medium">Talk to sales</div>
+            <div class="text-5xl font-extralight text-white mb-2">Custom</div>
+            <div class="text-xs text-white/70 uppercase tracking-wider font-medium">Talk to sales</div>
           </div>
   
           <ul class="relative z-10 space-y-4 mb-10">
-            <li class="flex items-start gap-3.5 text-deep-charcoal">
-              <i class="fas fa-check text-accent-gold mt-0.5 text-sm"></i>
+            <li class="flex items-start gap-3.5 text-white">
+              <i class="fas fa-check text-[#82C293] mt-0.5 text-sm"></i>
               <span class="font-light">Everything in Professional</span>
             </li>
-            <li class="flex items-start gap-3.5 text-deep-charcoal">
-              <i class="fas fa-check text-accent-gold mt-0.5 text-sm"></i>
+            <li class="flex items-start gap-3.5 text-white">
+              <i class="fas fa-check text-[#82C293] mt-0.5 text-sm"></i>
               <span class="font-light">Team management</span>
             </li>
-            <li class="flex items-start gap-3.5 text-deep-charcoal">
-              <i class="fas fa-check text-accent-gold mt-0.5 text-sm"></i>
+            <li class="flex items-start gap-3.5 text-white">
+              <i class="fas fa-check text-[#82C293] mt-0.5 text-sm"></i>
               <span class="font-light">Custom learning paths</span>
             </li>
-            <li class="flex items-start gap-3.5 text-deep-charcoal">
-              <i class="fas fa-check text-accent-gold mt-0.5 text-sm"></i>
+            <li class="flex items-start gap-3.5 text-white">
+              <i class="fas fa-check text-[#82C293] mt-0.5 text-sm"></i>
               <span class="font-light">Dedicated support</span>
             </li>
           </ul>
   
           <a href="#"
-             class="relative z-10 inline-flex w-full items-center justify-center gap-2.5 rounded-2xl bg-deep-charcoal text-white px-6 py-4.5 no-underline font-semibold shadow-[0_14px_35px_rgba(0,0,0,0.2)] hover:bg-accent-gold hover:shadow-[0_14px_35px_rgba(201,169,97,0.35)] transition-all duration-300 transform hover:scale-[1.02]">
+             class="relative z-10 inline-flex w-full items-center justify-center gap-2.5 rounded-2xl bg-gradient-to-r from-[#00655F] to-[#82C293] text-white px-6 py-4.5 no-underline font-semibold shadow-[0_14px_35px_rgba(0,101,95,0.4)] hover:shadow-[0_14px_35px_rgba(130,194,147,0.5)] transition-all duration-300 transform hover:scale-[1.02]">
             Contact Sales
             <i class="fas fa-arrow-right text-white/80 text-sm group-hover:translate-x-1 transition-transform"></i>
           </a>
@@ -214,10 +207,65 @@
       </div>
   
       <!-- Enhanced Footnote -->
-      <div class="mt-14 flex items-center justify-center gap-3 text-deep-charcoal/80 text-sm font-medium">
-        <i class="fas fa-circle-check text-accent-gold"></i>
+      <div class="mt-14 flex items-center justify-center gap-3 text-white/80 text-sm font-medium">
+        <i class="fas fa-circle-check text-[#82C293]"></i>
         <span>Cancel anytime. Keep your progress.</span>
       </div>
     </div>
   </section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const currencyButtons = document.querySelectorAll('.currency-btn');
+        const priceElements = document.querySelectorAll('.price-amount');
+        
+        // Currency symbols
+        const currencySymbols = {
+            'USD': '$',
+            'EUR': '€',
+            'GBP': '£'
+        };
+        
+        // Function to update prices
+        function updatePrices(currency) {
+            priceElements.forEach(priceEl => {
+                const priceValue = priceEl.getAttribute(`data-${currency.toLowerCase()}`);
+                if (priceValue) {
+                    const symbol = currencySymbols[currency];
+                    priceEl.textContent = symbol + priceValue;
+                }
+            });
+        }
+        
+        // Handle currency button clicks
+        currencyButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const selectedCurrency = this.getAttribute('data-currency');
+                
+                // Update button styles
+                currencyButtons.forEach(btn => {
+                    btn.classList.remove('bg-gradient-to-r', 'from-[#00655F]', 'to-[#82C293]', 'text-white', 'shadow-[0_6px_18px_rgba(0,101,95,0.4)]');
+                    btn.classList.add('text-white/80', 'hover:bg-[#254346]/60', 'hover:text-white');
+                });
+                
+                // Set active button style
+                this.classList.remove('text-white/80', 'hover:bg-[#254346]/60', 'hover:text-white');
+                this.classList.add('bg-gradient-to-r', 'from-[#00655F]', 'to-[#82C293]', 'text-white', 'shadow-[0_6px_18px_rgba(0,101,95,0.4)]');
+                
+                // Update prices
+                updatePrices(selectedCurrency);
+                
+                // Store selected currency in localStorage
+                localStorage.setItem('selectedCurrency', selectedCurrency);
+            });
+        });
+        
+        // Load saved currency preference
+        const savedCurrency = localStorage.getItem('selectedCurrency') || 'USD';
+        const savedButton = document.querySelector(`[data-currency="${savedCurrency}"]`);
+        if (savedButton) {
+            savedButton.click();
+        }
+    });
+</script>
   

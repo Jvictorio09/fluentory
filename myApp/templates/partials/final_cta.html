@@ -1,20 +1,13 @@
-<section class="relative bg-gradient-to-br from-deep-charcoal via-[#1a1a1a] to-deep-charcoal py-12 lg:py-16 text-white text-center overflow-hidden">
-    <!-- Background Image -->
+<section class="relative bg-[#000000] py-12 lg:py-16 text-white text-center overflow-hidden">
+    <!-- Background gradient splashes in corners -->
     <div class="absolute inset-0">
-      <img
-        src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=2400&q=80"
-        alt=""
-        class="w-full h-full object-cover opacity-12"
-        loading="lazy"
-      />
-      <div class="absolute inset-0 bg-gradient-to-b from-deep-charcoal/95 via-[#1a1a1a]/90 to-deep-charcoal/95"></div>
-      <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(201,169,97,0.08),transparent_70%)]"></div>
+      <div class="absolute top-0 left-0 w-[600px] h-[600px] bg-[radial-gradient(circle_at_0%_0%,rgba(0,101,95,0.15),transparent_70%)]"></div>
+      <div class="absolute bottom-0 right-0 w-[600px] h-[600px] bg-[radial-gradient(circle_at_100%_100%,rgba(130,194,147,0.12),transparent_70%)]"></div>
     </div>
     
     <!-- Animated enhanced background layers for depth -->
-    <div class="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-accent-gold/5 blur-[120px] animate-pulse" style="animation-duration: 7s;"></div>
-    <div class="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full bg-accent-gold/4 blur-[100px] animate-pulse" style="animation-duration: 9s; animation-delay: 1s;"></div>
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-accent-gold/3 blur-[130px] animate-pulse" style="animation-duration: 11s; animation-delay: 2s;"></div>
+    <div class="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full bg-[#82C293]/5 blur-[120px] animate-pulse" style="animation-duration: 7s;"></div>
+    <div class="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full bg-[#00655F]/4 blur-[100px] animate-pulse" style="animation-duration: 9s; animation-delay: 1s;"></div>
     
     <div class="max-w-[900px] mx-auto px-8 lg:px-20 relative z-10">
         <!-- Headline with improved spacing -->
@@ -29,11 +22,11 @@
         
         <!-- Enhanced CTAs -->
         <div class="flex flex-col sm:flex-row gap-5 justify-center mb-12">
-            <a href="{% url 'login' %}?next={% url 'student_placement' %}" class="group inline-flex items-center justify-center gap-3 bg-accent-gold text-deep-charcoal py-6 px-14 rounded-2xl no-underline text-lg font-semibold shadow-[0_20px_50px_rgba(201,169,97,0.35)] hover:bg-accent-gold/90 hover:shadow-[0_24px_60px_rgba(201,169,97,0.45)] transition-all duration-300 transform hover:scale-[1.02]">
+            <a href="{% url 'login' %}?next={% url 'student_placement' %}" class="group inline-flex items-center justify-center gap-3 bg-white text-[#00655F] py-6 px-14 rounded-2xl no-underline text-lg font-semibold shadow-[0_20px_50px_rgba(255,255,255,0.2)] hover:bg-white/90 hover:shadow-[0_24px_60px_rgba(255,255,255,0.3)] transition-all duration-300 transform hover:scale-[1.02]">
                 Take the Free Placement Test
-                <i class="fas fa-arrow-right text-deep-charcoal/70 group-hover:translate-x-1 transition-transform"></i>
+                <i class="fas fa-arrow-right text-[#00655F]/70 group-hover:translate-x-1 transition-transform"></i>
             </a>
-            <a href="#courses" class="inline-flex items-center justify-center bg-white/10 border-2 border-white/20 backdrop-blur-md text-white py-6 px-14 rounded-2xl no-underline text-lg font-semibold hover:bg-white/15 hover:border-accent-gold/40 transition-all duration-300 smooth-scroll">
+            <a href="#courses" class="inline-flex items-center justify-center bg-[#04363a]/40 border-2 border-white/20 backdrop-blur-md text-white py-6 px-14 rounded-2xl no-underline text-lg font-semibold hover:bg-[#04363a]/60 hover:border-[#82C293]/40 transition-all duration-300 smooth-scroll">
                 Browse Programs
             </a>
         </div>
@@ -41,20 +34,20 @@
         <!-- Enhanced trust indicators -->
         <div class="flex flex-wrap justify-center gap-8 lg:gap-12">
             <div class="flex items-center gap-3 text-sm text-white/90 font-medium">
-                <div class="w-10 h-10 rounded-xl bg-accent-gold/20 border border-accent-gold/30 grid place-items-center">
-                    <i class="fas fa-shield-halved text-accent-gold"></i>
+                <div class="w-10 h-10 rounded-xl bg-white/20 border border-white/30 grid place-items-center">
+                    <i class="fas fa-shield-halved text-white"></i>
                 </div>
                 <span>Secure checkout</span>
             </div>
             <div class="flex items-center gap-3 text-sm text-white/90 font-medium">
-                <div class="w-10 h-10 rounded-xl bg-accent-gold/20 border border-accent-gold/30 grid place-items-center">
-                    <i class="fas fa-globe text-accent-gold"></i>
+                <div class="w-10 h-10 rounded-xl bg-white/20 border border-white/30 grid place-items-center">
+                    <i class="fas fa-globe text-white"></i>
                 </div>
                 <span>Global access</span>
             </div>
             <div class="flex items-center gap-3 text-sm text-white/90 font-medium">
-                <div class="w-10 h-10 rounded-xl bg-accent-gold/20 border border-accent-gold/30 grid place-items-center">
-                    <i class="fas fa-award text-accent-gold"></i>
+                <div class="w-10 h-10 rounded-xl bg-white/20 border border-white/30 grid place-items-center">
+                    <i class="fas fa-award text-white"></i>
                 </div>
                 <span>Verified certification</span>
             </div>

@@ -1,0 +1,385 @@
+{% extends 'base.html' %}
+
+{% block title %}Help Center - Fluentory{% endblock %}
+
+{% block content %}
+<section class="relative py-24 bg-[#000000] overflow-hidden">
+    <!-- Background gradient splashes in corners -->
+    <div class="absolute inset-0">
+      <div class="absolute top-0 left-0 w-[600px] h-[600px] bg-[radial-gradient(circle_at_0%_0%,rgba(0,101,95,0.12),transparent_70%)]"></div>
+      <div class="absolute bottom-0 right-0 w-[600px] h-[600px] bg-[radial-gradient(circle_at_100%_100%,rgba(130,194,147,0.10),transparent_70%)]"></div>
+    </div>
+    
+    <div class="max-w-6xl mx-auto px-8 relative z-10">
+        <div class="text-center mb-16 animate-fade-in-up">
+            <h1 class="text-5xl md:text-6xl font-extralight mb-6 text-white tracking-[-2px]">Help Center</h1>
+            <p class="text-xl text-[#82C293] max-w-2xl mx-auto">Find answers to your questions and get the support you need</p>
+        </div>
+        
+        <!-- Search Bar -->
+        <div class="mb-12 relative z-50 animate-fade-in-up stagger-1">
+            <div class="bg-[#04363a]/90 backdrop-blur-xl rounded-3xl p-6 shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-white/10 max-w-3xl mx-auto relative">
+                <form id="help-search-form" class="relative z-50">
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1 relative">
+                            <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-white/40 z-10"></i>
+                            <input type="text" 
+                                   id="help-search-input"
+                                   placeholder="Search for help articles, guides, and FAQs..." 
+                                   class="w-full pl-12 pr-4 py-4 bg-[#254346]/70 rounded-2xl border-2 border-white/10 text-white placeholder:text-white/40 focus:outline-none focus:border-[#82C293]/50 focus:ring-4 focus:ring-[#82C293]/20 transition-all text-base relative z-10" />
+                        </div>
+                        <button type="submit" class="px-8 py-4 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-2xl font-semibold hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] transition-all duration-300 whitespace-nowrap flex items-center justify-center gap-2 min-w-[120px] relative z-10">
+                            <span>Search</span>
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    <div id="search-suggestions" class="hidden absolute top-full left-0 right-0 mt-2 bg-[#04363a]/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden z-[100] max-h-96 overflow-y-auto">
+                        <div class="p-2" id="suggestions-container">
+                            <div class="p-3 hover:bg-[#82C293]/20 rounded-xl cursor-pointer suggestion-item" data-title="How to Take the Placement Test" data-category="Getting Started">
+                                <div class="font-semibold text-white text-sm">How to Take the Placement Test</div>
+                                <div class="text-xs text-white/60 mt-1">Getting Started</div>
+                            </div>
+                            <div class="p-3 hover:bg-[#82C293]/20 rounded-xl cursor-pointer suggestion-item" data-title="Understanding Your Progress" data-category="Courses & Learning">
+                                <div class="font-semibold text-white text-sm">Understanding Your Progress</div>
+                                <div class="text-xs text-white/60 mt-1">Courses & Learning</div>
+                            </div>
+                            <div class="p-3 hover:bg-[#82C293]/20 rounded-xl cursor-pointer suggestion-item" data-title="Enrolling in a Course" data-category="Courses & Learning">
+                                <div class="font-semibold text-white text-sm">Enrolling in a Course</div>
+                                <div class="text-xs text-white/60 mt-1">Courses & Learning</div>
+                            </div>
+                            <div class="p-3 hover:bg-[#82C293]/20 rounded-xl cursor-pointer suggestion-item" data-title="Completing Lessons" data-category="Courses & Learning">
+                                <div class="font-semibold text-white text-sm">Completing Lessons</div>
+                                <div class="text-xs text-white/60 mt-1">Courses & Learning</div>
+                            </div>
+                            <div class="p-3 hover:bg-[#82C293]/20 rounded-xl cursor-pointer suggestion-item" data-title="Taking Quizzes" data-category="Courses & Learning">
+                                <div class="font-semibold text-white text-sm">Taking Quizzes</div>
+                                <div class="text-xs text-white/60 mt-1">Courses & Learning</div>
+                            </div>
+                            <div class="p-3 hover:bg-[#82C293]/20 rounded-xl cursor-pointer suggestion-item" data-title="Earning Certificates" data-category="Certificates">
+                                <div class="font-semibold text-white text-sm">Earning Certificates</div>
+                                <div class="text-xs text-white/60 mt-1">Certificates</div>
+                            </div>
+                            <div class="p-3 hover:bg-[#82C293]/20 rounded-xl cursor-pointer suggestion-item" data-title="Verifying Your Certificate" data-category="Certificates">
+                                <div class="font-semibold text-white text-sm">Verifying Your Certificate</div>
+                                <div class="text-xs text-white/60 mt-1">Certificates</div>
+                            </div>
+                            <div class="p-3 hover:bg-[#82C293]/20 rounded-xl cursor-pointer suggestion-item" data-title="Account Setup" data-category="Getting Started">
+                                <div class="font-semibold text-white text-sm">Account Setup</div>
+                                <div class="text-xs text-white/60 mt-1">Getting Started</div>
+                            </div>
+                            <div class="p-3 hover:bg-[#82C293]/20 rounded-xl cursor-pointer suggestion-item" data-title="Resetting Your Password" data-category="Getting Started">
+                                <div class="font-semibold text-white text-sm">Resetting Your Password</div>
+                                <div class="text-xs text-white/60 mt-1">Getting Started</div>
+                            </div>
+                            <div class="p-3 hover:bg-[#82C293]/20 rounded-xl cursor-pointer suggestion-item" data-title="Contacting Support" data-category="Getting Started">
+                                <div class="font-semibold text-white text-sm">Contacting Support</div>
+                                <div class="text-xs text-white/60 mt-1">Getting Started</div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Help Categories -->
+        <div class="grid md:grid-cols-3 gap-8 mb-12 relative z-10">
+            <div class="relative bg-[#04363a]/70 backdrop-blur-xl rounded-2xl p-8 shadow-[0_10px_40px_rgba(0,0,0,0.5)] border border-white/10 text-center hover:shadow-[0_15px_50px_rgba(130,194,147,0.2)] hover:border-[#82C293]/30 transition-all cursor-pointer animate-fade-in-up stagger-2">
+                <div class="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#82C293]/10 to-transparent pointer-events-none"></div>
+                <div class="relative z-10">
+                    <div class="w-16 h-16 bg-[#82C293]/20 border border-[#82C293]/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-graduation-cap text-[#82C293] text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3 text-white">Getting Started</h3>
+                    <p class="text-white/70 text-sm mb-4">Learn the basics of using Fluentory</p>
+                    <div class="relative rounded-xl overflow-hidden mt-4 shadow-md">
+                        <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=400&h=300&fit=crop" 
+                             alt="Getting Started" 
+                             class="rounded-xl w-full h-40 object-cover" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#04363a]/30 to-transparent"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="relative bg-[#04363a]/70 backdrop-blur-xl rounded-2xl p-8 shadow-[0_10px_40px_rgba(0,0,0,0.5)] border border-white/10 text-center hover:shadow-[0_15px_50px_rgba(130,194,147,0.2)] hover:border-[#82C293]/30 transition-all cursor-pointer animate-fade-in-up stagger-3">
+                <div class="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#82C293]/10 to-transparent pointer-events-none"></div>
+                <div class="relative z-10">
+                    <div class="w-16 h-16 bg-[#82C293]/20 border border-[#82C293]/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-book text-[#82C293] text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3 text-white">Courses & Learning</h3>
+                    <p class="text-white/70 text-sm mb-4">Everything about courses and lessons</p>
+                    <div class="relative rounded-xl overflow-hidden mt-4 shadow-md">
+                        <img src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=400&h=300&fit=crop" 
+                             alt="Courses" 
+                             class="rounded-xl w-full h-40 object-cover" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#04363a]/30 to-transparent"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="relative bg-[#04363a]/70 backdrop-blur-xl rounded-2xl p-8 shadow-[0_10px_40px_rgba(0,0,0,0.5)] border border-white/10 text-center hover:shadow-[0_15px_50px_rgba(130,194,147,0.2)] hover:border-[#82C293]/30 transition-all cursor-pointer animate-fade-in-up stagger-4">
+                <div class="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#82C293]/10 to-transparent pointer-events-none"></div>
+                <div class="relative z-10">
+                    <div class="w-16 h-16 bg-[#82C293]/20 border border-[#82C293]/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-certificate text-[#82C293] text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-3 text-white">Certificates</h3>
+                    <p class="text-white/70 text-sm mb-4">Information about certificates</p>
+                    <div class="relative rounded-xl overflow-hidden mt-4 shadow-md">
+                        <img src="https://images.unsplash.com/photo-1501504905252-473c47e087f8?w=400&h=300&fit=crop" 
+                             alt="Certificates" 
+                             class="rounded-xl w-full h-40 object-cover" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#04363a]/30 to-transparent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Popular Articles -->
+        <div class="relative bg-[#04363a]/70 backdrop-blur-xl rounded-3xl p-12 shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-white/10 animate-fade-in-up stagger-5">
+            <div class="absolute inset-0 rounded-3xl bg-gradient-to-br from-[#82C293]/10 to-transparent pointer-events-none"></div>
+            <h2 class="text-3xl font-light mb-8 text-white text-center relative z-10">Popular Articles</h2>
+            <div class="grid md:grid-cols-2 gap-6 relative z-10">
+                <div class="flex gap-4 p-5 rounded-xl hover:bg-[#82C293]/10 transition cursor-pointer border border-transparent hover:border-[#82C293]/30 animate-slide-in-left stagger-5">
+                    <div class="relative rounded-xl overflow-hidden flex-shrink-0 shadow-md">
+                        <img src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=200&h=150&fit=crop" 
+                             alt="Placement Test" 
+                             class="w-28 h-28 rounded-xl object-cover" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#04363a]/20 to-transparent"></div>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-semibold mb-2 text-white">How to Take the Placement Test</h3>
+                        <p class="text-sm text-white/70 leading-relaxed">Step-by-step guide to getting started with your learning journey</p>
+                    </div>
+                </div>
+                <div class="flex gap-4 p-5 rounded-xl hover:bg-[#82C293]/10 transition cursor-pointer border border-transparent hover:border-[#82C293]/30 animate-slide-in-right stagger-5">
+                    <div class="relative rounded-xl overflow-hidden flex-shrink-0 shadow-md">
+                        <img src="https://images.unsplash.com/photo-1531482615713-2afd69097998?w=200&h=150&fit=crop" 
+                             alt="Progress Tracking" 
+                             class="w-28 h-28 rounded-xl object-cover" />
+                        <div class="absolute inset-0 bg-gradient-to-t from-[#04363a]/20 to-transparent"></div>
+                    </div>
+                    <div class="flex-1">
+                        <h3 class="font-semibold mb-2 text-white">Understanding Your Progress</h3>
+                        <p class="text-sm text-white/70 leading-relaxed">Track your learning journey effectively and see your achievements</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    // Search functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('help-search-input');
+        const searchForm = document.getElementById('help-search-form');
+        const searchSuggestions = document.getElementById('search-suggestions');
+        const suggestionsContainer = document.getElementById('suggestions-container');
+        
+        if (!searchInput || !searchForm || !searchSuggestions || !suggestionsContainer) {
+            return;
+        }
+        
+        let selectedIndex = -1;
+        const allSuggestions = Array.from(searchSuggestions.querySelectorAll('.suggestion-item'));
+        
+        // Function to filter and show suggestions
+        function filterSuggestions(query) {
+            selectedIndex = -1;
+            let found = false;
+            
+            // Remove existing no-results message
+            const existingMessage = searchSuggestions.querySelector('.no-results');
+            if (existingMessage) {
+                existingMessage.remove();
+            }
+            
+            if (!query || query.trim().length === 0) {
+                // Show all suggestions when empty
+                allSuggestions.forEach(s => {
+                    s.style.display = 'block';
+                    s.classList.remove('bg-warm-sand/50');
+                });
+                searchSuggestions.classList.add('hidden');
+                return;
+            }
+            
+            const searchQuery = query.toLowerCase().trim();
+            const searchTerms = searchQuery.split(' ').filter(term => term.length > 0);
+            
+            allSuggestions.forEach(suggestion => {
+                const title = suggestion.getAttribute('data-title')?.toLowerCase() || '';
+                const category = suggestion.getAttribute('data-category')?.toLowerCase() || '';
+                
+                // Check if all search terms match
+                const matches = searchTerms.every(term => 
+                    title.includes(term) || category.includes(term)
+                );
+                
+                if (matches) {
+                    suggestion.style.display = 'block';
+                    found = true;
+                    suggestion.classList.remove('bg-warm-sand/50');
+                } else {
+                    suggestion.style.display = 'none';
+                    suggestion.classList.remove('bg-warm-sand/50');
+                }
+            });
+            
+            // Show suggestions dropdown
+            if (found || searchQuery.length > 0) {
+                searchSuggestions.classList.remove('hidden');
+            }
+            
+            // Show no results message if nothing found
+            if (!found && searchQuery.length > 0) {
+                const noResults = document.createElement('div');
+                noResults.className = 'no-results p-4 text-center text-white/60';
+                noResults.textContent = 'No results found. Try different keywords.';
+                suggestionsContainer.appendChild(noResults);
+            }
+        }
+        
+        // Function to highlight selected suggestion
+        function highlightSuggestion(index) {
+            const visibleSuggestions = allSuggestions.filter(s => s.style.display !== 'none');
+            
+            visibleSuggestions.forEach((s, i) => {
+                if (i === index) {
+                    s.classList.add('bg-[#82C293]/30');
+                    s.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                } else {
+                    s.classList.remove('bg-[#82C293]/30');
+                }
+            });
+        }
+        
+        // Function to select suggestion
+        function selectSuggestion(index) {
+            const visibleSuggestions = allSuggestions.filter(s => s.style.display !== 'none');
+            if (index >= 0 && index < visibleSuggestions.length) {
+                const selected = visibleSuggestions[index];
+                const title = selected.getAttribute('data-title');
+                searchInput.value = title;
+                filterSuggestions(title);
+                
+                // Show a message or scroll to relevant section
+                showSearchResult(title, selected.getAttribute('data-category'));
+            }
+        }
+        
+        // Function to show search result
+        function showSearchResult(title, category) {
+            // Hide suggestions
+            searchSuggestions.classList.add('hidden');
+            
+            // Scroll to relevant section based on category
+            const categoryMap = {
+                'Getting Started': 'help-categories',
+                'Courses & Learning': 'help-categories',
+                'Certificates': 'help-categories'
+            };
+            
+            // You can add more specific actions here, like scrolling to a section
+            // or showing a detailed view of the article
+            
+            // For now, just show a brief message
+            const message = document.createElement('div');
+            message.className = 'fixed top-20 left-1/2 -translate-x-1/2 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white px-6 py-3 rounded-xl shadow-lg z-[200]';
+            message.textContent = `Showing results for: ${title}`;
+            document.body.appendChild(message);
+            
+            setTimeout(() => {
+                message.style.opacity = '0';
+                message.style.transition = 'opacity 0.3s';
+                setTimeout(() => message.remove(), 300);
+            }, 2000);
+        }
+        
+        // Real-time filtering as user types
+        searchInput.addEventListener('input', (e) => {
+            filterSuggestions(e.target.value);
+        });
+        
+        // Show suggestions on focus if there's text
+        searchInput.addEventListener('focus', () => {
+            if (searchInput.value.trim().length > 0) {
+                filterSuggestions(searchInput.value);
+            } else {
+                // Show all suggestions when focusing on empty input
+                allSuggestions.forEach(s => s.style.display = 'block');
+                searchSuggestions.classList.remove('hidden');
+            }
+        });
+        
+        // Keyboard navigation
+        searchInput.addEventListener('keydown', (e) => {
+            const visibleSuggestions = allSuggestions.filter(s => s.style.display !== 'none');
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                selectedIndex = Math.min(selectedIndex + 1, visibleSuggestions.length - 1);
+                highlightSuggestion(selectedIndex);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                selectedIndex = Math.max(selectedIndex - 1, -1);
+                if (selectedIndex >= 0) {
+                    highlightSuggestion(selectedIndex);
+                } else {
+                    allSuggestions.forEach(s => s.classList.remove('bg-[#82C293]/30'));
+                }
+            } else if (e.key === 'Enter' && selectedIndex >= 0) {
+                e.preventDefault();
+                selectSuggestion(selectedIndex);
+            } else if (e.key === 'Escape') {
+                searchSuggestions.classList.add('hidden');
+                selectedIndex = -1;
+            }
+        });
+        
+        // Handle form submission
+        searchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const query = searchInput.value.trim();
+            if (query) {
+                filterSuggestions(query);
+                const visibleSuggestions = allSuggestions.filter(s => s.style.display !== 'none');
+                if (visibleSuggestions.length > 0) {
+                    // Select first result
+                    selectSuggestion(0);
+                } else {
+                    // Show no results message
+                    filterSuggestions(query);
+                }
+            } else {
+                searchSuggestions.classList.add('hidden');
+            }
+        });
+        
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!searchForm.contains(e.target)) {
+                searchSuggestions.classList.add('hidden');
+                selectedIndex = -1;
+            }
+        });
+        
+        // Make suggestions clickable
+        allSuggestions.forEach((suggestion, index) => {
+            suggestion.addEventListener('click', function() {
+                const title = this.getAttribute('data-title');
+                const category = this.getAttribute('data-category');
+                searchInput.value = title;
+                showSearchResult(title, category);
+            });
+            
+            suggestion.addEventListener('mouseenter', function() {
+                selectedIndex = allSuggestions.indexOf(this);
+                highlightSuggestion(selectedIndex);
+            });
+        });
+    });
+</script>
+{% endblock %}
+

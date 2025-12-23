@@ -1,53 +1,53 @@
-<aside class="hidden lg:block fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white border-r border-muted-taupe/20 overflow-y-auto z-40">
+<aside class="hidden lg:block fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-[#04363a]/70 backdrop-blur-xl border-r border-[#254346]/60 overflow-y-auto z-40 scrollbar-hide animate-slide-in-left">
     <nav class="p-6 space-y-6">
         <!-- Core -->
-        <div>
-            <div class="text-xs uppercase tracking-wider text-deep-charcoal/50 mb-3 px-2 font-medium">Core</div>
+        <div class="animate-fade-in stagger-1">
+            <div class="text-xs uppercase tracking-wider text-white/50 mb-3 px-2 font-medium">Core</div>
             <div class="space-y-1">
-                <a href="{% url 'dashboard:overview' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-deep-charcoal bg-warm-sand/20 font-medium transition text-sm">
-                    <i class="fas fa-chart-line w-4"></i>
+                <a href="{% url 'dashboard:overview' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white bg-[#82C293]/20 border border-[#82C293]/30 font-medium transition-all duration-300 text-sm group hover:bg-[#82C293]/30 hover:border-[#82C293]/50 hover:scale-105 hover:shadow-[0_4px_12px_rgba(130,194,147,0.3)]">
+                    <i class="fas fa-chart-line w-4 text-[#82C293] transition-transform duration-300 group-hover:scale-110"></i>
                     <span>Overview</span>
                 </a>
-                <a href="{% url 'dashboard:users' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-deep-charcoal/70 hover:bg-warm-sand/15 hover:text-deep-charcoal transition text-sm font-light">
-                    <i class="fas fa-users w-4"></i>
+                <a href="{% url 'dashboard:users' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:bg-[#82C293]/10 hover:text-white hover:border hover:border-[#82C293]/20 transition-all duration-300 text-sm font-light group hover:scale-105 hover:translate-x-1">
+                    <i class="fas fa-users w-4 text-white/60 transition-colors duration-300 group-hover:text-[#82C293]"></i>
                     <span>Users</span>
                 </a>
-                <a href="{% url 'dashboard:courses' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-deep-charcoal/70 hover:bg-warm-sand/15 hover:text-deep-charcoal transition text-sm font-light">
-                    <i class="fas fa-book w-4"></i>
+                <a href="{% url 'dashboard:courses' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:bg-[#82C293]/10 hover:text-white hover:border hover:border-[#82C293]/20 transition-all duration-300 text-sm font-light group hover:scale-105 hover:translate-x-1">
+                    <i class="fas fa-book w-4 text-white/60 transition-colors duration-300 group-hover:text-[#82C293]"></i>
                     <span>Courses</span>
                 </a>
-                <a href="{% url 'dashboard:payments' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-deep-charcoal/70 hover:bg-warm-sand/15 hover:text-deep-charcoal transition text-sm font-light">
-                    <i class="fas fa-credit-card w-4"></i>
+                <a href="{% url 'dashboard:payments' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:bg-[#82C293]/10 hover:text-white hover:border hover:border-[#82C293]/20 transition-all duration-300 text-sm font-light group hover:scale-105 hover:translate-x-1">
+                    <i class="fas fa-credit-card w-4 text-white/60 transition-colors duration-300 group-hover:text-[#82C293]"></i>
                     <span>Payments</span>
                 </a>
-                <a href="{% url 'dashboard:media' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-deep-charcoal/70 hover:bg-warm-sand/15 hover:text-deep-charcoal transition text-sm font-light">
-                    <i class="fas fa-images w-4"></i>
+                <a href="{% url 'dashboard:media' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:bg-[#82C293]/10 hover:text-white hover:border hover:border-[#82C293]/20 transition-all duration-300 text-sm font-light group hover:scale-105 hover:translate-x-1">
+                    <i class="fas fa-images w-4 text-white/60 transition-colors duration-300 group-hover:text-[#82C293]"></i>
                     <span>Media Library</span>
                 </a>
             </div>
         </div>
         
         <!-- Content -->
-        <div>
-            <div class="text-xs uppercase tracking-wider text-deep-charcoal/50 mb-3 px-2 font-medium">Content</div>
+        <div class="animate-fade-in stagger-2">
+            <div class="text-xs uppercase tracking-wider text-white/50 mb-3 px-2 font-medium">Content</div>
             <div class="space-y-1">
-                <a href="{% url 'dashboard:hero' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-deep-charcoal/70 hover:bg-warm-sand/15 hover:text-deep-charcoal transition text-sm font-light">
-                    <i class="fas fa-home w-4"></i>
+                <a href="{% url 'dashboard:hero' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:bg-[#82C293]/10 hover:text-white hover:border hover:border-[#82C293]/20 transition-all duration-300 text-sm font-light group hover:scale-105 hover:translate-x-1">
+                    <i class="fas fa-home w-4 text-white/60 transition-colors duration-300 group-hover:text-[#82C293]"></i>
                     <span>Hero Section</span>
                 </a>
-                <a href="{% url 'dashboard:site_images' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-deep-charcoal/70 hover:bg-warm-sand/15 hover:text-deep-charcoal transition text-sm font-light">
-                    <i class="fas fa-palette w-4"></i>
+                <a href="{% url 'dashboard:site_images' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:bg-[#82C293]/10 hover:text-white hover:border hover:border-[#82C293]/20 transition-all duration-300 text-sm font-light group hover:scale-105 hover:translate-x-1">
+                    <i class="fas fa-palette w-4 text-white/60 transition-colors duration-300 group-hover:text-[#82C293]"></i>
                     <span>Site Images</span>
                 </a>
             </div>
         </div>
         
         <!-- System -->
-        <div>
-            <div class="text-xs uppercase tracking-wider text-deep-charcoal/50 mb-3 px-2 font-medium">System</div>
+        <div class="animate-fade-in stagger-3">
+            <div class="text-xs uppercase tracking-wider text-white/50 mb-3 px-2 font-medium">System</div>
             <div class="space-y-1">
-                <a href="/django-admin/" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-deep-charcoal/70 hover:bg-warm-sand/15 hover:text-deep-charcoal transition text-sm font-light">
-                    <i class="fas fa-cog w-4"></i>
+                <a href="/django-admin/" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:bg-[#82C293]/10 hover:text-white hover:border hover:border-[#82C293]/20 transition-all duration-300 text-sm font-light group hover:scale-105 hover:translate-x-1">
+                    <i class="fas fa-cog w-4 text-white/60 transition-transform duration-300 group-hover:rotate-90 group-hover:text-[#82C293]"></i>
                     <span>Django Admin</span>
                 </a>
             </div>

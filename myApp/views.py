@@ -103,6 +103,50 @@ def home(request):
 
 
 # ============================================
+# STATIC PAGES
+# ============================================
+
+def about_page(request):
+    """About page"""
+    return render(request, 'pages/about.html')
+
+
+def careers_page(request):
+    """Careers page"""
+    return render(request, 'pages/careers.html')
+
+
+def blog_page(request):
+    """Blog page"""
+    return render(request, 'pages/blog.html')
+
+
+def help_center_page(request):
+    """Help Center page"""
+    return render(request, 'pages/help_center.html')
+
+
+def contact_page(request):
+    """Contact page"""
+    return render(request, 'pages/contact.html')
+
+
+def privacy_page(request):
+    """Privacy Policy page"""
+    return render(request, 'pages/privacy.html')
+
+
+def terms_page(request):
+    """Terms of Service page"""
+    return render(request, 'pages/terms.html')
+
+
+def cookies_page(request):
+    """Cookies Policy page"""
+    return render(request, 'pages/cookies.html')
+
+
+# ============================================
 # AUTHENTICATION
 # ============================================
 

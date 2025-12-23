@@ -1,49 +1,37 @@
-<section class="relative overflow-hidden py-16 lg:py-24 bg-gradient-to-br from-warm-sand to-[#E0D5C5]">
-    <!-- Background Image Layer -->
+<section class="relative overflow-hidden py-16 lg:py-24 bg-[#000000]">
+    <!-- Background radial gradient for teal glow -->
     <div class="absolute inset-0 z-0">
-      <img
-        src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=2400&q=80"
-        alt=""
-        class="w-full h-full object-cover opacity-50"
-        loading="lazy"
-      />
-      <!-- Enhanced gradient overlay for better text contrast -->
-      <div class="absolute inset-0 bg-gradient-to-b from-white/10 via-warm-sand/40 to-[#E0D5C5]/60"></div>
-      <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(255,255,255,0.4),transparent_60%)]"></div>
-      <!-- Additional overlay for depth -->
-      <div class="absolute inset-0 bg-gradient-to-t from-deep-charcoal/5 to-transparent"></div>
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(130,194,147,0.15),rgba(0,101,95,0.1),transparent_70%)]"></div>
     </div>
   
     <!-- Animated soft glow blobs -->
-    <div class="absolute top-[-45%] right-[-20%] w-[900px] h-[900px] bg-muted-taupe/18 rounded-full blur-[90px] animate-pulse" style="animation-duration: 6s;"></div>
-    <div class="absolute bottom-[-35%] left-[-10%] w-[700px] h-[700px] bg-muted-taupe/14 rounded-full blur-[80px] animate-pulse" style="animation-duration: 8s; animation-delay: 1s;"></div>
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent-gold/8 rounded-full blur-[100px] animate-pulse" style="animation-duration: 10s; animation-delay: 2s;"></div>
+    <div class="absolute top-[-45%] right-[-20%] w-[900px] h-[900px] bg-[#82C293]/10 rounded-full blur-[90px] animate-pulse" style="animation-duration: 6s;"></div>
+    <div class="absolute bottom-[-35%] left-[-10%] w-[700px] h-[700px] bg-[#00655F]/8 rounded-full blur-[80px] animate-pulse" style="animation-duration: 8s; animation-delay: 1s;"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#82C293]/5 rounded-full blur-[100px] animate-pulse" style="animation-duration: 10s; animation-delay: 2s;"></div>
   
     <div class="max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-16 relative z-10">
       <div class="grid grid-cols-1 place-items-center text-center">
-        <!-- Enhanced glass card container with noise texture and animations -->
-        <div class="w-full max-w-[980px] bg-white/40 border border-white/60 backdrop-blur-2xl rounded-[2rem] shadow-[0_25px_80px_rgba(0,0,0,0.15)] px-8 sm:px-12 py-10 sm:py-12 relative noise-texture hover:shadow-[0_30px_100px_rgba(0,0,0,0.2)] transition-all duration-500 hover:scale-[1.01]">
+        <!-- Enhanced glass card container -->
+        <div class="w-full max-w-[980px] bg-[#04363a]/70 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-[0_25px_80px_rgba(0,0,0,0.5)] px-8 sm:px-12 py-10 sm:py-12 relative hover:shadow-[0_30px_100px_rgba(130,194,147,0.2)] transition-all duration-500 hover:scale-[1.01] hover:border-[#82C293]/20">
           <!-- Subtle inner glow -->
-          <div class="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-white/20 to-transparent pointer-events-none"></div>
-          <!-- Animated shimmer effect -->
-          <div class="absolute inset-0 rounded-[2rem] bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full animate-[shimmer_3s_infinite] pointer-events-none"></div>
+          <div class="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-[#82C293]/10 to-transparent pointer-events-none"></div>
           <!-- Content wrapper -->
           <div class="relative z-10">
   
             <!-- Eyebrow Label -->
-            <div class="inline-flex items-center gap-2 bg-accent-gold/15 border border-accent-gold/25 px-5 py-2.5 rounded-full text-xs uppercase tracking-wider text-deep-charcoal mb-6 font-medium">
-              <i class="fas fa-bolt text-accent-gold"></i>
+            <div class="inline-flex items-center gap-2 bg-[#31641b]/40 border border-[#b8c943]/30 px-5 py-2.5 rounded-full text-xs uppercase tracking-wider text-[#b8c943] mb-6 font-medium">
+              <i class="fas fa-bolt text-[#8abc59]"></i>
               <span>AI-Powered Learning Paths</span>
             </div>
   
             <!-- Headline with improved spacing -->
-            <h1 class="text-5xl sm:text-6xl lg:text-[5.2rem] font-extralight leading-[1.05] mb-6 text-deep-charcoal tracking-[-2px]">
+            <h1 class="text-5xl sm:text-6xl lg:text-[5.2rem] font-extralight leading-[1.05] mb-6 text-white tracking-[-2px]">
               The Modern Way<br class="hidden sm:block" />
               To Learn Globally.
             </h1>
   
             <!-- Subheadline -->
-            <p class="text-lg sm:text-xl text-deep-charcoal/85 mb-8 leading-relaxed font-light max-w-[760px] mx-auto">
+            <p class="text-lg sm:text-xl text-white/80 mb-8 leading-relaxed font-light max-w-[760px] mx-auto">
               Placement-based learning. Milestone quizzes. Verified certification. Built for outcomes.
             </p>
   
@@ -51,7 +39,7 @@
             <div class="flex flex-col sm:flex-row gap-4 sm:gap-5 justify-center mb-8">
               <a
                 href="{% url 'login' %}?next={% url 'student_placement' %}"
-                class="group inline-flex items-center justify-center gap-3 bg-deep-charcoal text-white py-5 px-12 rounded-2xl no-underline text-lg font-medium shadow-[0_20px_50px_rgba(0,0,0,0.2)] hover:bg-accent-gold hover:shadow-[0_20px_50px_rgba(201,169,97,0.35)] transition-all duration-300 transform hover:scale-[1.02]"
+                class="group inline-flex items-center justify-center gap-3 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white py-5 px-12 rounded-2xl no-underline text-lg font-medium shadow-[0_20px_50px_rgba(0,101,95,0.4)] hover:opacity-90 hover:shadow-[0_20px_50px_rgba(130,194,147,0.5)] transition-all duration-300 transform hover:scale-[1.02] border border-[#82C293]/30"
               >
                 Take the Free Placement Test
                 <i class="fas fa-arrow-right text-white/80 group-hover:translate-x-1 transition-transform"></i>
@@ -60,50 +48,50 @@
               <!-- Secondary CTA -->
               <a
                 href="#courses"
-                class="inline-flex items-center justify-center bg-white/50 border-2 border-white/70 backdrop-blur-lg text-deep-charcoal py-5 px-12 rounded-2xl no-underline text-lg font-medium hover:bg-white/60 hover:border-accent-gold/40 transition-all duration-300 smooth-scroll"
+                class="inline-flex items-center justify-center bg-[#254346]/70 border-2 border-white/10 backdrop-blur-lg text-white py-5 px-12 rounded-2xl no-underline text-lg font-medium hover:bg-[#254346]/90 hover:border-[#82C293]/30 transition-all duration-300 smooth-scroll"
               >
                 Browse Courses
               </a>
             </div>
   
             <!-- Trust row -->
-            <div class="flex flex-wrap gap-6 justify-center mb-8 pb-6 border-b border-white/30">
-              <div class="flex items-center gap-2.5 text-sm text-deep-charcoal/90 font-medium">
-                <i class="fas fa-shield-halved text-accent-gold text-base"></i>
+            <div class="flex flex-wrap gap-6 justify-center mb-8 pb-6 border-b border-white/10">
+              <div class="flex items-center gap-2.5 text-sm text-white/80 font-medium">
+                <i class="fas fa-shield-halved text-[#82C293] text-base"></i>
                 <span>Secure Payments</span>
               </div>
-              <div class="flex items-center gap-2.5 text-sm text-deep-charcoal/90 font-medium">
-                <i class="fas fa-award text-accent-gold text-base"></i>
+              <div class="flex items-center gap-2.5 text-sm text-white/80 font-medium">
+                <i class="fas fa-award text-[#82C293] text-base"></i>
                 <span>Verified Certificates</span>
               </div>
-              <div class="flex items-center gap-2.5 text-sm text-deep-charcoal/90 font-medium">
-                <i class="fas fa-globe text-accent-gold text-base"></i>
+              <div class="flex items-center gap-2.5 text-sm text-white/80 font-medium">
+                <i class="fas fa-globe text-[#82C293] text-base"></i>
                 <span>Multi-language Support</span>
               </div>
             </div>
   
             <!-- Stats row with icons and improved visibility with animations -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
-              <div class="rounded-2xl bg-white/50 border border-white/60 backdrop-blur-md px-7 py-6 shadow-[0_12px_35px_rgba(0,0,0,0.08)] hover:shadow-[0_15px_40px_rgba(0,0,0,0.12)] transition-all duration-300 hover:border-accent-gold/30 hover:-translate-y-1 group">
+              <div class="rounded-2xl bg-[#254346]/70 backdrop-blur-md border border-white/10 px-7 py-6 shadow-[0_12px_35px_rgba(0,0,0,0.3)] hover:shadow-[0_15px_40px_rgba(130,194,147,0.2)] transition-all duration-300 hover:border-[#82C293]/30 hover:-translate-y-1 group">
                 <div class="flex items-center justify-center gap-3 mb-3">
-                  <i class="fas fa-book-open text-accent-gold text-xl group-hover:scale-110 transition-transform duration-300"></i>
-                  <div class="text-3xl font-semibold text-deep-charcoal">120,000+</div>
+                  <i class="fas fa-book-open text-[#82C293] text-xl group-hover:scale-110 transition-transform duration-300"></i>
+                  <div class="text-3xl font-semibold text-white">120,000+</div>
                 </div>
-                <div class="text-xs text-deep-charcoal/70 uppercase tracking-wider font-medium">Lessons Completed</div>
+                <div class="text-xs text-white/70 uppercase tracking-wider font-medium">Lessons Completed</div>
               </div>
-              <div class="rounded-2xl bg-white/50 border border-white/60 backdrop-blur-md px-7 py-6 shadow-[0_12px_35px_rgba(0,0,0,0.08)] hover:shadow-[0_15px_40px_rgba(0,0,0,0.12)] transition-all duration-300 hover:border-accent-gold/30 hover:-translate-y-1 group">
+              <div class="rounded-2xl bg-[#254346]/70 backdrop-blur-md border border-white/10 px-7 py-6 shadow-[0_12px_35px_rgba(0,0,0,0.3)] hover:shadow-[0_15px_40px_rgba(130,194,147,0.2)] transition-all duration-300 hover:border-[#82C293]/30 hover:-translate-y-1 group">
                 <div class="flex items-center justify-center gap-3 mb-3">
-                  <i class="fas fa-star text-accent-gold text-xl group-hover:scale-110 transition-transform duration-300"></i>
-                  <div class="text-3xl font-semibold text-deep-charcoal">4.8</div>
+                  <i class="fas fa-star text-[#f8da03] text-xl group-hover:scale-110 transition-transform duration-300"></i>
+                  <div class="text-3xl font-semibold text-white">4.8</div>
                 </div>
-                <div class="text-xs text-deep-charcoal/70 uppercase tracking-wider font-medium">Average Satisfaction</div>
+                <div class="text-xs text-white/70 uppercase tracking-wider font-medium">Average Satisfaction</div>
               </div>
-              <div class="rounded-2xl bg-white/50 border border-white/60 backdrop-blur-md px-7 py-6 shadow-[0_12px_35px_rgba(0,0,0,0.08)] hover:shadow-[0_15px_40px_rgba(0,0,0,0.12)] transition-all duration-300 hover:border-accent-gold/30 hover:-translate-y-1 group">
+              <div class="rounded-2xl bg-[#254346]/70 backdrop-blur-md border border-white/10 px-7 py-6 shadow-[0_12px_35px_rgba(0,0,0,0.3)] hover:shadow-[0_15px_40px_rgba(130,194,147,0.2)] transition-all duration-300 hover:border-[#82C293]/30 hover:-translate-y-1 group">
                 <div class="flex items-center justify-center gap-3 mb-3">
-                  <i class="fas fa-globe-americas text-accent-gold text-xl group-hover:scale-110 transition-transform duration-300"></i>
-                  <div class="text-3xl font-semibold text-deep-charcoal">40+</div>
+                  <i class="fas fa-globe-americas text-[#82C293] text-xl group-hover:scale-110 transition-transform duration-300"></i>
+                  <div class="text-3xl font-semibold text-white">40+</div>
                 </div>
-                <div class="text-xs text-deep-charcoal/70 uppercase tracking-wider font-medium">Countries</div>
+                <div class="text-xs text-white/70 uppercase tracking-wider font-medium">Countries</div>
               </div>
             </div>
   
@@ -112,4 +100,3 @@
       </div>
     </div>
   </section>
-  
