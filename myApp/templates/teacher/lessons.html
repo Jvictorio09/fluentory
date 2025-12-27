@@ -1,0 +1,35 @@
+{% extends 'teacher/base.html' %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold">{{ course.title }} - Lessons</h1>
+        <a href="{% url 'teacher_lesson_create' course.id %}" class="bg-deep-charcoal text-white px-4 py-2 rounded">Create Lesson</a>
+    </div>
+    
+    {% for module in modules %}
+    <div class="bg-white border rounded p-4 mb-4">
+        <h2 class="font-bold text-xl mb-4">{{ module.title }}</h2>
+        <div class="space-y-2">
+            {% for lesson in module.lessons.all %}
+            <div class="flex justify-between items-center border-b pb-2">
+                <span>{{ lesson.order }}. {{ lesson.title }}</span>
+                <div class="space-x-2">
+                    <a href="{% url 'teacher_lesson_edit' course.id lesson.id %}" class="text-blue-600 text-sm">Edit</a>
+                    <form method="post" action="{% url 'teacher_lesson_delete' course.id lesson.id %}" class="inline">
+                        {% csrf_token %}
+                        <button type="submit" class="text-red-600 text-sm" onclick="return confirm('Delete this lesson?')">Delete</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+
+
+
+

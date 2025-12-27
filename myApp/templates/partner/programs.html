@@ -1,0 +1,63 @@
+{% extends 'partner/base.html' %}
+
+{% block content %}
+<div class="w-full space-y-6 sm:space-y-8">
+    <div class="mb-6 sm:mb-8">
+        <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2">
+            Programs & Bundles
+        </h1>
+        <p class="text-sm sm:text-base text-white/60">
+            {% if is_preview_mode %}Platform-wide programs (read-only preview){% else %}View and manage your course programs and bundles{% endif %}
+        </p>
+    </div>
+    
+    {% if is_preview_mode %}
+    <div class="mb-4 p-4 bg-blue-500/20 border border-blue-500/50 rounded-lg">
+        <div class="flex items-center gap-2 text-blue-200">
+            <i class="fas fa-info-circle"></i>
+            <span class="font-medium">Preview Mode: Showing platform-wide programs (read-only)</span>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Programs List -->
+    <div class="bg-[#04363a]/50 backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-white/10 shadow-lg">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+            <h2 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                <i class="fas fa-box text-[#82C293]"></i>
+                Available Programs
+            </h2>
+        </div>
+        
+        {% if programs %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            {% for program in programs %}
+            <div class="bg-[#254346]/50 p-5 rounded-lg border border-white/5 hover:border-[#82C293]/30 transition">
+                <div class="text-lg font-semibold text-white mb-2">{{ program.title }}</div>
+                <div class="text-sm text-white/60 mb-4">
+                    {{ program.short_description|truncatewords:15|default:"No description available" }}
+                </div>
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <span class="px-3 py-1 bg-[#82C293]/20 text-[#82C293] text-xs font-medium rounded border border-[#82C293]/30">{{ program.level|default:"All Levels" }}</span>
+                    {% if program.price %}
+                    <span class="px-3 py-1 bg-[#82C293]/20 text-[#82C293] text-xs font-medium rounded border border-[#82C293]/30">${{ program.price }}</span>
+                    {% endif %}
+                </div>
+                <div class="text-xs text-white/50 flex items-center gap-4">
+                    <span class="flex items-center gap-1"><i class="fas fa-users"></i> {{ program.enrolled_count|default:0 }} enrolled</span>
+                    {% if program.estimated_hours %}
+                    <span class="flex items-center gap-1"><i class="fas fa-clock"></i> {{ program.estimated_hours }} hours</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <i class="fas fa-box text-5xl text-white/20 mb-4"></i>
+            <p class="text-white/60 text-lg">No programs found</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

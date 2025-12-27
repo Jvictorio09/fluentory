@@ -1,0 +1,137 @@
+{% extends 'partner/base.html' %}
+
+{% block content %}
+<div class="w-full space-y-6 sm:space-y-8">
+    <div class="mb-6 sm:mb-8">
+        <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2">
+            Settings
+        </h1>
+        <p class="text-sm sm:text-base text-white/60">
+            {% if is_preview_mode %}Preview mode (read-only){% else %}Manage your partner account settings{% endif %}
+        </p>
+    </div>
+    
+    {% if is_preview_mode %}
+    <div class="mb-4 p-4 bg-blue-500/20 border border-blue-500/50 rounded-lg">
+        <div class="flex items-center gap-2 text-blue-200">
+            <i class="fas fa-info-circle"></i>
+            <span class="font-medium">Preview Mode: Settings are read-only</span>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Company Information -->
+    <div class="bg-[#04363a]/50 backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-white/10 shadow-lg">
+        <h2 class="text-lg sm:text-xl font-bold text-white mb-6 flex items-center gap-2">
+            <i class="fas fa-building text-[#82C293]"></i>
+            Company Information
+        </h2>
+        
+        <form method="POST" class="space-y-5">
+            {% csrf_token %}
+            
+            <div>
+                <label for="company_name" class="block text-sm font-medium text-white mb-2">Company Name</label>
+                <input 
+                    type="text" 
+                    id="company_name" 
+                    name="company_name" 
+                    value="{{ partner.company_name }}" 
+                    {% if is_preview_mode %}readonly{% endif %}
+                    class="w-full px-4 py-3 bg-[#254346] border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50 {% if is_preview_mode %}opacity-50 cursor-not-allowed{% endif %}"
+                >
+            </div>
+            
+            <div>
+                <label for="contact_email" class="block text-sm font-medium text-white mb-2">Contact Email</label>
+                <input 
+                    type="email" 
+                    id="contact_email" 
+                    name="contact_email" 
+                    value="{{ partner.contact_email }}" 
+                    {% if is_preview_mode %}readonly{% endif %}
+                    class="w-full px-4 py-3 bg-[#254346] border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50 {% if is_preview_mode %}opacity-50 cursor-not-allowed{% endif %}"
+                >
+            </div>
+            
+            <div>
+                <label for="contact_phone" class="block text-sm font-medium text-white mb-2">Contact Phone</label>
+                <input 
+                    type="tel" 
+                    id="contact_phone" 
+                    name="contact_phone" 
+                    value="{{ partner.contact_phone|default:'' }}" 
+                    {% if is_preview_mode %}readonly{% endif %}
+                    class="w-full px-4 py-3 bg-[#254346] border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50 {% if is_preview_mode %}opacity-50 cursor-not-allowed{% endif %}"
+                >
+            </div>
+            
+            <div>
+                <label for="website" class="block text-sm font-medium text-white mb-2">Website</label>
+                <input 
+                    type="url" 
+                    id="website" 
+                    name="website" 
+                    value="{{ partner.website|default:'' }}" 
+                    {% if is_preview_mode %}readonly{% endif %}
+                    class="w-full px-4 py-3 bg-[#254346] border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50 {% if is_preview_mode %}opacity-50 cursor-not-allowed{% endif %}"
+                    placeholder="https://example.com"
+                >
+            </div>
+            
+            {% if not is_preview_mode %}
+            <div class="pt-4">
+                <button type="submit" class="px-6 py-3 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-lg hover:opacity-90 transition font-medium">
+                    Save Changes
+                </button>
+            </div>
+            {% endif %}
+        </form>
+    </div>
+    
+    <!-- Account Details -->
+    <div class="bg-[#04363a]/50 backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-white/10 shadow-lg">
+        <h2 class="text-lg sm:text-xl font-bold text-white mb-6 flex items-center gap-2">
+            <i class="fas fa-user-cog text-[#82C293]"></i>
+            Account Details
+        </h2>
+        
+        <div class="space-y-4">
+            <div class="flex justify-between items-center py-3 border-b border-white/10">
+                <span class="text-sm text-white/60">Commission Rate</span>
+                <span class="text-sm font-semibold text-white">
+                    {% if partner.commission_rate %}{{ partner.commission_rate|floatformat:0 }}%{% else %}20% (default){% endif %}
+                </span>
+            </div>
+            
+            <div class="flex justify-between items-center py-3 border-b border-white/10">
+                <span class="text-sm text-white/60">Account Status</span>
+                <span class="text-sm font-semibold {% if partner.is_active %}text-[#82C293]{% else %}text-red-400{% endif %}">
+                    {% if partner.is_active %}Active{% else %}Inactive{% endif %}
+                </span>
+            </div>
+            
+            <div class="flex justify-between items-center py-3">
+                <span class="text-sm text-white/60">Joined</span>
+                <span class="text-sm text-white">
+                    {% if partner.joined_at %}{{ partner.joined_at|date:"M d, Y" }}{% else %}N/A{% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Danger Zone -->
+    {% if not is_preview_mode %}
+    <div class="bg-red-500/10 rounded-xl p-6 sm:p-8 border border-red-500/30 shadow-lg">
+        <h2 class="text-lg sm:text-xl font-bold text-red-400 mb-4 flex items-center gap-2">
+            <i class="fas fa-exclamation-triangle"></i>
+            Danger Zone
+        </h2>
+        <p class="text-sm text-white/60 mb-4">Irreversible actions that affect your account</p>
+        <button class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition font-medium" disabled>
+            Deactivate Account
+        </button>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

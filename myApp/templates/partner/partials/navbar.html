@@ -1,13 +1,59 @@
-<nav class="bg-white border-b border-muted-taupe/20 sticky top-0 z-50">
-    <div class="px-6 py-4 flex items-center justify-between">
-        <div class="flex items-center gap-6">
-            <a href="/partner/" class="text-2xl font-semibold text-deep-charcoal">Fluentory Partner</a>
+<nav class="bg-[#04363a]/90 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50 w-full">
+    <div class="px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3 sm:gap-6">
+        <div class="flex items-center gap-3 sm:gap-6 flex-1 min-w-0">
+            <a href="/partner/" class="text-xl sm:text-2xl font-semibold text-white shrink-0">Fluentory Partner</a>
+            <span class="hidden sm:inline text-sm text-white/60">Partner Portal</span>
         </div>
         
-        <div class="flex items-center gap-4">
-            <div class="text-sm text-deep-charcoal/70">Partner Portal</div>
-            <div class="w-8 h-8 rounded-full bg-deep-charcoal border border-muted-taupe/20"></div>
+        <div class="flex items-center gap-3 sm:gap-4 shrink-0">
+            <!-- User Dropdown -->
+            <div class="relative" id="user-dropdown">
+                <button class="flex items-center gap-2 cursor-pointer hover:opacity-80 transition" onclick="toggleUserMenu()">
+                    <div class="w-8 h-8 rounded-full bg-[#254346] border border-white/10 grid place-items-center overflow-hidden">
+                        {% if request.user.profile.avatar %}
+                        <img src="{{ request.user.profile.avatar.url }}" alt="" class="w-full h-full object-cover">
+                        {% else %}
+                        <i class="fas fa-user text-sm text-white/70"></i>
+                        {% endif %}
+                    </div>
+                    <span class="hidden sm:inline text-sm text-white">{{ request.user.first_name|default:request.user.username }}</span>
+                    <i class="fas fa-chevron-down text-xs text-white/60 hidden sm:inline"></i>
+                </button>
+                
+                <!-- Dropdown Menu -->
+                <div id="user-menu" class="hidden absolute right-0 top-full mt-2 w-48 bg-[#04363a]/90 backdrop-blur-xl rounded-xl border border-white/10 shadow-lg py-2 z-50">
+                    <div class="px-4 py-2 border-b border-white/10">
+                        <div class="font-medium text-white">{{ request.user.first_name }} {{ request.user.last_name }}</div>
+                        <div class="text-xs text-white/60">{{ request.user.email }}</div>
+                    </div>
+                    <a href="/partner/" class="block px-4 py-2 text-sm text-white hover:bg-[#254346]/50 transition">
+                        <i class="fas fa-chart-line mr-2"></i> Dashboard
+                    </a>
+                    <a href="{% url 'student_home' %}" class="block px-4 py-2 text-sm text-white hover:bg-[#254346]/50 transition">
+                        <i class="fas fa-user-graduate mr-2"></i> Student View
+                    </a>
+                    <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm text-white hover:bg-red-500/20 transition border-t border-white/10 mt-2 pt-2">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Logout
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </nav>
+
+<script>
+function toggleUserMenu() {
+    const menu = document.getElementById('user-menu');
+    menu.classList.toggle('hidden');
+}
+
+// Close menu when clicking outside
+document.addEventListener('click', function(event) {
+    const dropdown = document.getElementById('user-dropdown');
+    const menu = document.getElementById('user-menu');
+    if (!dropdown.contains(event.target)) {
+        menu.classList.add('hidden');
+    }
+});
+</script>
 

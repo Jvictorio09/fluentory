@@ -1,0 +1,47 @@
+{% extends 'teacher/base.html' %}
+
+{% block content %}
+<div class="space-y-6">
+    <div class="flex justify-between items-center">
+        <h1 class="text-3xl font-bold">{{ course.title }} - Quizzes</h1>
+        <a href="{% url 'teacher_quiz_create' course.id %}" class="bg-deep-charcoal text-white px-4 py-2 rounded">Create Quiz</a>
+    </div>
+    
+    <div class="bg-white border rounded p-4">
+        <table class="w-full">
+            <thead>
+                <tr class="border-b">
+                    <th class="text-left p-2">Title</th>
+                    <th class="text-left p-2">Type</th>
+                    <th class="text-left p-2">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for quiz in quizzes %}
+                <tr class="border-b">
+                    <td class="p-2">{{ quiz.title }}</td>
+                    <td class="p-2">{{ quiz.get_quiz_type_display }}</td>
+                    <td class="p-2">
+                        <a href="{% url 'teacher_quiz_questions' course.id quiz.id %}" class="text-blue-600 text-sm">Manage</a>
+                        <a href="{% url 'teacher_quiz_edit' course.id quiz.id %}" class="text-blue-600 text-sm ml-2">Edit</a>
+                        <form method="post" action="{% url 'teacher_quiz_delete' course.id quiz.id %}" class="inline ml-2">
+                            {% csrf_token %}
+                            <button type="submit" class="text-red-600 text-sm" onclick="return confirm('Delete this quiz?')">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" class="p-2 text-muted-taupe">No quizzes yet</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+

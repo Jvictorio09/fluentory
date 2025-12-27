@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Fluentory - Teacher{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'teal-dark': '#04363a',
+                        'teal-medium': '#254346',
+                        'teal-light': '#00655F',
+                        'green-accent': '#82C293',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-[#000000] text-white font-sans">
+    {% include 'partials/role_preview_banner.html' %}
+    {% include 'teacher/partials/navbar.html' %}
+    
+    <div class="flex min-h-[calc(100vh-4rem)]" {% if request.session.preview_role %}style="margin-top: 3.5rem;"{% endif %}>
+        {% include 'teacher/partials/sidebar.html' %}
+        
+        <main class="flex-1 w-full lg:ml-64 pt-8 pb-6 px-6 sm:pt-10 sm:pb-8 sm:px-8 lg:pt-12 lg:pb-10 lg:px-10">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="mb-4 p-4 rounded-lg {% if message.tags == 'error' %}bg-red-500/20 border border-red-500/50 text-red-200{% elif message.tags == 'success' %}bg-green-500/20 border border-green-500/50 text-green-200{% elif message.tags == 'warning' %}bg-yellow-500/20 border border-yellow-500/50 text-yellow-200{% else %}bg-[#04363a]/50 border border-white/10 text-white{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+            
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>
+

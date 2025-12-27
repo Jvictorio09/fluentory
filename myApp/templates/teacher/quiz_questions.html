@@ -1,0 +1,42 @@
+{% extends 'teacher/base.html' %}
+
+{% block content %}
+<div class="space-y-6">
+    <h1 class="text-3xl font-bold">{{ quiz.title }} - Questions</h1>
+    
+    <div class="bg-white p-6 rounded shadow">
+        <h2 class="text-xl font-bold mb-4">Add Question</h2>
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block mb-2">Question Text</label>
+                <textarea name="question_text" required class="w-full border rounded p-2" rows="3"></textarea>
+            </div>
+            <div>
+                <label class="block mb-2">Answers (one per line, mark correct with * at start)</label>
+                <textarea name="answers[]" class="w-full border rounded p-2" rows="4" placeholder="*Correct answer&#10;Wrong answer 1&#10;Wrong answer 2"></textarea>
+            </div>
+            <button type="submit" class="bg-deep-charcoal text-white px-4 py-2 rounded">Add Question</button>
+        </form>
+    </div>
+    
+    <div class="bg-white p-6 rounded shadow">
+        <h2 class="text-xl font-bold mb-4">Existing Questions</h2>
+        {% for question in questions %}
+        <div class="border-b pb-4 mb-4">
+            <p class="font-bold mb-2">{{ question.question_text }}</p>
+            <ul class="list-disc ml-6">
+                {% for answer in question.answers.all %}
+                <li class="{% if answer.is_correct %}text-green-600 font-bold{% endif %}">{{ answer.answer_text }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+

@@ -20,9 +20,12 @@ from django.db.utils import OperationalError, DatabaseError
 
 from .models import (
     User, UserProfile, Course, Enrollment, LessonProgress, QuizAttempt,
-    Payment, Media, SiteSettings, PlacementTest
+    Payment, Media, SiteSettings, PlacementTest, Teacher, CourseTeacher,
+    Category
 )
 from .views import role_required, get_or_create_profile
+from django.http import JsonResponse
+import json
 
 
 # ============================================
@@ -488,4 +491,391 @@ def dashboard_payments(request):
         'payments': payments,
     }
     return render(request, 'dashboard/payments.html', context)
+
+
+# ============================================
+# TEACHER MANAGEMENT
+# ============================================
+
+@login_required
+@role_required(['admin'])
+def dashboard_teachers(request):
+    """Teacher management"""
+    teachers = Teacher.objects.select_related('user').order_by('-created_at')
+    
+    # Filters
+    status = request.GET.get('status')
+    search = request.GET.get('search')
+    
+    if status == 'approved':
+        teachers = teachers.filter(is_approved=True)
+    elif status == 'pending':
+        teachers = teachers.filter(is_approved=False)
+    
+    if search:
+        teachers = teachers.filter(
+            Q(user__username__icontains=search) |
+            Q(user__email__icontains=search) |
+            Q(user__first_name__icontains=search) |
+            Q(user__last_name__icontains=search)
+        )
+    
+    paginator = Paginator(teachers, 20)
+    page = request.GET.get('page', 1)
+    teachers = paginator.get_page(page)
+    
+    context = {
+        'teachers': teachers,
+        'selected_status': status,
+        'search_query': search,
+    }
+    return render(request, 'dashboard/teachers.html', context)
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_teacher_approve(request, teacher_id):
+    """Approve teacher"""
+    teacher = get_object_or_404(Teacher, id=teacher_id)
+    teacher.is_approved = True
+    teacher.approved_at = timezone.now()
+    teacher.approved_by = request.user
+    teacher.save()
+    
+    # Update user profile role
+    profile = get_or_create_profile(teacher.user)
+    profile.role = 'instructor'
+    profile.save()
+    
+    messages.success(request, f'Teacher {teacher.user.username} approved successfully!')
+    return redirect('dashboard:teachers')
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_teacher_reject(request, teacher_id):
+    """Reject teacher"""
+    teacher = get_object_or_404(Teacher, id=teacher_id)
+    teacher.is_approved = False
+    teacher.save()
+    
+    messages.success(request, f'Teacher {teacher.user.username} rejected.')
+    return redirect('dashboard:teachers')
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_teacher_assign_course(request, teacher_id):
+    """Assign course to teacher"""
+    teacher = get_object_or_404(Teacher, id=teacher_id)
+    data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
+    
+    course_id = data.get('course_id')
+    permission_level = data.get('permission_level', 'view_only')
+    can_create_live_classes = data.get('can_create_live_classes', 'false') == 'true'
+    
+    course = get_object_or_404(Course, id=course_id)
+    
+    # Check if already assigned
+    assignment, created = CourseTeacher.objects.get_or_create(
+        course=course,
+        teacher=teacher,
+        defaults={
+            'permission_level': permission_level,
+            'can_create_live_classes': can_create_live_classes,
+            'assigned_by': request.user
+        }
+    )
+    
+    if not created:
+        assignment.permission_level = permission_level
+        assignment.can_create_live_classes = can_create_live_classes
+        assignment.save()
+        messages.info(request, 'Assignment updated.')
+    else:
+        messages.success(request, f'Course "{course.title}" assigned to {teacher.user.username}!')
+    
+    if request.content_type == 'application/json':
+        return JsonResponse({'success': True})
+    return redirect('dashboard:teachers')
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_teacher_remove_course(request, teacher_id, assignment_id):
+    """Remove course assignment from teacher"""
+    assignment = get_object_or_404(CourseTeacher, id=assignment_id, teacher_id=teacher_id)
+    course_title = assignment.course.title
+    assignment.delete()
+    
+    messages.success(request, f'Course "{course_title}" removed from teacher.')
+    return redirect('dashboard:teachers')
+
+
+# ============================================
+# ROLE SWITCHER & IMPERSONATION
+# ============================================
+
+@login_required
+@role_required(['admin'])
+def dashboard_switch_role(request):
+    """Role switcher - preview different role views (godlike admin feature)"""
+    role = request.GET.get('role')
+    
+    # Clear impersonation if switching roles
+    if 'impersonating_user_id' in request.session:
+        del request.session['impersonating_user_id']
+        del request.session['impersonating']
+    
+    # Set preview role in session
+    if role == 'student':
+        request.session['preview_role'] = 'student'
+        request.session['switched_from'] = 'admin'
+        messages.info(request, 'Switched to Student view. You can switch back anytime from the admin dashboard.')
+        return redirect('student_home')
+    elif role == 'teacher':
+        request.session['preview_role'] = 'teacher'
+        request.session['switched_from'] = 'admin'
+        messages.info(request, 'Switched to Teacher view. You can switch back anytime from the admin dashboard.')
+        return redirect('teacher_dashboard')
+    elif role == 'partner':
+        request.session['preview_role'] = 'partner'
+        request.session['switched_from'] = 'admin'
+        messages.info(request, 'Switched to Partner view. You can switch back anytime from the admin dashboard.')
+        return redirect('partner_overview')
+    elif role == 'admin' or role == 'admin_dashboard':
+        # Return to admin view
+        if 'preview_role' in request.session:
+            del request.session['preview_role']
+        if 'switched_from' in request.session:
+            del request.session['switched_from']
+        messages.success(request, 'Switched back to Admin view.')
+        return redirect('dashboard:overview')
+    
+    return redirect('dashboard:overview')
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_login_as(request, user_id):
+    """Login as user (impersonation)"""
+    target_user = get_object_or_404(User, id=user_id)
+    
+    # Store original user ID in session
+    request.session['impersonating_user_id'] = request.user.id
+    request.session['impersonating'] = True
+    
+    # Login as target user
+    from django.contrib.auth import login
+    login(request, target_user)
+    
+    messages.info(request, f'Now viewing as {target_user.username}. Use Stop Impersonation to return.')
+    
+    # Redirect based on their role
+    from .views import redirect_by_role
+    return redirect_by_role(target_user)
+
+
+@login_required
+def dashboard_stop_impersonation(request):
+    """Stop impersonation and return to admin"""
+    if 'impersonating_user_id' in request.session:
+        original_user_id = request.session['impersonating_user_id']
+        original_user = get_object_or_404(User, id=original_user_id)
+        
+        # Clear impersonation session
+        del request.session['impersonating_user_id']
+        del request.session['impersonating']
+        
+        # Login as original user
+        from django.contrib.auth import login
+        login(request, original_user)
+        
+        messages.success(request, 'Returned to admin view.')
+        return redirect('dashboard:overview')
+    
+    return redirect('dashboard:overview')
+
+
+# ============================================
+# MANUAL ENROLLMENT
+# ============================================
+
+@login_required
+@role_required(['admin'])
+def dashboard_manual_enroll(request):
+    """Manually enroll student in course"""
+    if request.method == 'POST':
+        user_id = request.POST.get('user_id')
+        course_id = request.POST.get('course_id')
+        notes = request.POST.get('notes', '')
+        
+        user = get_object_or_404(User, id=user_id)
+        course = get_object_or_404(Course, id=course_id)
+        
+        # Check if already enrolled
+        enrollment, created = Enrollment.objects.get_or_create(
+            user=user,
+            course=course,
+            defaults={
+                'status': 'active'
+            }
+        )
+        
+        if created:
+            # Create payment record if paid course
+            if not course.is_free and course.price > 0:
+                Payment.objects.create(
+                    user=user,
+                    course=course,
+                    amount=course.price,
+                    currency=course.currency,
+                    status='completed',
+                    payment_method='partner',
+                    created_at=timezone.now(),
+                    completed_at=timezone.now()
+                )
+            
+            # Update course stats
+            course.enrolled_count += 1
+            course.save()
+            
+            messages.success(request, f'{user.username} enrolled in "{course.title}" successfully!')
+        else:
+            messages.info(request, f'{user.username} is already enrolled in "{course.title}".')
+        
+        return redirect('dashboard:manual_enroll')
+    
+    # Get users and courses for dropdown
+    users = User.objects.filter(profile__role='student').order_by('username')[:100]
+    courses = Course.objects.filter(status='published').order_by('title')
+    
+    context = {
+        'users': users,
+        'courses': courses,
+    }
+    return render(request, 'dashboard/manual_enroll.html', context)
+
+
+# ============================================
+# COURSE MANAGEMENT (ADMIN)
+# ============================================
+
+@login_required
+@role_required(['admin'])
+def dashboard_course_create(request):
+    """Create new course (admin)"""
+    if request.method == 'POST':
+        course = Course.objects.create(
+            title=request.POST.get('title'),
+            slug=request.POST.get('slug'),
+            description=request.POST.get('description'),
+            short_description=request.POST.get('short_description', ''),
+            outcome=request.POST.get('outcome', ''),
+            category_id=request.POST.get('category'),
+            level=request.POST.get('level', 'beginner'),
+            instructor_id=request.POST.get('instructor') or None,
+            price=float(request.POST.get('price', 0)),
+            is_free=request.POST.get('is_free') == 'on',
+            status='draft'
+        )
+        
+        messages.success(request, f'Course "{course.title}" created successfully!')
+        return redirect('dashboard:course_edit', course_id=course.id)
+    
+    categories = Category.objects.all()
+    instructors = User.objects.filter(profile__role='instructor').order_by('username')
+    
+    context = {
+        'categories': categories,
+        'instructors': instructors,
+    }
+    return render(request, 'dashboard/course_create.html', context)
+
+
+@login_required
+@role_required(['admin'])
+def dashboard_course_edit(request, course_id):
+    """Edit course (admin)"""
+    course = get_object_or_404(Course, id=course_id)
+    
+    if request.method == 'POST':
+        course.title = request.POST.get('title', course.title)
+        course.slug = request.POST.get('slug', course.slug)
+        course.description = request.POST.get('description', course.description)
+        course.short_description = request.POST.get('short_description', course.short_description)
+        course.outcome = request.POST.get('outcome', course.outcome)
+        course.category_id = request.POST.get('category') or course.category_id
+        course.level = request.POST.get('level', course.level)
+        course.instructor_id = request.POST.get('instructor') or course.instructor_id
+        course.price = float(request.POST.get('price', course.price))
+        course.is_free = request.POST.get('is_free') == 'on'
+        course.status = request.POST.get('status', course.status)
+        
+        if request.FILES.get('thumbnail'):
+            course.thumbnail = request.FILES.get('thumbnail')
+        
+        course.save()
+        messages.success(request, 'Course updated successfully!')
+        return redirect('dashboard:course_edit', course_id=course.id)
+    
+    categories = Category.objects.all()
+    instructors = User.objects.filter(profile__role='instructor').order_by('username')
+    modules = course.modules.prefetch_related('lessons').order_by('order')
+    
+    context = {
+        'course': course,
+        'categories': categories,
+        'instructors': instructors,
+        'modules': modules,
+    }
+    return render(request, 'dashboard/course_edit.html', context)
+
+
+# ============================================
+# USER MANAGEMENT (EXTENDED)
+# ============================================
+
+@login_required
+@role_required(['admin'])
+def dashboard_user_create(request):
+    """Create new user (admin)"""
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        first_name = request.POST.get('first_name', '')
+        last_name = request.POST.get('last_name', '')
+        role = request.POST.get('role', 'student')
+        
+        # Create user
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name
+        )
+        
+        # Create profile with role
+        profile = get_or_create_profile(user)
+        profile.role = role
+        profile.save()
+        
+        # If teacher, create teacher profile and auto-approve
+        if role == 'instructor':
+            teacher = Teacher.objects.create(user=user, is_approved=True, approved_by=request.user, approved_at=timezone.now())
+            messages.success(request, f'Teacher {username} created and auto-approved!')
+        else:
+            messages.success(request, f'User {username} created successfully!')
+        
+        return redirect('dashboard:users')
+    
+    context = {}
+    return render(request, 'dashboard/user_create.html', context)
 

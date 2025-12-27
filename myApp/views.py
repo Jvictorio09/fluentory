@@ -19,7 +19,8 @@ from .models import (
     Quiz, Question, Answer, Enrollment, LessonProgress, QuizAttempt,
     Certificate, PlacementTest, TutorConversation, TutorMessage,
     Partner, Cohort, CohortMembership, Payment, Review, FAQ,
-    Notification, SiteSettings, Media
+    Notification, SiteSettings, Media, Teacher, CourseTeacher,
+    LiveClassSession, CourseAnnouncement, StudentMessage
 )
 
 
@@ -44,7 +45,7 @@ def get_or_create_profile(user):
 
 
 def role_required(allowed_roles):
-    """Decorator to check user role. Allows superusers/admins even without profile."""
+    """Decorator to check user role. Allows superusers/admins to access everything (godlike admin)."""
     def decorator(view_func):
         def wrapper(request, *args, **kwargs):
             if not request.user.is_authenticated:
@@ -56,6 +57,10 @@ def role_required(allowed_roles):
             
             # Get or create profile
             profile = get_or_create_profile(request.user)
+            
+            # Godlike Admin Feature: Admins can access ALL views (for preview/switching)
+            if profile.role == 'admin' or request.user.is_superuser or request.user.is_staff:
+                return view_func(request, *args, **kwargs)
             
             if profile.role in allowed_roles:
                 return view_func(request, *args, **kwargs)
@@ -232,7 +237,11 @@ def redirect_by_role(user):
     
     profile = get_or_create_profile(user)
     role = profile.role
-    if role == 'admin':
+    
+    # Check if user is a teacher (approved)
+    if role == 'instructor' or (hasattr(user, 'teacher_profile') and user.teacher_profile.is_approved):
+        return redirect('teacher_dashboard')
+    elif role == 'admin':
         return redirect('dashboard:overview')
     elif role == 'partner':
         return redirect('partner_overview')
@@ -1247,6 +1256,797 @@ def admin_site_images(request):
 
 
 # ============================================
+# TEACHER VIEWS
+# ============================================
+
+@login_required
+def teacher_dashboard(request):
+    """Teacher dashboard"""
+    user = request.user
+    profile = get_or_create_profile(user)
+    
+    # Check if user is teacher
+    if not hasattr(user, 'teacher_profile') or not user.teacher_profile.is_approved:
+        # Check if user has instructor role
+        if profile.role != 'instructor':
+            messages.error(request, 'You do not have permission to access the teacher dashboard.')
+            return redirect('student_home')
+        # Create teacher profile if doesn't exist
+        teacher, _ = Teacher.objects.get_or_create(user=user)
+        teacher.is_approved = True
+        teacher.save()
+    else:
+        teacher = user.teacher_profile
+    
+    # Update online status
+    teacher.is_online = True
+    teacher.last_seen = timezone.now()
+    teacher.save()
+    
+    # Get assigned courses
+    assigned_courses = CourseTeacher.objects.filter(teacher=teacher).select_related('course')
+    course_ids = [ct.course.id for ct in assigned_courses]
+    
+    # KPIs
+    total_students = Enrollment.objects.filter(course_id__in=course_ids).values('user').distinct().count()
+    
+    # Active students (last 7 days)
+    week_ago = timezone.now() - timezone.timedelta(days=7)
+    active_students = LessonProgress.objects.filter(
+        enrollment__course_id__in=course_ids,
+        started_at__gte=week_ago
+    ).values('enrollment__user').distinct().count()
+    
+    # Total courses
+    total_courses = len(course_ids)
+    
+    # Upcoming live classes
+    upcoming_classes = LiveClassSession.objects.filter(
+        teacher=teacher,
+        status='scheduled',
+        scheduled_start__gte=timezone.now()
+    ).select_related('course').order_by('scheduled_start')[:5]
+    
+    # Recent announcements
+    recent_announcements = CourseAnnouncement.objects.filter(
+        teacher=teacher
+    ).select_related('course').order_by('-created_at')[:5]
+    
+    # Unread messages
+    unread_messages_count = StudentMessage.objects.filter(
+        teacher=teacher,
+        is_read=False
+    ).count()
+    
+    # Live activity feed data (for AJAX)
+    # This will be loaded via API endpoint
+    
+    context = {
+        'teacher': teacher,
+        'total_students': total_students,
+        'active_students': active_students,
+        'total_courses': total_courses,
+        'upcoming_classes': upcoming_classes,
+        'recent_announcements': recent_announcements,
+        'unread_messages_count': unread_messages_count,
+        'assigned_courses': assigned_courses,
+    }
+    return render(request, 'teacher/dashboard.html', context)
+
+
+@login_required
+def teacher_courses(request):
+    """My Courses - view all assigned courses"""
+    user = request.user
+    # Check if user is teacher
+    if not hasattr(user, 'teacher_profile'):
+        messages.error(request, 'You do not have permission to access this page.')
+        return redirect('student_home')
+    teacher = user.teacher_profile
+    
+    # Get assigned courses
+    course_assignments = CourseTeacher.objects.filter(teacher=teacher).select_related('course')
+    
+    # Filters
+    status = request.GET.get('status')
+    search = request.GET.get('search')
+    
+    courses = [ca.course for ca in course_assignments]
+    
+    if status:
+        courses = [c for c in courses if c.status == status]
+    if search:
+        courses = [c for c in courses if search.lower() in c.title.lower() or search.lower() in c.description.lower()]
+    
+    context = {
+        'courses': courses,
+        'course_assignments': course_assignments,
+    }
+    return render(request, 'teacher/courses.html', context)
+
+
+@login_required
+def teacher_course_create(request):
+    """Create new course (only for teachers with 'full' permission)"""
+    user = request.user
+    teacher, _ = Teacher.objects.get_or_create(user=user)
+    
+    if request.method == 'POST':
+        # Create course
+        course = Course.objects.create(
+            title=request.POST.get('title'),
+            slug=request.POST.get('slug'),
+            description=request.POST.get('description'),
+            short_description=request.POST.get('short_description', ''),
+            outcome=request.POST.get('outcome', ''),
+            category_id=request.POST.get('category'),
+            level=request.POST.get('level', 'beginner'),
+            instructor=user,
+            price=float(request.POST.get('price', 0)),
+            is_free=request.POST.get('is_free') == 'on',
+            status='draft'
+        )
+        
+        # Assign teacher with full permissions
+        CourseTeacher.objects.create(
+            course=course,
+            teacher=teacher,
+            permission_level='full',
+            can_create_live_classes=True,
+            assigned_by=user
+        )
+        
+        messages.success(request, f'Course "{course.title}" created successfully!')
+        return redirect('teacher_course_edit', course_id=course.id)
+    
+    categories = Category.objects.all()
+    context = {
+        'categories': categories,
+    }
+    return render(request, 'teacher/course_create.html', context)
+
+
+@login_required
+def teacher_course_edit(request, course_id):
+    """Edit course"""
+    course = get_object_or_404(Course, id=course_id)
+    user = request.user
+    teacher, _ = Teacher.objects.get_or_create(user=user)
+    
+    # Check permissions
+    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    if not assignment or assignment.permission_level == 'view_only':
+        messages.error(request, 'You do not have permission to edit this course.')
+        return redirect('teacher_courses')
+    
+    if request.method == 'POST':
+        course.title = request.POST.get('title', course.title)
+        course.description = request.POST.get('description', course.description)
+        course.short_description = request.POST.get('short_description', course.short_description)
+        course.outcome = request.POST.get('outcome', course.outcome)
+        course.category_id = request.POST.get('category') or course.category_id
+        course.level = request.POST.get('level', course.level)
+        course.price = float(request.POST.get('price', course.price))
+        course.is_free = request.POST.get('is_free') == 'on'
+        course.status = request.POST.get('status', course.status)
+        
+        if request.FILES.get('thumbnail'):
+            course.thumbnail = request.FILES.get('thumbnail')
+        
+        course.save()
+        messages.success(request, 'Course updated successfully!')
+        return redirect('teacher_course_edit', course_id=course.id)
+    
+    categories = Category.objects.all()
+    modules = course.modules.prefetch_related('lessons').order_by('order')
+    
+    context = {
+        'course': course,
+        'categories': categories,
+        'modules': modules,
+        'assignment': assignment,
+    }
+    return render(request, 'teacher/course_edit.html', context)
+
+
+@login_required
+def teacher_lessons(request, course_id):
+    """Manage lessons for a course"""
+    course = get_object_or_404(Course, id=course_id)
+    user = request.user
+    teacher, _ = Teacher.objects.get_or_create(user=user)
+    
+    # Check permissions
+    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    if not assignment or assignment.permission_level == 'view_only':
+        messages.error(request, 'You do not have permission to manage lessons.')
+        return redirect('teacher_courses')
+    
+    modules = course.modules.prefetch_related('lessons').order_by('order')
+    module_id = request.GET.get('module')
+    
+    context = {
+        'course': course,
+        'modules': modules,
+        'selected_module_id': int(module_id) if module_id else None,
+    }
+    return render(request, 'teacher/lessons.html', context)
+
+
+@login_required
+def teacher_lesson_create(request, course_id):
+    """Create new lesson"""
+    course = get_object_or_404(Course, id=course_id)
+    user = request.user
+    teacher, _ = Teacher.objects.get_or_create(user=user)
+    
+    # Check permissions
+    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    if not assignment or assignment.permission_level == 'view_only':
+        messages.error(request, 'You do not have permission to create lessons.')
+        return redirect('teacher_courses')
+    
+    if request.method == 'POST':
+        module_id = request.POST.get('module')
+        module = get_object_or_404(Module, id=module_id, course=course)
+        
+        lesson = Lesson.objects.create(
+            module=module,
+            title=request.POST.get('title'),
+            description=request.POST.get('description', ''),
+            content_type=request.POST.get('content_type', 'video'),
+            video_url=request.POST.get('video_url', ''),
+            text_content=request.POST.get('text_content', ''),
+            order=int(request.POST.get('order', 0)),
+            estimated_minutes=int(request.POST.get('estimated_minutes', 10))
+        )
+        
+        messages.success(request, 'Lesson created successfully!')
+        return redirect('teacher_lessons', course_id=course.id)
+    
+    modules = course.modules.all()
+    context = {
+        'course': course,
+        'modules': modules,
+    }
+    return render(request, 'teacher/lesson_create.html', context)
+
+
+@login_required
+def teacher_lesson_edit(request, course_id, lesson_id):
+    """Edit lesson"""
+    course = get_object_or_404(Course, id=course_id)
+    lesson = get_object_or_404(Lesson, id=lesson_id, module__course=course)
+    user = request.user
+    teacher, _ = Teacher.objects.get_or_create(user=user)
+    
+    # Check permissions
+    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    if not assignment or assignment.permission_level == 'view_only':
+        messages.error(request, 'You do not have permission to edit lessons.')
+        return redirect('teacher_courses')
+    
+    if request.method == 'POST':
+        lesson.title = request.POST.get('title', lesson.title)
+        lesson.description = request.POST.get('description', lesson.description)
+        lesson.content_type = request.POST.get('content_type', lesson.content_type)
+        lesson.video_url = request.POST.get('video_url', lesson.video_url)
+        lesson.text_content = request.POST.get('text_content', lesson.text_content)
+        lesson.order = int(request.POST.get('order', lesson.order))
+        lesson.estimated_minutes = int(request.POST.get('estimated_minutes', lesson.estimated_minutes))
+        
+        module_id = request.POST.get('module')
+        if module_id:
+            lesson.module = get_object_or_404(Module, id=module_id, course=course)
+        
+        lesson.save()
+        messages.success(request, 'Lesson updated successfully!')
+        return redirect('teacher_lessons', course_id=course.id)
+    
+    modules = course.modules.all()
+    context = {
+        'course': course,
+        'lesson': lesson,
+        'modules': modules,
+    }
+    return render(request, 'teacher/lesson_edit.html', context)
+
+
+@login_required
+@require_POST
+def teacher_lesson_delete(request, course_id, lesson_id):
+    """Delete lesson"""
+    course = get_object_or_404(Course, id=course_id)
+    lesson = get_object_or_404(Lesson, id=lesson_id, module__course=course)
+    user = request.user
+    teacher, _ = Teacher.objects.get_or_create(user=user)
+    
+    # Check permissions
+    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    if not assignment or assignment.permission_level == 'view_only':
+        messages.error(request, 'You do not have permission to delete lessons.')
+        return redirect('teacher_courses')
+    
+    lesson.delete()
+    messages.success(request, 'Lesson deleted successfully!')
+    return redirect('teacher_lessons', course_id=course.id)
+
+
+@login_required
+def teacher_quizzes(request, course_id):
+    """Manage quizzes for a course"""
+    course = get_object_or_404(Course, id=course_id)
+    user = request.user
+    teacher, _ = Teacher.objects.get_or_create(user=user)
+    
+    # Check permissions
+    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    if not assignment or assignment.permission_level == 'view_only':
+        messages.error(request, 'You do not have permission to manage quizzes.')
+        return redirect('teacher_courses')
+    
+    quizzes = course.quizzes.all().order_by('-created_at')
+    quiz_type = request.GET.get('type')
+    
+    if quiz_type:
+        quizzes = quizzes.filter(quiz_type=quiz_type)
+    
+    context = {
+        'course': course,
+        'quizzes': quizzes,
+        'selected_type': quiz_type,
+    }
+    return render(request, 'teacher/quizzes.html', context)
+
+
+@login_required
+def teacher_quiz_create(request, course_id):
+    """Create new quiz"""
+    course = get_object_or_404(Course, id=course_id)
+    user = request.user
+    teacher, _ = Teacher.objects.get_or_create(user=user)
+    
+    # Check permissions
+    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    if not assignment or assignment.permission_level == 'view_only':
+        messages.error(request, 'You do not have permission to create quizzes.')
+        return redirect('teacher_courses')
+    
+    if request.method == 'POST':
+        quiz = Quiz.objects.create(
+            course=course,
+            title=request.POST.get('title'),
+            description=request.POST.get('description', ''),
+            quiz_type=request.POST.get('quiz_type', 'module'),
+            passing_score=int(request.POST.get('passing_score', 70)),
+            time_limit_minutes=int(request.POST.get('time_limit_minutes', 0)) or None,
+            max_attempts=int(request.POST.get('max_attempts', 3))
+        )
+        
+        messages.success(request, 'Quiz created successfully!')
+        return redirect('teacher_quiz_questions', course_id=course.id, quiz_id=quiz.id)
+    
+    context = {
+        'course': course,
+    }
+    return render(request, 'teacher/quiz_create.html', context)
+
+
+@login_required
+def teacher_quiz_edit(request, course_id, quiz_id):
+    """Edit quiz"""
+    course = get_object_or_404(Course, id=course_id)
+    quiz = get_object_or_404(Quiz, id=quiz_id, course=course)
+    user = request.user
+    teacher, _ = Teacher.objects.get_or_create(user=user)
+    
+    # Check permissions
+    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    if not assignment or assignment.permission_level == 'view_only':
+        messages.error(request, 'You do not have permission to edit quizzes.')
+        return redirect('teacher_courses')
+    
+    if request.method == 'POST':
+        quiz.title = request.POST.get('title', quiz.title)
+        quiz.description = request.POST.get('description', quiz.description)
+        quiz.quiz_type = request.POST.get('quiz_type', quiz.quiz_type)
+        quiz.passing_score = int(request.POST.get('passing_score', quiz.passing_score))
+        quiz.time_limit_minutes = int(request.POST.get('time_limit_minutes', 0)) or None
+        quiz.max_attempts = int(request.POST.get('max_attempts', quiz.max_attempts))
+        quiz.save()
+        
+        messages.success(request, 'Quiz updated successfully!')
+        return redirect('teacher_quiz_questions', course_id=course.id, quiz_id=quiz.id)
+    
+    context = {
+        'course': course,
+        'quiz': quiz,
+    }
+    return render(request, 'teacher/quiz_edit.html', context)
+
+
+@login_required
+@require_POST
+def teacher_quiz_delete(request, course_id, quiz_id):
+    """Delete quiz"""
+    course = get_object_or_404(Course, id=course_id)
+    quiz = get_object_or_404(Quiz, id=quiz_id, course=course)
+    user = request.user
+    teacher, _ = Teacher.objects.get_or_create(user=user)
+    
+    # Check permissions
+    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    if not assignment or assignment.permission_level == 'view_only':
+        messages.error(request, 'You do not have permission to delete quizzes.')
+        return redirect('teacher_courses')
+    
+    quiz.delete()
+    messages.success(request, 'Quiz deleted successfully!')
+    return redirect('teacher_quizzes', course_id=course.id)
+
+
+@login_required
+def teacher_quiz_questions(request, course_id, quiz_id):
+    """Manage quiz questions"""
+    course = get_object_or_404(Course, id=course_id)
+    quiz = get_object_or_404(Quiz, id=quiz_id, course=course)
+    user = request.user
+    teacher, _ = Teacher.objects.get_or_create(user=user)
+    
+    # Check permissions
+    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    if not assignment or assignment.permission_level == 'view_only':
+        messages.error(request, 'You do not have permission to manage quiz questions.')
+        return redirect('teacher_courses')
+    
+    questions = quiz.questions.prefetch_related('answers').order_by('order')
+    
+    if request.method == 'POST':
+        # Add new question
+        question = Question.objects.create(
+            quiz=quiz,
+            question_text=request.POST.get('question_text'),
+            question_type=request.POST.get('question_type', 'multiple_choice'),
+            explanation=request.POST.get('explanation', ''),
+            points=int(request.POST.get('points', 1)),
+            order=int(request.POST.get('order', questions.count()))
+        )
+        
+        # Add answers
+        answers_data = request.POST.getlist('answers[]')
+        is_correct_data = request.POST.getlist('is_correct[]')
+        
+        for i, answer_text in enumerate(answers_data):
+            if answer_text.strip():
+                Answer.objects.create(
+                    question=question,
+                    answer_text=answer_text,
+                    is_correct=str(i) in is_correct_data,
+                    order=i
+                )
+        
+        messages.success(request, 'Question added successfully!')
+        return redirect('teacher_quiz_questions', course_id=course.id, quiz_id=quiz.id)
+    
+    context = {
+        'course': course,
+        'quiz': quiz,
+        'questions': questions,
+    }
+    return render(request, 'teacher/quiz_questions.html', context)
+
+
+@login_required
+def teacher_my_students(request):
+    """View all students across assigned courses"""
+    user = request.user
+    teacher, _ = Teacher.objects.get_or_create(user=user)
+    
+    # Get assigned courses
+    assigned_courses = CourseTeacher.objects.filter(teacher=teacher).select_related('course')
+    course_ids = [ca.course.id for ca in assigned_courses]
+    
+    # Get all enrollments
+    enrollments = Enrollment.objects.filter(course_id__in=course_ids).select_related('user', 'course').distinct()
+    
+    # Filters
+    course_filter = request.GET.get('course')
+    search = request.GET.get('search')
+    
+    if course_filter:
+        enrollments = enrollments.filter(course_id=course_filter)
+    if search:
+        enrollments = enrollments.filter(
+            Q(user__username__icontains=search) |
+            Q(user__email__icontains=search) |
+            Q(user__first_name__icontains=search) |
+            Q(user__last_name__icontains=search)
+        )
+    
+    # Get unique students
+    students_dict = {}
+    for enrollment in enrollments:
+        student_id = enrollment.user.id
+        if student_id not in students_dict:
+            students_dict[student_id] = {
+                'user': enrollment.user,
+                'enrollments': [],
+                'total_progress': 0,
+                'courses_count': 0
+            }
+        students_dict[student_id]['enrollments'].append(enrollment)
+        students_dict[student_id]['total_progress'] += enrollment.progress_percentage
+        students_dict[student_id]['courses_count'] += 1
+    
+    students = list(students_dict.values())
+    for student_data in students:
+        student_data['avg_progress'] = student_data['total_progress'] / student_data['courses_count'] if student_data['courses_count'] > 0 else 0
+    
+    courses = [ca.course for ca in assigned_courses]
+    
+    context = {
+        'students': students,
+        'courses': courses,
+        'selected_course_id': int(course_filter) if course_filter else None,
+        'search_query': search,
+    }
+    return render(request, 'teacher/my_students.html', context)
+
+
+@login_required
+def teacher_students(request, course_id):
+    """View students for a specific course"""
+    course = get_object_or_404(Course, id=course_id)
+    user = request.user
+    teacher, _ = Teacher.objects.get_or_create(user=user)
+    
+    # Check permissions
+    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    if not assignment:
+        messages.error(request, 'You do not have access to this course.')
+        return redirect('teacher_courses')
+    
+    enrollments = Enrollment.objects.filter(course=course).select_related('user')
+    
+    # Filters
+    status = request.GET.get('status')
+    search = request.GET.get('search')
+    
+    if status:
+        enrollments = enrollments.filter(status=status)
+    if search:
+        enrollments = enrollments.filter(
+            Q(user__username__icontains=search) |
+            Q(user__email__icontains=search)
+        )
+    
+    context = {
+        'course': course,
+        'enrollments': enrollments,
+        'selected_status': status,
+        'search_query': search,
+    }
+    return render(request, 'teacher/course_students.html', context)
+
+
+@login_required
+def teacher_schedule(request):
+    """Live class schedule"""
+    user = request.user
+    teacher, _ = Teacher.objects.get_or_create(user=user)
+    
+    live_classes = LiveClassSession.objects.filter(teacher=teacher).select_related('course').order_by('-scheduled_start')
+    
+    # Filters
+    status = request.GET.get('status')
+    if status:
+        live_classes = live_classes.filter(status=status)
+    
+    if request.method == 'POST':
+        # Create new live class
+        course_id = request.POST.get('course')
+        course = get_object_or_404(Course, id=course_id)
+        
+        # Check if teacher has permission
+        assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+        if not assignment or not assignment.can_create_live_classes:
+            messages.error(request, 'You do not have permission to create live classes for this course.')
+            return redirect('teacher_schedule')
+        
+        from datetime import datetime
+        scheduled_start_str = request.POST.get('scheduled_start')
+        if 'T' in scheduled_start_str:
+            scheduled_start = datetime.fromisoformat(scheduled_start_str.replace('Z', '+00:00'))
+        else:
+            scheduled_start = datetime.strptime(scheduled_start_str, '%Y-%m-%d %H:%M:%S')
+        
+        live_class = LiveClassSession.objects.create(
+            course=course,
+            teacher=teacher,
+            title=request.POST.get('title'),
+            description=request.POST.get('description', ''),
+            scheduled_start=scheduled_start,
+            duration_minutes=int(request.POST.get('duration_minutes', 60)),
+            zoom_link=request.POST.get('zoom_link', ''),
+            google_meet_link=request.POST.get('google_meet_link', ''),
+            meeting_id=request.POST.get('meeting_id', ''),
+            meeting_password=request.POST.get('meeting_password', ''),
+            max_attendees=int(request.POST.get('max_attendees', 0)) or None
+        )
+        
+        messages.success(request, 'Live class scheduled successfully!')
+        return redirect('teacher_schedule')
+    
+    # Get assigned courses for dropdown
+    assigned_courses = CourseTeacher.objects.filter(
+        teacher=teacher,
+        can_create_live_classes=True
+    ).select_related('course')
+    
+    context = {
+        'live_classes': live_classes,
+        'assigned_courses': assigned_courses,
+        'selected_status': status,
+    }
+    return render(request, 'teacher/schedule.html', context)
+
+
+@login_required
+def teacher_live_classes(request, course_id):
+    """Live classes for a specific course"""
+    course = get_object_or_404(Course, id=course_id)
+    user = request.user
+    teacher, _ = Teacher.objects.get_or_create(user=user)
+    
+    # Check permissions
+    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    if not assignment:
+        messages.error(request, 'You do not have access to this course.')
+        return redirect('teacher_courses')
+    
+    live_classes = LiveClassSession.objects.filter(
+        teacher=teacher,
+        course=course
+    ).order_by('-scheduled_start')
+    
+    context = {
+        'course': course,
+        'live_classes': live_classes,
+    }
+    return render(request, 'teacher/course_live_classes.html', context)
+
+
+@login_required
+def teacher_announcements(request, course_id):
+    """Course announcements"""
+    course = get_object_or_404(Course, id=course_id)
+    user = request.user
+    teacher, _ = Teacher.objects.get_or_create(user=user)
+    
+    # Check permissions
+    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    if not assignment:
+        messages.error(request, 'You do not have access to this course.')
+        return redirect('teacher_courses')
+    
+    announcements = CourseAnnouncement.objects.filter(
+        teacher=teacher,
+        course=course
+    ).order_by('-is_pinned', '-created_at')
+    
+    if request.method == 'POST':
+        announcement = CourseAnnouncement.objects.create(
+            course=course,
+            teacher=teacher,
+            title=request.POST.get('title'),
+            message=request.POST.get('message'),
+            is_pinned=request.POST.get('is_pinned') == 'on',
+            send_to_all_students=request.POST.get('send_to_all_students') == 'on'
+        )
+        
+        # Send notifications to enrolled students if requested
+        if announcement.send_to_all_students:
+            enrollments = Enrollment.objects.filter(course=course, status='active')
+            for enrollment in enrollments:
+                Notification.objects.create(
+                    user=enrollment.user,
+                    notification_type='announcement',
+                    title=announcement.title,
+                    message=announcement.message,
+                    action_url=f'/student/courses/{course.slug}/'
+                )
+        
+        messages.success(request, 'Announcement created successfully!')
+        return redirect('teacher_announcements', course_id=course.id)
+    
+    context = {
+        'course': course,
+        'announcements': announcements,
+    }
+    return render(request, 'teacher/announcements.html', context)
+
+
+@login_required
+@require_GET
+def api_teacher_activity_feed(request):
+    """Live activity feed for teacher dashboard (AJAX)"""
+    user = request.user
+    teacher, _ = Teacher.objects.get_or_create(user=user)
+    
+    # Get assigned courses
+    assigned_courses = CourseTeacher.objects.filter(teacher=teacher).select_related('course')
+    course_ids = [ca.course.id for ca in assigned_courses]
+    
+    activities = []
+    
+    # Recent lesson completions (last 24 hours)
+    yesterday = timezone.now() - timezone.timedelta(hours=24)
+    recent_completions = LessonProgress.objects.filter(
+        enrollment__course_id__in=course_ids,
+        completed_at__gte=yesterday
+    ).select_related('enrollment__user', 'lesson').order_by('-completed_at')[:10]
+    
+    for completion in recent_completions:
+        activities.append({
+            'type': 'lesson_completion',
+            'user': completion.enrollment.user.get_full_name() or completion.enrollment.user.username,
+            'action': f'completed lesson "{completion.lesson.title}"',
+            'course': completion.enrollment.course.title,
+            'time': completion.completed_at.isoformat(),
+        })
+    
+    # Recent quiz attempts
+    recent_attempts = QuizAttempt.objects.filter(
+        quiz__course_id__in=course_ids,
+        completed_at__gte=yesterday
+    ).select_related('user', 'quiz').order_by('-completed_at')[:10]
+    
+    for attempt in recent_attempts:
+        activities.append({
+            'type': 'quiz_attempt',
+            'user': attempt.user.get_full_name() or attempt.user.username,
+            'action': f'attempted quiz "{attempt.quiz.title}" ({attempt.score:.0f}%)',
+            'course': attempt.quiz.course.title if attempt.quiz.course else '',
+            'time': attempt.completed_at.isoformat() if attempt.completed_at else '',
+        })
+    
+    # Recent certificates
+    recent_certificates = Certificate.objects.filter(
+        course_id__in=course_ids,
+        issued_at__gte=yesterday
+    ).select_related('user').order_by('-issued_at')[:10]
+    
+    for cert in recent_certificates:
+        activities.append({
+            'type': 'certificate',
+            'user': cert.user.get_full_name() or cert.user.username,
+            'action': f'earned certificate for "{cert.course.title}"',
+            'course': cert.course.title,
+            'time': cert.issued_at.isoformat(),
+        })
+    
+    # New enrollments
+    new_enrollments = Enrollment.objects.filter(
+        course_id__in=course_ids,
+        enrolled_at__gte=yesterday
+    ).select_related('user').order_by('-enrolled_at')[:10]
+    
+    for enrollment in new_enrollments:
+        activities.append({
+            'type': 'enrollment',
+            'user': enrollment.user.get_full_name() or enrollment.user.username,
+            'action': f'enrolled in "{enrollment.course.title}"',
+            'course': enrollment.course.title,
+            'time': enrollment.enrolled_at.isoformat(),
+        })
+    
+    # Sort by time (most recent first)
+    activities.sort(key=lambda x: x['time'], reverse=True)
+    
+    return JsonResponse({'activities': activities[:20]})
+
+
+# ============================================
 # PARTNER VIEWS
 # ============================================
 
@@ -1255,37 +2055,75 @@ def admin_site_images(request):
 def partner_overview(request):
     """Partner dashboard"""
     user = request.user
-    partner = get_object_or_404(Partner, user=user)
+    profile = get_or_create_profile(user)
     
-    # Cohorts
-    cohorts = partner.cohorts.all()
+    # Check if user is admin in preview mode or actual partner
+    is_admin_preview = profile.role == 'admin' and request.session.get('preview_role') == 'partner'
     
-    # Stats
-    total_students = CohortMembership.objects.filter(cohort__partner=partner).count()
-    
-    # Active learners
-    active_learners = Enrollment.objects.filter(
-        partner=partner,
-        status='active'
-    ).count()
-    
-    # Completion rate
-    partner_enrollments = Enrollment.objects.filter(partner=partner)
-    completed = partner_enrollments.filter(status='completed').count()
-    total = partner_enrollments.count()
-    completion_rate = (completed / total * 100) if total > 0 else 0
-    
-    # Certificates earned
-    certificates_earned = Certificate.objects.filter(
-        enrollment__partner=partner
-    ).count()
-    
-    # Revenue (if commission-based)
-    total_revenue = Payment.objects.filter(
-        partner=partner,
-        status='completed'
-    ).aggregate(total=Sum('amount'))['total'] or 0
-    commission = total_revenue * partner.commission_rate
+    if is_admin_preview:
+        # For admins previewing, show platform-wide stats (read-only demo)
+        partner = None
+        cohorts = Cohort.objects.none()
+        
+        # Platform-wide stats (read-only for preview)
+        total_students = User.objects.filter(profile__role='student').count()
+        active_learners = Enrollment.objects.filter(status='active').count()
+        
+        # Platform completion rate
+        total_enrollments = Enrollment.objects.count()
+        completed_enrollments = Enrollment.objects.filter(status='completed').count()
+        completion_rate = (completed_enrollments / total_enrollments * 100) if total_enrollments > 0 else 0
+        
+        certificates_earned = Certificate.objects.count()
+        total_revenue = Payment.objects.filter(status='completed').aggregate(total=Sum('amount'))['total'] or 0
+        commission = 0
+        
+        # Create a mock partner object for template compatibility
+        class MockPartner:
+            company_name = "Platform Overview (Preview)"
+            is_active = True
+        
+        partner = MockPartner()
+        is_preview_mode = True
+        
+    else:
+        # Actual partner view
+        try:
+            partner = Partner.objects.get(user=user)
+        except Partner.DoesNotExist:
+            messages.error(request, 'You do not have a partner account. Please contact an administrator.')
+            return redirect('home')
+        
+        # Cohorts
+        cohorts = partner.cohorts.all()
+        
+        # Stats
+        total_students = CohortMembership.objects.filter(cohort__partner=partner).count()
+        
+        # Active learners
+        active_learners = Enrollment.objects.filter(
+            partner=partner,
+            status='active'
+        ).count()
+        
+        # Completion rate
+        partner_enrollments = Enrollment.objects.filter(partner=partner)
+        completed = partner_enrollments.filter(status='completed').count()
+        total = partner_enrollments.count()
+        completion_rate = (completed / total * 100) if total > 0 else 0
+        
+        # Certificates earned
+        certificates_earned = Certificate.objects.filter(
+            enrollment__partner=partner
+        ).count()
+        
+        # Revenue (if commission-based)
+        total_revenue = Payment.objects.filter(
+            partner=partner,
+            status='completed'
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        commission = total_revenue * partner.commission_rate
+        is_preview_mode = False
     
     context = {
         'partner': partner,
@@ -1296,6 +2134,7 @@ def partner_overview(request):
         'certificates_earned': certificates_earned,
         'total_revenue': total_revenue,
         'commission': commission,
+        'is_preview_mode': is_preview_mode,
     }
     return render(request, 'partner/overview.html', context)
 
@@ -1304,14 +2143,292 @@ def partner_overview(request):
 @role_required(['partner'])
 def partner_cohorts(request):
     """Partner cohort management"""
-    partner = get_object_or_404(Partner, user=request.user)
-    cohorts = partner.cohorts.prefetch_related('courses', 'students').order_by('-start_date')
+    user = request.user
+    profile = get_or_create_profile(user)
+    
+    # Check if user is admin in preview mode
+    is_admin_preview = profile.role == 'admin' and request.session.get('preview_role') == 'partner'
+    
+    if is_admin_preview:
+        # For admins previewing, show all cohorts (read-only)
+        cohorts = Cohort.objects.prefetch_related('courses', 'students').order_by('-start_date')
+        
+        class MockPartner:
+            company_name = "Platform Overview (Preview)"
+        
+        partner = MockPartner()
+    else:
+        try:
+            partner = Partner.objects.get(user=user)
+            cohorts = partner.cohorts.prefetch_related('courses', 'students').order_by('-start_date')
+        except Partner.DoesNotExist:
+            messages.error(request, 'You do not have a partner account.')
+            return redirect('home')
     
     context = {
         'partner': partner,
         'cohorts': cohorts,
+        'is_preview_mode': is_admin_preview,
     }
     return render(request, 'partner/cohorts.html', context)
+
+
+@login_required
+@role_required(['partner'])
+def partner_programs(request):
+    """Partner programs and bundles management"""
+    user = request.user
+    profile = get_or_create_profile(user)
+    
+    is_admin_preview = profile.role == 'admin' and request.session.get('preview_role') == 'partner'
+    
+    if is_admin_preview:
+        # Show all courses as programs (read-only)
+        programs = Course.objects.filter(status='published').prefetch_related('cohorts').order_by('-created_at')
+        
+        class MockPartner:
+            company_name = "Platform Overview (Preview)"
+        
+        partner = MockPartner()
+    else:
+        try:
+            partner = Partner.objects.get(user=user)
+            # Get courses associated with partner's cohorts
+            programs = Course.objects.filter(
+                cohorts__partner=partner
+            ).distinct().prefetch_related('cohorts').order_by('-created_at')
+        except Partner.DoesNotExist:
+            messages.error(request, 'You do not have a partner account.')
+            return redirect('home')
+    
+    context = {
+        'partner': partner,
+        'programs': programs,
+        'is_preview_mode': is_admin_preview,
+    }
+    return render(request, 'partner/programs.html', context)
+
+
+@login_required
+@role_required(['partner'])
+def partner_referrals(request):
+    """Partner referrals and sales tracking"""
+    user = request.user
+    profile = get_or_create_profile(user)
+    
+    is_admin_preview = profile.role == 'admin' and request.session.get('preview_role') == 'partner'
+    
+    if is_admin_preview:
+        # Show all payments (read-only)
+        payments_list = list(Payment.objects.filter(status='completed').select_related('user', 'course').order_by('-created_at')[:50])
+        total_revenue = Payment.objects.filter(status='completed').aggregate(total=Sum('amount'))['total'] or 0
+        total_count = Payment.objects.filter(status='completed').count()
+        
+        class MockPartner:
+            company_name = "Platform Overview (Preview)"
+            commission_rate = 0.2
+        
+        partner = MockPartner()
+        commission = total_revenue * partner.commission_rate
+        
+        # Add commission amount to each payment
+        for payment in payments_list:
+            payment.commission_amount = float(payment.amount) * partner.commission_rate
+    else:
+        try:
+            partner = Partner.objects.get(user=user)
+            # Get payments associated with partner
+            payments_list = list(Payment.objects.filter(
+                partner=partner,
+                status='completed'
+            ).select_related('user', 'course').order_by('-created_at')[:50])
+            
+            total_revenue = Payment.objects.filter(
+                partner=partner,
+                status='completed'
+            ).aggregate(total=Sum('amount'))['total'] or 0
+            
+            total_count = Payment.objects.filter(
+                partner=partner,
+                status='completed'
+            ).count()
+            
+            commission = total_revenue * partner.commission_rate
+            
+            # Add commission amount to each payment
+            for payment in payments_list:
+                payment.commission_amount = float(payment.amount) * partner.commission_rate
+        except Partner.DoesNotExist:
+            messages.error(request, 'You do not have a partner account.')
+            return redirect('home')
+    
+    # Calculate average sale
+    avg_sale = (float(total_revenue) / total_count) if total_count > 0 else 0
+    
+    context = {
+        'partner': partner,
+        'payments': payments_list,
+        'total_revenue': total_revenue,
+        'total_count': total_count,
+        'avg_sale': avg_sale,
+        'commission': commission,
+        'is_preview_mode': is_admin_preview,
+    }
+    return render(request, 'partner/referrals.html', context)
+
+
+@login_required
+@role_required(['partner'])
+def partner_marketing(request):
+    """Partner marketing assets"""
+    user = request.user
+    profile = get_or_create_profile(user)
+    
+    is_admin_preview = profile.role == 'admin' and request.session.get('preview_role') == 'partner'
+    
+    if is_admin_preview:
+        # Show all cohorts with promo codes (read-only)
+        cohorts = Cohort.objects.filter(promo_code__isnull=False).exclude(promo_code='').order_by('-created_at')
+        
+        class MockPartner:
+            company_name = "Platform Overview (Preview)"
+        
+        partner = MockPartner()
+    else:
+        try:
+            partner = Partner.objects.get(user=user)
+            # Get cohorts with promo codes
+            cohorts = partner.cohorts.filter(
+                promo_code__isnull=False
+            ).exclude(promo_code='').order_by('-created_at')
+        except Partner.DoesNotExist:
+            messages.error(request, 'You do not have a partner account.')
+            return redirect('home')
+    
+    context = {
+        'partner': partner,
+        'cohorts': cohorts,
+        'is_preview_mode': is_admin_preview,
+    }
+    return render(request, 'partner/marketing.html', context)
+
+
+@login_required
+@role_required(['partner'])
+def partner_reports(request):
+    """Partner reports and analytics"""
+    user = request.user
+    profile = get_or_create_profile(user)
+    
+    is_admin_preview = profile.role == 'admin' and request.session.get('preview_role') == 'partner'
+    
+    if is_admin_preview:
+        # Platform-wide stats (read-only)
+        total_students = User.objects.filter(profile__role='student').count()
+        total_enrollments = Enrollment.objects.count()
+        completed_enrollments = Enrollment.objects.filter(status='completed').count()
+        active_enrollments = Enrollment.objects.filter(status='active').count()
+        total_revenue = Payment.objects.filter(status='completed').aggregate(total=Sum('amount'))['total'] or 0
+        certificates_earned = Certificate.objects.count()
+        
+        class MockPartner:
+            company_name = "Platform Overview (Preview)"
+            commission_rate = 0.2
+        
+        partner = MockPartner()
+        commission = total_revenue * partner.commission_rate
+    else:
+        try:
+            partner = Partner.objects.get(user=user)
+            
+            # Student stats
+            total_students = CohortMembership.objects.filter(cohort__partner=partner).count()
+            
+            # Enrollment stats
+            enrollments = Enrollment.objects.filter(partner=partner)
+            total_enrollments = enrollments.count()
+            completed_enrollments = enrollments.filter(status='completed').count()
+            active_enrollments = enrollments.filter(status='active').count()
+            
+            # Revenue stats
+            total_revenue = Payment.objects.filter(
+                partner=partner,
+                status='completed'
+            ).aggregate(total=Sum('amount'))['total'] or 0
+            
+            commission = total_revenue * partner.commission_rate
+            
+            # Certificates
+            certificates_earned = Certificate.objects.filter(
+                enrollment__partner=partner
+            ).count()
+        except Partner.DoesNotExist:
+            messages.error(request, 'You do not have a partner account.')
+            return redirect('home')
+    
+    completion_rate = (completed_enrollments / total_enrollments * 100) if total_enrollments > 0 else 0
+    active_percentage = (active_enrollments / total_enrollments * 100) if total_enrollments > 0 else 0
+    completed_percentage = (completed_enrollments / total_enrollments * 100) if total_enrollments > 0 else 0
+    
+    context = {
+        'partner': partner,
+        'total_students': total_students,
+        'total_enrollments': total_enrollments,
+        'completed_enrollments': completed_enrollments,
+        'active_enrollments': active_enrollments,
+        'completion_rate': completion_rate,
+        'active_percentage': active_percentage,
+        'completed_percentage': completed_percentage,
+        'total_revenue': total_revenue,
+        'commission': commission,
+        'certificates_earned': certificates_earned,
+        'is_preview_mode': is_admin_preview,
+    }
+    return render(request, 'partner/reports.html', context)
+
+
+@login_required
+@role_required(['partner'])
+def partner_settings(request):
+    """Partner settings"""
+    user = request.user
+    profile = get_or_create_profile(user)
+    
+    is_admin_preview = profile.role == 'admin' and request.session.get('preview_role') == 'partner'
+    
+    if is_admin_preview:
+        class MockPartner:
+            company_name = "Platform Overview (Preview)"
+            contact_email = "preview@example.com"
+            contact_phone = ""
+            website = ""
+            commission_rate = 0.2
+            is_active = True
+        
+        partner = MockPartner()
+    else:
+        try:
+            partner = Partner.objects.get(user=user)
+        except Partner.DoesNotExist:
+            messages.error(request, 'You do not have a partner account.')
+            return redirect('home')
+    
+    if request.method == 'POST' and not is_admin_preview:
+        # Update partner settings
+        partner.company_name = request.POST.get('company_name', partner.company_name)
+        partner.contact_email = request.POST.get('contact_email', partner.contact_email)
+        partner.contact_phone = request.POST.get('contact_phone', partner.contact_phone)
+        partner.website = request.POST.get('website', partner.website)
+        partner.save()
+        
+        messages.success(request, 'Settings updated successfully.')
+        return redirect('partner_settings')
+    
+    context = {
+        'partner': partner,
+        'is_preview_mode': is_admin_preview,
+    }
+    return render(request, 'partner/settings.html', context)
 
 
 # ============================================
@@ -1350,5 +2467,19 @@ def api_mark_notification_read(request):
     notification.is_read = True
     notification.read_at = timezone.now()
     notification.save()
+    
+    return JsonResponse({'success': True})
+
+
+@login_required
+@require_POST
+def api_update_language(request):
+    """Update user language preference"""
+    data = json.loads(request.body)
+    language = data.get('language')
+    
+    profile = get_or_create_profile(request.user)
+    profile.preferred_language = language
+    profile.save()
     
     return JsonResponse({'success': True})

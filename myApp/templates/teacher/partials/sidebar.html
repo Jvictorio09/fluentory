@@ -1,0 +1,24 @@
+<aside class="fixed left-0 top-[4rem] h-[calc(100vh-4rem)] w-64 bg-[#04363a]/90 backdrop-blur-xl border-r border-white/10 z-40 hidden lg:block overflow-y-auto scrollbar-hide">
+    <nav class="p-4 space-y-1">
+        <a href="{% url 'teacher_dashboard' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#254346]/50 hover:text-[#82C293] transition group {% if request.resolver_match.url_name == 'teacher_dashboard' %}bg-[#254346]/50 text-[#82C293] border-l-2 border-[#82C293]{% endif %}">
+            <i class="fas fa-tachometer-alt w-5 text-center"></i>
+            <span class="font-medium">Dashboard</span>
+        </a>
+        <a href="{% url 'teacher_courses' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#254346]/50 hover:text-[#82C293] transition group {% if 'courses' in request.resolver_match.url_name %}bg-[#254346]/50 text-[#82C293] border-l-2 border-[#82C293]{% endif %}">
+            <i class="fas fa-book w-5 text-center"></i>
+            <span class="font-medium">My Courses</span>
+        </a>
+        <a href="{% url 'teacher_my_students' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#254346]/50 hover:text-[#82C293] transition group {% if 'students' in request.resolver_match.url_name %}bg-[#254346]/50 text-[#82C293] border-l-2 border-[#82C293]{% endif %}">
+            <i class="fas fa-users w-5 text-center"></i>
+            <span class="font-medium">My Students</span>
+        </a>
+        <a href="{% url 'teacher_schedule' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#254346]/50 hover:text-[#82C293] transition group {% if 'schedule' in request.resolver_match.url_name or 'live' in request.resolver_match.url_name %}bg-[#254346]/50 text-[#82C293] border-l-2 border-[#82C293]{% endif %}">
+            <i class="fas fa-calendar w-5 text-center"></i>
+            <span class="font-medium">Live Classes</span>
+        </a>
+    </nav>
+</aside>
+
+
+
+

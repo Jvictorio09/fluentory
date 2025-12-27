@@ -1,0 +1,30 @@
+{% extends 'teacher/base.html' %}
+
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">Edit Lesson</h1>
+<form method="post" class="bg-white p-6 rounded shadow space-y-4">
+    {% csrf_token %}
+    <div>
+        <label class="block mb-2">Title</label>
+        <input type="text" name="title" value="{{ lesson.title }}" required class="w-full border rounded p-2">
+    </div>
+    <div>
+        <label class="block mb-2">Description</label>
+        <textarea name="description" class="w-full border rounded p-2" rows="3">{{ lesson.description }}</textarea>
+    </div>
+    <div>
+        <label class="block mb-2">Video URL</label>
+        <input type="url" name="video_url" value="{{ lesson.video_url }}" class="w-full border rounded p-2">
+    </div>
+    <div>
+        <label class="block mb-2">Order</label>
+        <input type="number" name="order" value="{{ lesson.order }}" class="w-full border rounded p-2">
+    </div>
+    <button type="submit" class="bg-deep-charcoal text-white px-4 py-2 rounded">Update</button>
+</form>
+{% endblock %}
+
+
+
+
+

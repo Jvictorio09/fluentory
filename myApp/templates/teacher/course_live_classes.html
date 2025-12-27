@@ -1,0 +1,34 @@
+{% extends 'teacher/base.html' %}
+
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">{{ course.title }} - Live Classes</h1>
+<div class="bg-white p-6 rounded shadow">
+    <table class="w-full">
+        <thead>
+            <tr class="border-b">
+                <th class="text-left p-2">Title</th>
+                <th class="text-left p-2">Scheduled</th>
+                <th class="text-left p-2">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for class in live_classes %}
+            <tr class="border-b">
+                <td class="p-2">{{ class.title }}</td>
+                <td class="p-2">{{ class.scheduled_start|date:"M d, Y H:i" }}</td>
+                <td class="p-2">{{ class.get_status_display }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="3" class="p-2 text-muted-taupe">No live classes</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+
+
+
+

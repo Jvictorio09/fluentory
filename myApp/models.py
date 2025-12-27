@@ -64,6 +64,62 @@ class UserProfile(models.Model):
 
 
 # ============================================
+# TEACHERS
+# ============================================
+
+class Teacher(models.Model):
+    """Teacher profile with approval status"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='teacher_profile')
+    
+    # Status
+    is_approved = models.BooleanField(default=False)
+    approved_at = models.DateTimeField(null=True, blank=True)
+    approved_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='approved_teachers')
+    
+    # Online status
+    is_online = models.BooleanField(default=False)
+    last_seen = models.DateTimeField(null=True, blank=True)
+    
+    # Bio
+    bio = models.TextField(blank=True)
+    specialization = models.CharField(max_length=200, blank=True)
+    years_experience = models.PositiveIntegerField(default=0)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    def __str__(self):
+        return f"{self.user.username} - Teacher"
+
+
+class CourseTeacher(models.Model):
+    """Course-Teacher relationship with permissions"""
+    PERMISSION_CHOICES = [
+        ('view_only', 'View Only'),
+        ('edit', 'Can Edit'),
+        ('full', 'Full Access'),
+    ]
+    
+    course = models.ForeignKey('Course', on_delete=models.CASCADE, related_name='course_teachers')
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name='course_assignments')
+    
+    # Permissions
+    permission_level = models.CharField(max_length=20, choices=PERMISSION_CHOICES, default='view_only')
+    can_create_live_classes = models.BooleanField(default=False)
+    
+    # Timestamps
+    assigned_at = models.DateTimeField(auto_now_add=True)
+    assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        unique_together = ['course', 'teacher']
+    
+    def __str__(self):
+        return f"{self.teacher.user.username} - {self.course.title} ({self.permission_level})"
+
+
+# ============================================
 # COURSES & CONTENT
 # ============================================
 
@@ -718,6 +774,109 @@ class Notification(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - {self.title}"
+
+
+# ============================================
+# LIVE CLASSES
+# ============================================
+
+class LiveClassSession(models.Model):
+    """Scheduled live class sessions"""
+    STATUS_CHOICES = [
+        ('scheduled', 'Scheduled'),
+        ('live', 'Live'),
+        ('completed', 'Completed'),
+        ('cancelled', 'Cancelled'),
+    ]
+    
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='live_classes')
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name='live_classes')
+    
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    
+    # Scheduling
+    scheduled_start = models.DateTimeField()
+    duration_minutes = models.PositiveIntegerField(default=60)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='scheduled')
+    
+    # Video conferencing links
+    zoom_link = models.URLField(blank=True)
+    google_meet_link = models.URLField(blank=True)
+    meeting_id = models.CharField(max_length=100, blank=True)
+    meeting_password = models.CharField(max_length=50, blank=True)
+    
+    # Attendance
+    max_attendees = models.PositiveIntegerField(null=True, blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    started_at = models.DateTimeField(null=True, blank=True)
+    ended_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-scheduled_start']
+    
+    def __str__(self):
+        return f"{self.course.title} - {self.title} - {self.scheduled_start}"
+
+
+# ============================================
+# ANNOUNCEMENTS
+# ============================================
+
+class CourseAnnouncement(models.Model):
+    """Course announcements by teachers"""
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='announcements')
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name='announcements')
+    
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    
+    # Visibility
+    is_pinned = models.BooleanField(default=False)
+    send_to_all_students = models.BooleanField(default=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-is_pinned', '-created_at']
+    
+    def __str__(self):
+        return f"{self.course.title} - {self.title}"
+
+
+# ============================================
+# MESSAGING
+# ============================================
+
+class StudentMessage(models.Model):
+    """Teacher-student messaging"""
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name='sent_messages')
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='received_messages')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='messages', null=True, blank=True)
+    
+    subject = models.CharField(max_length=200)
+    message = models.TextField()
+    
+    # Status
+    is_read = models.BooleanField(default=False)
+    read_at = models.DateTimeField(null=True, blank=True)
+    
+    # Reply chain
+    reply_to = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='replies')
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.teacher.user.username} → {self.student.username}: {self.subject}"
 
 
 # ============================================

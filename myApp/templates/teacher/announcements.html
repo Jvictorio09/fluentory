@@ -1,0 +1,38 @@
+{% extends 'teacher/base.html' %}
+
+{% block content %}
+<div class="space-y-6">
+    <h1 class="text-3xl font-bold">{{ course.title }} - Announcements</h1>
+    
+    <div class="bg-white p-6 rounded shadow">
+        <h2 class="text-xl font-bold mb-4">Create Announcement</h2>
+        <form method="post" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block mb-2">Title</label>
+                <input type="text" name="title" required class="w-full border rounded p-2">
+            </div>
+            <div>
+                <label class="block mb-2">Message</label>
+                <textarea name="message" required class="w-full border rounded p-2" rows="4"></textarea>
+            </div>
+            <button type="submit" class="bg-deep-charcoal text-white px-4 py-2 rounded">Create</button>
+        </form>
+    </div>
+    
+    <div class="space-y-4">
+        {% for announcement in announcements %}
+        <div class="bg-white border rounded p-4">
+            <h3 class="font-bold text-lg">{{ announcement.title }}</h3>
+            <p class="text-muted-taupe mb-2">{{ announcement.message }}</p>
+            <span class="text-sm text-muted-taupe">{{ announcement.created_at|date:"M d, Y" }}</span>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+
+
+
+

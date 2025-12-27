@@ -43,14 +43,15 @@
         }
     </style>
 </head>
-<body class="bg-soft-ivory text-deep-charcoal font-sans">
+<body class="bg-[#000000] text-white font-sans">
+    {% include 'partials/role_preview_banner.html' %}
     {% include 'student/partials/navbar.html' %}
     
-    <div class="flex min-h-[calc(100vh-4rem)] relative">
+    <div class="flex min-h-[calc(100vh-4rem)] relative" {% if request.session.preview_role %}style="margin-top: 3.5rem;"{% endif %}>
         {% include 'student/partials/sidebar.html' %}
         {% include 'student/partials/mobile_menu.html' %}
         
-        <main class="flex-1 w-full lg:ml-64">
+        <main class="flex-1 w-full lg:ml-64 bg-[#000000]">
             {% block content %}{% endblock %}
         </main>
     </div>

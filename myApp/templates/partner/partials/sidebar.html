@@ -1,38 +1,38 @@
-<aside class="hidden lg:block fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-white border-r border-muted-taupe/20 z-40">
-    <nav class="p-6 space-y-2">
-        <a href="/partner/" class="flex items-center gap-3 px-4 py-3 rounded-xl text-deep-charcoal hover:bg-warm-sand/30 transition">
-            <i class="fas fa-chart-line w-5"></i>
-            <span>Overview</span>
+<aside class="fixed left-0 top-[4rem] h-[calc(100vh-4rem)] w-64 bg-[#04363a]/90 backdrop-blur-xl border-r border-white/10 z-40 hidden lg:block overflow-y-auto scrollbar-hide">
+    <nav class="p-4 space-y-1">
+        <a href="/partner/" class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#254346]/50 hover:text-[#82C293] transition group {% if request.resolver_match.url_name == 'partner_overview' or request.path == '/partner/' %}bg-[#254346]/50 text-[#82C293] border-l-2 border-[#82C293]{% endif %}">
+            <i class="fas fa-chart-line w-5 text-center"></i>
+            <span class="font-medium">Overview</span>
         </a>
         
-        <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-deep-charcoal hover:bg-warm-sand/30 transition">
-            <i class="fas fa-users w-5"></i>
-            <span>My Cohorts / Students</span>
+        <a href="{% url 'partner_cohorts' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#254346]/50 hover:text-[#82C293] transition group {% if 'cohorts' in request.resolver_match.url_name %}bg-[#254346]/50 text-[#82C293] border-l-2 border-[#82C293]{% endif %}">
+            <i class="fas fa-users w-5 text-center"></i>
+            <span class="font-medium">My Cohorts / Students</span>
         </a>
         
-        <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-deep-charcoal hover:bg-warm-sand/30 transition">
-            <i class="fas fa-box w-5"></i>
-            <span>Programs & Bundles</span>
+        <a href="{% url 'partner_programs' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#254346]/50 hover:text-[#82C293] transition group {% if 'programs' in request.resolver_match.url_name %}bg-[#254346]/50 text-[#82C293] border-l-2 border-[#82C293]{% endif %}">
+            <i class="fas fa-box w-5 text-center"></i>
+            <span class="font-medium">Programs & Bundles</span>
         </a>
         
-        <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-deep-charcoal hover:bg-warm-sand/30 transition">
-            <i class="fas fa-link w-5"></i>
-            <span>Referrals / Sales</span>
+        <a href="{% url 'partner_referrals' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#254346]/50 hover:text-[#82C293] transition group {% if 'referrals' in request.resolver_match.url_name %}bg-[#254346]/50 text-[#82C293] border-l-2 border-[#82C293]{% endif %}">
+            <i class="fas fa-link w-5 text-center"></i>
+            <span class="font-medium">Referrals / Sales</span>
         </a>
         
-        <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-deep-charcoal hover:bg-warm-sand/30 transition">
-            <i class="fas fa-bullhorn w-5"></i>
-            <span>Marketing Assets</span>
+        <a href="{% url 'partner_marketing' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#254346]/50 hover:text-[#82C293] transition group {% if 'marketing' in request.resolver_match.url_name %}bg-[#254346]/50 text-[#82C293] border-l-2 border-[#82C293]{% endif %}">
+            <i class="fas fa-bullhorn w-5 text-center"></i>
+            <span class="font-medium">Marketing Assets</span>
         </a>
         
-        <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-deep-charcoal hover:bg-warm-sand/30 transition">
-            <i class="fas fa-chart-bar w-5"></i>
-            <span>Reports</span>
+        <a href="{% url 'partner_reports' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#254346]/50 hover:text-[#82C293] transition group {% if 'reports' in request.resolver_match.url_name %}bg-[#254346]/50 text-[#82C293] border-l-2 border-[#82C293]{% endif %}">
+            <i class="fas fa-chart-bar w-5 text-center"></i>
+            <span class="font-medium">Reports</span>
         </a>
         
-        <a href="#" class="flex items-center gap-3 px-4 py-3 rounded-xl text-deep-charcoal hover:bg-warm-sand/30 transition">
-            <i class="fas fa-cog w-5"></i>
-            <span>Settings</span>
+        <a href="{% url 'partner_settings' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#254346]/50 hover:text-[#82C293] transition group {% if 'settings' in request.resolver_match.url_name %}bg-[#254346]/50 text-[#82C293] border-l-2 border-[#82C293]{% endif %}">
+            <i class="fas fa-cog w-5 text-center"></i>
+            <span class="font-medium">Settings</span>
         </a>
     </nav>
 </aside>

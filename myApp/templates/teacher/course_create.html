@@ -1,0 +1,26 @@
+{% extends 'teacher/base.html' %}
+
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">Create Course</h1>
+<form method="post" class="bg-white p-6 rounded shadow space-y-4">
+    {% csrf_token %}
+    <div>
+        <label class="block mb-2">Title</label>
+        <input type="text" name="title" required class="w-full border rounded p-2">
+    </div>
+    <div>
+        <label class="block mb-2">Slug</label>
+        <input type="text" name="slug" required class="w-full border rounded p-2">
+    </div>
+    <div>
+        <label class="block mb-2">Description</label>
+        <textarea name="description" required class="w-full border rounded p-2" rows="5"></textarea>
+    </div>
+    <button type="submit" class="bg-deep-charcoal text-white px-4 py-2 rounded">Create</button>
+</form>
+{% endblock %}
+
+
+
+
+

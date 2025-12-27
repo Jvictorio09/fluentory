@@ -4,9 +4,9 @@
 <div class="p-4 sm:p-6 lg:p-8 xl:p-10 w-full">
     <!-- Breadcrumb -->
     <nav class="mb-6 text-sm">
-        <a href="{% url 'student_courses' %}" class="text-deep-charcoal/60 hover:text-deep-charcoal transition">Courses</a>
-        <span class="mx-2 text-deep-charcoal/40">/</span>
-        <span class="text-deep-charcoal">{{ course.title }}</span>
+        <a href="{% url 'student_courses' %}" class="text-white/60 hover:text-white transition">Courses</a>
+        <span class="mx-2 text-white/40">/</span>
+        <span class="text-white">{{ course.title }}</span>
     </nav>
     
     <!-- Course Header -->
@@ -14,26 +14,26 @@
         <!-- Course Info (2/3) -->
         <div class="lg:col-span-2">
             <div class="flex flex-wrap gap-3 mb-4">
-                <span class="text-xs px-3 py-1.5 rounded-full bg-muted-taupe/20 text-deep-charcoal font-medium">{{ course.level|title }}</span>
+                <span class="text-xs px-3 py-1.5 rounded-full bg-[#254346]/50 text-white font-medium border border-white/10">{{ course.level|title }}</span>
                 {% if course.category %}
-                <span class="text-xs px-3 py-1.5 rounded-full bg-deep-charcoal/10 text-deep-charcoal">{{ course.category.name }}</span>
+                <span class="text-xs px-3 py-1.5 rounded-full bg-[#254346]/30 text-white border border-white/10">{{ course.category.name }}</span>
                 {% endif %}
                 {% if course.has_certificate %}
-                <span class="text-xs px-3 py-1.5 rounded-full bg-green-100 text-green-700">
+                <span class="text-xs px-3 py-1.5 rounded-full bg-[#82C293]/20 text-[#82C293] border border-[#82C293]/30">
                     <i class="fas fa-certificate mr-1"></i> Certificate
                 </span>
                 {% endif %}
             </div>
             
-            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-deep-charcoal mb-4 leading-tight">
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-white mb-4 leading-tight">
                 {{ course.title }}
             </h1>
             
-            <p class="text-lg sm:text-xl text-deep-charcoal/70 font-light mb-6">
+            <p class="text-lg sm:text-xl text-white/70 font-light mb-6">
                 {{ course.outcome }}
             </p>
             
-            <div class="flex flex-wrap items-center gap-6 text-sm text-deep-charcoal/60 mb-8">
+            <div class="flex flex-wrap items-center gap-6 text-sm text-white/60 mb-8">
                 <span><i class="fas fa-clock mr-2"></i>{{ course.estimated_hours }} hours</span>
                 <span><i class="fas fa-layer-group mr-2"></i>{{ course.lessons_count }} lessons</span>
                 <span><i class="fas fa-users mr-2"></i>{{ course.enrolled_count }} students</span>
@@ -44,7 +44,7 @@
             
             <!-- Preview Video -->
             {% if course.preview_video %}
-            <div class="rounded-2xl overflow-hidden bg-deep-charcoal aspect-video mb-8 relative group cursor-pointer">
+            <div class="rounded-2xl overflow-hidden bg-[#000000] aspect-video mb-8 relative group cursor-pointer">
                 <div class="absolute inset-0 flex items-center justify-center">
                     <div class="w-20 h-20 rounded-full bg-white/20 backdrop-blur-md border border-white/30 grid place-items-center group-hover:scale-110 transition">
                         <i class="fas fa-play text-white text-2xl ml-1"></i>
@@ -59,22 +59,22 @@
         
         <!-- Enrollment Card (1/3) -->
         <div class="lg:col-span-1">
-            <div class="bg-white rounded-3xl p-6 sm:p-8 border border-muted-taupe/20 shadow-lg sticky top-24">
+            <div class="bg-[#04363a]/90 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.3)] sticky top-24">
                 {% if enrollment %}
                 <!-- Already Enrolled -->
                 <div class="text-center mb-6">
-                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 grid place-items-center">
-                        <i class="fas fa-check text-green-600 text-2xl"></i>
+                    <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-[#82C293]/20 border border-[#82C293]/30 grid place-items-center">
+                        <i class="fas fa-check text-[#82C293] text-2xl"></i>
                     </div>
-                    <h3 class="text-xl font-medium text-deep-charcoal mb-2">You're Enrolled!</h3>
-                    <p class="text-deep-charcoal/60 text-sm">{{ enrollment.progress_percentage|floatformat:0 }}% complete</p>
+                    <h3 class="text-xl font-medium text-white mb-2">You're Enrolled!</h3>
+                    <p class="text-white/60 text-sm">{{ enrollment.progress_percentage|floatformat:0 }}% complete</p>
                 </div>
                 
-                <div class="h-2 bg-warm-sand rounded-full overflow-hidden mb-6">
-                    <div class="h-full bg-deep-charcoal rounded-full" style="width: {{ enrollment.progress_percentage }}%"></div>
+                <div class="h-2 bg-[#254346]/70 rounded-full overflow-hidden mb-6">
+                    <div class="h-full bg-gradient-to-r from-[#00655F] to-[#82C293] rounded-full" style="width: {{ enrollment.progress_percentage }}%"></div>
                 </div>
                 
-                <a href="{% url 'student_course_player_enrollment' enrollment.id %}" class="block w-full text-center py-4 bg-deep-charcoal text-white rounded-xl font-medium hover:opacity-90 transition shadow-lg">
+                <a href="{% url 'student_course_player_enrollment' enrollment.id %}" class="block w-full text-center py-4 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl font-medium hover:opacity-90 transition shadow-lg">
                     Continue Learning
                     <i class="fas fa-arrow-right ml-2"></i>
                 </a>
@@ -82,40 +82,40 @@
                 <!-- Not Enrolled -->
                 <div class="text-center mb-6">
                     {% if course.is_free %}
-                    <div class="text-3xl font-light text-green-600 mb-2">Free</div>
+                    <div class="text-3xl font-light text-[#82C293] mb-2">Free</div>
                     {% else %}
-                    <div class="text-3xl font-light text-deep-charcoal mb-2">{{ course.currency }} {{ course.price }}</div>
+                    <div class="text-3xl font-light text-white mb-2">{{ course.currency }} {{ course.price }}</div>
                     {% endif %}
-                    <p class="text-deep-charcoal/60 text-sm">Full lifetime access</p>
+                    <p class="text-white/60 text-sm">Full lifetime access</p>
                 </div>
                 
                 <button 
                     onclick="enrollCourse({{ course.id }})"
-                    class="block w-full text-center py-4 bg-deep-charcoal text-white rounded-xl font-medium hover:opacity-90 transition shadow-lg mb-4"
+                    class="block w-full text-center py-4 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl font-medium hover:opacity-90 transition shadow-lg mb-4"
                 >
                     {% if course.is_free %}Start Learning{% else %}Enroll Now{% endif %}
                     <i class="fas fa-arrow-right ml-2"></i>
                 </button>
                 
-                <div class="space-y-3 text-sm text-deep-charcoal/70">
+                <div class="space-y-3 text-sm text-white/70">
                     <div class="flex items-center gap-3">
-                        <i class="fas fa-infinity text-muted-taupe w-5"></i>
+                        <i class="fas fa-infinity text-[#82C293] w-5"></i>
                         <span>Lifetime access</span>
                     </div>
                     {% if course.has_certificate %}
                     <div class="flex items-center gap-3">
-                        <i class="fas fa-certificate text-muted-taupe w-5"></i>
+                        <i class="fas fa-certificate text-[#82C293] w-5"></i>
                         <span>Certificate of completion</span>
                     </div>
                     {% endif %}
                     {% if course.has_ai_tutor %}
                     <div class="flex items-center gap-3">
-                        <i class="fas fa-robot text-muted-taupe w-5"></i>
+                        <i class="fas fa-robot text-[#82C293] w-5"></i>
                         <span>AI tutor support</span>
                     </div>
                     {% endif %}
                     <div class="flex items-center gap-3">
-                        <i class="fas fa-mobile-alt text-muted-taupe w-5"></i>
+                        <i class="fas fa-mobile-alt text-[#82C293] w-5"></i>
                         <span>Access on all devices</span>
                     </div>
                 </div>
@@ -126,48 +126,48 @@
     
     <!-- Course Description -->
     <div class="mb-12">
-        <h2 class="text-2xl font-light text-deep-charcoal mb-6">About This Course</h2>
-        <div class="prose prose-lg max-w-none text-deep-charcoal/80">
+        <h2 class="text-2xl font-light text-white mb-6">About This Course</h2>
+        <div class="prose prose-lg max-w-none text-white/80">
             {{ course.description|linebreaks }}
         </div>
     </div>
     
     <!-- Course Syllabus -->
     <div class="mb-12">
-        <h2 class="text-2xl font-light text-deep-charcoal mb-6">Course Content</h2>
-        <div class="bg-white rounded-2xl border border-muted-taupe/20 overflow-hidden">
+        <h2 class="text-2xl font-light text-white mb-6">Course Content</h2>
+        <div class="bg-[#04363a]/90 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden">
             {% for module in modules %}
-            <div class="border-b border-muted-taupe/10 last:border-b-0">
-                <div class="p-5 flex items-center justify-between bg-warm-sand/10 cursor-pointer hover:bg-warm-sand/20 transition" onclick="toggleModule(this)">
+            <div class="border-b border-white/10 last:border-b-0">
+                <div class="p-5 flex items-center justify-between bg-[#254346]/30 cursor-pointer hover:bg-[#254346]/50 transition" onclick="toggleModule(this)">
                     <div class="flex items-center gap-3">
-                        <i class="fas fa-chevron-right text-muted-taupe transition-transform"></i>
-                        <span class="font-medium text-deep-charcoal">{{ module.title }}</span>
+                        <i class="fas fa-chevron-right text-[#82C293] transition-transform"></i>
+                        <span class="font-medium text-white">{{ module.title }}</span>
                     </div>
-                    <span class="text-sm text-deep-charcoal/60">{{ module.lessons.count }} lessons</span>
+                    <span class="text-sm text-white/60">{{ module.lessons.count }} lessons</span>
                 </div>
                 <div class="hidden">
                     {% for lesson in module.lessons.all %}
-                    <div class="p-4 pl-12 border-t border-muted-taupe/10 flex items-center justify-between">
+                    <div class="p-4 pl-12 border-t border-white/10 flex items-center justify-between">
                         <div class="flex items-center gap-3">
                             {% if lesson.content_type == 'video' %}
-                            <i class="fas fa-play-circle text-muted-taupe"></i>
+                            <i class="fas fa-play-circle text-[#82C293]"></i>
                             {% elif lesson.content_type == 'quiz' %}
-                            <i class="fas fa-clipboard-check text-muted-taupe"></i>
+                            <i class="fas fa-clipboard-check text-[#82C293]"></i>
                             {% else %}
-                            <i class="fas fa-file-alt text-muted-taupe"></i>
+                            <i class="fas fa-file-alt text-[#82C293]"></i>
                             {% endif %}
-                            <span class="text-deep-charcoal/80">{{ lesson.title }}</span>
+                            <span class="text-white/80">{{ lesson.title }}</span>
                             {% if lesson.is_preview %}
-                            <span class="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded">Preview</span>
+                            <span class="text-xs px-2 py-0.5 bg-[#82C293]/20 text-[#82C293] border border-[#82C293]/30 rounded">Preview</span>
                             {% endif %}
                         </div>
-                        <span class="text-sm text-deep-charcoal/50">{{ lesson.estimated_minutes }} min</span>
+                        <span class="text-sm text-white/50">{{ lesson.estimated_minutes }} min</span>
                     </div>
                     {% endfor %}
                 </div>
             </div>
             {% empty %}
-            <div class="p-8 text-center text-deep-charcoal/60">
+            <div class="p-8 text-center text-white/60">
                 <i class="fas fa-folder-open text-3xl mb-3"></i>
                 <p>Course content coming soon</p>
             </div>
@@ -178,16 +178,16 @@
     <!-- Reviews -->
     {% if reviews %}
     <div class="mb-12">
-        <h2 class="text-2xl font-light text-deep-charcoal mb-6">Student Reviews</h2>
+        <h2 class="text-2xl font-light text-white mb-6">Student Reviews</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             {% for review in reviews %}
-            <div class="bg-white rounded-2xl p-6 border border-muted-taupe/20">
+            <div class="bg-[#04363a]/90 backdrop-blur-xl rounded-2xl p-6 border border-white/10">
                 <div class="flex items-center gap-4 mb-4">
-                    <div class="w-12 h-12 rounded-full bg-warm-sand/30 grid place-items-center">
-                        <i class="fas fa-user text-muted-taupe"></i>
+                    <div class="w-12 h-12 rounded-full bg-[#254346]/50 border border-white/10 grid place-items-center">
+                        <i class="fas fa-user text-[#82C293]"></i>
                     </div>
                     <div>
-                        <div class="font-medium text-deep-charcoal">{{ review.user.first_name|default:review.user.username }}</div>
+                        <div class="font-medium text-white">{{ review.user.first_name|default:review.user.username }}</div>
                         <div class="text-sm text-yellow-500">
                             {% for i in "12345"|make_list %}
                             {% if forloop.counter <= review.rating %}
@@ -199,7 +199,7 @@
                         </div>
                     </div>
                 </div>
-                <p class="text-deep-charcoal/70">{{ review.content }}</p>
+                <p class="text-white/70">{{ review.content }}</p>
             </div>
             {% endfor %}
         </div>
@@ -209,18 +209,18 @@
     <!-- Similar Courses -->
     {% if similar_courses %}
     <div>
-        <h2 class="text-2xl font-light text-deep-charcoal mb-6">Similar Courses</h2>
+        <h2 class="text-2xl font-light text-white mb-6">Similar Courses</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {% for similar in similar_courses %}
-            <a href="{% url 'student_course_detail' similar.slug %}" class="bg-white rounded-2xl border border-muted-taupe/20 overflow-hidden hover:shadow-lg transition group">
-                <div class="h-32 bg-gradient-to-br from-warm-sand to-[#E0D5C5] relative">
+            <a href="{% url 'student_course_detail' similar.slug %}" class="bg-[#04363a]/90 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden hover:shadow-lg transition group">
+                <div class="h-32 bg-gradient-to-br from-[#254346] to-[#04363a] relative">
                     {% if similar.thumbnail %}
                     <img src="{{ similar.thumbnail.url }}" alt="{{ similar.title }}" class="w-full h-full object-cover">
                     {% endif %}
                 </div>
                 <div class="p-4">
-                    <h4 class="font-medium text-deep-charcoal mb-1 group-hover:text-deep-charcoal/80 transition">{{ similar.title }}</h4>
-                    <p class="text-sm text-deep-charcoal/60">{{ similar.level|title }} • {{ similar.estimated_hours }}h</p>
+                    <h4 class="font-medium text-white mb-1 group-hover:text-white/80 transition">{{ similar.title }}</h4>
+                    <p class="text-sm text-white/60">{{ similar.level|title }} • {{ similar.estimated_hours }}h</p>
                 </div>
             </a>
             {% endfor %}

@@ -199,8 +199,8 @@
             
             // Set first item as active by default
             if (index === 0) {
-                item.classList.add('bg-[#04363a]/70', 'border-[#82C293]/25');
-                item.classList.remove('bg-[#04363a]/50', 'border-white/10');
+                item.classList.add('bg-[#254346]/70', 'border-[#82C293]/25');
+                item.classList.remove('bg-[#254346]/70', 'border-white/10');
                 content.classList.remove('hidden');
             }
             
@@ -216,8 +216,8 @@
                     otherContent.classList.add('hidden');
                     otherIcon.classList.remove('fa-minus');
                     otherIcon.classList.add('fa-plus');
-                    otherItem.classList.remove('bg-[#04363a]/70', 'border-[#82C293]/25', 'shadow-[0_18px_55px_rgba(0,0,0,0.2)]');
-                    otherItem.classList.add('bg-[#04363a]/50', 'border-white/10');
+                    otherItem.classList.remove('bg-[#254346]/70', 'border-[#82C293]/25', 'shadow-[0_18px_55px_rgba(0,0,0,0.2)]');
+                    otherItem.classList.add('bg-[#254346]/70', 'border-white/10');
                     otherItem.querySelector('.faq-icon').classList.remove('bg-[#82C293]', 'text-white');
                     otherItem.querySelector('.faq-icon').classList.add('bg-[#254346]/50', 'border-white/10', 'text-white/70');
                 });
@@ -228,8 +228,8 @@
                     content.classList.remove('hidden');
                     icon.classList.remove('fa-plus');
                     icon.classList.add('fa-minus');
-                    item.classList.remove('bg-[#04363a]/50', 'border-white/10');
-                    item.classList.add('bg-[#04363a]/70', 'border-[#82C293]/25', 'shadow-[0_18px_55px_rgba(0,0,0,0.2)]');
+                    item.classList.remove('bg-[#254346]/70', 'border-white/10');
+                    item.classList.add('bg-[#254346]/70', 'border-[#82C293]/25', 'shadow-[0_18px_55px_rgba(0,0,0,0.4)]');
                     item.querySelector('.faq-icon').classList.remove('bg-[#254346]/50', 'border-white/10', 'text-white/70');
                     item.querySelector('.faq-icon').classList.add('bg-[#82C293]', 'text-white');
                     
@@ -249,7 +249,7 @@
             if (previewDescription) previewDescription.textContent = data.description;
             if (previewTags) {
                 previewTags.innerHTML = data.tags.map(tag => 
-                    `<span class="text-xs px-3 py-2 rounded-full bg-[#254346]/50 text-white/70 border border-white/10">${tag}</span>`
+                    `<span class="text-xs px-4 py-2.5 rounded-full bg-[#82C293]/20 border border-[#82C293]/30 text-white font-medium">${tag}</span>`
                 ).join('');
             }
         }

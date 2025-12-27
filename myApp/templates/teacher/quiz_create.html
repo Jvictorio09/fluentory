@@ -1,0 +1,29 @@
+{% extends 'teacher/base.html' %}
+
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">Create Quiz</h1>
+<form method="post" class="bg-white p-6 rounded shadow space-y-4">
+    {% csrf_token %}
+    <div>
+        <label class="block mb-2">Title</label>
+        <input type="text" name="title" required class="w-full border rounded p-2">
+    </div>
+    <div>
+        <label class="block mb-2">Quiz Type</label>
+        <select name="quiz_type" required class="w-full border rounded p-2">
+            <option value="module">Module Quiz</option>
+            <option value="final">Final Assessment</option>
+        </select>
+    </div>
+    <div>
+        <label class="block mb-2">Passing Score (%)</label>
+        <input type="number" name="passing_score" value="70" class="w-full border rounded p-2">
+    </div>
+    <button type="submit" class="bg-deep-charcoal text-white px-4 py-2 rounded">Create</button>
+</form>
+{% endblock %}
+
+
+
+
+

@@ -1,0 +1,80 @@
+{% extends 'partner/base.html' %}
+
+{% block content %}
+<div class="w-full space-y-6 sm:space-y-8">
+    <div class="mb-6 sm:mb-8">
+        <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2">
+            My Cohorts / Students
+        </h1>
+        <p class="text-sm sm:text-base text-white/60">
+            {% if is_preview_mode %}Platform-wide cohorts (read-only preview){% else %}Manage your student cohorts and track their progress{% endif %}
+        </p>
+    </div>
+    
+    {% if is_preview_mode %}
+    <div class="mb-4 p-4 bg-blue-500/20 border border-blue-500/50 rounded-lg">
+        <div class="flex items-center gap-2 text-blue-200">
+            <i class="fas fa-info-circle"></i>
+            <span class="font-medium">Preview Mode: Showing platform-wide cohorts (read-only)</span>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Cohorts List -->
+    <div class="bg-[#04363a]/50 backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-white/10 shadow-lg">
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+            <h2 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
+                <i class="fas fa-users text-[#82C293]"></i>
+                All Cohorts
+            </h2>
+            {% if not is_preview_mode %}
+            <button class="w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-lg text-sm font-medium hover:opacity-90 transition">
+                <i class="fas fa-plus mr-2"></i>Create New Cohort
+            </button>
+            {% endif %}
+        </div>
+        
+        {% if cohorts %}
+        <div class="space-y-4">
+            {% for cohort in cohorts %}
+            <div class="bg-[#254346]/50 p-5 rounded-lg border border-white/5 hover:border-[#82C293]/30 transition cursor-pointer">
+                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div class="flex-1 min-w-0">
+                        <div class="text-base sm:text-lg font-semibold text-white mb-2">{{ cohort.name }}</div>
+                        <div class="text-sm text-white/60 mb-3">
+                            {% if cohort.description %}{{ cohort.description|truncatewords:20 }}{% else %}No description{% endif %}
+                        </div>
+                        <div class="flex flex-wrap gap-4 text-xs text-white/50">
+                            <span class="flex items-center gap-1"><i class="fas fa-calendar"></i> Started {{ cohort.start_date|date:"M d, Y" }}</span>
+                            {% if cohort.end_date %}
+                            <span class="flex items-center gap-1"><i class="fas fa-calendar-check"></i> Ends {{ cohort.end_date|date:"M d, Y" }}</span>
+                            {% endif %}
+                            <span class="flex items-center gap-1"><i class="fas fa-users"></i> {{ cohort.students.count }} students</span>
+                            <span class="flex items-center gap-1"><i class="fas fa-book"></i> {{ cohort.courses.count }} courses</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-6">
+                        <div class="text-right">
+                            <div class="text-base font-bold text-white">{{ cohort.capacity|default:"Unlimited" }}</div>
+                            <div class="text-xs text-white/60">Capacity</div>
+                        </div>
+                        <i class="fas fa-chevron-right text-white/40"></i>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <i class="fas fa-users text-5xl text-white/20 mb-4"></i>
+            <p class="text-white/60 mb-4 text-lg">No cohorts found</p>
+            {% if not is_preview_mode %}
+            <button class="px-5 py-3 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-lg text-sm font-medium hover:opacity-90 transition">
+                <i class="fas fa-plus mr-2"></i>Create Your First Cohort
+            </button>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -3,37 +3,37 @@
 {% block content %}
 <div class="p-4 sm:p-6 lg:p-8 xl:p-10 w-full">
     <div class="mb-6 sm:mb-8">
-        <h1 class="text-2xl sm:text-3xl font-light text-deep-charcoal mb-2">My Learning</h1>
-        <p class="text-sm sm:text-base text-deep-charcoal/70">Track your progress across all courses</p>
+        <h1 class="text-2xl sm:text-3xl font-light text-white mb-2">My Learning</h1>
+        <p class="text-sm sm:text-base text-white/70">Track your progress across all courses</p>
     </div>
     
     <div class="space-y-4 sm:space-y-6">
         {% for i in "123"|make_list %}
-        <div class="bg-white rounded-2xl p-6 border border-muted-taupe/20 shadow-sm">
+        <div class="bg-[#04363a]/90 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.3)]">
             <div class="flex items-start justify-between mb-4">
                 <div class="flex-1">
-                    <h3 class="text-xl font-medium text-deep-charcoal mb-2">Introduction to Data Science</h3>
-                    <p class="text-sm text-deep-charcoal/70 mb-4">Currently on: Lesson 3 of 12</p>
+                    <h3 class="text-xl font-medium text-white mb-2">Introduction to Data Science</h3>
+                    <p class="text-sm text-white/70 mb-4">Currently on: Lesson 3 of 12</p>
                     
                     <div class="mb-4">
                         <div class="flex items-center justify-between mb-2">
-                            <span class="text-sm text-deep-charcoal/70">Progress</span>
-                            <span class="text-sm font-medium text-deep-charcoal">25%</span>
+                            <span class="text-sm text-white/70">Progress</span>
+                            <span class="text-sm font-medium text-white">25%</span>
                         </div>
-                        <div class="h-2 bg-warm-sand rounded-full overflow-hidden">
-                            <div class="h-full bg-deep-charcoal rounded-full" style="width: 25%"></div>
+                        <div class="h-2 bg-[#254346]/70 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-[#00655F] to-[#82C293] rounded-full" style="width: 25%"></div>
                         </div>
                     </div>
                 </div>
                 
                 <div class="ml-6">
-                    <a href="#" class="px-6 py-3 bg-deep-charcoal text-white rounded-xl font-medium hover:opacity-90 transition">
+                    <a href="#" class="px-6 py-3 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl font-medium hover:opacity-90 transition">
                         Continue
                     </a>
                 </div>
             </div>
             
-            <div class="flex items-center gap-6 text-sm text-deep-charcoal/70">
+            <div class="flex items-center gap-6 text-sm text-white/70">
                 <span><i class="fas fa-clock mr-2"></i> 12 hours remaining</span>
                 <span><i class="fas fa-certificate mr-2"></i> Certificate available</span>
                 <span><i class="fas fa-calendar mr-2"></i> Started 5 days ago</span>

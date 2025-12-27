@@ -1,0 +1,35 @@
+{% extends 'teacher/base.html' %}
+
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">Edit Course: {{ course.title }}</h1>
+<form method="post" class="bg-white p-6 rounded shadow space-y-4" enctype="multipart/form-data">
+    {% csrf_token %}
+    <div>
+        <label class="block mb-2">Title</label>
+        <input type="text" name="title" value="{{ course.title }}" required class="w-full border rounded p-2">
+    </div>
+    <div>
+        <label class="block mb-2">Description</label>
+        <textarea name="description" required class="w-full border rounded p-2" rows="5">{{ course.description }}</textarea>
+    </div>
+    <div>
+        <label class="block mb-2">Status</label>
+        <select name="status" class="w-full border rounded p-2">
+            <option value="draft" {% if course.status == 'draft' %}selected{% endif %}>Draft</option>
+            <option value="published" {% if course.status == 'published' %}selected{% endif %}>Published</option>
+        </select>
+    </div>
+    <button type="submit" class="bg-deep-charcoal text-white px-4 py-2 rounded">Update</button>
+</form>
+
+<div class="mt-6">
+    <a href="{% url 'teacher_lessons' course.id %}" class="text-blue-600">Manage Lessons →</a>
+    <a href="{% url 'teacher_quizzes' course.id %}" class="text-blue-600 ml-4">Manage Quizzes →</a>
+    <a href="{% url 'teacher_students' course.id %}" class="text-blue-600 ml-4">View Students →</a>
+</div>
+{% endblock %}
+
+
+
+
+

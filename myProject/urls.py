@@ -54,14 +54,41 @@ urlpatterns = [
     # Django Admin is at /django-admin/ for technical users
     path('dashboard/', include('myApp.dashboard_urls')),
     
+    # Teacher routes
+    path('teacher/', views.teacher_dashboard, name='teacher_dashboard'),
+    path('teacher/courses/', views.teacher_courses, name='teacher_courses'),
+    path('teacher/courses/create/', views.teacher_course_create, name='teacher_course_create'),
+    path('teacher/courses/<int:course_id>/', views.teacher_course_edit, name='teacher_course_edit'),
+    path('teacher/courses/<int:course_id>/lessons/', views.teacher_lessons, name='teacher_lessons'),
+    path('teacher/courses/<int:course_id>/lessons/create/', views.teacher_lesson_create, name='teacher_lesson_create'),
+    path('teacher/courses/<int:course_id>/lessons/<int:lesson_id>/edit/', views.teacher_lesson_edit, name='teacher_lesson_edit'),
+    path('teacher/courses/<int:course_id>/lessons/<int:lesson_id>/delete/', views.teacher_lesson_delete, name='teacher_lesson_delete'),
+    path('teacher/courses/<int:course_id>/quizzes/', views.teacher_quizzes, name='teacher_quizzes'),
+    path('teacher/courses/<int:course_id>/quizzes/create/', views.teacher_quiz_create, name='teacher_quiz_create'),
+    path('teacher/courses/<int:course_id>/quizzes/<int:quiz_id>/edit/', views.teacher_quiz_edit, name='teacher_quiz_edit'),
+    path('teacher/courses/<int:course_id>/quizzes/<int:quiz_id>/delete/', views.teacher_quiz_delete, name='teacher_quiz_delete'),
+    path('teacher/courses/<int:course_id>/quizzes/<int:quiz_id>/questions/', views.teacher_quiz_questions, name='teacher_quiz_questions'),
+    path('teacher/students/', views.teacher_my_students, name='teacher_my_students'),
+    path('teacher/courses/<int:course_id>/students/', views.teacher_students, name='teacher_students'),
+    path('teacher/schedule/', views.teacher_schedule, name='teacher_schedule'),
+    path('teacher/courses/<int:course_id>/live-classes/', views.teacher_live_classes, name='teacher_live_classes'),
+    path('teacher/courses/<int:course_id>/announcements/', views.teacher_announcements, name='teacher_announcements'),
+    
     # Partner routes
     path('partner/', views.partner_overview, name='partner_overview'),
     path('partner/cohorts/', views.partner_cohorts, name='partner_cohorts'),
+    path('partner/programs/', views.partner_programs, name='partner_programs'),
+    path('partner/referrals/', views.partner_referrals, name='partner_referrals'),
+    path('partner/marketing/', views.partner_marketing, name='partner_marketing'),
+    path('partner/reports/', views.partner_reports, name='partner_reports'),
+    path('partner/settings/', views.partner_settings, name='partner_settings'),
     
     # Public API
     path('api/courses/', views.api_courses, name='api_courses'),
     path('api/notifications/', views.api_notifications, name='api_notifications'),
     path('api/notifications/read/', views.api_mark_notification_read, name='api_mark_notification_read'),
+    path('api/update-language/', views.api_update_language, name='api_update_language'),
+    path('api/teacher/activity-feed/', views.api_teacher_activity_feed, name='api_teacher_activity_feed'),
 ]
 
 # Serve media files in development
