@@ -62,3 +62,4 @@ If no rows are returned, the column doesn't exist and you need to add it (use Op
 Once the column is added, restart your Django development server and the error should be resolved.
 
 
+

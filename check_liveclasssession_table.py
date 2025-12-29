@@ -44,3 +44,4 @@ for field in LiveClassSession._meta.get_fields():
 cursor.close()
 
 
+

@@ -101,3 +101,4 @@ Please provide the **light mode versions** for:
 
 Also, should the **gradient colors** (`#00655F` to `#82C293`) remain the same in light mode, or do you want different colors?
 
+
