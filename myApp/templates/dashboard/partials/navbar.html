@@ -11,19 +11,16 @@
     </div>
     
     <div class="flex items-center gap-4 animate-slide-in-right">
-        <!-- Role Switcher - Godlike Admin Feature -->
-        <div class="relative group" id="roleSwitcher">
-            <button class="flex items-center gap-2 px-4 py-2 rounded-xl bg-[#82C293]/20 border border-[#82C293]/30 text-[#82C293] text-sm font-medium hover:bg-[#82C293]/30 hover:border-[#82C293]/50 transition-all duration-300 hover:scale-105">
+        <!-- Compact Role Switcher (dashboard header) -->
+        <div class="relative group" id="dashboard-role-switcher">
+            <button class="flex items-center gap-2 px-3 py-2 rounded-md bg-[#82C293]/10 border border-[#82C293]/20 text-[#82C293] text-sm font-medium hover:bg-[#82C293]/20 hover:border-[#82C293]/30 transition-all duration-200">
                 <i class="fas fa-exchange-alt"></i>
-                <span>Switch View</span>
-                <i class="fas fa-chevron-down text-xs transition-transform duration-300 group-hover:rotate-180"></i>
+                <span class="hidden sm:inline">Switch View</span>
+                <i class="fas fa-chevron-down text-xs ml-1"></i>
             </button>
-            
-            <!-- Dropdown Menu -->
             <div class="absolute right-0 mt-2 w-56 rounded-xl bg-[#04363a]/95 backdrop-blur-xl border border-[#254346]/60 shadow-[0_15px_40px_rgba(0,0,0,0.5)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
                 <div class="p-2 space-y-1">
                     <div class="px-3 py-2 text-xs uppercase tracking-wider text-white/50 font-medium">View As:</div>
-                    
                     <a href="{% url 'dashboard:switch_role' %}?role=admin_dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white bg-[#82C293]/20 border border-[#82C293]/30 hover:bg-[#82C293]/30 hover:border-[#82C293]/50 transition-all duration-300 group/item">
                         <div class="w-8 h-8 rounded-lg bg-[#82C293]/30 border border-[#82C293]/50 flex items-center justify-center">
                             <i class="fas fa-shield-alt text-[#82C293] text-sm"></i>
@@ -32,9 +29,7 @@
                             <div class="text-sm font-medium">Admin</div>
                             <div class="text-xs text-white/60">Full control</div>
                         </div>
-                        <i class="fas fa-check text-[#82C293] text-xs opacity-0 group-hover/item:opacity-100 transition-opacity"></i>
                     </a>
-                    
                     <a href="{% url 'dashboard:switch_role' %}?role=student" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-[#82C293]/10 hover:text-white hover:border hover:border-[#82C293]/20 transition-all duration-300 group/item">
                         <div class="w-8 h-8 rounded-lg bg-[#259d78]/20 border border-[#259d78]/30 flex items-center justify-center">
                             <i class="fas fa-graduation-cap text-[#259d78] text-sm"></i>
@@ -43,9 +38,7 @@
                             <div class="text-sm font-medium">Student</div>
                             <div class="text-xs text-white/60">Learning view</div>
                         </div>
-                        <i class="fas fa-arrow-right text-white/40 text-xs opacity-0 group-hover/item:opacity-100 transition-opacity"></i>
                     </a>
-                    
                     <a href="{% url 'dashboard:switch_role' %}?role=teacher" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-[#82C293]/10 hover:text-white hover:border hover:border-[#82C293]/20 transition-all duration-300 group/item">
                         <div class="w-8 h-8 rounded-lg bg-[#369dbf]/20 border border-[#369dbf]/30 flex items-center justify-center">
                             <i class="fas fa-chalkboard-teacher text-[#369dbf] text-sm"></i>
@@ -54,9 +47,7 @@
                             <div class="text-sm font-medium">Teacher</div>
                             <div class="text-xs text-white/60">Course management</div>
                         </div>
-                        <i class="fas fa-arrow-right text-white/40 text-xs opacity-0 group-hover/item:opacity-100 transition-opacity"></i>
                     </a>
-                    
                     <a href="{% url 'dashboard:switch_role' %}?role=partner" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-[#82C293]/10 hover:text-white hover:border hover:border-[#82C293]/20 transition-all duration-300 group/item">
                         <div class="w-8 h-8 rounded-lg bg-[#b8c943]/20 border border-[#b8c943]/30 flex items-center justify-center">
                             <i class="fas fa-handshake text-[#b8c943] text-sm"></i>
@@ -65,7 +56,6 @@
                             <div class="text-sm font-medium">Partner</div>
                             <div class="text-xs text-white/60">Analytics view</div>
                         </div>
-                        <i class="fas fa-arrow-right text-white/40 text-xs opacity-0 group-hover/item:opacity-100 transition-opacity"></i>
                     </a>
                 </div>
             </div>

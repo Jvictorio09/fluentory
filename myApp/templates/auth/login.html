@@ -20,8 +20,25 @@
             }
         }
     </script>
+    <style>
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://res.cloudinary.com/dkjtfjnlf/image/upload/v1766150324/fluentory_-_branding-01_ljretg.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            opacity: 0.5;
+            z-index: -1;
+            pointer-events: none;
+        }
+    </style>
 </head>
-<body class="min-h-screen bg-soft-ivory flex items-center justify-center p-4">
+<body class="min-h-screen flex items-center justify-center p-4">
     <div class="w-full max-w-md">
         <!-- Logo -->
         <div class="text-center mb-10">
@@ -65,14 +82,24 @@
                     <label for="password" class="block text-sm font-medium text-deep-charcoal mb-2">
                         Password
                     </label>
-                    <input 
-                        type="password" 
-                        id="password" 
-                        name="password" 
-                        required
-                        class="w-full px-4 py-3 rounded-xl border border-muted-taupe/30 bg-soft-ivory/50 text-deep-charcoal placeholder-deep-charcoal/40 focus:outline-none focus:ring-2 focus:ring-deep-charcoal/20 focus:border-deep-charcoal/40 transition"
-                        placeholder="Enter your password"
-                    >
+                    <div class="relative">
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            required
+                            class="w-full px-4 py-3 rounded-xl border border-muted-taupe/30 bg-soft-ivory/50 text-deep-charcoal placeholder-deep-charcoal/40 focus:outline-none focus:ring-2 focus:ring-deep-charcoal/20 focus:border-deep-charcoal/40 transition pr-12"
+                            placeholder="Enter your password"
+                        >
+                        <button 
+                            type="button" 
+                            class="absolute right-4 top-1/2 transform -translate-y-1/2 text-deep-charcoal/60 hover:text-deep-charcoal transition"
+                            onclick="togglePasswordVisibility()"
+                            id="toggleBtn"
+                        >
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
                 
                 <div class="flex items-center justify-between">
@@ -80,7 +107,7 @@
                         <input type="checkbox" name="remember" class="w-4 h-4 rounded border-muted-taupe/30 text-deep-charcoal focus:ring-deep-charcoal/20">
                         <span class="text-sm text-deep-charcoal/70">Remember me</span>
                     </label>
-                    <a href="#" class="text-sm text-deep-charcoal/70 hover:text-deep-charcoal transition">
+                    <a href="{% url 'accounts:password_reset' %}" class="text-sm text-deep-charcoal/70 hover:text-deep-charcoal transition">
                         Forgot password?
                     </a>
                 </div>
@@ -110,6 +137,21 @@
             </a>
         </div>
     </div>
+
+    <script>
+        function togglePasswordVisibility() {
+            const passwordField = document.getElementById('password');
+            const toggleBtn = document.getElementById('toggleBtn');
+            
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                toggleBtn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+            } else {
+                passwordField.type = 'password';
+                toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
+            }
+        }
+    </script>
 </body>
 </html>
 

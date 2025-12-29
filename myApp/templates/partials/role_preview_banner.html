@@ -1,23 +1,103 @@
 {% if request.session.preview_role %}
-<div class="fixed top-0 left-0 right-0 z-[9999] bg-gradient-to-r from-[#82C293]/90 to-[#259d78]/90 backdrop-blur-xl border-b border-[#82C293]/50 shadow-lg">
-    <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-            <div class="w-8 h-8 rounded-lg bg-white/20 border border-white/30 flex items-center justify-center">
-                <i class="fas fa-eye text-white text-sm"></i>
+<div class="fixed top-0 left-0 right-0 z-[9999] bg-gradient-to-r from-[#1e5a7a] via-[#2a7ba3] to-[#1a4d6d] backdrop-blur-lg border-b-2 border-[#3ba4d4]/40 shadow-2xl">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-white/30 to-white/10 border border-white/40 flex items-center justify-center shadow-lg">
+                <i class="fas fa-eye text-white text-lg"></i>
             </div>
             <div>
-                <div class="text-sm font-medium text-white">Preview Mode</div>
-                <div class="text-xs text-white/80">Viewing as {{ request.session.preview_role|title }}</div>
+                <div class="text-sm font-bold text-white tracking-wide">PREVIEW MODE</div>
+                <div class="text-xs text-white/80 mt-0.5">Viewing as <span class="font-semibold text-[#3ba4d4]">{{ request.session.preview_role|title }}</span></div>
             </div>
         </div>
-        <a href="{% url 'dashboard:switch_role' %}?role=admin_dashboard" 
-           class="px-4 py-2 bg-white/20 hover:bg-white/30 border border-white/30 hover:border-white/50 text-white rounded-lg text-sm font-medium transition-all duration-300 hover:scale-105 flex items-center gap-2">
-            <i class="fas fa-arrow-left"></i>
-            <span>Back to Admin</span>
-        </a>
+        <div class="relative">
+            <button id="switch-view-btn" aria-haspopup="true" aria-expanded="false" title="Switch View"
+                class="px-4 py-2 bg-white/15 hover:bg-white/25 border border-white/40 hover:border-white/60 text-white rounded-lg text-sm font-medium transition-all duration-300 hover:scale-105 flex items-center gap-2 shadow-lg hover:shadow-xl">
+                <i class="fas fa-exchange-alt"></i>
+                <span>Switch View</span>
+                <i class="fas fa-chevron-down text-xs ml-1"></i>
+            </button>
+
+            <div id="switch-view-menu" class="hidden absolute right-0 top-full mt-2 w-64 bg-gradient-to-b from-[#1e5a7a]/95 to-[#154057]/95 backdrop-blur-xl rounded-lg border border-[#3ba4d4]/30 shadow-2xl py-3 z-50">
+                <div class="px-4 pb-2 text-xs text-white/60 font-semibold tracking-widest">VIEW AS:</div>
+                <div class="px-3">
+                    {% with current=request.session.preview_role|default:'' %}
+                    <a href="{% url 'dashboard:switch_role' %}?role=admin_dashboard" class="flex items-center gap-3 px-3 py-2 rounded-md transition mb-2 {% if current == '' or current == 'admin' or current == 'admin_dashboard' %}bg-[#3ba4d4]/30 ring-1 ring-[#3ba4d4]/50{% endif %} hover:bg-[#3ba4d4]/20">
+                        <div class="w-9 h-9 flex items-center justify-center rounded-md bg-white/10">
+                            <i class="fas fa-user-shield text-white"></i>
+                        </div>
+                        <div class="text-left">
+                            <div class="text-sm font-medium text-white">Admin</div>
+                            <div class="text-xs text-white/60">Full control</div>
+                        </div>
+                    </a>
+
+                    <a href="{% url 'dashboard:switch_role' %}?role=student" class="flex items-center gap-3 px-3 py-2 rounded-md transition mb-2 {% if current == 'student' %}bg-[#3ba4d4]/30 ring-1 ring-[#3ba4d4]/50{% endif %} hover:bg-[#3ba4d4]/20">
+                        <div class="w-9 h-9 flex items-center justify-center rounded-md bg-white/10">
+                            <i class="fas fa-user-graduate text-white"></i>
+                        </div>
+                        <div class="text-left">
+                            <div class="text-sm font-medium text-white">Student</div>
+                            <div class="text-xs text-white/60">Learning view</div>
+                        </div>
+                    </a>
+
+                    <a href="{% url 'dashboard:switch_role' %}?role=teacher" class="flex items-center gap-3 px-3 py-2 rounded-md transition mb-2 {% if current == 'teacher' %}bg-[#3ba4d4]/30 ring-1 ring-[#3ba4d4]/50{% endif %} hover:bg-[#3ba4d4]/20">
+                        <div class="w-9 h-9 flex items-center justify-center rounded-md bg-white/10">
+                            <i class="fas fa-chalkboard-teacher text-white"></i>
+                        </div>
+                        <div class="text-left">
+                            <div class="text-sm font-medium text-white">Teacher</div>
+                            <div class="text-xs text-white/60">Course management</div>
+                        </div>
+                    </a>
+
+                    <a href="{% url 'dashboard:switch_role' %}?role=partner" class="flex items-center gap-3 px-3 py-2 rounded-md transition {% if current == 'partner' %}bg-[#3ba4d4]/30 ring-1 ring-[#3ba4d4]/50{% endif %} hover:bg-[#3ba4d4]/20">
+                        <div class="w-9 h-9 flex items-center justify-center rounded-md bg-white/10">
+                            <i class="fas fa-chart-line text-white"></i>
+                        </div>
+                        <div class="text-left">
+                            <div class="text-sm font-medium text-white">Partner</div>
+                            <div class="text-xs text-white/60">Analytics view</div>
+                        </div>
+                    </a>
+                    {% endwith %}
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endif %}
+
+    <script>
+    // Toggle switch view dropdown
+    (function(){
+        const btn = document.getElementById('switch-view-btn');
+        const menu = document.getElementById('switch-view-menu');
+        if (!btn || !menu) return;
+
+        btn.addEventListener('click', function(e){
+            e.stopPropagation();
+            const isHidden = menu.classList.contains('hidden');
+            if (isHidden) {
+                menu.classList.remove('hidden');
+                btn.setAttribute('aria-expanded','true');
+            } else {
+                menu.classList.add('hidden');
+                btn.setAttribute('aria-expanded','false');
+            }
+        });
+
+        // Close when clicking outside
+        document.addEventListener('click', function(ev){
+            if (!menu.classList.contains('hidden') && !btn.contains(ev.target) && !menu.contains(ev.target)){
+                menu.classList.add('hidden');
+                btn.setAttribute('aria-expanded','false');
+            }
+        });
+    })();
+    </script>
+
 
 
 

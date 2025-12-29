@@ -25,6 +25,9 @@ urlpatterns = [
     path('login/', views.login_view, name='login'),
     path('signup/', views.signup_view, name='signup'),
     path('logout/', views.logout_view, name='logout'),
+    # Django built-in auth views (password reset, confirm, done, etc.)
+    # Namespace the included auth URLs to avoid name collisions with our own views
+    path('accounts/', include(('django.contrib.auth.urls', 'auth'), namespace='accounts')),
     
     # Student routes
     path('student/', views.student_home, name='student_home'),

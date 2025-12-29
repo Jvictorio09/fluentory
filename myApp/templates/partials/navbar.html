@@ -47,7 +47,23 @@
                     <a href="#" class="language-option block px-4 py-2.5 text-sm text-white/80 hover:bg-[#82C293]/20 hover:text-[#82C293] transition-colors rounded-b-xl" data-lang="fr" data-code="FR">Français</a>
                 </div>
             </div>
-            <a href="{% url 'login' %}" class="text-white/90 no-underline text-[0.95rem] font-semibold relative group transition-colors hover:text-[#82C293] flex items-center h-full">
+            <!-- Global Switch View (visible in header) -->
+            {% if request.path != '/' %}
+            <div class="relative" id="global-switch-view">
+                <button id="switch-view-btn" aria-haspopup="true" aria-expanded="false" aria-controls="switch-view-menu" class="px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 text-white text-sm font-medium flex items-center gap-2 transition-all">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Switch View</span>
+                    <i class="fas fa-chevron-down text-xs ml-1" aria-hidden="true"></i>
+                </button>
+                <div id="switch-view-menu" role="menu" aria-labelledby="switch-view-btn" class="absolute right-0 top-full mt-2 w-48 bg-[#04363a]/95 backdrop-blur-xl rounded-lg shadow-lg border border-white/10 opacity-0 invisible transition-all duration-200 z-50" style="transform-origin: top right;">
+                    <a role="menuitem" href="{% url 'dashboard:switch_role' %}?role=admin_dashboard" class="block px-4 py-2 text-sm text-white/80 hover:bg-[#82C293]/20 hover:text-[#82C293]">Admin</a>
+                    <a role="menuitem" href="{% url 'dashboard:switch_role' %}?role=student" class="block px-4 py-2 text-sm text-white/80 hover:bg-[#82C293]/20 hover:text-[#82C293]">Student</a>
+                    <a role="menuitem" href="{% url 'dashboard:switch_role' %}?role=teacher" class="block px-4 py-2 text-sm text-white/80 hover:bg-[#82C293]/20 hover:text-[#82C293]">Teacher</a>
+                    <a role="menuitem" href="{% url 'dashboard:switch_role' %}?role=partner" class="block px-4 py-2 text-sm text-white/80 hover:bg-[#82C293]/20 hover:text-[#82C293]">Partner</a>
+                </div>
+            </div>
+            {% endif %}
+            <a href="{% url 'login' %}?show=login" class="text-white/90 no-underline text-[0.95rem] font-semibold relative group transition-colors hover:text-[#82C293] flex items-center h-full">
                 <span>Login</span>
                 <span class="absolute bottom-0 left-0 w-0 h-0.5 bg-[#82C293] transition-all duration-300 group-hover:w-full"></span>
             </a>
@@ -55,3 +71,36 @@
         </div>
     </div>
 </nav>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('switch-view-btn');
+    var menu = document.getElementById('switch-view-menu');
+    if (!btn || !menu) return;
+
+    function openMenu(){
+        menu.classList.remove('opacity-0','invisible');
+        menu.classList.add('opacity-100','visible');
+        btn.setAttribute('aria-expanded','true');
+    }
+    function closeMenu(){
+        menu.classList.remove('opacity-100','visible');
+        menu.classList.add('opacity-0','invisible');
+        btn.setAttribute('aria-expanded','false');
+    }
+
+    btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var isOpen = btn.getAttribute('aria-expanded') === 'true';
+        if (isOpen) closeMenu(); else openMenu();
+    });
+
+    // Prevent clicks inside the menu from closing it
+    menu.addEventListener('click', function(e){ e.stopPropagation(); });
+
+    // Close on outside click
+    document.addEventListener('click', function(){ closeMenu(); });
+
+    // Close on Escape
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeMenu(); });
+});
+</script>

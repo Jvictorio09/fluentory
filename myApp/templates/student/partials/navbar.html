@@ -17,15 +17,31 @@
         </div>
         
         <div class="flex items-center gap-2 sm:gap-4 shrink-0">
-            <div class="flex items-center gap-1 sm:gap-2 text-white cursor-pointer hover:opacity-70 transition">
-                <i class="fas fa-globe text-sm sm:text-base"></i>
-                <span class="text-xs sm:text-sm hidden sm:inline">{{ request.user.profile.preferred_language|upper|default:'EN' }}</span>
+            <div class="relative">
+                <div id="student-language-btn" class="flex items-center gap-1 sm:gap-2 text-white cursor-pointer hover:opacity-70 transition">
+                    <i class="fas fa-globe text-sm sm:text-base"></i>
+                    <span id="student-current-language" class="text-xs sm:text-sm hidden sm:inline">{{ request.user.profile.preferred_language|upper|default:'EN' }}</span>
+                </div>
+                <!-- Language menu -->
+                <div id="student-language-menu" class="hidden absolute right-0 top-full mt-2 w-36 bg-[#04363a]/90 backdrop-blur-xl rounded-xl border border-white/10 shadow-lg py-2 z-50">
+                    <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-[#254346]/50 language-select" data-lang="en">English</a>
+                    <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-[#254346]/50 language-select" data-lang="es">Español</a>
+                    <a href="#" class="block px-4 py-2 text-sm text-white hover:bg-[#254346]/50 language-select" data-lang="fr">Français</a>
+                </div>
             </div>
-            
-            <button class="relative text-white hover:opacity-70 transition" id="notifications-btn">
-                <i class="fas fa-bell text-base sm:text-lg"></i>
-                <span class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
+
+            <div class="relative">
+                <button class="relative text-white hover:opacity-70 transition" id="notifications-btn">
+                    <i class="fas fa-bell text-base sm:text-lg"></i>
+                    <span id="notifications-dot" class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                </button>
+                <!-- Notifications dropdown -->
+                <div id="notifications-dropdown" class="hidden absolute right-0 top-full mt-2 w-80 bg-[#04363a]/90 backdrop-blur-xl rounded-xl border border-white/10 shadow-lg py-2 z-50">
+                    <div class="px-4 py-2 border-b border-white/10 font-medium text-white">Notifications</div>
+                    <div id="notifications-list" class="max-h-64 overflow-auto"></div>
+                    <div id="notifications-empty" class="px-4 py-3 text-sm text-white/60 hidden">No notifications</div>
+                </div>
+            </div>
             
             <!-- User Dropdown -->
             <div class="relative" id="user-dropdown">
@@ -50,6 +66,7 @@
                     <a href="{% url 'student_home' %}" class="block px-4 py-2 text-sm text-white hover:bg-[#254346]/50 transition">
                         <i class="fas fa-home w-4 mr-2"></i> Dashboard
                     </a>
+                    {# Back to Teacher View removed from user menu; use Switch View control in header instead #}
                     <a href="{% url 'student_settings' %}" class="block px-4 py-2 text-sm text-white hover:bg-[#254346]/50 transition">
                         <i class="fas fa-cog w-4 mr-2"></i> Settings
                     </a>
@@ -73,12 +90,147 @@ function toggleUserMenu() {
     menu.classList.toggle('hidden');
 }
 
-// Close menu when clicking outside
+// Helper: get CSRF token from cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Notifications
+async function fetchNotifications() {
+    try {
+        const res = await fetch('{% url "api_notifications" %}', { credentials: 'same-origin' });
+        if (!res.ok) throw new Error('Network error');
+        const data = await res.json();
+        const list = document.getElementById('notifications-list');
+        const empty = document.getElementById('notifications-empty');
+        list.innerHTML = '';
+        if (!data || data.length === 0) {
+            empty.classList.remove('hidden');
+            document.getElementById('notifications-dot').classList.add('hidden');
+            return;
+        }
+        empty.classList.add('hidden');
+        // show dot if any unread
+        const anyUnread = data.some(n => !n.is_read);
+        if (anyUnread) document.getElementById('notifications-dot').classList.remove('hidden');
+        else document.getElementById('notifications-dot').classList.add('hidden');
+
+        data.forEach(n => {
+            const item = document.createElement('div');
+            item.className = 'px-4 py-3 border-b border-white/5 hover:bg-[#254346]/30 transition text-sm text-white';
+            item.innerHTML = `
+                <div class="font-medium">${n.title}</div>
+                <div class="text-xs text-white/70 mt-1">${n.message}</div>
+            `;
+            if (!n.is_read) {
+                const btn = document.createElement('button');
+                btn.className = 'mt-2 inline-block text-xs text-[#82C293]';
+                btn.textContent = 'Mark as read';
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    markNotificationRead(n.id, item, btn);
+                });
+                item.appendChild(btn);
+            }
+            list.appendChild(item);
+        });
+    } catch (err) {
+        console.error('Failed to load notifications', err);
+    }
+}
+
+async function markNotificationRead(notificationId, itemEl, btn) {
+    try {
+        const csrf = getCookie('csrftoken');
+        const res = await fetch('{% url "api_mark_notification_read" %}', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrf
+            },
+            body: JSON.stringify({ notification_id: notificationId })
+        });
+        if (!res.ok) throw new Error('Network error');
+        // remove button and dim item
+        if (btn) btn.remove();
+        itemEl.style.opacity = '0.7';
+        document.getElementById('notifications-dot').classList.add('hidden');
+    } catch (err) {
+        console.error('Failed to mark read', err);
+    }
+}
+
+// Toggle notifications dropdown
+document.getElementById('notifications-btn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    const dd = document.getElementById('notifications-dropdown');
+    dd.classList.toggle('hidden');
+    if (!dd.classList.contains('hidden')) {
+        fetchNotifications();
+    }
+});
+
+// Language selector
+document.getElementById('student-language-btn').addEventListener('click', function(e) {
+    e.stopPropagation();
+    const menu = document.getElementById('student-language-menu');
+    menu.classList.toggle('hidden');
+});
+
+document.querySelectorAll('.language-select').forEach(el => {
+    el.addEventListener('click', async function(e) {
+        e.preventDefault();
+        const lang = this.dataset.lang;
+        try {
+            const csrf = getCookie('csrftoken');
+            const res = await fetch('{% url "api_update_language" %}', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrf
+                },
+                body: JSON.stringify({ language: lang })
+            });
+            if (!res.ok) throw new Error('Network error');
+            document.getElementById('student-current-language').textContent = lang.toUpperCase();
+            document.getElementById('student-language-menu').classList.add('hidden');
+        } catch (err) {
+            console.error('Failed to update language', err);
+        }
+    });
+});
+
+// Close menus when clicking outside
 document.addEventListener('click', function(e) {
     const dropdown = document.getElementById('user-dropdown');
     const menu = document.getElementById('user-menu');
     if (dropdown && !dropdown.contains(e.target)) {
         menu.classList.add('hidden');
+    }
+
+    const notifContainer = document.getElementById('notifications-dropdown');
+    const notifBtn = document.getElementById('notifications-btn');
+    if (notifContainer && notifBtn && !notifBtn.contains(e.target) && !notifContainer.contains(e.target)) {
+        notifContainer.classList.add('hidden');
+    }
+
+    const langBtn = document.getElementById('student-language-btn');
+    const langMenu = document.getElementById('student-language-menu');
+    if (langBtn && langMenu && !langBtn.contains(e.target) && !langMenu.contains(e.target)) {
+        langMenu.classList.add('hidden');
     }
 });
 </script>

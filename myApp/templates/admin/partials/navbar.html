@@ -7,7 +7,56 @@
         <div class="flex items-center gap-3 sm:gap-4">
             <div class="hidden sm:block text-sm text-deep-charcoal/70 font-light">Admin User</div>
             <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-warm-sand border border-muted-taupe/20"></div>
+
+            <!-- Admin Switch View -->
+            <div class="relative ml-2" id="admin-switch-view">
+                <button id="admin-switch-view-btn" aria-haspopup="true" aria-expanded="false" aria-controls="admin-switch-view-menu" class="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-md bg-deep-charcoal/5 hover:bg-deep-charcoal/10 text-sm font-medium text-deep-charcoal transition">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Switch View</span>
+                    <i class="fas fa-chevron-down text-xs ml-1" aria-hidden="true"></i>
+                </button>
+                <div id="admin-switch-view-menu" role="menu" aria-labelledby="admin-switch-view-btn" class="absolute right-0 top-full mt-2 w-44 bg-white rounded-md shadow-md border border-muted-taupe/20 opacity-0 invisible transition-all duration-150 z-50" style="transform-origin: top right;">
+                    <a role="menuitem" href="{% url 'dashboard:switch_role' %}?role=admin_dashboard" class="block px-4 py-2 text-sm text-deep-charcoal/80 hover:bg-gray-50">Admin</a>
+                    <a role="menuitem" href="{% url 'dashboard:switch_role' %}?role=student" class="block px-4 py-2 text-sm text-deep-charcoal/80 hover:bg-gray-50">Student</a>
+                    <a role="menuitem" href="{% url 'dashboard:switch_role' %}?role=teacher" class="block px-4 py-2 text-sm text-deep-charcoal/80 hover:bg-gray-50">Teacher</a>
+                    <a role="menuitem" href="{% url 'dashboard:switch_role' %}?role=partner" class="block px-4 py-2 text-sm text-deep-charcoal/80 hover:bg-gray-50">Partner</a>
+                </div>
+            </div>
+
+            <a href="{% url 'logout' %}" class="ml-4 inline-flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 transition">
+                <i class="fas fa-sign-out-alt"></i>
+                <span class="hidden sm:inline">Logout</span>
+            </a>
         </div>
     </div>
 </nav>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('admin-switch-view-btn');
+    var menu = document.getElementById('admin-switch-view-menu');
+    if (!btn || !menu) return;
+
+    function openMenu(){
+        menu.classList.remove('opacity-0','invisible');
+        menu.classList.add('opacity-100','visible');
+        btn.setAttribute('aria-expanded','true');
+    }
+    function closeMenu(){
+        menu.classList.remove('opacity-100','visible');
+        menu.classList.add('opacity-0','invisible');
+        btn.setAttribute('aria-expanded','false');
+    }
+
+    btn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var isOpen = btn.getAttribute('aria-expanded') === 'true';
+        if (isOpen) closeMenu(); else openMenu();
+    });
+
+    menu.addEventListener('click', function(e){ e.stopPropagation(); });
+    document.addEventListener('click', function(){ closeMenu(); });
+    document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeMenu(); });
+});
+</script>
 

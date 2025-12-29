@@ -157,7 +157,10 @@ def cookies_page(request):
 
 def login_view(request):
     """User login"""
-    if request.user.is_authenticated:
+    # If user is already authenticated, normally redirect them to their dashboard.
+    # However, if the request explicitly asks to show the login form (e.g. ?show=login),
+    # render the login page so they can enter different credentials.
+    if request.user.is_authenticated and not request.GET.get('show'):
         return redirect_by_role(request.user)
     
     if request.method == 'POST':
@@ -226,7 +229,12 @@ def logout_view(request):
     """User logout"""
     logout(request)
     messages.info(request, 'You have been logged out.')
-    return redirect('home')
+    # Allow an optional `next` parameter so callers can control where to go after logout.
+    next_url = request.GET.get('next') or request.POST.get('next')
+    if next_url:
+        return redirect(next_url)
+    # Default: send the user to the login page so they can sign in again.
+    return redirect('login')
 
 
 def redirect_by_role(user):
