@@ -1,0 +1,273 @@
+{% extends 'teacher/base.html' %}
+{% load tz %}
+
+{% block content %}
+<div class="space-y-6 sm:space-y-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+            <h1 class="text-3xl sm:text-4xl font-bold text-white mb-2">Schedule Calendar</h1>
+            <p class="text-white/60">View your availability, live classes, and bookings in calendar format</p>
+        </div>
+        <a href="{% url 'teacher_availability' %}" class="inline-flex items-center gap-2 bg-[#254346] text-white px-5 py-3 rounded-lg hover:bg-[#82C293]/20 transition font-medium border border-white/10">
+            <i class="fas fa-clock"></i>
+            Manage Availability
+        </a>
+    </div>
+    
+    <!-- Calendar Navigation -->
+    <div class="bg-[#04363a]/50 backdrop-blur-sm border border-white/10 rounded-xl p-4 flex items-center justify-between">
+        <button onclick="changeMonth(-1)" class="px-4 py-2 bg-[#254346] text-white rounded-lg hover:bg-[#82C293]/20 transition">
+            <i class="fas fa-chevron-left"></i> Previous
+        </button>
+        <h2 class="text-xl font-bold text-white" id="currentMonth">Loading...</h2>
+        <button onclick="changeMonth(1)" class="px-4 py-2 bg-[#254346] text-white rounded-lg hover:bg-[#82C293]/20 transition">
+            Next <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+    
+    <!-- Calendar Grid -->
+    <div class="bg-[#04363a]/50 backdrop-blur-sm border border-white/10 rounded-xl p-6 overflow-x-auto">
+        <div id="calendarContainer" class="min-w-full">
+            <!-- Calendar will be rendered here by JavaScript -->
+        </div>
+    </div>
+    
+    <!-- Legend -->
+    <div class="bg-[#04363a]/50 backdrop-blur-sm border border-white/10 rounded-xl p-6">
+        <h3 class="text-lg font-bold text-white mb-4">Legend</h3>
+        <div class="flex flex-wrap gap-4">
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 bg-green-500/30 border border-green-500/50 rounded"></div>
+                <span class="text-white/80 text-sm">Available Time Slots</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 bg-blue-500/30 border border-blue-500/50 rounded"></div>
+                <span class="text-white/80 text-sm">Live Class Sessions</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 bg-purple-500/30 border border-purple-500/50 rounded"></div>
+                <span class="text-white/80 text-sm">Bookings</span>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 bg-red-500/30 border border-red-500/50 rounded"></div>
+                <span class="text-white/80 text-sm">Blocked Slots</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- List View (Alternative) -->
+    <div class="bg-[#04363a]/50 backdrop-blur-sm border border-white/10 rounded-xl p-6 sm:p-8">
+        <h2 class="text-xl sm:text-2xl font-bold text-white mb-6 flex items-center gap-2">
+            <i class="fas fa-list text-[#82C293]"></i>
+            Upcoming Events
+        </h2>
+        
+        <div class="space-y-4">
+            <!-- Live Sessions -->
+            {% for session in live_sessions %}
+            {% if session.scheduled_start >= now %}
+            <div class="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+                <div class="flex items-start justify-between">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-white mb-1">
+                            <i class="fas fa-video text-blue-400 mr-2"></i>
+                            {{ session.title }}
+                        </h3>
+                        <p class="text-sm text-white/60 mb-2">{{ session.course.title }}</p>
+                        <div class="flex flex-wrap items-center gap-4 text-sm text-white/70">
+                            <span><i class="fas fa-calendar mr-1"></i>{{ session.scheduled_start|date:"M d, Y" }}</span>
+                            <span><i class="fas fa-clock mr-1"></i>{{ session.scheduled_start|time:"H:i" }} - {{ session.scheduled_end|time:"H:i" }}</span>
+                            <span class="px-2 py-1 rounded bg-blue-500/20 text-blue-400 border border-blue-500/30 text-xs">
+                                {{ session.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    <a href="{% url 'teacher_session_bookings' session.id %}" class="px-4 py-2 bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-lg hover:bg-blue-500/30 transition text-sm font-medium">
+                        View Bookings
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+            {% empty %}
+            <div class="text-center py-8 text-white/60">
+                <i class="fas fa-calendar-times text-4xl mb-4 opacity-50"></i>
+                <p>No upcoming live class sessions</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Calendar data from Django (we'll pass it as JSON)
+const availabilitySlots = [
+    {% for slot in availability_slots %}
+    {
+        id: {{ slot.id }},
+        type: '{{ slot.slot_type }}',
+        {% if slot.slot_type == 'recurring' %}
+        dayOfWeek: {{ slot.day_of_week }},
+        startTime: '{{ slot.start_time|time:"H:i" }}',
+        endTime: '{{ slot.end_time|time:"H:i" }}',
+        validFrom: '{{ slot.valid_from|date:"Y-m-d" }}' || null,
+        validUntil: '{{ slot.valid_until|date:"Y-m-d" }}' || null,
+        {% else %}
+        startDateTime: '{{ slot.start_datetime|date:"Y-m-d H:i" }}',
+        endDateTime: '{{ slot.end_datetime|date:"Y-m-d H:i" }}',
+        {% endif %}
+        isBlocked: {{ slot.is_blocked|lower }},
+        course: '{{ slot.course.title|default:"All Courses"|escapejs }}',
+        timezone: '{{ slot.timezone }}'
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+
+const liveSessions = [
+    {% for session in live_sessions %}
+    {
+        id: {{ session.id }},
+        title: '{{ session.title|escapejs }}',
+        course: '{{ session.course.title|escapejs }}',
+        startDateTime: '{{ session.scheduled_start|date:"Y-m-d H:i" }}',
+        endDateTime: '{{ session.scheduled_end|date:"Y-m-d H:i" }}',
+        status: '{{ session.status }}',
+        maxAttendees: {{ session.max_attendees|default:"null" }}
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+
+const bookings = [
+    {% for booking in bookings %}
+    {
+        id: {{ booking.id }},
+        sessionId: {{ booking.session.id }},
+        userName: '{{ booking.user.get_full_name|default:booking.user.username|escapejs }}',
+        status: '{{ booking.status }}',
+        sessionStart: '{{ booking.session.scheduled_start|date:"Y-m-d H:i" }}'
+    }{% if not forloop.last %},{% endif %}
+    {% endfor %}
+];
+
+// Simple calendar rendering
+let currentDate = new Date();
+currentDate.setDate(1); // Start at first day of month
+
+function renderCalendar() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                       'July', 'August', 'September', 'October', 'November', 'December'];
+    
+    document.getElementById('currentMonth').textContent = `${monthNames[month]} ${year}`;
+    
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const daysInPrevMonth = new Date(year, month, 0).getDate();
+    
+    let html = '<table class="w-full border-collapse">';
+    html += '<thead><tr class="border-b border-white/10">';
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    dayNames.forEach(day => {
+        html += `<th class="p-3 text-white/60 font-medium text-sm text-center">${day}</th>`;
+    });
+    html += '</tr></thead><tbody>';
+    
+    let day = 1;
+    let nextMonthDay = 1;
+    
+    for (let i = 0; i < 6; i++) {
+        html += '<tr>';
+        for (let j = 0; j < 7; j++) {
+            if (i === 0 && j < firstDay) {
+                // Previous month days
+                const prevDay = daysInPrevMonth - firstDay + j + 1;
+                html += `<td class="p-2 border border-white/10 text-white/30 text-center min-h-[80px]">${prevDay}</td>`;
+            } else if (day > daysInMonth) {
+                // Next month days
+                html += `<td class="p-2 border border-white/10 text-white/30 text-center min-h-[80px]">${nextMonthDay}</td>`;
+                nextMonthDay++;
+            } else {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const currentDayEvents = getEventsForDate(dateStr);
+                
+                html += `<td class="p-2 border border-white/10 text-white text-center min-h-[80px] align-top">`;
+                html += `<div class="font-semibold mb-1">${day}</div>`;
+                
+                currentDayEvents.forEach(event => {
+                    html += `<div class="text-xs mb-1 p-1 rounded ${event.class} truncate" title="${event.title}">${event.title}</div>`;
+                });
+                
+                html += '</td>';
+                day++;
+            }
+        }
+        html += '</tr>';
+        if (day > daysInMonth) break;
+    }
+    
+    html += '</tbody></table>';
+    document.getElementById('calendarContainer').innerHTML = html;
+}
+
+function getEventsForDate(dateStr) {
+    const events = [];
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    const dayOfWeek = date.getDay();
+    
+    // Check recurring availability slots
+    availabilitySlots.forEach(slot => {
+        if (slot.type === 'recurring' && slot.dayOfWeek === dayOfWeek && !slot.isBlocked) {
+            if ((!slot.validFrom || dateStr >= slot.validFrom) && 
+                (!slot.validUntil || dateStr <= slot.validUntil)) {
+                events.push({
+                    title: `Available: ${slot.startTime}-${slot.endTime}`,
+                    class: 'bg-green-500/30 border border-green-500/50 text-green-300'
+                });
+            }
+        } else if (slot.type === 'one_time') {
+            const slotDate = slot.startDateTime.split(' ')[0];
+            if (slotDate === dateStr) {
+                events.push({
+                    title: slot.isBlocked ? `Blocked: ${slot.course}` : `Available: ${slot.course}`,
+                    class: slot.isBlocked ? 'bg-red-500/30 border border-red-500/50 text-red-300' : 'bg-green-500/30 border border-green-500/50 text-green-300'
+                });
+            }
+        }
+    });
+    
+    // Check live sessions
+    liveSessions.forEach(session => {
+        const sessionDate = session.startDateTime.split(' ')[0];
+        if (sessionDate === dateStr) {
+            events.push({
+                title: `Live: ${session.title}`,
+                class: 'bg-blue-500/30 border border-blue-500/50 text-blue-300'
+            });
+        }
+    });
+    
+    // Check bookings
+    bookings.forEach(booking => {
+        const bookingDate = booking.sessionStart.split(' ')[0];
+        if (bookingDate === dateStr) {
+            events.push({
+                title: `Booking: ${booking.userName}`,
+                class: 'bg-purple-500/30 border border-purple-500/50 text-purple-300'
+            });
+        }
+    });
+    
+    return events;
+}
+
+function changeMonth(direction) {
+    currentDate.setMonth(currentDate.getMonth() + direction);
+    renderCalendar();
+}
+
+// Initialize calendar
+renderCalendar();
+</script>
+{% endblock %}
+

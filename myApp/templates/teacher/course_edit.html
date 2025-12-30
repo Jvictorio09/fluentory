@@ -13,6 +13,15 @@
         <textarea name="description" required class="w-full border rounded p-2" rows="5">{{ course.description }}</textarea>
     </div>
     <div>
+        <label class="block mb-2">Course Type <span class="text-red-500">*</span></label>
+        <select name="course_type" required class="w-full border rounded p-2">
+            <option value="recorded" {% if course.course_type == 'recorded' %}selected{% endif %}>Recorded (Self-paced)</option>
+            <option value="live" {% if course.course_type == 'live' %}selected{% endif %}>Live (Scheduled sessions)</option>
+            <option value="hybrid" {% if course.course_type == 'hybrid' %}selected{% endif %}>Hybrid (Combination of recorded and live)</option>
+        </select>
+        <p class="text-sm text-gray-600 mt-1">Select the type of course delivery method</p>
+    </div>
+    <div>
         <label class="block mb-2">Status</label>
         <select name="status" class="w-full border rounded p-2">
             <option value="draft" {% if course.status == 'draft' %}selected{% endif %}>Draft</option>
@@ -25,6 +34,7 @@
 <div class="mt-6">
     <a href="{% url 'teacher_lessons' course.id %}" class="text-blue-600">Manage Lessons →</a>
     <a href="{% url 'teacher_quizzes' course.id %}" class="text-blue-600 ml-4">Manage Quizzes →</a>
+    <a href="{% url 'teacher_ai_settings' course.id %}" class="text-blue-600 ml-4">AI Tutor Settings →</a>
     <a href="{% url 'teacher_students' course.id %}" class="text-blue-600 ml-4">View Students →</a>
 </div>
 {% endblock %}

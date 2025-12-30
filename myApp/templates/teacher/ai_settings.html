@@ -1,0 +1,167 @@
+{% extends 'teacher/base.html' %}
+
+{% block content %}
+<div class="w-full max-w-5xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h1 class="text-3xl sm:text-4xl font-extralight text-white mb-2 tracking-[-0.02em]">
+                    AI Tutor Settings
+                </h1>
+                <p class="text-base sm:text-lg text-white/70 font-light">
+                    Configure AI tutor behavior for <span class="font-medium text-white">{{ course.title }}</span>
+                </p>
+            </div>
+            <a href="{% url 'teacher_course_edit' course.id %}" class="text-white/70 hover:text-white transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Course
+            </a>
+        </div>
+    </div>
+
+    <form method="post" class="bg-[#0a0a0a] border border-white/10 rounded-2xl p-6 sm:p-8 space-y-8">
+        {% csrf_token %}
+        
+        <!-- Model Configuration -->
+        <div class="border-b border-white/10 pb-6">
+            <h2 class="text-xl font-semibold text-white mb-4">Model Configuration</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
+                    <label class="block text-sm font-medium text-white/90 mb-2">
+                        AI Model
+                        <span class="text-xs text-white/50 ml-1">(OpenAI model to use)</span>
+                    </label>
+                    <select name="model" class="w-full bg-[#1a1a1a] border border-white/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-green-accent focus:border-transparent">
+                        {% for value, label in ai_settings.MODEL_CHOICES %}
+                            <option value="{{ value }}" {% if ai_settings.model == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-white/90 mb-2">
+                        Temperature
+                        <span class="text-xs text-white/50 ml-1">(0.0 = focused, 2.0 = creative)</span>
+                    </label>
+                    <input type="number" name="temperature" value="{{ ai_settings.temperature }}" 
+                           step="0.1" min="0" max="2" required
+                           class="w-full bg-[#1a1a1a] border border-white/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-green-accent focus:border-transparent">
+                    <p class="text-xs text-white/50 mt-1">Current: {{ ai_settings.temperature }}</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-white/90 mb-2">
+                        Max Tokens
+                        <span class="text-xs text-white/50 ml-1">(Response length limit)</span>
+                    </label>
+                    <input type="number" name="max_tokens" value="{{ ai_settings.max_tokens }}" 
+                           min="50" max="2000" required
+                           class="w-full bg-[#1a1a1a] border border-white/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-green-accent focus:border-transparent">
+                </div>
+            </div>
+        </div>
+
+        <!-- Personality & Prompt -->
+        <div class="border-b border-white/10 pb-6">
+            <h2 class="text-xl font-semibold text-white mb-4">Personality & Behavior</h2>
+            
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-white/90 mb-2">
+                    Personality Style
+                    <span class="text-xs text-white/50 ml-1">(Default teaching style)</span>
+                </label>
+                <select name="personality" id="personality-select" 
+                        class="w-full bg-[#1a1a1a] border border-white/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-green-accent focus:border-transparent">
+                    {% for value, label in ai_settings.PERSONALITY_CHOICES %}
+                        <option value="{{ value }}" {% if ai_settings.personality == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-white/90 mb-2">
+                    Custom System Prompt
+                    <span class="text-xs text-white/50 ml-1">(Overrides personality if set. Use {course_title}, {lesson_title} as placeholders)</span>
+                </label>
+                <textarea name="custom_system_prompt" rows="4"
+                          placeholder="You are a helpful AI tutor...&#10;Custom instructions here..."
+                          class="w-full bg-[#1a1a1a] border border-white/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-green-accent focus:border-transparent resize-y">{{ ai_settings.custom_system_prompt }}</textarea>
+                <p class="text-xs text-white/50 mt-1">Leave empty to use the selected personality style</p>
+            </div>
+
+            <div>
+                <label class="block text-sm font-medium text-white/90 mb-2">
+                    Additional Instructions
+                    <span class="text-xs text-white/50 ml-1">(Additional guidance for the AI tutor)</span>
+                </label>
+                <textarea name="custom_instructions" rows="3"
+                          placeholder="e.g., Focus on practical examples, encourage questions, use simple language..."
+                          class="w-full bg-[#1a1a1a] border border-white/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-green-accent focus:border-transparent resize-y">{{ ai_settings.custom_instructions }}</textarea>
+            </div>
+        </div>
+
+        <!-- Context Settings -->
+        <div class="border-b border-white/10 pb-6">
+            <h2 class="text-xl font-semibold text-white mb-4">Context Settings</h2>
+            
+            <div class="space-y-4">
+                <label class="flex items-center cursor-pointer group">
+                    <input type="checkbox" name="include_course_context" 
+                           {% if ai_settings.include_course_context %}checked{% endif %}
+                           class="w-5 h-5 rounded border-white/20 bg-[#1a1a1a] text-green-accent focus:ring-2 focus:ring-green-accent focus:ring-offset-0 cursor-pointer">
+                    <span class="ml-3 text-white/90">
+                        Include Course Context
+                        <span class="text-xs text-white/50 block mt-1">Include course title and description in AI context</span>
+                    </span>
+                </label>
+
+                <label class="flex items-center cursor-pointer group">
+                    <input type="checkbox" name="include_lesson_context" 
+                           {% if ai_settings.include_lesson_context %}checked{% endif %}
+                           class="w-5 h-5 rounded border-white/20 bg-[#1a1a1a] text-green-accent focus:ring-2 focus:ring-green-accent focus:ring-offset-0 cursor-pointer">
+                    <span class="ml-3 text-white/90">
+                        Include Lesson Context
+                        <span class="text-xs text-white/50 block mt-1">Include lesson content in AI context when available</span>
+                    </span>
+                </label>
+            </div>
+
+            <div class="mt-6">
+                <label class="block text-sm font-medium text-white/90 mb-2">
+                    Conversation History Limit
+                    <span class="text-xs text-white/50 ml-1">(Number of previous messages to include)</span>
+                </label>
+                <input type="number" name="max_conversation_history" value="{{ ai_settings.max_conversation_history }}" 
+                       min="3" max="50" required
+                       class="w-full max-w-xs bg-[#1a1a1a] border border-white/20 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-green-accent focus:border-transparent">
+            </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="flex items-center justify-end gap-4 pt-4">
+            <a href="{% url 'teacher_course_edit' course.id %}" 
+               class="px-6 py-2.5 text-white/70 hover:text-white border border-white/20 rounded-lg hover:border-white/30 transition-colors">
+                Cancel
+            </a>
+            <button type="submit" 
+                    class="px-6 py-2.5 bg-gradient-to-r from-teal-light to-green-accent text-white rounded-lg font-medium hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] hover:scale-105 transition-all duration-300">
+                <i class="fas fa-save mr-2"></i>Save Settings
+            </button>
+        </div>
+    </form>
+
+    <!-- Help Section -->
+    <div class="mt-8 bg-[#0a0a0a] border border-white/10 rounded-2xl p-6">
+        <h3 class="text-lg font-semibold text-white mb-3">
+            <i class="fas fa-info-circle mr-2 text-green-accent"></i>About AI Tutor Settings
+        </h3>
+        <div class="space-y-3 text-white/70 text-sm">
+            <p><strong class="text-white">Temperature:</strong> Lower values (0.0-0.5) make responses more focused and consistent. Higher values (1.0-2.0) make responses more creative and varied.</p>
+            <p><strong class="text-white">Max Tokens:</strong> Limits the length of AI responses. Higher values allow longer, more detailed responses but cost more.</p>
+            <p><strong class="text-white">Personality:</strong> Choose a default teaching style. You can override this with a custom system prompt.</p>
+            <p><strong class="text-white">Custom Prompt:</strong> Use placeholders like <code class="bg-[#1a1a1a] px-1.5 py-0.5 rounded">{course_title}</code> and <code class="bg-[#1a1a1a] px-1.5 py-0.5 rounded">{lesson_title}</code> that will be replaced automatically.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

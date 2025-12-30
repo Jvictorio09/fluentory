@@ -117,39 +117,54 @@
                 </div>
             </div>
             
-            <div class="flex-1 space-y-4 mb-6 overflow-y-auto">
-                <div class="flex justify-end">
-                    <div class="max-w-[80%] rounded-2xl bg-[#254346]/70 border border-white/10 px-4 py-3 text-sm text-white">
-                        Can you explain data visualization in simpler terms?
+            <div id="tutor-messages" class="flex-1 space-y-4 mb-6 overflow-y-auto">
+                {% if tutor_messages %}
+                    {% for msg in tutor_messages %}
+                        {% if msg.role == 'user' %}
+                            <div class="flex justify-end">
+                                <div class="max-w-[80%] rounded-2xl bg-[#254346]/70 border border-white/10 px-4 py-3 text-sm text-white">
+                                    {{ msg.content }}
+                                </div>
+                            </div>
+                        {% elif msg.role == 'assistant' %}
+                            <div class="flex items-start gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-[#82C293]/20 border border-[#82C293]/30 grid place-items-center shrink-0">
+                                    <i class="fas fa-sparkles text-[#82C293] text-xs"></i>
+                                </div>
+                                <div class="max-w-[80%] rounded-2xl bg-[#254346]/70 border border-white/10 px-4 py-3 text-sm text-white">
+                                    {{ msg.content }}
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% else %}
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-[#82C293]/20 border border-[#82C293]/30 grid place-items-center shrink-0">
+                            <i class="fas fa-robot text-[#82C293] text-xs"></i>
+                        </div>
+                        <div class="max-w-[80%] rounded-2xl bg-[#254346]/70 border border-white/10 px-4 py-3 text-sm text-white">
+                            Hello! I'm your AI tutor. How can I help you with this lesson?
+                        </div>
                     </div>
-                </div>
-                
-                <div class="flex items-start gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-[#82C293]/20 border border-[#82C293]/30 grid place-items-center shrink-0">
-                        <i class="fas fa-sparkles text-[#82C293] text-xs"></i>
-                    </div>
-                    <div class="max-w-[80%] rounded-2xl bg-[#254346]/70 border border-white/10 px-4 py-3 text-sm text-white">
-                        Absolutely! Think of data visualization as turning numbers into pictures. Just like a map helps you understand geography, charts help you understand data patterns...
-                    </div>
-                </div>
+                {% endif %}
             </div>
             
             <div class="space-y-2 mb-4">
                 <div class="text-xs uppercase tracking-wider text-white/60 mb-2">Suggested prompts</div>
-                <button class="w-full text-left px-4 py-2 rounded-lg bg-[#254346]/50 border border-white/10 text-sm text-white hover:bg-[#254346]/70 transition">
+                <button class="suggested-prompt w-full text-left px-4 py-2 rounded-lg bg-[#254346]/50 border border-white/10 text-sm text-white hover:bg-[#254346]/70 transition" data-prompt="Explain this in simple terms">
                     Explain this in simple terms
                 </button>
-                <button class="w-full text-left px-4 py-2 rounded-lg bg-[#254346]/50 border border-white/10 text-sm text-white hover:bg-[#254346]/70 transition">
+                <button class="suggested-prompt w-full text-left px-4 py-2 rounded-lg bg-[#254346]/50 border border-white/10 text-sm text-white hover:bg-[#254346]/70 transition" data-prompt="Give me examples">
                     Give me examples
                 </button>
-                <button class="w-full text-left px-4 py-2 rounded-lg bg-[#254346]/50 border border-white/10 text-sm text-white hover:bg-[#254346]/70 transition">
+                <button class="suggested-prompt w-full text-left px-4 py-2 rounded-lg bg-[#254346]/50 border border-white/10 text-sm text-white hover:bg-[#254346]/70 transition" data-prompt="Quiz me on this lesson">
                     Quiz me on this lesson
                 </button>
             </div>
             
             <div class="flex gap-2">
-                <input type="text" placeholder="Ask about this lesson..." class="flex-1 px-4 py-2 rounded-lg border border-white/10 bg-[#254346]/70 text-white placeholder:text-white/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40">
-                <button class="px-4 py-2 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-lg hover:opacity-90 transition">
+                <input type="text" id="tutor-input" placeholder="Ask about this lesson..." class="flex-1 px-4 py-2 rounded-lg border border-white/10 bg-[#254346]/70 text-white placeholder:text-white/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40">
+                <button id="tutor-send" class="px-4 py-2 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-lg hover:opacity-90 transition">
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
@@ -161,5 +176,192 @@
         </div>
     </aside>
 </div>
+
+{% csrf_token %}
+<script>
+(function() {
+    const tutorInput = document.getElementById('tutor-input');
+    const tutorSend = document.getElementById('tutor-send');
+    const tutorMessages = document.getElementById('tutor-messages');
+    const suggestedPrompts = document.querySelectorAll('.suggested-prompt');
+    
+    let conversationId = {% if conversation_id %}{{ conversation_id }}{% else %}null{% endif %};
+    const lessonId = {% if current_lesson %}{{ current_lesson.id }}{% else %}null{% endif %};
+    
+    // Add message to chat
+    function addMessage(content, isUser = false) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = isUser ? 'flex justify-end' : 'flex items-start gap-3';
+        
+        if (isUser) {
+            messageDiv.innerHTML = `
+                <div class="max-w-[80%] rounded-2xl bg-[#254346]/70 border border-white/10 px-4 py-3 text-sm text-white">
+                    ${escapeHtml(content)}
+                </div>
+            `;
+        } else {
+            messageDiv.innerHTML = `
+                <div class="w-8 h-8 rounded-lg bg-[#82C293]/20 border border-[#82C293]/30 grid place-items-center shrink-0">
+                    <i class="fas fa-sparkles text-[#82C293] text-xs"></i>
+                </div>
+                <div class="max-w-[80%] rounded-2xl bg-[#254346]/70 border border-white/10 px-4 py-3 text-sm text-white">
+                    ${escapeHtml(content)}
+                </div>
+            `;
+        }
+        
+        tutorMessages.appendChild(messageDiv);
+        tutorMessages.scrollTop = tutorMessages.scrollHeight;
+    }
+    
+    // Show loading indicator
+    function showLoading() {
+        const loadingDiv = document.createElement('div');
+        loadingDiv.id = 'tutor-loading';
+        loadingDiv.className = 'flex items-start gap-3';
+        loadingDiv.innerHTML = `
+            <div class="w-8 h-8 rounded-lg bg-[#82C293]/20 border border-[#82C293]/30 grid place-items-center shrink-0">
+                <i class="fas fa-sparkles text-[#82C293] text-xs"></i>
+            </div>
+            <div class="max-w-[80%] rounded-2xl bg-[#254346]/70 border border-white/10 px-4 py-3 text-sm text-white">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-[#82C293] animate-pulse"></div>
+                    <div class="w-2 h-2 rounded-full bg-[#82C293] animate-pulse" style="animation-delay: 0.2s"></div>
+                    <div class="w-2 h-2 rounded-full bg-[#82C293] animate-pulse" style="animation-delay: 0.4s"></div>
+                </div>
+            </div>
+        `;
+        tutorMessages.appendChild(loadingDiv);
+        tutorMessages.scrollTop = tutorMessages.scrollHeight;
+    }
+    
+    // Remove loading indicator
+    function removeLoading() {
+        const loading = document.getElementById('tutor-loading');
+        if (loading) loading.remove();
+    }
+    
+    // Escape HTML to prevent XSS
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    // Send message to AI tutor
+    async function sendMessage(message) {
+        if (!message.trim()) return;
+        
+        // Add user message to UI
+        addMessage(message, true);
+        tutorInput.value = '';
+        
+        // Show loading
+        showLoading();
+        
+        // Disable input while processing
+        tutorInput.disabled = true;
+        tutorSend.disabled = true;
+        
+        try {
+            const response = await fetch('{% url "ai_tutor_chat" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    message: message,
+                    lesson_id: lessonId || null,
+                    conversation_id: conversationId
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                // Update conversation ID
+                conversationId = data.conversation_id;
+                
+                // Remove loading and add AI response
+                removeLoading();
+                addMessage(data.response, false);
+            } else {
+                removeLoading();
+                addMessage('Sorry, I encountered an error. Please try again.', false);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            removeLoading();
+            addMessage('Sorry, I\'m having trouble connecting right now. Please try again in a moment.', false);
+        } finally {
+            // Re-enable input
+            tutorInput.disabled = false;
+            tutorSend.disabled = false;
+            tutorInput.focus();
+        }
+    }
+    
+    // Get CSRF token from cookie
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    // Send button click
+    if (tutorSend) {
+        tutorSend.addEventListener('click', function() {
+            const message = tutorInput.value.trim();
+            if (message) {
+                sendMessage(message);
+            }
+        });
+    }
+    
+    // Enter key to send
+    if (tutorInput) {
+        tutorInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                const message = tutorInput.value.trim();
+                if (message) {
+                    sendMessage(message);
+                }
+            }
+        });
+        
+        // Enable send button when typing
+        tutorInput.addEventListener('input', function() {
+            tutorSend.disabled = !tutorInput.value.trim();
+        });
+    }
+    
+    // Suggested prompt buttons
+    suggestedPrompts.forEach(button => {
+        button.addEventListener('click', function() {
+            const prompt = this.dataset.prompt;
+            if (prompt) {
+                tutorInput.value = prompt;
+                sendMessage(prompt);
+            }
+        });
+    });
+    
+    // Focus input on load
+    if (tutorInput) {
+        tutorInput.focus();
+    }
+})();
+</script>
 {% endblock %}
 

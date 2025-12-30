@@ -79,6 +79,7 @@ class Teacher(models.Model):
     # Online status
     is_online = models.BooleanField(default=False)
     last_seen = models.DateTimeField(null=True, blank=True)
+    online_status_updated_at = models.DateTimeField(null=True, blank=True, help_text='When online status was last updated')
     
     # Bio
     bio = models.TextField(blank=True)
@@ -91,6 +92,23 @@ class Teacher(models.Model):
     
     def __str__(self):
         return f"{self.user.username} - Teacher"
+    
+    def update_online_status(self, is_online_value):
+        """Update online status and timestamp"""
+        from django.utils import timezone
+        self.is_online = is_online_value
+        self.last_seen = timezone.now()
+        self.online_status_updated_at = timezone.now()
+        self.save(update_fields=['is_online', 'last_seen', 'online_status_updated_at'])
+    
+    @property
+    def is_recently_online(self):
+        """Check if teacher was online in the last 15 minutes"""
+        from django.utils import timezone
+        from datetime import timedelta
+        if not self.last_seen:
+            return False
+        return self.last_seen > timezone.now() - timedelta(minutes=15)
 
 
 class CourseTeacher(models.Model):
@@ -151,6 +169,12 @@ class Course(models.Model):
         ('archived', 'Archived'),
     ]
     
+    COURSE_TYPE_CHOICES = [
+        ('recorded', 'Recorded'),
+        ('live', 'Live'),
+        ('hybrid', 'Hybrid'),
+    ]
+    
     title = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
     description = models.TextField()
@@ -164,6 +188,7 @@ class Course(models.Model):
     # Classification
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='courses')
     level = models.CharField(max_length=20, choices=LEVEL_CHOICES, default='beginner')
+    course_type = models.CharField(max_length=20, choices=COURSE_TYPE_CHOICES, default='recorded', help_text='Type of course: Recorded (self-paced), Live (scheduled sessions), or Hybrid (combination)')
     
     # Instructor
     instructor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='courses_taught')
@@ -212,6 +237,62 @@ class Course(models.Model):
             total=models.Sum('lessons__id')
         )['total'] or 0
         self.save()
+    
+    def get_price(self, currency='USD'):
+        """Get price in specified currency, fallback to default currency"""
+        if self.is_free:
+            return 0
+        
+        # Try to get multi-currency pricing
+        try:
+            pricing = self.pricing.get(currency=currency)
+            return float(pricing.price)
+        except:
+            # Fallback to default currency if available
+            if currency == self.currency:
+                return float(self.price)
+            # Try to get default currency pricing
+            try:
+                default_pricing = self.pricing.get(currency=self.currency)
+                return float(default_pricing.price)
+            except:
+                # Final fallback to model's price field
+                return float(self.price)
+    
+    def has_currency_price(self, currency):
+        """Check if course has a price set for a specific currency"""
+        if self.is_free:
+            return True
+        return self.pricing.filter(currency=currency).exists()
+
+
+class CoursePricing(models.Model):
+    """Multi-currency pricing for courses"""
+    CURRENCY_CHOICES = [
+        ('USD', 'USD - US Dollar'),
+        ('EUR', 'EUR - Euro'),
+        ('SAR', 'SAR - Saudi Riyal'),
+        ('AED', 'AED - UAE Dirham'),
+        ('JOD', 'JOD - Jordanian Dinar'),
+        ('GBP', 'GBP - British Pound'),
+    ]
+    
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='pricing')
+    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['course', 'currency']
+        verbose_name = 'Course Pricing'
+        verbose_name_plural = 'Course Pricing'
+        ordering = ['currency']
+    
+    def __str__(self):
+        return f"{self.course.title} - {self.currency} {self.price}"
 
 
 class Module(models.Model):
@@ -567,6 +648,104 @@ class TutorMessage(models.Model):
         return f"{self.role}: {self.content[:50]}..."
 
 
+class AITutorSettings(models.Model):
+    """AI Tutor configuration settings for a course - configurable by teachers"""
+    
+    MODEL_CHOICES = [
+        ('gpt-4o-mini', 'GPT-4o Mini (Fast & Efficient)'),
+        ('gpt-4o', 'GPT-4o (More Capable)'),
+        ('gpt-3.5-turbo', 'GPT-3.5 Turbo (Legacy)'),
+    ]
+    
+    PERSONALITY_CHOICES = [
+        ('friendly', 'Friendly & Encouraging'),
+        ('professional', 'Professional & Formal'),
+        ('casual', 'Casual & Conversational'),
+        ('enthusiastic', 'Enthusiastic & Motivational'),
+        ('patient', 'Patient & Supportive'),
+        ('custom', 'Custom (Use Custom Prompt)'),
+    ]
+    
+    course = models.OneToOneField(Course, on_delete=models.CASCADE, related_name='ai_tutor_settings')
+    
+    # Model Configuration
+    model = models.CharField(max_length=50, choices=MODEL_CHOICES, default='gpt-4o-mini', 
+                            help_text='OpenAI model to use for AI tutor')
+    temperature = models.FloatField(default=0.7, validators=[MinValueValidator(0.0), MaxValueValidator(2.0)],
+                                   help_text='Creativity level (0.0 = focused, 2.0 = creative)')
+    max_tokens = models.PositiveIntegerField(default=500, 
+                                            help_text='Maximum tokens in AI response')
+    
+    # Personality & Prompt
+    personality = models.CharField(max_length=20, choices=PERSONALITY_CHOICES, default='friendly',
+                                  help_text='Default personality style for the AI tutor')
+    custom_system_prompt = models.TextField(blank=True,
+                                           help_text='Custom system prompt (overrides personality if set). Use {course_title}, {lesson_title} as placeholders.')
+    custom_instructions = models.TextField(blank=True,
+                                          help_text='Additional instructions for the AI tutor (e.g., teaching style, focus areas)')
+    
+    # Behavior Settings
+    include_lesson_context = models.BooleanField(default=True,
+                                                 help_text='Include lesson content in AI context')
+    include_course_context = models.BooleanField(default=True,
+                                                help_text='Include course description in AI context')
+    max_conversation_history = models.PositiveIntegerField(default=10,
+                                                          help_text='Number of previous messages to include in context')
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='ai_settings_updated')
+    
+    class Meta:
+        verbose_name = 'AI Tutor Settings'
+        verbose_name_plural = 'AI Tutor Settings'
+    
+    def __str__(self):
+        return f"AI Settings for {self.course.title}"
+    
+    def get_system_prompt(self, lesson=None):
+        """Generate system prompt based on personality or custom prompt"""
+        if self.custom_system_prompt:
+            prompt = self.custom_system_prompt
+            # Replace placeholders
+            prompt = prompt.replace('{course_title}', self.course.title)
+            if lesson:
+                prompt = prompt.replace('{lesson_title}', lesson.title)
+            return prompt
+        
+        # Default prompts based on personality
+        base_prompts = {
+            'friendly': """You are a friendly and encouraging AI tutor for Fluentory, an online learning platform.
+            Be warm, supportive, and patient. Help students understand concepts from their lessons in a clear and approachable way.
+            Encourage questions and provide explanations that build confidence.""",
+            
+            'professional': """You are a professional AI tutor for Fluentory, an online learning platform.
+            Provide clear, concise, and structured explanations. Maintain a formal but approachable tone.
+            Focus on accuracy and depth of understanding.""",
+            
+            'casual': """You're a casual and conversational AI tutor for Fluentory, an online learning platform.
+            Keep it relaxed and easy-going while still being helpful. Use simple language and relatable examples.
+            Make learning feel natural and engaging.""",
+            
+            'enthusiastic': """You are an enthusiastic and motivational AI tutor for Fluentory, an online learning platform.
+            Be energetic and positive! Celebrate progress and encourage students to push forward.
+            Use encouraging language and show excitement about their learning journey.""",
+            
+            'patient': """You are a patient and supportive AI tutor for Fluentory, an online learning platform.
+            Take time to explain concepts thoroughly. Be understanding when students struggle.
+            Break down complex ideas into simpler parts and offer multiple explanations if needed.""",
+        }
+        
+        prompt = base_prompts.get(self.personality, base_prompts['friendly'])
+        
+        # Add custom instructions if provided
+        if self.custom_instructions:
+            prompt += f"\n\nAdditional instructions: {self.custom_instructions}"
+        
+        return prompt
+
+
 # ============================================
 # PARTNERS & COHORTS
 # ============================================
@@ -819,7 +998,244 @@ class LiveClassSession(models.Model):
         ordering = ['-scheduled_start']
     
     def __str__(self):
-        return f"{self.course.title} - {self.title} - {self.scheduled_start}"
+        return f"{self.title} - {self.course.title} - {self.scheduled_start}"
+    
+    @property
+    def scheduled_end(self):
+        """Calculate end time based on start and duration"""
+        from datetime import timedelta
+        return self.scheduled_start + timedelta(minutes=self.duration_minutes)
+    
+    @property
+    def is_past(self):
+        """Check if session is in the past"""
+        return self.scheduled_start < timezone.now()
+    
+    @property
+    def available_spots(self):
+        """Get number of available booking spots"""
+        if not self.max_attendees:
+            return None  # Unlimited
+        booked_count = self.bookings.filter(status__in=['confirmed', 'attended']).count()
+        return max(0, self.max_attendees - booked_count)
+    
+    def can_be_booked(self, user=None):
+        """Check if session can be booked"""
+        if self.status != 'scheduled':
+            return False, "Session is not available for booking"
+        if self.is_past:
+            return False, "Session has already passed"
+        if self.max_attendees and self.available_spots <= 0:
+            return False, "No available spots"
+        if user:
+            # Check if user already has a booking
+            existing_booking = self.bookings.filter(user=user, status__in=['confirmed', 'waitlisted']).first()
+            if existing_booking:
+                return False, "You already have a booking for this session"
+        return True, "Available"
+
+
+class TeacherAvailability(models.Model):
+    """Teacher's available time slots for live sessions"""
+    TYPE_CHOICES = [
+        ('recurring', 'Recurring (Weekly)'),
+        ('one_time', 'One-Time Slot'),
+    ]
+    
+    DAY_CHOICES = [
+        (0, 'Monday'),
+        (1, 'Tuesday'),
+        (2, 'Wednesday'),
+        (3, 'Thursday'),
+        (4, 'Friday'),
+        (5, 'Saturday'),
+        (6, 'Sunday'),
+    ]
+    
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name='availability_slots')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='teacher_availability', null=True, blank=True, help_text='Leave blank for all courses')
+    
+    # Type: recurring or one-time
+    slot_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='recurring')
+    
+    # For recurring slots (day of week)
+    day_of_week = models.IntegerField(choices=DAY_CHOICES, null=True, blank=True)
+    start_time = models.TimeField(null=True, blank=True)
+    end_time = models.TimeField(null=True, blank=True)
+    
+    # For one-time slots (specific datetime)
+    start_datetime = models.DateTimeField(null=True, blank=True)
+    end_datetime = models.DateTimeField(null=True, blank=True)
+    
+    timezone = models.CharField(max_length=50, default='UTC')
+    
+    # Date range for recurring slots
+    valid_from = models.DateField(null=True, blank=True)
+    valid_until = models.DateField(null=True, blank=True)
+    
+    # Status
+    is_active = models.BooleanField(default=True)
+    is_blocked = models.BooleanField(default=False, help_text='Block this time slot from being booked')
+    blocked_reason = models.TextField(blank=True, help_text='Reason for blocking this slot')
+    
+    # Calendar integration (future use)
+    google_calendar_event_id = models.CharField(max_length=200, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name_plural = 'Teacher Availabilities'
+        ordering = ['day_of_week', 'start_time', 'start_datetime']
+    
+    def __str__(self):
+        if self.slot_type == 'one_time':
+            course_name = f" - {self.course.title}" if self.course else ""
+            return f"{self.teacher.user.get_full_name()} - {self.start_datetime}{course_name}"
+        else:
+            day_name = self.get_day_of_week_display() if self.day_of_week is not None else "N/A"
+            course_name = f" - {self.course.title}" if self.course else ""
+            return f"{self.teacher.user.get_full_name()} - {day_name} {self.start_time}-{self.end_time}{course_name}"
+    
+    def clean(self):
+        """Validate that required fields are set based on slot_type"""
+        from django.core.exceptions import ValidationError
+        if self.slot_type == 'recurring':
+            if self.day_of_week is None or not self.start_time or not self.end_time:
+                raise ValidationError('Recurring slots require day_of_week, start_time, and end_time.')
+        elif self.slot_type == 'one_time':
+            if not self.start_datetime or not self.end_datetime:
+                raise ValidationError('One-time slots require start_datetime and end_datetime.')
+    
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+
+class Booking(models.Model):
+    """Student bookings for live class sessions"""
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('confirmed', 'Confirmed'),
+        ('waitlisted', 'Waitlisted'),
+        ('cancelled', 'Cancelled'),
+        ('attended', 'Attended'),
+        ('no_show', 'No Show'),
+    ]
+    
+    CANCELLATION_REASON_CHOICES = [
+        ('student', 'Cancelled by student'),
+        ('teacher', 'Cancelled by teacher'),
+        ('system', 'Cancelled by system'),
+        ('conflict', 'Scheduling conflict'),
+        ('emergency', 'Emergency'),
+    ]
+    
+    booking_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookings')
+    session = models.ForeignKey(LiveClassSession, on_delete=models.CASCADE, related_name='bookings')
+    
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    
+    # Booking details
+    booked_at = models.DateTimeField(auto_now_add=True)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    cancellation_reason = models.CharField(max_length=20, choices=CANCELLATION_REASON_CHOICES, blank=True)
+    cancellation_notes = models.TextField(blank=True)
+    
+    # Reschedule
+    original_session = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='rescheduled_bookings')
+    rescheduled_at = models.DateTimeField(null=True, blank=True)
+    
+    # Attendance
+    attended = models.BooleanField(default=False)
+    attended_at = models.DateTimeField(null=True, blank=True)
+    
+    # Notes
+    student_notes = models.TextField(blank=True, help_text='Student notes or questions')
+    
+    class Meta:
+        ordering = ['-booked_at']
+        unique_together = [['user', 'session']]  # One booking per user per session
+    
+    def __str__(self):
+        return f"{self.user.get_full_name()} - {self.session.title} - {self.get_status_display()}"
+    
+    def confirm(self):
+        """Confirm the booking"""
+        if self.status == 'pending':
+            self.status = 'confirmed'
+            self.confirmed_at = timezone.now()
+            self.save()
+            return True
+        return False
+    
+    def cancel(self, reason='student', notes=''):
+        """Cancel the booking"""
+        if self.status in ['pending', 'confirmed', 'waitlisted']:
+            self.status = 'cancelled'
+            self.cancelled_at = timezone.now()
+            self.cancellation_reason = reason
+            self.cancellation_notes = notes
+            self.save()
+            
+            # If there's a waitlist, confirm next booking
+            if self.session.max_attendees:
+                next_waitlisted = self.session.bookings.filter(status='waitlisted').order_by('booked_at').first()
+                if next_waitlisted:
+                    next_waitlisted.confirm()
+            return True
+        return False
+    
+    def reschedule_to(self, new_session, notes=''):
+        """Reschedule booking to a new session"""
+        if self.status in ['confirmed', 'pending']:
+            # Create new booking
+            new_booking = Booking.objects.create(
+                user=self.user,
+                session=new_session,
+                status='confirmed',
+                original_session=self,
+                rescheduled_at=timezone.now(),
+                student_notes=notes
+            )
+            # Cancel old booking
+            self.cancel(reason='conflict', notes=f'Rescheduled to session on {new_session.scheduled_start}')
+            return new_booking
+        return None
+    
+    @property
+    def can_cancel(self):
+        """Check if booking can be cancelled"""
+        if self.status not in ['pending', 'confirmed', 'waitlisted']:
+            return False
+        # Allow cancellation up to 24 hours before session
+        hours_until = (self.session.scheduled_start - timezone.now()).total_seconds() / 3600
+        return hours_until >= 24
+
+
+class BookingReminder(models.Model):
+    """Track sent reminders for bookings"""
+    REMINDER_TYPE_CHOICES = [
+        ('24h', '24 Hours Before'),
+        ('1h', '1 Hour Before'),
+        ('confirmed', 'Booking Confirmed'),
+        ('cancelled', 'Booking Cancelled'),
+        ('rescheduled', 'Booking Rescheduled'),
+    ]
+    
+    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='reminders')
+    reminder_type = models.CharField(max_length=20, choices=REMINDER_TYPE_CHOICES)
+    sent_at = models.DateTimeField(auto_now_add=True)
+    sent_via = models.CharField(max_length=20, default='email', choices=[('email', 'Email'), ('sms', 'SMS'), ('push', 'Push Notification')])
+    
+    class Meta:
+        ordering = ['-sent_at']
+        unique_together = [['booking', 'reminder_type']]  # One reminder of each type per booking
+    
+    def __str__(self):
+        return f"{self.booking} - {self.get_reminder_type_display()} - {self.sent_at}"
 
 
 # ============================================

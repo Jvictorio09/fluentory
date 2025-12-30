@@ -8,36 +8,49 @@
     </div>
     
     <div class="space-y-4 sm:space-y-6">
-        {% for i in "123"|make_list %}
+        {% for enrollment in active_enrollments %}
         <div class="bg-[#04363a]/90 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.3)]">
             <div class="flex items-start justify-between mb-4">
                 <div class="flex-1">
-                    <h3 class="text-xl font-medium text-white mb-2">Introduction to Data Science</h3>
-                    <p class="text-sm text-white/70 mb-4">Currently on: Lesson 3 of 12</p>
+                    <h3 class="text-xl font-medium text-white mb-2">{{ enrollment.course.title }}</h3>
+                    <p class="text-sm text-white/70 mb-4">Currently on: Lesson {{ enrollment.current_lesson_number|default:1 }} of {{ enrollment.total_lessons|default:0 }}</p>
                     
                     <div class="mb-4">
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-sm text-white/70">Progress</span>
-                            <span class="text-sm font-medium text-white">25%</span>
+                            <span class="text-sm font-medium text-white">{{ enrollment.progress_percentage|floatformat:0 }}%</span>
                         </div>
                         <div class="h-2 bg-[#254346]/70 rounded-full overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-[#00655F] to-[#82C293] rounded-full" style="width: 25%"></div>
+                            <div class="h-full bg-gradient-to-r from-[#00655F] to-[#82C293] rounded-full transition-all duration-500" style="width: {{ enrollment.progress_percentage|default:0 }}%"></div>
                         </div>
                     </div>
                 </div>
                 
                 <div class="ml-6">
-                    <a href="#" class="px-6 py-3 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl font-medium hover:opacity-90 transition">
+                    <a href="{% url 'student_course_player_enrollment' enrollment.id %}" class="px-6 py-3 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl font-medium hover:opacity-90 transition">
                         Continue
                     </a>
                 </div>
             </div>
             
             <div class="flex items-center gap-6 text-sm text-white/70">
-                <span><i class="fas fa-clock mr-2"></i> 12 hours remaining</span>
+                <span><i class="fas fa-clock mr-2"></i> {{ enrollment.estimated_hours_remaining|floatformat:0|default:0 }} hours remaining</span>
+                {% if enrollment.course.has_certificate %}
                 <span><i class="fas fa-certificate mr-2"></i> Certificate available</span>
-                <span><i class="fas fa-calendar mr-2"></i> Started 5 days ago</span>
+                {% endif %}
+                <span><i class="fas fa-calendar mr-2"></i> Started {{ enrollment.days_since_enrollment|default:0 }} {% if enrollment.days_since_enrollment == 1 %}day{% else %}days{% endif %} ago</span>
             </div>
+        </div>
+        {% empty %}
+        <div class="bg-[#04363a]/90 backdrop-blur-xl rounded-2xl p-8 border border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.3)] text-center">
+            <div class="text-white/60 mb-4">
+                <i class="fas fa-book text-4xl mb-4"></i>
+                <p class="text-lg">No active courses yet</p>
+                <p class="text-sm mt-2">Browse our courses to get started!</p>
+            </div>
+            <a href="{% url 'student_courses' %}" class="inline-block px-6 py-3 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl font-medium hover:opacity-90 transition">
+                Browse Courses
+            </a>
         </div>
         {% endfor %}
     </div>

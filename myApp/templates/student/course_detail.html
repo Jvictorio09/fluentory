@@ -1,4 +1,5 @@
 {% extends 'student/base.html' %}
+{% load static %}
 
 {% block content %}
 <div class="p-4 sm:p-6 lg:p-8 xl:p-10 w-full">
@@ -15,6 +16,15 @@
         <div class="lg:col-span-2">
             <div class="flex flex-wrap gap-3 mb-4">
                 <span class="text-xs px-3 py-1.5 rounded-full bg-[#254346]/50 text-white font-medium border border-white/10">{{ course.level|title }}</span>
+                <span class="text-xs px-3 py-1.5 rounded-full {% if course.course_type == 'live' %}bg-blue-500/20 text-blue-300 border-blue-400/30{% elif course.course_type == 'hybrid' %}bg-purple-500/20 text-purple-300 border-purple-400/30{% else %}bg-[#254346]/30 text-white/80 border-white/10{% endif %} font-medium border">
+                    {% if course.course_type == 'live' %}
+                        <i class="fas fa-video mr-1"></i>Live
+                    {% elif course.course_type == 'hybrid' %}
+                        <i class="fas fa-layer-group mr-1"></i>Hybrid
+                    {% else %}
+                        <i class="fas fa-play-circle mr-1"></i>Recorded
+                    {% endif %}
+                </span>
                 {% if course.category %}
                 <span class="text-xs px-3 py-1.5 rounded-full bg-[#254346]/30 text-white border border-white/10">{{ course.category.name }}</span>
                 {% endif %}
@@ -84,9 +94,21 @@
                     {% if course.is_free %}
                     <div class="text-3xl font-light text-[#82C293] mb-2">Free</div>
                     {% else %}
-                    <div class="text-3xl font-light text-white mb-2">{{ course.currency }} {{ course.price }}</div>
+                    <div class="text-3xl font-light text-white mb-2" id="course-price">{{ course_currency|default:selected_currency|default:"USD" }} {{ course_price|default:course.price|floatformat:2 }}</div>
                     {% endif %}
                     <p class="text-white/60 text-sm">Full lifetime access</p>
+                    
+                    <!-- Currency Selector -->
+                    {% if not course.is_free %}
+                    <div class="mt-4 flex items-center justify-center gap-2">
+                        <span class="text-xs text-white/60">Currency:</span>
+                        <select id="currency-selector" class="px-3 py-1.5 rounded-lg border border-white/20 bg-[#254346]/70 text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40">
+                            {% for code, name in currency_choices %}
+                            <option value="{{ code }}" {% if code == course_currency|default:selected_currency|default:"USD" %}selected{% endif %}>{{ code }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
                 </div>
                 
                 <button 
@@ -261,6 +283,65 @@ async function enrollCourse(courseId) {
         alert('Something went wrong. Please try again.');
     }
 }
+
+// Currency selector functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const currencySelector = document.getElementById('currency-selector');
+    const priceDisplay = document.getElementById('course-price');
+    
+    if (currencySelector && priceDisplay) {
+        currencySelector.addEventListener('change', function() {
+            const selectedCurrency = this.value;
+            
+            // Show loading state
+            const originalText = priceDisplay.textContent;
+            priceDisplay.textContent = 'Loading...';
+            
+            // Update currency via AJAX
+            const formData = new FormData();
+            formData.append('currency', selectedCurrency);
+            formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+            
+            fetch('{% url "set_currency" %}', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Reload page to show updated price
+                    window.location.reload();
+                } else {
+                    priceDisplay.textContent = originalText;
+                    alert('Failed to update currency. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                priceDisplay.textContent = originalText;
+                alert('Something went wrong. Please try again.');
+            });
+        });
+    }
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
 </script>
 {% endblock %}
 

@@ -37,6 +37,10 @@ urlpatterns = [
     path('student/learning/', views.student_learning, name='student_learning'),
     path('student/certificates/', views.student_certificates, name='student_certificates'),
     path('student/settings/', views.student_settings, name='student_settings'),
+    path('student/bookings/', views.student_bookings, name='student_bookings'),
+    path('student/sessions/<int:session_id>/book/', views.student_book_session, name='student_book_session'),
+    path('student/bookings/<int:booking_id>/cancel/', views.student_booking_cancel, name='student_booking_cancel'),
+    path('student/bookings/<int:booking_id>/reschedule/', views.student_booking_reschedule, name='student_booking_reschedule'),
     path('student/player/', views.student_course_player, name='student_course_player'),
     path('student/player/<int:enrollment_id>/', views.student_course_player, name='student_course_player_enrollment'),
     path('student/player/<int:enrollment_id>/lesson/<int:lesson_id>/', views.student_course_player, name='student_course_player_lesson'),
@@ -46,6 +50,7 @@ urlpatterns = [
     path('student/quiz/result/<int:attempt_id>/', views.quiz_result, name='quiz_result'),
     
     # Student API endpoints
+    path('api/set-currency/', views.set_currency, name='set_currency'),
     path('api/mark-complete/', views.mark_lesson_complete, name='mark_lesson_complete'),
     path('api/enroll/', views.enroll_course, name='enroll_course'),
     path('api/tutor/chat/', views.ai_tutor_chat, name='ai_tutor_chat'),
@@ -76,6 +81,15 @@ urlpatterns = [
     path('teacher/schedule/', views.teacher_schedule, name='teacher_schedule'),
     path('teacher/courses/<int:course_id>/live-classes/', views.teacher_live_classes, name='teacher_live_classes'),
     path('teacher/courses/<int:course_id>/announcements/', views.teacher_announcements, name='teacher_announcements'),
+    path('teacher/courses/<int:course_id>/ai-settings/', views.teacher_ai_settings, name='teacher_ai_settings'),
+    path('teacher/availability/', views.teacher_availability, name='teacher_availability'),
+    path('teacher/availability/<int:availability_id>/delete/', views.teacher_availability_delete, name='teacher_availability_delete'),
+    path('teacher/availability/<int:availability_id>/toggle-block/', views.teacher_availability_toggle_block, name='teacher_availability_toggle_block'),
+    path('teacher/schedule/calendar/', views.teacher_schedule_calendar, name='teacher_schedule_calendar'),
+    path('teacher/toggle-online-status/', views.teacher_toggle_online_status, name='teacher_toggle_online_status'),
+    path('teacher/sessions/<int:session_id>/bookings/', views.teacher_session_bookings, name='teacher_session_bookings'),
+    path('teacher/bookings/<int:booking_id>/cancel/', views.teacher_booking_cancel, name='teacher_booking_cancel'),
+    path('teacher/bookings/<int:booking_id>/attendance/', views.teacher_mark_attendance, name='teacher_mark_attendance'),
     
     # Partner routes
     path('partner/', views.partner_overview, name='partner_overview'),

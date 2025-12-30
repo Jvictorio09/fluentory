@@ -34,7 +34,7 @@
     {% include 'partials/role_preview_banner.html' %}
     {% include 'teacher/partials/navbar.html' %}
     
-    <div class="flex min-h-[calc(100vh-4rem)]" {% if request.session.preview_role %}style="margin-top: 3.5rem;"{% endif %}>
+    <div class="flex min-h-[calc(100vh-4rem)] relative" {% if request.session.preview_role %}style="margin-top: 3.5rem; padding-top: 4rem;"{% else %}style="padding-top: 4rem;"{% endif %}>
         {% include 'teacher/partials/sidebar.html' %}
         
         <main class="flex-1 w-full lg:ml-64 pt-8 pb-6 px-6 sm:pt-10 sm:pb-8 sm:px-8 lg:pt-12 lg:pb-10 lg:px-10">

@@ -5,7 +5,8 @@ from .models import (
     Quiz, Question, Answer, Enrollment, LessonProgress, QuizAttempt,
     Certificate, PlacementTest, TutorConversation, TutorMessage,
     Partner, Cohort, CohortMembership, Payment, Review, FAQ,
-    Notification, SiteSettings, Media
+    Notification, SiteSettings, Media,
+    TeacherAvailability, Booking, BookingReminder
 )
 
 
@@ -426,3 +427,33 @@ class MediaAdmin(admin.ModelAdmin):
         if not change:  # New object
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
+
+
+# ============================================
+# BOOKING SYSTEM ADMIN
+# ============================================
+
+@admin.register(TeacherAvailability)
+class TeacherAvailabilityAdmin(admin.ModelAdmin):
+    list_display = ['teacher', 'course', 'day_of_week', 'start_time', 'end_time', 'timezone', 'is_active']
+    list_filter = ['day_of_week', 'is_active', 'timezone']
+    search_fields = ['teacher__user__username', 'course__title']
+    list_editable = ['is_active']
+
+
+@admin.register(Booking)
+class BookingAdmin(admin.ModelAdmin):
+    list_display = ['booking_id', 'user', 'session', 'status', 'booked_at', 'confirmed_at', 'attended']
+    list_filter = ['status', 'attended', 'cancellation_reason', 'booked_at']
+    search_fields = ['booking_id', 'user__username', 'user__email', 'session__title']
+    readonly_fields = ['booking_id', 'booked_at', 'confirmed_at', 'cancelled_at', 'rescheduled_at']
+    date_hierarchy = 'booked_at'
+
+
+@admin.register(BookingReminder)
+class BookingReminderAdmin(admin.ModelAdmin):
+    list_display = ['booking', 'reminder_type', 'sent_at', 'sent_via']
+    list_filter = ['reminder_type', 'sent_via', 'sent_at']
+    search_fields = ['booking__user__username', 'booking__session__title']
+    readonly_fields = ['sent_at']
+    date_hierarchy = 'sent_at'

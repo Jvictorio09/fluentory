@@ -48,5 +48,8 @@ urlpatterns = [
     
     # Payment Management (User-friendly interface)
     path('payments/', dashboard_views.dashboard_payments, name='payments'),
+    
+    # Analytics Dashboard
+    path('analytics/', dashboard_views.dashboard_analytics, name='analytics'),
 ]
 

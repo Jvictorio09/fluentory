@@ -215,9 +215,20 @@
                     <div class="p-5 sm:p-6">
                         <!-- Level & Duration -->
                         <div class="flex items-center justify-between mb-3">
-                            <span class="text-xs px-3 py-1.5 rounded-full bg-[#254346]/50 text-white font-medium border border-white/10">
-                                {{ course.level|title }}
-                            </span>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <span class="text-xs px-3 py-1.5 rounded-full bg-[#254346]/50 text-white font-medium border border-white/10">
+                                    {{ course.level|title }}
+                                </span>
+                                <span class="text-xs px-3 py-1.5 rounded-full {% if course.course_type == 'live' %}bg-blue-500/20 text-blue-300 border-blue-400/30{% elif course.course_type == 'hybrid' %}bg-purple-500/20 text-purple-300 border-purple-400/30{% else %}bg-[#254346]/30 text-white/80 border-white/10{% endif %} font-medium border">
+                                    {% if course.course_type == 'live' %}
+                                        <i class="fas fa-video mr-1"></i>Live
+                                    {% elif course.course_type == 'hybrid' %}
+                                        <i class="fas fa-layer-group mr-1"></i>Hybrid
+                                    {% else %}
+                                        <i class="fas fa-play-circle mr-1"></i>Recorded
+                                    {% endif %}
+                                </span>
+                            </div>
                             <span class="text-xs text-white/60 flex items-center gap-1">
                                 <i class="fas fa-clock text-[#82C293]"></i>
                                 {{ course.estimated_hours }} hours

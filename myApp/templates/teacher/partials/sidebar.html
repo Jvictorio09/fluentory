@@ -16,6 +16,10 @@
             <i class="fas fa-calendar w-5 text-center"></i>
             <span class="font-medium">Live Classes</span>
         </a>
+        <a href="{% url 'teacher_availability' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#254346]/50 hover:text-[#82C293] transition group {% if 'availability' in request.resolver_match.url_name %}bg-[#254346]/50 text-[#82C293] border-l-2 border-[#82C293]{% endif %}">
+            <i class="fas fa-clock w-5 text-center"></i>
+            <span class="font-medium">Availability</span>
+        </a>
     </nav>
 </aside>
 

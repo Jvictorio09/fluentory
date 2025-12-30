@@ -15,12 +15,13 @@ import json
 import openai
 
 from .models import (
-    UserProfile, Category, Course, Module, Lesson,
+    UserProfile, Category, Course, CoursePricing, Module, Lesson,
     Quiz, Question, Answer, Enrollment, LessonProgress, QuizAttempt,
-    Certificate, PlacementTest, TutorConversation, TutorMessage,
+    Certificate, PlacementTest, TutorConversation, TutorMessage, AITutorSettings,
     Partner, Cohort, CohortMembership, Payment, Review, FAQ,
     Notification, SiteSettings, Media, Teacher, CourseTeacher,
-    LiveClassSession, CourseAnnouncement, StudentMessage
+    LiveClassSession, CourseAnnouncement, StudentMessage,
+    TeacherAvailability, Booking, BookingReminder
 )
 
 
@@ -402,6 +403,25 @@ def student_courses(request):
     page = request.GET.get('page', 1)
     courses = paginator.get_page(page)
     
+    # Get selected currency from session
+    selected_currency = request.session.get('selected_currency', 'USD')
+    
+    # Prefetch pricing for all courses
+    course_pricing_map = {}
+    course_ids = [c.id for c in courses]
+    pricing_objects = CoursePricing.objects.filter(course_id__in=course_ids, currency=selected_currency).select_related('course')
+    for pricing in pricing_objects:
+        course_pricing_map[pricing.course_id] = pricing.price
+    
+    # Add pricing info to each course object for template access
+    for course in courses:
+        if course.id in course_pricing_map:
+            course.display_price = course_pricing_map[course.id]
+            course.display_currency = selected_currency
+        else:
+            course.display_price = course.price
+            course.display_currency = course.currency
+    
     context = {
         'courses': courses,
         'categories': categories,
@@ -409,6 +429,7 @@ def student_courses(request):
         'selected_level': level,
         'selected_category': category_slug,
         'search_query': search,
+        'selected_currency': selected_currency,
     }
     return render(request, 'student/courses.html', context)
 
@@ -434,12 +455,32 @@ def student_course_detail(request, slug):
         status='published'
     ).exclude(id=course.id)[:4]
     
+    # Get selected currency from session
+    selected_currency = request.session.get('selected_currency', 'USD')
+    
+    # Get price in selected currency
+    try:
+        pricing = CoursePricing.objects.get(course=course, currency=selected_currency)
+        course_price = pricing.price
+        course_currency = selected_currency
+    except CoursePricing.DoesNotExist:
+        if selected_currency == course.currency:
+            course_price = course.price
+            course_currency = course.currency
+        else:
+            # Fallback to course's default currency
+            course_price = course.price
+            course_currency = course.currency
+    
     context = {
         'course': course,
         'enrollment': enrollment,
         'modules': modules,
         'reviews': reviews,
         'similar_courses': similar_courses,
+        'selected_currency': selected_currency,
+        'course_price': course_price,
+        'course_currency': course_currency,
     }
     return render(request, 'student/course_detail.html', context)
 
@@ -516,7 +557,33 @@ def student_learning(request):
     active_enrollments = Enrollment.objects.filter(
         user=user,
         status='active'
-    ).select_related('course', 'current_lesson').order_by('-enrolled_at')
+    ).select_related('course', 'current_lesson', 'current_module').prefetch_related('course__modules__lessons').order_by('-enrolled_at')
+    
+    # Add additional info for each enrollment
+    for enrollment in active_enrollments:
+        # Update progress if needed
+        enrollment.update_progress()
+        
+        # Calculate current lesson number and total lessons
+        total_lessons = Lesson.objects.filter(module__course=enrollment.course).count()
+        enrollment.total_lessons = total_lessons
+        
+        if enrollment.current_lesson:
+            # Find current lesson number
+            all_lessons = Lesson.objects.filter(module__course=enrollment.course).order_by('module__order', 'order')
+            lesson_numbers = {lesson.id: idx + 1 for idx, lesson in enumerate(all_lessons)}
+            enrollment.current_lesson_number = lesson_numbers.get(enrollment.current_lesson.id, 0)
+        else:
+            enrollment.current_lesson_number = 0
+        
+        # Calculate hours remaining (estimated)
+        completed_lessons = LessonProgress.objects.filter(enrollment=enrollment, completed=True).count()
+        remaining_lessons = max(0, total_lessons - completed_lessons)
+        enrollment.estimated_hours_remaining = (enrollment.course.estimated_hours / total_lessons * remaining_lessons) if total_lessons > 0 else 0
+        
+        # Days since enrollment
+        days_since = (timezone.now().date() - enrollment.enrolled_at.date()).days
+        enrollment.days_since_enrollment = days_since
     
     # Completed enrollments
     completed_enrollments = Enrollment.objects.filter(
@@ -630,8 +697,10 @@ def student_course_player(request, enrollment_id=None, lesson_id=None):
     ).first()
     
     tutor_messages = []
+    conversation_id = None
     if conversation:
         tutor_messages = conversation.messages.all()[:20]
+        conversation_id = conversation.id
     
     context = {
         'enrollment': enrollment,
@@ -641,6 +710,7 @@ def student_course_player(request, enrollment_id=None, lesson_id=None):
         'modules': modules,
         'completed_lesson_ids': completed_lesson_ids,
         'tutor_messages': tutor_messages,
+        'conversation_id': conversation_id,
     }
     return render(request, 'student/course_player.html', context)
 
@@ -670,6 +740,21 @@ def mark_lesson_complete(request):
         'success': True,
         'progress_percentage': enrollment.progress_percentage
     })
+
+
+@require_POST
+def set_currency(request):
+    """Set user's preferred currency in session"""
+    currency = request.POST.get('currency', 'USD')
+    # Validate currency
+    valid_currencies = ['USD', 'EUR', 'SAR', 'AED', 'JOD', 'GBP']
+    if currency in valid_currencies:
+        request.session['selected_currency'] = currency
+        request.session.modified = True
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest' or request.content_type == 'application/json':
+            return JsonResponse({'success': True, 'currency': currency})
+        return redirect(request.META.get('HTTP_REFERER', '/'))
+    return JsonResponse({'success': False, 'error': 'Invalid currency'})
 
 
 @login_required
@@ -709,7 +794,7 @@ def enroll_course(request):
 @login_required
 @require_POST
 def ai_tutor_chat(request):
-    """AI Tutor chat endpoint"""
+    """AI Tutor chat endpoint - uses course-specific AI settings"""
     data = json.loads(request.body)
     message = data.get('message')
     lesson_id = data.get('lesson_id')
@@ -717,17 +802,34 @@ def ai_tutor_chat(request):
     
     user = request.user
     lesson = get_object_or_404(Lesson, id=lesson_id) if lesson_id else None
+    course = lesson.module.course if lesson else None
     
     # Get or create conversation
     if conversation_id:
         conversation = get_object_or_404(TutorConversation, id=conversation_id, user=user)
+        if not course:
+            course = conversation.course
     else:
         conversation = TutorConversation.objects.create(
             user=user,
             lesson=lesson,
-            course=lesson.module.course if lesson else None,
+            course=course,
             title=f"Chat about {lesson.title}" if lesson else "General Chat"
         )
+    
+    # Get AI Tutor settings for the course (or use defaults)
+    ai_settings = None
+    if course and hasattr(course, 'ai_tutor_settings'):
+        ai_settings = course.ai_tutor_settings
+    elif course:
+        # Create default settings if they don't exist
+        ai_settings = AITutorSettings.objects.create(course=course)
+    
+    # Use default values if no settings exist
+    model = ai_settings.model if ai_settings else "gpt-4o-mini"
+    temperature = ai_settings.temperature if ai_settings else 0.7
+    max_tokens = ai_settings.max_tokens if ai_settings else 500
+    max_history = ai_settings.max_conversation_history if ai_settings else 10
     
     # Save user message
     TutorMessage.objects.create(
@@ -736,12 +838,28 @@ def ai_tutor_chat(request):
         content=message
     )
     
-    # Get conversation history
-    history = conversation.messages.all().order_by('created_at')[:10]
+    # Get conversation history (limited by settings)
+    history = conversation.messages.filter(role__in=['user', 'assistant']).order_by('created_at')[:max_history]
     
-    # Build context
+    # Build context based on settings
     context_text = ""
-    if lesson:
+    if course and ai_settings:
+        if ai_settings.include_course_context:
+            context_text += f"\nCourse: {course.title}\n"
+            if course.description:
+                context_text += f"Course Description: {course.description[:500]}\n"
+        
+        if lesson and ai_settings.include_lesson_context:
+            context_text += f"\nModule: {lesson.module.title}\n"
+            context_text += f"Lesson: {lesson.title}\n"
+            if lesson.description:
+                context_text += f"Lesson Description: {lesson.description[:500]}\n"
+            if lesson.text_content:
+                context_text += f"Lesson Content: {lesson.text_content[:1000]}\n"
+            elif lesson.video_url:
+                context_text += "Lesson Type: Video lesson\n"
+    elif lesson:
+        # Fallback context if no settings
         context_text = f"""
         Course: {lesson.module.course.title}
         Module: {lesson.module.title}
@@ -749,14 +867,23 @@ def ai_tutor_chat(request):
         Lesson Content: {lesson.text_content[:1000] if lesson.text_content else 'Video lesson'}
         """
     
+    # Get system prompt from settings
+    if ai_settings:
+        system_prompt = ai_settings.get_system_prompt(lesson=lesson)
+        if context_text:
+            system_prompt += f"\n\nCurrent context: {context_text}"
+    else:
+        # Default system prompt
+        system_prompt = f"""You are a helpful AI tutor for Fluentory, an online learning platform.
+        Be encouraging, clear, and concise. Help students understand concepts from their lessons.
+        Current context: {context_text}
+        """
+    
     # Build messages for OpenAI
     messages_for_ai = [
         {
             "role": "system",
-            "content": f"""You are a helpful AI tutor for Fluentory, an online learning platform.
-            Be encouraging, clear, and concise. Help students understand concepts from their lessons.
-            Current context: {context_text}
-            """
+            "content": system_prompt
         }
     ]
     
@@ -766,14 +893,14 @@ def ai_tutor_chat(request):
             "content": msg.content
         })
     
-    # Call OpenAI
+    # Call OpenAI with configured settings
     try:
         client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model=model,
             messages=messages_for_ai,
-            max_tokens=500,
-            temperature=0.7
+            max_tokens=max_tokens,
+            temperature=temperature
         )
         
         ai_response = response.choices[0].message.content
@@ -1389,6 +1516,7 @@ def teacher_course_create(request):
             outcome=request.POST.get('outcome', ''),
             category_id=request.POST.get('category'),
             level=request.POST.get('level', 'beginner'),
+            course_type=request.POST.get('course_type', 'recorded'),
             instructor=user,
             price=float(request.POST.get('price', 0)),
             is_free=request.POST.get('is_free') == 'on',
@@ -1434,6 +1562,7 @@ def teacher_course_edit(request, course_id):
         course.outcome = request.POST.get('outcome', course.outcome)
         course.category_id = request.POST.get('category') or course.category_id
         course.level = request.POST.get('level', course.level)
+        course.course_type = request.POST.get('course_type', course.course_type)
         course.price = float(request.POST.get('price', course.price))
         course.is_free = request.POST.get('is_free') == 'on'
         course.status = request.POST.get('status', course.status)
@@ -1975,6 +2104,47 @@ def teacher_announcements(request, course_id):
 
 
 @login_required
+def teacher_ai_settings(request, course_id):
+    """Configure AI Tutor settings for a course"""
+    course = get_object_or_404(Course, id=course_id)
+    user = request.user
+    teacher, _ = Teacher.objects.get_or_create(user=user)
+    
+    # Check permissions - only teachers with edit or full access can configure AI settings
+    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    if not assignment or assignment.permission_level == 'view_only':
+        messages.error(request, 'You do not have permission to configure AI settings for this course.')
+        return redirect('teacher_courses')
+    
+    # Get or create AI settings
+    ai_settings, created = AITutorSettings.objects.get_or_create(course=course)
+    
+    if request.method == 'POST':
+        # Update AI settings
+        ai_settings.model = request.POST.get('model', ai_settings.model)
+        ai_settings.temperature = float(request.POST.get('temperature', ai_settings.temperature))
+        ai_settings.max_tokens = int(request.POST.get('max_tokens', ai_settings.max_tokens))
+        ai_settings.personality = request.POST.get('personality', ai_settings.personality)
+        ai_settings.custom_system_prompt = request.POST.get('custom_system_prompt', '')
+        ai_settings.custom_instructions = request.POST.get('custom_instructions', '')
+        ai_settings.include_lesson_context = request.POST.get('include_lesson_context') == 'on'
+        ai_settings.include_course_context = request.POST.get('include_course_context') == 'on'
+        ai_settings.max_conversation_history = int(request.POST.get('max_conversation_history', ai_settings.max_conversation_history))
+        ai_settings.updated_by = user
+        ai_settings.save()
+        
+        messages.success(request, 'AI Tutor settings updated successfully!')
+        return redirect('teacher_ai_settings', course_id=course.id)
+    
+    context = {
+        'course': course,
+        'ai_settings': ai_settings,
+        'assignment': assignment,
+    }
+    return render(request, 'teacher/ai_settings.html', context)
+
+
+@login_required
 @require_GET
 def api_teacher_activity_feed(request):
     """Live activity feed for teacher dashboard (AJAX)"""
@@ -2491,3 +2661,373 @@ def api_update_language(request):
     profile.save()
     
     return JsonResponse({'success': True})
+
+
+# ============================================
+# BOOKING SYSTEM - TEACHER AVAILABILITY
+# ============================================
+
+@login_required
+def teacher_availability(request):
+    """Manage teacher availability schedule"""
+    user = request.user
+    teacher, _ = Teacher.objects.get_or_create(user=user)
+    
+    # Get all availability slots
+    availability_slots = TeacherAvailability.objects.filter(teacher=teacher).order_by('day_of_week', 'start_time')
+    
+    # Get teacher's courses for course-specific availability
+    courses = Course.objects.filter(instructor=user).order_by('title')
+    
+    if request.method == 'POST':
+        # Create new availability slot
+        slot_type = request.POST.get('slot_type', 'recurring')
+        timezone_str = request.POST.get('timezone', 'UTC')
+        course_id = request.POST.get('course')
+        
+        if slot_type == 'one_time':
+            # One-time slot
+            from datetime import datetime
+            start_datetime_str = request.POST.get('start_datetime')
+            end_datetime_str = request.POST.get('end_datetime')
+            
+            start_datetime = datetime.fromisoformat(start_datetime_str.replace('Z', '+00:00')) if start_datetime_str else None
+            end_datetime = datetime.fromisoformat(end_datetime_str.replace('Z', '+00:00')) if end_datetime_str else None
+            
+            TeacherAvailability.objects.create(
+                teacher=teacher,
+                course_id=course_id if course_id else None,
+                slot_type='one_time',
+                start_datetime=start_datetime,
+                end_datetime=end_datetime,
+                timezone=timezone_str
+            )
+        else:
+            # Recurring slot
+            day_of_week = int(request.POST.get('day_of_week'))
+            start_time = request.POST.get('start_time')
+            end_time = request.POST.get('end_time')
+            valid_from = request.POST.get('valid_from') or None
+            valid_until = request.POST.get('valid_until') or None
+            
+            TeacherAvailability.objects.create(
+                teacher=teacher,
+                course_id=course_id if course_id else None,
+                slot_type='recurring',
+                day_of_week=day_of_week,
+                start_time=start_time,
+                end_time=end_time,
+                timezone=timezone_str,
+                valid_from=valid_from,
+                valid_until=valid_until
+            )
+        
+        messages.success(request, 'Availability slot added successfully!')
+        return redirect('teacher_availability')
+    
+    context = {
+        'availability_slots': availability_slots,
+        'courses': courses,
+    }
+    return render(request, 'teacher/availability.html', context)
+
+
+@login_required
+@require_POST
+def teacher_availability_toggle_block(request, availability_id):
+    """Block or unblock an availability slot"""
+    availability = get_object_or_404(TeacherAvailability, id=availability_id, teacher__user=request.user)
+    availability.is_blocked = not availability.is_blocked
+    if availability.is_blocked:
+        availability.blocked_reason = request.POST.get('blocked_reason', '')
+    else:
+        availability.blocked_reason = ''
+    availability.save()
+    
+    action = 'blocked' if availability.is_blocked else 'unblocked'
+    messages.success(request, f'Availability slot {action} successfully!')
+    return redirect('teacher_availability')
+
+
+@login_required
+@require_POST
+def teacher_availability_delete(request, availability_id):
+    """Delete availability slot"""
+    availability = get_object_or_404(TeacherAvailability, id=availability_id, teacher__user=request.user)
+    availability.delete()
+    messages.success(request, 'Availability slot deleted successfully!')
+    return redirect('teacher_availability')
+
+
+@login_required
+def teacher_schedule_calendar(request):
+    """Teacher schedule calendar view"""
+    user = request.user
+    teacher, _ = Teacher.objects.get_or_create(user=user)
+    
+    # Get all availability slots
+    availability_slots = TeacherAvailability.objects.filter(teacher=teacher).order_by('day_of_week', 'start_time', 'start_datetime')
+    
+    # Get all live class sessions
+    live_sessions = LiveClassSession.objects.filter(teacher=teacher).select_related('course').order_by('scheduled_start')
+    
+    # Get all bookings
+    bookings = Booking.objects.filter(session__teacher=teacher).select_related('session', 'user').order_by('session__scheduled_start')
+    
+    context = {
+        'availability_slots': availability_slots,
+        'live_sessions': live_sessions,
+        'bookings': bookings,
+        'now': timezone.now(),
+    }
+    return render(request, 'teacher/schedule_calendar.html', context)
+
+
+@login_required
+@require_POST
+def teacher_toggle_online_status(request):
+    """Toggle teacher online status"""
+    teacher, _ = Teacher.objects.get_or_create(user=request.user)
+    is_online = request.POST.get('is_online') == 'true'
+    teacher.update_online_status(is_online)
+    
+    return JsonResponse({
+        'success': True,
+        'is_online': teacher.is_online,
+        'last_seen': teacher.last_seen.isoformat() if teacher.last_seen else None
+    })
+
+
+# ============================================
+# BOOKING SYSTEM - STUDENT BOOKING
+# ============================================
+
+@login_required
+def student_book_session(request, session_id):
+    """Book a live class session"""
+    user = request.user
+    session = get_object_or_404(LiveClassSession, id=session_id)
+    
+    # Check if user is enrolled in the course
+    enrollment = Enrollment.objects.filter(user=user, course=session.course, status='active').first()
+    if not enrollment:
+        messages.error(request, 'You must be enrolled in this course to book a session.')
+        return redirect('student_course_detail', slug=session.course.slug)
+    
+    # Check if session can be booked
+    can_book, message = session.can_be_booked(user)
+    if not can_book:
+        messages.error(request, message)
+        return redirect('student_course_detail', slug=session.course.slug)
+    
+    if request.method == 'POST':
+        student_notes = request.POST.get('student_notes', '')
+        
+        # Check for conflicts (user already has a booking at this time)
+        conflicting_bookings = Booking.objects.filter(
+            user=user,
+            session__scheduled_start__date=session.scheduled_start.date(),
+            session__scheduled_start__time__gte=session.scheduled_start.time(),
+            session__scheduled_start__time__lt=session.scheduled_end.time(),
+            status__in=['confirmed', 'pending']
+        ).exclude(session=session)
+        
+        if conflicting_bookings.exists():
+            messages.error(request, 'You already have a booking at this time.')
+            return redirect('student_course_detail', slug=session.course.slug)
+        
+        # Determine booking status
+        if session.max_attendees and session.available_spots <= 0:
+            status = 'waitlisted'
+        else:
+            status = 'confirmed'
+        
+        booking = Booking.objects.create(
+            user=user,
+            session=session,
+            status=status,
+            student_notes=student_notes
+        )
+        
+        if status == 'confirmed':
+            booking.confirm()
+            messages.success(request, f'Successfully booked "{session.title}"!')
+        else:
+            messages.info(request, f'Added to waitlist for "{session.title}". You will be notified if a spot becomes available.')
+        
+        # Create notification
+        Notification.objects.create(
+            user=user,
+            notification_type='booking_confirmed' if status == 'confirmed' else 'booking_waitlisted',
+            title=f'Booking {status.title()}',
+            message=f'Your booking for "{session.title}" is {status}.'
+        )
+        
+        return redirect('student_bookings')
+    
+    context = {
+        'session': session,
+        'enrollment': enrollment,
+    }
+    return render(request, 'student/book_session.html', context)
+
+
+@login_required
+def student_bookings(request):
+    """View all student bookings"""
+    user = request.user
+    bookings = Booking.objects.filter(user=user).select_related('session', 'session__course', 'session__teacher__user').order_by('-booked_at')
+    
+    # Separate by status
+    upcoming_bookings = bookings.filter(session__scheduled_start__gte=timezone.now(), status__in=['confirmed', 'waitlisted'])
+    past_bookings = bookings.filter(Q(session__scheduled_start__lt=timezone.now()) | Q(status__in=['cancelled', 'attended', 'no_show']))
+    
+    context = {
+        'upcoming_bookings': upcoming_bookings,
+        'past_bookings': past_bookings,
+    }
+    return render(request, 'student/bookings.html', context)
+
+
+@login_required
+@require_POST
+def student_booking_cancel(request, booking_id):
+    """Cancel a booking"""
+    booking = get_object_or_404(Booking, id=booking_id, user=request.user)
+    
+    if not booking.can_cancel:
+        messages.error(request, 'This booking cannot be cancelled (must be cancelled at least 24 hours before the session).')
+        return redirect('student_bookings')
+    
+    notes = request.POST.get('notes', '')
+    booking.cancel(reason='student', notes=notes)
+    
+    messages.success(request, 'Booking cancelled successfully.')
+    
+    # Create notification
+    Notification.objects.create(
+        user=request.user,
+        notification_type='booking_cancelled',
+        title='Booking Cancelled',
+        message=f'Your booking for "{booking.session.title}" has been cancelled.'
+    )
+    
+    return redirect('student_bookings')
+
+
+@login_required
+def student_booking_reschedule(request, booking_id):
+    """Reschedule a booking to a different session"""
+    booking = get_object_or_404(Booking, id=booking_id, user=request.user)
+    
+    if booking.status not in ['confirmed', 'pending']:
+        messages.error(request, 'This booking cannot be rescheduled.')
+        return redirect('student_bookings')
+    
+    # Get available sessions for the same course
+    available_sessions = LiveClassSession.objects.filter(
+        course=booking.session.course,
+        status='scheduled',
+        scheduled_start__gte=timezone.now()
+    ).exclude(id=booking.session.id).order_by('scheduled_start')
+    
+    if request.method == 'POST':
+        new_session_id = request.POST.get('new_session_id')
+        notes = request.POST.get('notes', '')
+        
+        new_session = get_object_or_404(LiveClassSession, id=new_session_id, course=booking.session.course)
+        
+        # Check if new session can be booked
+        can_book, message = new_session.can_be_booked(request.user)
+        if not can_book:
+            messages.error(request, message)
+            return redirect('student_booking_reschedule', booking_id=booking.id)
+        
+        new_booking = booking.reschedule_to(new_session, notes)
+        
+        if new_booking:
+            messages.success(request, f'Booking rescheduled to {new_session.scheduled_start.strftime("%B %d, %Y at %I:%M %p")}.')
+            
+            # Create notification
+            Notification.objects.create(
+                user=request.user,
+                notification_type='booking_rescheduled',
+                title='Booking Rescheduled',
+                message=f'Your booking has been rescheduled to "{new_session.title}".'
+            )
+            return redirect('student_bookings')
+        else:
+            messages.error(request, 'Failed to reschedule booking.')
+    
+    context = {
+        'booking': booking,
+        'available_sessions': available_sessions,
+    }
+    return render(request, 'student/reschedule_booking.html', context)
+
+
+# ============================================
+# BOOKING SYSTEM - BOOKING MANAGEMENT (Teacher)
+# ============================================
+
+@login_required
+def teacher_session_bookings(request, session_id):
+    """View all bookings for a session (teacher view)"""
+    session = get_object_or_404(LiveClassSession, id=session_id, teacher__user=request.user)
+    bookings = Booking.objects.filter(session=session).select_related('user', 'user__profile').order_by('booked_at')
+    
+    context = {
+        'session': session,
+        'bookings': bookings,
+    }
+    return render(request, 'teacher/session_bookings.html', context)
+
+
+@login_required
+@require_POST
+def teacher_booking_cancel(request, booking_id):
+    """Teacher cancels a booking"""
+    booking = get_object_or_404(Booking, id=booking_id)
+    session = booking.session
+    
+    # Check if user is teacher for this session
+    if session.teacher.user != request.user:
+        messages.error(request, 'You do not have permission to cancel this booking.')
+        return redirect('teacher_live_classes', course_id=session.course.id)
+    
+    notes = request.POST.get('notes', '')
+    booking.cancel(reason='teacher', notes=notes)
+    
+    messages.success(request, 'Booking cancelled successfully.')
+    
+    # Create notification for student
+    Notification.objects.create(
+        user=booking.user,
+        notification_type='booking_cancelled',
+        title='Booking Cancelled by Teacher',
+        message=f'Your booking for "{session.title}" has been cancelled by the teacher.'
+    )
+    
+    return redirect('teacher_session_bookings', session_id=session.id)
+
+
+@login_required
+@require_POST
+def teacher_mark_attendance(request, booking_id):
+    """Mark student attendance"""
+    booking = get_object_or_404(Booking, id=booking_id)
+    session = booking.session
+    
+    # Check if user is teacher for this session
+    if session.teacher.user != request.user:
+        messages.error(request, 'You do not have permission to mark attendance.')
+        return redirect('teacher_live_classes', course_id=session.course.id)
+    
+    attended = request.POST.get('attended') == 'true'
+    booking.attended = attended
+    booking.status = 'attended' if attended else 'no_show'
+    booking.attended_at = timezone.now() if attended else None
+    booking.save()
+    
+    messages.success(request, f'Attendance marked as {"Attended" if attended else "No Show"}.')
+    return redirect('teacher_session_bookings', session_id=session.id)

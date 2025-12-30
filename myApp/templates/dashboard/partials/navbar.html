@@ -69,6 +69,10 @@
             <i class="fas fa-cog transition-transform duration-300 group-hover:rotate-90"></i>
             <span>Django Admin</span>
         </a>
+        <a href="{% url 'logout' %}" class="text-sm text-white/80 hover:text-red-400 transition-all duration-300 flex items-center gap-2 group hover:scale-105" title="Logout">
+            <i class="fas fa-sign-out-alt transition-transform duration-300 group-hover:rotate-12"></i>
+            <span class="hidden sm:inline">Logout</span>
+        </a>
         <div class="w-8 h-8 rounded-full bg-[#254346]/70 border border-white/10 flex items-center justify-center hover:bg-[#82C293]/20 hover:border-[#82C293]/40 transition-all duration-300 cursor-pointer group hover:scale-110">
             <i class="fas fa-user text-white/70 text-sm group-hover:text-[#82C293] transition-colors duration-300"></i>
         </div>
