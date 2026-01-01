@@ -1,0 +1,68 @@
+<style>
+    /* Theme CSS Variables - Single Source of Truth */
+    :root {
+        /* Dark Mode Colors (Default) */
+        --bg-primary: #000000;
+        --bg-secondary: #04363A;
+        --bg-elevated: #254346;
+        --text-primary: #FFFFFF;
+        --text-secondary: rgba(255, 255, 255, 0.7);
+        --text-tertiary: rgba(255, 255, 255, 0.6);
+        --text-muted: rgba(255, 255, 255, 0.5);
+        --border-primary: rgba(255, 255, 255, 0.1);
+        --border-accent: rgba(130, 194, 147, 0.3);
+        --accent-primary: #82C293;
+        --accent-cta: #00655F;
+        --gradient-start: #00655F;
+        --gradient-end: #82C293;
+        
+        /* Hero-specific dark mode gradients and shadows */
+        --hero-radial-gradient: radial-gradient(circle at 50% 20%, rgba(130,194,147,0.15), rgba(0,101,95,0.1), transparent 70%);
+        --hero-blob-1: rgba(130,194,147,0.1);
+        --hero-blob-2: rgba(0,101,95,0.08);
+        --hero-blob-3: rgba(130,194,147,0.05);
+        --hero-card-shadow: 0 25px 80px rgba(0,0,0,0.5);
+        --hero-card-inner-gradient: linear-gradient(to bottom right, rgba(130,194,147,0.1), transparent);
+        --hero-eyebrow-bg: rgba(49,100,27,0.4);
+        --hero-eyebrow-border: rgba(184,201,67,0.3);
+        --hero-stat-shadow: 0 12px 35px rgba(0,0,0,0.3);
+        --hero-cta-shadow: 0 20px 50px rgba(0,101,95,0.4);
+    }
+    
+    [data-theme="light"] {
+        /* Light Mode Colors */
+        --bg-primary: #F7FAF9;
+        --bg-secondary: #FFFFFF;
+        --bg-elevated: #EEF5F3;
+        --text-primary: #0F2E2E;
+        --text-secondary: rgba(15, 46, 46, 0.7);
+        --text-tertiary: rgba(15, 46, 46, 0.6);
+        --text-muted: rgba(15, 46, 46, 0.5);
+        --border-primary: rgba(15, 46, 46, 0.1);
+        --border-accent: rgba(130, 194, 147, 0.3);
+        --accent-primary: #82C293;
+        --accent-cta: #00655F;
+        --gradient-start: #00655F;
+        --gradient-end: #82C293;
+        
+        /* Hero-specific light mode gradients and shadows */
+        --hero-radial-gradient: radial-gradient(circle at 50% 18%, rgba(130,194,147,0.22), rgba(130,194,147,0.10), transparent 68%);
+        --hero-blob-1: rgba(130,194,147,0.18);
+        --hero-blob-2: rgba(0,101,95,0.12);
+        --hero-blob-3: rgba(130,194,147,0.10);
+        --hero-card-shadow: 0 30px 90px rgba(4,54,58,0.15), inset 0 1px 0 rgba(255,255,255,0.6);
+        --hero-card-inner-gradient: linear-gradient(180deg, rgba(255,255,255,0.65), rgba(255,255,255,0.15), transparent);
+        --hero-eyebrow-bg: rgba(130,194,147,0.18);
+        --hero-eyebrow-border: rgba(130,194,147,0.35);
+        --hero-stat-shadow: 0 18px 45px rgba(4,54,58,0.12);
+        --hero-cta-shadow: 0 18px 55px rgba(0,101,95,0.35);
+    }
+    
+    /* Smooth transitions for theme switching */
+    * {
+        transition-property: background-color, border-color, color, fill, stroke, opacity;
+        transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+        transition-duration: 200ms;
+    }
+</style>
+

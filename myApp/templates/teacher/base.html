@@ -6,6 +6,9 @@
     <title>{% block title %}Fluentory - Teacher{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% load static %}
+    {% include 'partials/theme_variables.html' %}
+    <script src="{% static 'js/theme.js' %}"></script>
     <script>
         tailwind.config = {
             theme: {
@@ -30,7 +33,7 @@
         }
     </style>
 </head>
-<body class="bg-[#000000] text-white font-sans">
+<body class="font-sans" style="background-color: var(--bg-primary); color: var(--text-primary);">
     {% include 'partials/role_preview_banner.html' %}
     {% include 'teacher/partials/navbar.html' %}
     

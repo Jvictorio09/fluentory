@@ -1,7 +1,7 @@
 /**
  * Theme Toggle System
  * Manages light/dark theme switching across all pages
- * Defaults to light mode
+ * Default: dark mode (as per requirements)
  */
 
 (function() {
@@ -12,12 +12,25 @@
     const THEME_DARK = 'dark';
 
     /**
-     * Get current theme from localStorage or default to light
+     * Detect system preference
+     */
+    function getSystemPreference() {
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) {
+            return THEME_LIGHT;
+        }
+        return THEME_DARK;
+    }
+
+    /**
+     * Get current theme from localStorage or default to system preference, fallback to dark
      */
     function getTheme() {
         const stored = localStorage.getItem(THEME_STORAGE_KEY);
-        // Default to light mode if no preference is stored
-        return stored || THEME_LIGHT;
+        if (stored === THEME_LIGHT || stored === THEME_DARK) {
+            return stored;
+        }
+        // No stored preference - respect system preference, default to dark
+        return getSystemPreference();
     }
 
     /**
@@ -34,22 +47,32 @@
         const html = document.documentElement;
         const body = document.body;
         
+        // Remove both theme classes first (html always exists)
+        html.classList.remove('light-theme', 'dark-theme');
+        
+        // Only manipulate body if it exists
+        if (body) {
+            body.classList.remove('theme-light', 'theme-dark');
+        }
+        
         if (theme === THEME_DARK) {
             html.setAttribute('data-theme', 'dark');
             html.classList.add('dark-theme');
-            html.classList.remove('light-theme');
+            if (body) {
+                body.classList.add('theme-dark');
+            }
         } else {
             html.setAttribute('data-theme', 'light');
             html.classList.add('light-theme');
-            html.classList.remove('dark-theme');
+            if (body) {
+                body.classList.add('theme-light');
+            }
         }
         
-        // Update body classes for compatibility
-        body.classList.remove('theme-light', 'theme-dark');
-        body.classList.add(`theme-${theme}`);
-        
-        // Update toggle button icons
-        updateToggleIcons(theme);
+        // Update toggle button icons (only if DOM is ready)
+        if (body) {
+            updateToggleIcons(theme);
+        }
     }
 
     /**
@@ -58,16 +81,23 @@
     function updateToggleIcons(theme) {
         const lightIcon = document.querySelector('.theme-icon-light');
         const darkIcon = document.querySelector('.theme-icon-dark');
+        const toggleBtn = document.getElementById('theme-toggle');
         
         if (lightIcon && darkIcon) {
             if (theme === THEME_DARK) {
                 // Show sun icon (to switch to light)
                 lightIcon.classList.remove('hidden');
                 darkIcon.classList.add('hidden');
+                if (toggleBtn) {
+                    toggleBtn.setAttribute('aria-label', 'Switch to light mode');
+                }
             } else {
                 // Show moon icon (to switch to dark)
                 lightIcon.classList.add('hidden');
                 darkIcon.classList.remove('hidden');
+                if (toggleBtn) {
+                    toggleBtn.setAttribute('aria-label', 'Switch to dark mode');
+                }
             }
         }
     }
@@ -103,28 +133,52 @@
         // Listen for theme changes from other tabs/windows
         window.addEventListener('storage', function(e) {
             if (e.key === THEME_STORAGE_KEY) {
-                const newTheme = e.newValue || THEME_LIGHT;
+                const newTheme = e.newValue || getSystemPreference();
                 applyTheme(newTheme);
             }
         });
+
+        // Listen for system preference changes (only if user hasn't set a preference)
+        if (window.matchMedia) {
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: light)');
+            mediaQuery.addEventListener('change', function(e) {
+                // Only apply system preference if user hasn't set a manual preference
+                const stored = localStorage.getItem(THEME_STORAGE_KEY);
+                if (!stored) {
+                    const systemTheme = e.matches ? THEME_LIGHT : THEME_DARK;
+                    applyTheme(systemTheme);
+                }
+            });
+        }
     }
 
     /**
      * Initialize when DOM is ready
      */
     function init() {
-        // Apply theme immediately to prevent flash
+        // Apply theme immediately to prevent flash (before DOM ready)
+        // This sets data-theme on html element (body might not exist yet)
         initTheme();
         
         // Set up event listeners when DOM is ready
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', setupEventListeners);
+            document.addEventListener('DOMContentLoaded', function() {
+                // Re-apply theme now that body exists (to set body classes)
+                const theme = getTheme();
+                applyTheme(theme);
+                setupEventListeners();
+                updateToggleIcons(theme);
+            });
         } else {
+            // DOM already ready - body exists, so applyTheme will set body classes
+            const theme = getTheme();
+            applyTheme(theme);
             setupEventListeners();
+            updateToggleIcons(theme);
         }
     }
 
-    // Start initialization
+    // Start initialization immediately (runs before DOM is ready to prevent flash)
     init();
 
     // Export for external use if needed
@@ -139,4 +193,3 @@
         getTheme: getTheme
     };
 })();
-

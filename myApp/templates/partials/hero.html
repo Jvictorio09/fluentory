@@ -1,102 +1,104 @@
-<section class="relative overflow-hidden py-16 lg:py-24 bg-[#000000]">
-    <!-- Background radial gradient for teal glow -->
-    <div class="absolute inset-0 z-0">
-      <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_20%,rgba(130,194,147,0.15),rgba(0,101,95,0.1),transparent_70%)]"></div>
-    </div>
-  
-    <!-- Animated soft glow blobs -->
-    <div class="absolute top-[-45%] right-[-20%] w-[900px] h-[900px] bg-[#82C293]/10 rounded-full blur-[90px] animate-pulse" style="animation-duration: 6s;"></div>
-    <div class="absolute bottom-[-35%] left-[-10%] w-[700px] h-[700px] bg-[#00655F]/8 rounded-full blur-[80px] animate-pulse" style="animation-duration: 8s; animation-delay: 1s;"></div>
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#82C293]/5 rounded-full blur-[100px] animate-pulse" style="animation-duration: 10s; animation-delay: 2s;"></div>
-  
-    <div class="max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-16 relative z-10">
-      <div class="grid grid-cols-1 place-items-center text-center">
-        <!-- Enhanced glass card container -->
-        <div class="w-full max-w-[980px] bg-[#04363a]/70 backdrop-blur-2xl border border-white/10 rounded-[2rem] shadow-[0_25px_80px_rgba(0,0,0,0.5)] px-8 sm:px-12 py-10 sm:py-12 relative hover:shadow-[0_30px_100px_rgba(130,194,147,0.2)] transition-all duration-500 hover:scale-[1.01] hover:border-[#82C293]/20">
-          <!-- Subtle inner glow -->
-          <div class="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-[#82C293]/10 to-transparent pointer-events-none"></div>
-          <!-- Content wrapper -->
-          <div class="relative z-10">
-  
-            <!-- Eyebrow Label -->
-            <div class="inline-flex items-center gap-2 bg-[#31641b]/40 border border-[#b8c943]/30 px-5 py-2.5 rounded-full text-xs uppercase tracking-wider text-[#b8c943] mb-6 font-medium">
-              <i class="fas fa-bolt text-[#8abc59]"></i>
-              <span>AI-Powered Learning Paths</span>
-            </div>
-  
-            <!-- Headline with improved spacing -->
-            <h1 class="text-5xl sm:text-6xl lg:text-[5.2rem] font-extralight leading-[1.05] mb-6 text-white tracking-[-2px]">
-              The Modern Way<br class="hidden sm:block" />
-              To Learn Globally.
-            </h1>
-  
-            <!-- Subheadline -->
-            <p class="text-lg sm:text-xl text-white/80 mb-8 leading-relaxed font-light max-w-[760px] mx-auto">
-              Placement-based learning. Milestone quizzes. Verified certification. Built for outcomes.
-            </p>
-  
-            <!-- Primary CTA -->
-            <div class="flex flex-col sm:flex-row gap-4 sm:gap-5 justify-center mb-8">
-              <a
-                href="{% url 'login' %}?next={% url 'student_placement' %}"
-                class="group inline-flex items-center justify-center gap-3 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white py-5 px-12 rounded-2xl no-underline text-lg font-medium shadow-[0_20px_50px_rgba(0,101,95,0.4)] hover:opacity-90 hover:shadow-[0_20px_50px_rgba(130,194,147,0.5)] transition-all duration-300 transform hover:scale-[1.02] border border-[#82C293]/30"
-              >
-                Take the Free Placement Test
-                <i class="fas fa-arrow-right text-white/80 group-hover:translate-x-1 transition-transform"></i>
-              </a>
-  
-              <!-- Secondary CTA -->
-              <a
-                href="#courses"
-                class="inline-flex items-center justify-center bg-[#254346]/70 border-2 border-white/10 backdrop-blur-lg text-white py-5 px-12 rounded-2xl no-underline text-lg font-medium hover:bg-[#254346]/90 hover:border-[#82C293]/30 transition-all duration-300 smooth-scroll"
-              >
-                Browse Courses
-              </a>
-            </div>
-  
-            <!-- Trust row -->
-            <div class="flex flex-wrap gap-6 justify-center mb-8 pb-6 border-b border-white/10">
-              <div class="flex items-center gap-2.5 text-sm text-white/80 font-medium">
-                <i class="fas fa-shield-halved text-[#82C293] text-base"></i>
-                <span>Secure Payments</span>
-              </div>
-              <div class="flex items-center gap-2.5 text-sm text-white/80 font-medium">
-                <i class="fas fa-award text-[#82C293] text-base"></i>
-                <span>Verified Certificates</span>
-              </div>
-              <div class="flex items-center gap-2.5 text-sm text-white/80 font-medium">
-                <i class="fas fa-globe text-[#82C293] text-base"></i>
-                <span>Multi-language Support</span>
-              </div>
-            </div>
-  
-            <!-- Stats row with icons and improved visibility with animations -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
-              <div class="rounded-2xl bg-[#254346]/70 backdrop-blur-md border border-white/10 px-7 py-6 shadow-[0_12px_35px_rgba(0,0,0,0.3)] hover:shadow-[0_15px_40px_rgba(130,194,147,0.2)] transition-all duration-300 hover:border-[#82C293]/30 hover:-translate-y-1 group">
-                <div class="flex items-center justify-center gap-3 mb-3">
-                  <i class="fas fa-book-open text-[#82C293] text-xl group-hover:scale-110 transition-transform duration-300"></i>
-                  <div class="text-3xl font-semibold text-white">120,000+</div>
-                </div>
-                <div class="text-xs text-white/70 uppercase tracking-wider font-medium">Lessons Completed</div>
-              </div>
-              <div class="rounded-2xl bg-[#254346]/70 backdrop-blur-md border border-white/10 px-7 py-6 shadow-[0_12px_35px_rgba(0,0,0,0.3)] hover:shadow-[0_15px_40px_rgba(130,194,147,0.2)] transition-all duration-300 hover:border-[#82C293]/30 hover:-translate-y-1 group">
-                <div class="flex items-center justify-center gap-3 mb-3">
-                  <i class="fas fa-star text-[#f8da03] text-xl group-hover:scale-110 transition-transform duration-300"></i>
-                  <div class="text-3xl font-semibold text-white">4.8</div>
-                </div>
-                <div class="text-xs text-white/70 uppercase tracking-wider font-medium">Average Satisfaction</div>
-              </div>
-              <div class="rounded-2xl bg-[#254346]/70 backdrop-blur-md border border-white/10 px-7 py-6 shadow-[0_12px_35px_rgba(0,0,0,0.3)] hover:shadow-[0_15px_40px_rgba(130,194,147,0.2)] transition-all duration-300 hover:border-[#82C293]/30 hover:-translate-y-1 group">
-                <div class="flex items-center justify-center gap-3 mb-3">
-                  <i class="fas fa-globe-americas text-[#82C293] text-xl group-hover:scale-110 transition-transform duration-300"></i>
-                  <div class="text-3xl font-semibold text-white">40+</div>
-                </div>
-                <div class="text-xs text-white/70 uppercase tracking-wider font-medium">Countries</div>
-              </div>
-            </div>
-  
+<section class="relative overflow-hidden py-16 lg:py-24" style="background-color: var(--bg-primary);">
+  <!-- Background radial gradient -->
+  <div class="absolute inset-0 z-0">
+    <div class="absolute inset-0" style="background: var(--hero-radial-gradient);"></div>
+  </div>
+
+  <!-- Animated soft glow blobs -->
+  <div class="absolute top-[-45%] right-[-20%] w-[900px] h-[900px] rounded-full blur-[90px] animate-pulse" style="animation-duration: 6s; background-color: var(--hero-blob-1);"></div>
+  <div class="absolute bottom-[-35%] left-[-10%] w-[700px] h-[700px] rounded-full blur-[80px] animate-pulse" style="animation-duration: 8s; animation-delay: 1s; background-color: var(--hero-blob-2);"></div>
+  <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-[100px] animate-pulse" style="animation-duration: 10s; animation-delay: 2s; background-color: var(--hero-blob-3);"></div>
+
+  <div class="max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-16 relative z-10">
+    <div class="grid grid-cols-1 place-items-center text-center">
+      <!-- Glass card container -->
+      <div class="w-full max-w-[980px] backdrop-blur-2xl rounded-[2rem] px-8 sm:px-12 py-10 sm:py-12 relative transition-all duration-500 hover:scale-[1.01]" style="background-color: var(--bg-secondary); border: 1px solid var(--border-primary); box-shadow: var(--hero-card-shadow);">
+        <!-- Inner glow/sheen -->
+        <div class="absolute inset-0 rounded-[2rem] pointer-events-none" style="background: var(--hero-card-inner-gradient);"></div>
+        <!-- Content wrapper -->
+        <div class="relative z-10">
+
+          <!-- Eyebrow Label -->
+          <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs uppercase tracking-wider mb-6 font-medium" style="background-color: var(--hero-eyebrow-bg); border: 1px solid var(--hero-eyebrow-border); color: var(--accent-cta);">
+            <i class="fas fa-bolt" style="color: var(--accent-primary);"></i>
+            <span>AI-Powered Learning Paths</span>
           </div>
+
+          <!-- Headline -->
+          <h1 class="text-5xl sm:text-6xl lg:text-[5.2rem] font-extralight leading-[1.05] mb-6 tracking-[-2px]" style="color: var(--text-primary);">
+            The Modern Way<br class="hidden sm:block" />
+            To Learn Globally.
+          </h1>
+
+          <!-- Subheadline -->
+          <p class="text-lg sm:text-xl mb-8 leading-relaxed font-light max-w-[760px] mx-auto" style="color: var(--text-secondary);">
+            Placement-based learning. Milestone quizzes. Verified certification. Built for outcomes.
+          </p>
+
+          <!-- Primary CTA -->
+          <div class="flex flex-col sm:flex-row gap-4 sm:gap-5 justify-center mb-8">
+            <a
+              href="{% url 'login' %}?next={% url 'student_placement' %}"
+              class="group inline-flex items-center justify-center gap-3 py-5 px-12 rounded-2xl no-underline text-lg font-medium transition-all duration-300 transform hover:scale-[1.02]"
+              style="background: linear-gradient(to right, var(--accent-cta), var(--accent-primary)); color: white; box-shadow: var(--hero-cta-shadow); border: 1px solid rgba(130,194,147,0.35);"
+            >
+              Take the Free Placement Test
+              <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform" style="color: rgba(255,255,255,0.85);"></i>
+            </a>
+
+            <!-- Secondary CTA -->
+            <a
+              href="#courses"
+              class="inline-flex items-center justify-center backdrop-blur-lg py-5 px-12 rounded-2xl no-underline text-lg font-medium transition-all duration-300 smooth-scroll"
+              style="background-color: var(--bg-elevated); border: 2px solid var(--border-primary); color: var(--text-primary);"
+            >
+              Browse Courses
+            </a>
+          </div>
+
+          <!-- Trust row -->
+          <div class="flex flex-wrap gap-6 justify-center mb-8 pb-6" style="border-bottom: 1px solid var(--border-primary);">
+            <div class="flex items-center gap-2.5 text-sm font-medium" style="color: var(--text-secondary);">
+              <i class="fas fa-shield-halved" style="color: var(--accent-primary);"></i>
+              <span>Secure Payments</span>
+            </div>
+            <div class="flex items-center gap-2.5 text-sm font-medium" style="color: var(--text-secondary);">
+              <i class="fas fa-award" style="color: var(--accent-primary);"></i>
+              <span>Verified Certificates</span>
+            </div>
+            <div class="flex items-center gap-2.5 text-sm font-medium" style="color: var(--text-secondary);">
+              <i class="fas fa-globe" style="color: var(--accent-primary);"></i>
+              <span>Multi-language Support</span>
+            </div>
+          </div>
+
+          <!-- Stats row -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <div class="rounded-2xl px-7 py-6 transition-all duration-300 hover:-translate-y-1" style="background-color: var(--bg-elevated); border: 1px solid var(--border-primary); box-shadow: var(--hero-stat-shadow);">
+              <div class="flex items-center justify-center gap-3 mb-3">
+                <i class="fas fa-book-open text-xl" style="color: var(--accent-primary);"></i>
+                <div class="text-3xl font-semibold" style="color: var(--text-primary);">120,000+</div>
+              </div>
+              <div class="text-xs uppercase tracking-wider font-medium" style="color: var(--text-tertiary);">Lessons Completed</div>
+            </div>
+            <div class="rounded-2xl px-7 py-6 transition-all duration-300 hover:-translate-y-1" style="background-color: var(--bg-elevated); border: 1px solid var(--border-primary); box-shadow: var(--hero-stat-shadow);">
+              <div class="flex items-center justify-center gap-3 mb-3">
+                <i class="fas fa-star text-xl" style="color: #F5C451;"></i>
+                <div class="text-3xl font-semibold" style="color: var(--text-primary);">4.8</div>
+              </div>
+              <div class="text-xs uppercase tracking-wider font-medium" style="color: var(--text-tertiary);">Average Satisfaction</div>
+            </div>
+            <div class="rounded-2xl px-7 py-6 transition-all duration-300 hover:-translate-y-1" style="background-color: var(--bg-elevated); border: 1px solid var(--border-primary); box-shadow: var(--hero-stat-shadow);">
+              <div class="flex items-center justify-center gap-3 mb-3">
+                <i class="fas fa-globe-americas text-xl" style="color: var(--accent-primary);"></i>
+                <div class="text-3xl font-semibold" style="color: var(--text-primary);">40+</div>
+              </div>
+              <div class="text-xs uppercase tracking-wider font-medium" style="color: var(--text-tertiary);">Countries</div>
+            </div>
+          </div>
+
         </div>
       </div>
     </div>
-  </section>
+  </div>
+</section>

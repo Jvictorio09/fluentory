@@ -6,67 +6,10 @@
     <title>{% block title %}Fluentory - Dashboard{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    {% load static %}
+    {% include 'partials/theme_variables.html' %}
+    <script src="{% static 'js/theme.js' %}"></script>
     <style>
-        /* Telegraf - Main Font for Headers */
-        @font-face {
-            font-family: 'Telegraf';
-            src: url('/static/fonts/Telegraf-Regular.woff2') format('woff2'),
-                 url('/static/fonts/Telegraf-Regular.woff') format('woff');
-            font-weight: 400;
-            font-style: normal;
-            font-display: swap;
-        }
-        @font-face {
-            font-family: 'Telegraf';
-            src: url('/static/fonts/Telegraf-Bold.woff2') format('woff2'),
-                 url('/static/fonts/Telegraf-Bold.woff') format('woff');
-            font-weight: 700;
-            font-style: normal;
-            font-display: swap;
-        }
-        @font-face {
-            font-family: 'Telegraf';
-            src: url('/static/fonts/Telegraf-Light.woff2') format('woff2'),
-                 url('/static/fonts/Telegraf-Light.woff') format('woff');
-            font-weight: 300;
-            font-style: normal;
-            font-display: swap;
-        }
-        
-        /* Garet - Alternative Font for Subheaders and Paragraphs */
-        @font-face {
-            font-family: 'Garet';
-            src: url('/static/fonts/Garet-Regular.woff2') format('woff2'),
-                 url('/static/fonts/Garet-Regular.woff') format('woff');
-            font-weight: 400;
-            font-style: normal;
-            font-display: swap;
-        }
-        @font-face {
-            font-family: 'Garet';
-            src: url('/static/fonts/Garet-Bold.woff2') format('woff2'),
-                 url('/static/fonts/Garet-Bold.woff') format('woff');
-            font-weight: 700;
-            font-style: normal;
-            font-display: swap;
-        }
-        @font-face {
-            font-family: 'Garet';
-            src: url('/static/fonts/Garet-Light.woff2') format('woff2'),
-                 url('/static/fonts/Garet-Light.woff') format('woff');
-            font-weight: 300;
-            font-style: normal;
-            font-display: swap;
-        }
-        
-        /* Global font application */
-        body {
-            font-family: 'Garet', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        }
-        h1, h2, h3, h4, h5, h6, .font-heading {
-            font-family: 'Telegraf', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-        }
-        
         .scrollbar-hide {
             -ms-overflow-style: none;
             scrollbar-width: none;
@@ -205,22 +148,20 @@
             theme: {
                 extend: {
                     fontFamily: {
-                        'telegraf': ['Telegraf', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
-                        'garet': ['Garet', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
-                        'sans': ['Garet', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                        'sans': ['-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
                     }
                 }
             }
         }
     </script>
 </head>
-<body class="bg-[#000000] text-white font-garet">
+<body class="font-sans" style="background-color: var(--bg-primary); color: var(--text-primary);">
     {% include 'dashboard/partials/navbar.html' %}
     
     <div class="flex min-h-[calc(100vh-4rem)] relative">
         {% include 'dashboard/partials/sidebar.html' %}
         
-        <main class="flex-1 w-full lg:ml-64 pt-12 pb-6 px-6 sm:pt-14 sm:pb-8 sm:px-8 lg:pt-16 lg:pb-10 lg:px-10 xl:pt-20 xl:pb-12 xl:px-12 bg-[#000000] page-enter">
+        <main class="flex-1 w-full lg:ml-64 pt-12 pb-6 px-6 sm:pt-14 sm:pb-8 sm:px-8 lg:pt-16 lg:pb-10 lg:px-10 xl:pt-20 xl:pb-12 xl:px-12 page-enter" style="background-color: var(--bg-primary);">
             {% block content %}{% endblock %}
         </main>
     </div>

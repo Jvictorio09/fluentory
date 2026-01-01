@@ -1,159 +1,244 @@
-<section id="certificates" class="relative overflow-hidden bg-[#000000] py-12 lg:py-16">
-    <!-- Background gradient -->
-    <div class="absolute inset-0">
-      <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_10%,rgba(130,194,147,0.12),rgba(0,101,95,0.08),transparent_60%)]"></div>
+<section id="certificates"
+  class="relative overflow-hidden py-20 lg:py-28"
+  style="background-color: var(--bg-primary);">
+
+  <!-- Architectural trust light -->
+  <div class="absolute inset-0 pointer-events-none">
+    <div class="absolute inset-0"
+      style="background:
+        radial-gradient(
+          ellipse at 35% 10%,
+          rgba(130,194,147,0.16),
+          rgba(130,194,147,0.06),
+          transparent 62%
+        );">
     </div>
-    
-    <!-- Animated enhanced background layers for depth -->
-    <div class="absolute -top-28 -right-28 w-[560px] h-[560px] rounded-full bg-[#82C293]/10 blur-[95px] animate-pulse" style="animation-duration: 6s;"></div>
-    <div class="absolute -bottom-28 -left-28 w-[560px] h-[560px] rounded-full bg-[#00655F]/8 blur-[95px] animate-pulse" style="animation-duration: 8s; animation-delay: 1s;"></div>
-    <div class="absolute top-1/2 left-1/4 w-[600px] h-[600px] rounded-full bg-[#82C293]/5 blur-[110px] animate-pulse" style="animation-duration: 10s; animation-delay: 2s;"></div>
-  
-    <div class="max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-16 relative z-10">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 lg:gap-20 items-center">
+  </div>
 
-        <!-- LEFT: Enhanced Verify Panel -->
-        <div class="space-y-8">
-          <!-- Eyebrow with accent -->
-          <div class="inline-flex items-center gap-2 bg-[#b8c943]/20 border border-[#b8c943]/30 px-5 py-2.5 rounded-full text-xs uppercase tracking-wider text-[#b8c943] font-medium">
-            <i class="fas fa-shield-halved text-[#b8c943]"></i>
-            <span>Trust & Verification</span>
-          </div>
+  <!-- Calm ambient depth (no pulse = confidence) -->
+  <div class="absolute -top-[35%] -right-[20%] w-[900px] h-[900px] rounded-full blur-[180px]"
+       style="background-color: rgba(130,194,147,0.12);"></div>
 
-          <!-- Headline with improved spacing -->
-          <h2 class="text-[2.8rem] sm:text-[3.6rem] lg:text-[4rem] font-extralight text-white tracking-[-1px] leading-[1.05]">
-            Verified Certificates,<br />Employer-Ready.
-          </h2>
+  <div class="absolute -bottom-[35%] -left-[20%] w-[950px] h-[950px] rounded-full blur-[200px]"
+       style="background-color: rgba(0,101,95,0.10);"></div>
 
-          <!-- Description with better spacing -->
-          <p class="text-base sm:text-lg text-[#82C293] font-light leading-relaxed max-w-[620px]">
-            Every certificate is verifiable via QR and Certificate ID—so learners can share proof that holds up anywhere.
-          </p>
+  <div class="max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-16 relative z-10">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 lg:gap-28 items-center">
 
-          <!-- Enhanced verification card -->
-          <div class="rounded-[2rem] bg-[#04363a]/90 backdrop-blur-xl border border-white/10 shadow-[0_20px_60px_rgba(0,0,0,0.5)] p-8 sm:p-9 relative overflow-hidden">
-            <!-- Inner glow -->
-            <div class="absolute inset-0 bg-gradient-to-br from-[#82C293]/10 to-transparent pointer-events-none"></div>
-            
-            <div class="relative z-10">
-              <div class="text-sm uppercase tracking-wider text-white/70 font-semibold mb-5">Verify Certificate</div>
+      <!-- LEFT: Trust & Verification -->
+      <div class="space-y-10">
 
-              <div class="flex flex-col sm:flex-row gap-4">
-                <input
-                  type="text"
-                  class="w-full rounded-2xl px-5 py-4.5 bg-[#254346]/70 border border-white/10 backdrop-blur-md text-[0.95rem] text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.3)]"
-                  placeholder="Enter Certificate ID (e.g., FLU-2026-0X92A)"
-                />
-
-                <button
-                  class="w-full sm:w-auto rounded-2xl px-8 py-4.5 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white font-semibold shadow-[0_14px_35px_rgba(0,101,95,0.4)] hover:shadow-[0_14px_35px_rgba(130,194,147,0.5)] transition-all duration-300 transform hover:scale-[1.02]"
-                  type="button"
-                >
-                  Verify
-                  <i class="fas fa-arrow-right ml-2 text-white/80"></i>
-                </button>
-              </div>
-
-              <!-- Example result state -->
-              <div class="mt-5 hidden rounded-2xl border border-[#8abc59] bg-[#8abc59]/20 backdrop-blur-md px-5 py-4 text-[#8abc59] text-sm font-medium shadow-[0_8px_20px_rgba(138,188,89,0.2)]">
-                <i class="fas fa-check-circle text-[#8abc59]"></i>
-                <span class="ml-2 font-semibold">Verified Certificate</span>
-                <span class="ml-2 text-[#8abc59]/70">— record found and valid</span>
-              </div>
-
-              <div class="mt-6 text-xs text-white/70 font-medium">
-                Verification checks issuance, course completion, and tamper resistance.
-              </div>
-            </div>
-          </div>
-
-          <!-- Enhanced trust bullets with accent -->
-          <div class="flex flex-wrap gap-4 pt-2">
-            <div class="inline-flex items-center gap-2.5 rounded-full bg-[#82C293]/15 border border-[#82C293]/25 px-5 py-3 text-white hover:bg-[#82C293]/25 hover:border-[#82C293]/40 transition-all shadow-[0_4px_12px_rgba(130,194,147,0.2)]">
-              <i class="fas fa-qrcode text-[#82C293]"></i>
-              <span class="text-sm font-semibold">QR Verification</span>
-            </div>
-            <div class="inline-flex items-center gap-2.5 rounded-full bg-[#82C293]/15 border border-[#82C293]/25 px-5 py-3 text-white hover:bg-[#82C293]/25 hover:border-[#82C293]/40 transition-all shadow-[0_4px_12px_rgba(130,194,147,0.2)]">
-              <i class="fas fa-building text-[#82C293]"></i>
-              <span class="text-sm font-semibold">Employer-ready</span>
-            </div>
-            <div class="inline-flex items-center gap-2.5 rounded-full bg-[#82C293]/15 border border-[#82C293]/25 px-5 py-3 text-white hover:bg-[#82C293]/25 hover:border-[#82C293]/40 transition-all shadow-[0_4px_12px_rgba(130,194,147,0.2)]">
-              <i class="fas fa-lock text-[#82C293]"></i>
-              <span class="text-sm font-semibold">Fraud-resistant</span>
-            </div>
-          </div>
+        <!-- Eyebrow -->
+        <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs uppercase tracking-wider font-medium"
+             style="background-color: rgba(130,194,147,0.18); color: var(--accent-cta);">
+          <i class="fas fa-shield-halved"></i>
+          Trust & Verification
         </div>
 
-        <!-- RIGHT: Enhanced Certificate Preview -->
-        <div class="relative">
-          <div class="rounded-[2rem] bg-[#04363a]/90 backdrop-blur-xl border border-white/10 shadow-[0_25px_80px_rgba(0,0,0,0.5)] p-8 sm:p-9 relative overflow-hidden">
-            <!-- Inner glow -->
-            <div class="absolute inset-0 bg-gradient-to-br from-[#82C293]/10 to-transparent pointer-events-none"></div>
-            
-            <div class="relative z-10 flex items-center justify-between mb-6">
-              <div class="inline-flex items-center gap-2 bg-[#b8c943]/20 border border-[#b8c943]/30 px-5 py-2.5 rounded-full text-xs uppercase tracking-wider text-[#b8c943] font-medium">
-                <i class="fas fa-award text-[#b8c943]"></i>
-                <span>Certificate Preview</span>
-              </div>
+        <!-- Headline -->
+        <h2 class="text-[3rem] sm:text-[3.6rem] lg:text-[4rem] font-extralight leading-[1.05]"
+            style="color: var(--text-primary);">
+          Verified Certificates.<br />
+          Employer-Ready Proof.
+        </h2>
 
-              <div class="hidden sm:inline-flex items-center gap-2 text-xs uppercase tracking-wider text-white/80 bg-[#82C293]/15 border border-[#82C293]/25 px-4 py-2 rounded-full font-medium">
-                <i class="fas fa-qrcode text-[#82C293]"></i>
-                QR Verified
-              </div>
+        <!-- Copy -->
+        <p class="text-lg font-light leading-relaxed max-w-[620px]"
+           style="color: var(--text-secondary);">
+          Every Fluentory certificate is uniquely issued, QR-verifiable, and
+          backed by a tamper-resistant verification record.
+        </p>
+
+        <!-- Verification Panel -->
+        <div class="rounded-[2.25rem] p-8 sm:p-10 relative"
+             style="
+               background-color: var(--bg-secondary);
+               border: 1px solid var(--border-primary);
+               box-shadow:
+                 0 40px 100px rgba(4,54,58,0.18),
+                 inset 0 1px 0 rgba(255,255,255,0.65);
+             ">
+
+          <!-- Inner daylight sheen -->
+          <div class="absolute inset-0 pointer-events-none"
+               style="background:
+                 linear-gradient(
+                   180deg,
+                   rgba(255,255,255,0.55),
+                   rgba(255,255,255,0.12),
+                   transparent
+                 );">
+          </div>
+
+          <div class="relative z-10 space-y-6">
+
+            <div class="text-xs uppercase tracking-widest font-semibold"
+                 style="color: var(--text-tertiary);">
+              Verify Certificate
             </div>
 
-            <div class="relative rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-[#254346] via-[#04363a] to-[#254346] shadow-[0_15px_40px_rgba(0,0,0,0.4)]">
-              <!-- Enhanced watermark -->
-              <div class="absolute inset-0 opacity-[0.15] bg-[radial-gradient(circle_at_20%_20%,rgba(130,194,147,0.3),transparent_60%)]"></div>
-              <div class="absolute inset-0 opacity-[0.10] bg-[radial-gradient(circle_at_80%_60%,rgba(0,101,95,0.2),transparent_60%)]"></div>
+            <div class="flex flex-col sm:flex-row gap-4">
+              <input
+                type="text"
+                placeholder="Certificate ID (e.g., FLU-2026-0X92A)"
+                class="w-full rounded-2xl px-5 py-4 focus:outline-none"
+                style="
+                  background-color: var(--bg-elevated);
+                  border: 1px solid var(--border-primary);
+                  color: var(--text-primary);
+                  box-shadow: 0 10px 25px rgba(4,54,58,0.14);
+                " />
 
-              <!-- Inner certificate canvas -->
-              <div class="relative p-9 sm:p-11 min-h-[440px]">
-                <div class="flex items-start justify-between">
-                  <div>
-                    <div class="text-xs uppercase tracking-widest text-white/70 font-semibold">Fluentory</div>
-                    <div class="text-2xl sm:text-3xl font-light text-white mt-3 tracking-[-0.5px]">
-                      Certificate of Completion
-                    </div>
-                  </div>
-
-                  <!-- Enhanced QR block -->
-                  <div class="w-24 h-24 rounded-2xl bg-[#254346]/90 border-2 border-[#82C293]/30 backdrop-blur-md shadow-[0_12px_30px_rgba(0,0,0,0.4)] grid place-items-center">
-                    <div class="w-16 h-16 rounded-lg bg-[#82C293]/20 border-2 border-[#82C293]/40"></div>
-                  </div>
-                </div>
-
-                <div class="mt-12 space-y-5">
-                  <div class="h-3.5 w-[70%] rounded-full bg-white/20 shadow-inner"></div>
-                  <div class="h-3.5 w-[55%] rounded-full bg-white/15 shadow-inner"></div>
-                  <div class="h-3.5 w-[62%] rounded-full bg-white/10 shadow-inner"></div>
-                </div>
-
-                <div class="mt-14 grid grid-cols-2 gap-6">
-                  <div class="rounded-2xl bg-[#254346]/70 border border-white/10 backdrop-blur-md p-6 shadow-[0_8px_20px_rgba(0,0,0,0.3)]">
-                    <div class="text-xs uppercase tracking-wider text-white/70 font-semibold mb-2">Certificate ID</div>
-                    <div class="text-base font-semibold text-white">FLU-2026-0X92A</div>
-                  </div>
-                  <div class="rounded-2xl bg-[#254346]/70 border border-white/10 backdrop-blur-md p-6 shadow-[0_8px_20px_rgba(0,0,0,0.3)]">
-                    <div class="text-xs uppercase tracking-wider text-white/70 font-semibold mb-2">Issued</div>
-                    <div class="text-base font-semibold text-white">Instantly after passing</div>
-                  </div>
-                </div>
-
-                <div class="mt-12 flex items-center justify-between">
-                  <div class="h-12 w-44 rounded-xl bg-white/10 border border-white/10 shadow-inner"></div>
-                  <div class="h-12 w-36 rounded-xl bg-white/10 border border-white/10 shadow-inner"></div>
-                </div>
-              </div>
+              <button
+                type="button"
+                class="rounded-2xl px-8 py-4 font-semibold transition-transform hover:scale-[1.02]"
+                style="
+                  background: linear-gradient(to right, var(--accent-cta), var(--accent-primary));
+                  color: white;
+                  box-shadow: 0 18px 45px rgba(0,101,95,0.35);
+                ">
+                Verify
+                <i class="fas fa-arrow-right ml-2 opacity-80"></i>
+              </button>
             </div>
 
-            <p class="text-xs text-white/70 mt-5 font-medium">
-              Preview mock. Real certificates include QR + verification record.
+            <p class="text-xs font-medium"
+               style="color: var(--text-secondary);">
+              Verification confirms issuance, completion status, and authenticity.
             </p>
           </div>
         </div>
 
+        <!-- Trust Pills -->
+        <div class="flex flex-wrap gap-4 pt-2">
+          <div class="inline-flex items-center gap-2.5 px-5 py-3 rounded-full text-sm font-medium"
+               style="background-color: rgba(130,194,147,0.16); color: var(--text-primary);">
+            <i class="fas fa-qrcode" style="color: var(--accent-primary);"></i>
+            QR Verified
+          </div>
+
+          <div class="inline-flex items-center gap-2.5 px-5 py-3 rounded-full text-sm font-medium"
+               style="background-color: rgba(130,194,147,0.16); color: var(--text-primary);">
+            <i class="fas fa-building" style="color: var(--accent-primary);"></i>
+            Employer-Ready
+          </div>
+
+          <div class="inline-flex items-center gap-2.5 px-5 py-3 rounded-full text-sm font-medium"
+               style="background-color: rgba(130,194,147,0.16); color: var(--text-primary);">
+            <i class="fas fa-lock" style="color: var(--accent-primary);"></i>
+            Fraud-Resistant
+          </div>
+        </div>
       </div>
+
+      <!-- RIGHT: Certificate Preview -->
+      <div class="relative">
+
+        <div class="rounded-[2.25rem] p-8 sm:p-10 relative"
+             style="
+               background-color: var(--bg-secondary);
+               border: 1px solid var(--border-primary);
+               box-shadow:
+                 0 50px 120px rgba(4,54,58,0.20),
+                 inset 0 1px 0 rgba(255,255,255,0.65);
+             ">
+
+          <!-- Preview Header -->
+          <div class="flex items-center justify-between mb-6">
+            <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs uppercase tracking-wider font-medium"
+                 style="background-color: rgba(130,194,147,0.18); color: var(--accent-cta);">
+              <i class="fas fa-award"></i>
+              Certificate Preview
+            </div>
+
+            <div class="hidden sm:inline-flex items-center gap-2 text-xs px-4 py-2 rounded-full"
+                 style="background-color: rgba(130,194,147,0.14); color: var(--text-secondary);">
+              <i class="fas fa-qrcode" style="color: var(--accent-primary);"></i>
+              QR Verified
+            </div>
+          </div>
+
+          <!-- Certificate Canvas -->
+          <div class="relative rounded-2xl overflow-hidden p-10 min-h-[440px]"
+               style="
+                 background:
+                   linear-gradient(
+                     to bottom right,
+                     var(--bg-elevated),
+                     var(--bg-secondary),
+                     var(--bg-elevated)
+                   );
+                 box-shadow: 0 25px 60px rgba(4,54,58,0.18);
+               ">
+
+            <!-- Watermarks -->
+            <div class="absolute inset-0 opacity-[0.12]"
+                 style="background: radial-gradient(circle at 20% 20%, rgba(130,194,147,0.35), transparent 60%);"></div>
+
+            <div class="absolute inset-0 opacity-[0.10]"
+                 style="background: radial-gradient(circle at 80% 60%, rgba(0,101,95,0.25), transparent 60%);"></div>
+
+            <div class="relative z-10">
+              <div class="flex justify-between items-start">
+                <div>
+                  <div class="text-xs uppercase tracking-widest font-semibold"
+                       style="color: var(--text-tertiary);">
+                    Fluentory
+                  </div>
+                  <div class="text-3xl font-light mt-3"
+                       style="color: var(--text-primary);">
+                    Certificate of Completion
+                  </div>
+                </div>
+
+                <div class="w-24 h-24 rounded-2xl grid place-items-center"
+                     style="background-color: rgba(130,194,147,0.18);">
+                  <div class="w-16 h-16 rounded-lg"
+                       style="background-color: rgba(130,194,147,0.35);"></div>
+                </div>
+              </div>
+
+              <div class="mt-14 space-y-4">
+                <div class="h-3.5 w-[70%] rounded-full" style="background-color: rgba(0,0,0,0.08);"></div>
+                <div class="h-3.5 w-[55%] rounded-full" style="background-color: rgba(0,0,0,0.06);"></div>
+                <div class="h-3.5 w-[62%] rounded-full" style="background-color: rgba(0,0,0,0.05);"></div>
+              </div>
+
+              <div class="mt-14 grid grid-cols-2 gap-6">
+                <div class="rounded-2xl p-5"
+                     style="background-color: var(--bg-elevated);">
+                  <div class="text-xs uppercase tracking-wider font-semibold"
+                       style="color: var(--text-tertiary);">
+                    Certificate ID
+                  </div>
+                  <div class="text-base font-semibold"
+                       style="color: var(--text-primary);">
+                    FLU-2026-0X92A
+                  </div>
+                </div>
+
+                <div class="rounded-2xl p-5"
+                     style="background-color: var(--bg-elevated);">
+                  <div class="text-xs uppercase tracking-wider font-semibold"
+                       style="color: var(--text-tertiary);">
+                    Issued
+                  </div>
+                  <div class="text-base font-semibold"
+                       style="color: var(--text-primary);">
+                    Instantly after completion
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p class="text-xs mt-5 font-medium"
+             style="color: var(--text-secondary);">
+            Preview only. Actual certificates include live QR verification.
+          </p>
+        </div>
+      </div>
+
     </div>
-  </section>
-  
+  </div>
+</section>

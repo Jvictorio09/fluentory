@@ -1,14 +1,7 @@
 <!-- Theme Toggle Button -->
-<button 
-    id="theme-toggle" 
-    class="theme-toggle-btn flex items-center justify-center w-10 h-10 rounded-full transition-all duration-300 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-offset-2"
-    style="background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color);"
-    aria-label="Toggle theme"
-    type="button"
->
-    <!-- Sun icon for light mode (shown when dark mode is active) -->
-    <i class="fas fa-sun text-lg theme-icon-light hidden"></i>
-    <!-- Moon icon for dark mode (shown when light mode is active) -->
-    <i class="fas fa-moon text-lg theme-icon-dark"></i>
+<button id="theme-toggle" class="flex items-center justify-center w-10 h-10 rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#82C293] focus:ring-offset-2" style="background-color: var(--bg-elevated); color: var(--text-primary); border: 1px solid var(--border-primary);" aria-label="Toggle theme">
+    <!-- Sun icon (show when in dark mode, click to switch to light) -->
+    <i class="fas fa-sun theme-icon-light hidden" style="color: var(--accent-primary);"></i>
+    <!-- Moon icon (show when in light mode, click to switch to dark) -->
+    <i class="fas fa-moon theme-icon-dark hidden" style="color: var(--accent-primary);"></i>
 </button>
-

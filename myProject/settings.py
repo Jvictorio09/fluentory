@@ -85,30 +85,27 @@ WSGI_APPLICATION = 'myProject.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-# Get DATABASE_URL from environment variable
+# Get DATABASE_URL from environment variable - REQUIRED for all environments
 DATABASE_URL = os.getenv('DATABASE_URL')
 
-if DATABASE_URL:
-    # Use PostgreSQL if DATABASE_URL is provided
-    db_config = dj_database_url.parse(DATABASE_URL, conn_max_age=600)
-    # Add connection pool settings and retry logic
-    db_config['OPTIONS'] = {
-        'connect_timeout': 10,
-        'options': '-c statement_timeout=30000'  # 30 second query timeout
-    }
-    # Enable connection pooling
-    db_config['CONN_MAX_AGE'] = 600
-    DATABASES = {
-        'default': db_config
-    }
-else:
-    # Fallback to SQLite for local development if DATABASE_URL is not set
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+if not DATABASE_URL:
+    raise ValueError(
+        "DATABASE_URL environment variable is required. "
+        "Please set it in your .env file or environment variables."
+    )
+
+# Always use DATABASE_URL (PostgreSQL) for all environments including local development
+db_config = dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+# Add connection pool settings and retry logic
+db_config['OPTIONS'] = {
+    'connect_timeout': 10,
+    'options': '-c statement_timeout=30000'  # 30 second query timeout
+}
+# Enable connection pooling
+db_config['CONN_MAX_AGE'] = 600
+DATABASES = {
+    'default': db_config
+}
 
 
 # Password validation

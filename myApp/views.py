@@ -265,12 +265,18 @@ def redirect_by_role(user):
 def student_home(request):
     """Student dashboard"""
     user = request.user
+    profile = get_or_create_profile(user)
+    
+    # Check if admin/superuser is previewing as teacher - redirect to teacher dashboard
+    preview_role = request.session.get('preview_role')
+    if preview_role == 'teacher':
+        # Check if user is admin or superuser
+        if profile.role == 'admin' or user.is_superuser or user.is_staff:
+            return redirect('teacher_dashboard')
     
     try:
         # Ensure database connection is alive
         connection.ensure_connection()
-        
-        profile = get_or_create_profile(user)
         
         # Update streak
         try:
@@ -1400,9 +1406,34 @@ def teacher_dashboard(request):
     user = request.user
     profile = get_or_create_profile(user)
     
-    # Check if user is teacher
-    if not hasattr(user, 'teacher_profile') or not user.teacher_profile.is_approved:
-        # Check if user has instructor role
+    # Allow admin/superuser to access teacher views automatically (godlike admin)
+    is_superuser_or_admin = user.is_superuser or user.is_staff or profile.role == 'admin'
+    preview_role = request.session.get('preview_role')
+    is_previewing_teacher = preview_role == 'teacher' and is_superuser_or_admin
+    
+    # Superusers/admins automatically have teacher access
+    if is_superuser_or_admin and not hasattr(user, 'teacher_profile'):
+        # For superusers/admins without teacher profile, use mock teacher for template compatibility
+        class MockTeacher:
+            def __init__(self, user):
+                self.user = user
+                self.is_approved = True
+                self.is_online = False
+                self.last_seen = None
+                self.id = None
+            
+            def save(self):
+                pass  # No-op for mock object
+            
+            def __getattr__(self, name):
+                # Return None or default values for any other attributes
+                return None
+        
+        teacher = MockTeacher(user)
+    elif hasattr(user, 'teacher_profile'):
+        teacher = user.teacher_profile
+    else:
+        # Regular user - check if they're a teacher
         if profile.role != 'instructor':
             messages.error(request, 'You do not have permission to access the teacher dashboard.')
             return redirect('student_home')
@@ -1410,48 +1441,66 @@ def teacher_dashboard(request):
         teacher, _ = Teacher.objects.get_or_create(user=user)
         teacher.is_approved = True
         teacher.save()
+    
+    # Update online status (only for real teacher objects)
+    if hasattr(teacher, 'save') and teacher.id is not None:
+        teacher.is_online = True
+        teacher.last_seen = timezone.now()
+        teacher.save()
+    
+    # Get assigned courses (for superusers/admins without teacher profile, show all courses)
+    if is_superuser_or_admin and teacher.id is None:
+        # Admin preview mode: show all courses
+        assigned_courses = CourseTeacher.objects.none()  # Empty queryset
+        course_ids = list(Course.objects.filter(status__in=['published', 'draft']).values_list('id', flat=True))
+        total_courses = Course.objects.filter(status__in=['published', 'draft']).count()
+        total_students = Enrollment.objects.filter(course_id__in=course_ids).values('user').distinct().count() if course_ids else 0
+        week_ago = timezone.now() - timezone.timedelta(days=7)
+        active_students = LessonProgress.objects.filter(
+            enrollment__course_id__in=course_ids,
+            started_at__gte=week_ago
+        ).values('enrollment__user').distinct().count() if course_ids else 0
+        upcoming_classes = LiveClassSession.objects.filter(
+            status='scheduled',
+            scheduled_start__gte=timezone.now()
+        ).select_related('course').order_by('scheduled_start')[:5]
+        recent_announcements = CourseAnnouncement.objects.all().select_related('course').order_by('-created_at')[:5]
+        unread_messages_count = 0
     else:
-        teacher = user.teacher_profile
-    
-    # Update online status
-    teacher.is_online = True
-    teacher.last_seen = timezone.now()
-    teacher.save()
-    
-    # Get assigned courses
-    assigned_courses = CourseTeacher.objects.filter(teacher=teacher).select_related('course')
-    course_ids = [ct.course.id for ct in assigned_courses]
-    
-    # KPIs
-    total_students = Enrollment.objects.filter(course_id__in=course_ids).values('user').distinct().count()
-    
-    # Active students (last 7 days)
-    week_ago = timezone.now() - timezone.timedelta(days=7)
-    active_students = LessonProgress.objects.filter(
-        enrollment__course_id__in=course_ids,
-        started_at__gte=week_ago
-    ).values('enrollment__user').distinct().count()
-    
-    # Total courses
-    total_courses = len(course_ids)
-    
-    # Upcoming live classes
-    upcoming_classes = LiveClassSession.objects.filter(
-        teacher=teacher,
-        status='scheduled',
-        scheduled_start__gte=timezone.now()
-    ).select_related('course').order_by('scheduled_start')[:5]
-    
-    # Recent announcements
-    recent_announcements = CourseAnnouncement.objects.filter(
-        teacher=teacher
-    ).select_related('course').order_by('-created_at')[:5]
-    
-    # Unread messages
-    unread_messages_count = StudentMessage.objects.filter(
-        teacher=teacher,
-        is_read=False
-    ).count()
+        # Normal teacher mode
+        assigned_courses = CourseTeacher.objects.filter(teacher=teacher).select_related('course')
+        course_ids = [ct.course.id for ct in assigned_courses]
+        
+        # KPIs
+        total_students = Enrollment.objects.filter(course_id__in=course_ids).values('user').distinct().count()
+        
+        # Active students (last 7 days)
+        week_ago = timezone.now() - timezone.timedelta(days=7)
+        active_students = LessonProgress.objects.filter(
+            enrollment__course_id__in=course_ids,
+            started_at__gte=week_ago
+        ).values('enrollment__user').distinct().count()
+        
+        # Total courses
+        total_courses = len(course_ids)
+        
+        # Upcoming live classes
+        upcoming_classes = LiveClassSession.objects.filter(
+            teacher=teacher,
+            status='scheduled',
+            scheduled_start__gte=timezone.now()
+        ).select_related('course').order_by('scheduled_start')[:5]
+        
+        # Recent announcements
+        recent_announcements = CourseAnnouncement.objects.filter(
+            teacher=teacher
+        ).select_related('course').order_by('-created_at')[:5]
+        
+        # Unread messages
+        unread_messages_count = StudentMessage.objects.filter(
+            teacher=teacher,
+            is_read=False
+        ).count()
     
     # Live activity feed data (for AJAX)
     # This will be loaded via API endpoint
@@ -1473,6 +1522,20 @@ def teacher_dashboard(request):
 def teacher_courses(request):
     """My Courses - view all assigned courses"""
     user = request.user
+    profile = get_or_create_profile(user)
+    
+    # Allow superusers/admins to access automatically
+    is_superuser_or_admin = user.is_superuser or user.is_staff or profile.role == 'admin'
+    
+    if is_superuser_or_admin and not hasattr(user, 'teacher_profile'):
+        # For superusers/admins, show all courses
+        course_assignments = CourseTeacher.objects.all().select_related('course')
+        context = {
+            'courses': [ca.course for ca in course_assignments],
+            'course_assignments': course_assignments,
+        }
+        return render(request, 'teacher/courses.html', context)
+    
     # Check if user is teacher
     if not hasattr(user, 'teacher_profile'):
         messages.error(request, 'You do not have permission to access this page.')
@@ -2235,8 +2298,10 @@ def partner_overview(request):
     user = request.user
     profile = get_or_create_profile(user)
     
-    # Check if user is admin in preview mode or actual partner
-    is_admin_preview = profile.role == 'admin' and request.session.get('preview_role') == 'partner'
+    # Superusers/admins automatically have partner access
+    is_superuser_or_admin = user.is_superuser or user.is_staff or profile.role == 'admin'
+    preview_role = request.session.get('preview_role')
+    is_admin_preview = is_superuser_or_admin and (preview_role == 'partner' or (not preview_role and is_superuser_or_admin))
     
     if is_admin_preview:
         # For admins previewing, show platform-wide stats (read-only demo)
@@ -2324,8 +2389,10 @@ def partner_cohorts(request):
     user = request.user
     profile = get_or_create_profile(user)
     
-    # Check if user is admin in preview mode
-    is_admin_preview = profile.role == 'admin' and request.session.get('preview_role') == 'partner'
+    # Superusers/admins automatically have partner access
+    is_superuser_or_admin = user.is_superuser or user.is_staff or profile.role == 'admin'
+    preview_role = request.session.get('preview_role')
+    is_admin_preview = is_superuser_or_admin and (preview_role == 'partner' or (not preview_role and is_superuser_or_admin))
     
     if is_admin_preview:
         # For admins previewing, show all cohorts (read-only)
@@ -2358,7 +2425,10 @@ def partner_programs(request):
     user = request.user
     profile = get_or_create_profile(user)
     
-    is_admin_preview = profile.role == 'admin' and request.session.get('preview_role') == 'partner'
+    # Superusers/admins automatically have partner access
+    is_superuser_or_admin = user.is_superuser or user.is_staff or profile.role == 'admin'
+    preview_role = request.session.get('preview_role')
+    is_admin_preview = is_superuser_or_admin and (preview_role == 'partner' or (not preview_role and is_superuser_or_admin))
     
     if is_admin_preview:
         # Show all courses as programs (read-only)
@@ -2394,7 +2464,10 @@ def partner_referrals(request):
     user = request.user
     profile = get_or_create_profile(user)
     
-    is_admin_preview = profile.role == 'admin' and request.session.get('preview_role') == 'partner'
+    # Superusers/admins automatically have partner access
+    is_superuser_or_admin = user.is_superuser or user.is_staff or profile.role == 'admin'
+    preview_role = request.session.get('preview_role')
+    is_admin_preview = is_superuser_or_admin and (preview_role == 'partner' or (not preview_role and is_superuser_or_admin))
     
     if is_admin_preview:
         # Show all payments (read-only)
@@ -2462,7 +2535,10 @@ def partner_marketing(request):
     user = request.user
     profile = get_or_create_profile(user)
     
-    is_admin_preview = profile.role == 'admin' and request.session.get('preview_role') == 'partner'
+    # Superusers/admins automatically have partner access
+    is_superuser_or_admin = user.is_superuser or user.is_staff or profile.role == 'admin'
+    preview_role = request.session.get('preview_role')
+    is_admin_preview = is_superuser_or_admin and (preview_role == 'partner' or (not preview_role and is_superuser_or_admin))
     
     if is_admin_preview:
         # Show all cohorts with promo codes (read-only)
@@ -2498,7 +2574,10 @@ def partner_reports(request):
     user = request.user
     profile = get_or_create_profile(user)
     
-    is_admin_preview = profile.role == 'admin' and request.session.get('preview_role') == 'partner'
+    # Superusers/admins automatically have partner access
+    is_superuser_or_admin = user.is_superuser or user.is_staff or profile.role == 'admin'
+    preview_role = request.session.get('preview_role')
+    is_admin_preview = is_superuser_or_admin and (preview_role == 'partner' or (not preview_role and is_superuser_or_admin))
     
     if is_admin_preview:
         # Platform-wide stats (read-only)
@@ -2572,7 +2651,10 @@ def partner_settings(request):
     user = request.user
     profile = get_or_create_profile(user)
     
-    is_admin_preview = profile.role == 'admin' and request.session.get('preview_role') == 'partner'
+    # Superusers/admins automatically have partner access
+    is_superuser_or_admin = user.is_superuser or user.is_staff or profile.role == 'admin'
+    preview_role = request.session.get('preview_role')
+    is_admin_preview = is_superuser_or_admin and (preview_role == 'partner' or (not preview_role and is_superuser_or_admin))
     
     if is_admin_preview:
         class MockPartner:

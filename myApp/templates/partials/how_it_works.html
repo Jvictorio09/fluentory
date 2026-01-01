@@ -1,163 +1,411 @@
-<section id="proof" class="relative overflow-hidden bg-[#000000] py-12 lg:py-16">
-    <!-- Background gradient -->
-    <div class="absolute inset-0">
-      <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_15%,rgba(130,194,147,0.15),rgba(0,101,95,0.10),transparent_60%)]"></div>
+<style>
+  /* =========================================================
+     PROOF SECTION — Billion-dollar Light + Dark (drop-in)
+     Works with:
+       - <html data-theme="light|dark">
+       - OR <body class="theme-light|theme-dark">
+     Keep both selectors so you're covered.
+  ========================================================= */
+
+  /* Theme variables (fallback = dark-ish premium) */
+  #proof {
+    --proof-bg: var(--bg-primary);
+    --proof-text: var(--text-primary);
+    --proof-text-muted: var(--text-secondary);
+    --proof-border: rgba(255,255,255,0.12);
+
+    --proof-surface: rgba(4, 54, 58, 0.55);   /* left rail surface */
+    --proof-card: rgba(37, 67, 70, 0.65);     /* right cards */
+    --proof-chip: rgba(4, 54, 58, 0.45);      /* spec chips */
+
+    --proof-shadow-strong: 0 22px 70px rgba(0,0,0,0.35);
+    --proof-shadow: 0 22px 70px rgba(0,0,0,0.34);
+
+    --proof-glow-a: rgba(130,194,147,0.08);
+    --proof-glow-b: rgba(0,101,95,0.06);
+    --proof-glow-c: rgba(130,194,147,0.04);
+
+    --proof-chip-border: rgba(255,255,255,0.10);
+    --proof-outline: rgba(255,255,255,0.10);
+    --proof-accent: rgba(130,194,147,0.95);
+  }
+
+  /* LIGHT MODE — clean frosted glass, crisp borders, soft shadows */
+  html[data-theme="light"] #proof,
+  .theme-light #proof {
+    --proof-border: rgba(3,73,95,0.10);
+
+    --proof-surface: rgba(255,255,255,0.74);
+    --proof-card: rgba(255,255,255,0.78);
+    --proof-chip: rgba(255,255,255,0.82);
+
+    --proof-shadow-strong: 0 30px 90px rgba(3,73,95,0.14);
+    --proof-shadow: 0 24px 70px rgba(3,73,95,0.10);
+
+    --proof-glow-a: rgba(130,194,147,0.18);
+    --proof-glow-b: rgba(0,101,95,0.12);
+    --proof-glow-c: rgba(130,194,147,0.08);
+
+    --proof-chip-border: rgba(3,73,95,0.10);
+    --proof-outline: rgba(3,73,95,0.08);
+    --proof-accent: rgba(0,101,95,0.85);
+  }
+
+  /* DARK MODE explicit (optional, but keeps consistency) */
+  html[data-theme="dark"] #proof,
+  .theme-dark #proof {
+    /* uses defaults above */
+  }
+
+  /* Shared polish */
+  #proof .proof-blur {
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+  }
+
+  #proof .proof-surface {
+    background: var(--proof-surface) !important;
+    border: 1px solid var(--proof-outline) !important;
+    box-shadow: var(--proof-shadow-strong) !important;
+  }
+
+  #proof .proof-card {
+    background: var(--proof-card) !important;
+    border: 1px solid var(--proof-border) !important;
+    box-shadow: var(--proof-shadow) !important;
+  }
+
+  #proof .proof-chip {
+    background: var(--proof-chip) !important;
+    border: 1px solid var(--proof-chip-border) !important;
+  }
+
+  #proof .proof-muted {
+    color: var(--proof-text-muted) !important;
+  }
+
+  /* Light mode: improve readability if your CSS vars are still dark-leaning */
+  html[data-theme="light"] #proof .proof-muted,
+  .theme-light #proof .proof-muted {
+    color: rgba(3,73,95,0.62) !important;
+  }
+
+  /* Glow blobs */
+  #proof .proof-glow {
+    filter: blur(140px);
+    opacity: 0.95;
+  }
+
+  html[data-theme="light"] #proof .proof-glow,
+  .theme-light #proof .proof-glow {
+    opacity: 0.65; /* less glow on white */
+    filter: blur(150px);
+  }
+</style>
+
+<section id="proof" class="relative overflow-hidden py-12 lg:py-16" style="background-color: var(--bg-primary);">
+  <!-- Premium background -->
+  <div class="absolute inset-0 z-0">
+    <div class="absolute inset-0"
+      style="background:
+        radial-gradient(circle at 22% 18%, rgba(130,194,147,0.20), transparent 55%),
+        radial-gradient(circle at 78% 70%, rgba(0,101,95,0.16), transparent 55%),
+        linear-gradient(to bottom, rgba(4,54,58,0.18), transparent 60%);
+      ">
     </div>
-    
-    <!-- Animated enhanced background layers for depth -->
-    <div class="absolute -top-24 -right-24 w-[520px] h-[520px] rounded-full bg-[#82C293]/10 blur-[90px] animate-pulse" style="animation-duration: 6s;"></div>
-    <div class="absolute -bottom-28 -left-28 w-[560px] h-[560px] rounded-full bg-[#00655F]/8 blur-[95px] animate-pulse" style="animation-duration: 8s; animation-delay: 1s;"></div>
-    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-[#82C293]/5 blur-[120px] animate-pulse" style="animation-duration: 10s; animation-delay: 2s;"></div>
-  
-    <div class="max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-16 relative z-10">
-      <div class="grid grid-cols-1 lg:grid-cols-[42%_58%] gap-16 lg:gap-20 items-start">
-  
-        <!-- LEFT: Enhanced with better spacing and hierarchy -->
-        <div class="lg:sticky lg:top-32">
-          <!-- Eyebrow with accent color -->
-          <div class="inline-flex items-center gap-2 bg-[#82C293]/20 border border-[#82C293]/30 px-5 py-2.5 rounded-full text-xs uppercase tracking-wider text-white mb-10 font-medium">
-            <i class="fas fa-award text-[#82C293]"></i>
-            <span>Proof of Learning</span>
-          </div>
+  </div>
 
-          <!-- Headline with improved spacing -->
-          <h2 class="text-[2.8rem] sm:text-[3.4rem] lg:text-[3.8rem] font-extralight leading-[1.05] mb-10 text-white tracking-[-1px]">
-            Not More Courses.<br />Better Outcomes.
-          </h2>
+  <!-- Soft glow blobs (subtle + premium in both themes) -->
+  <div class="proof-glow absolute -top-24 -right-24 w-[520px] h-[520px] rounded-full animate-pulse"
+    style="animation-duration: 7s; background-color: var(--proof-glow-a);"></div>
+  <div class="proof-glow absolute -bottom-32 -left-28 w-[640px] h-[640px] rounded-full animate-pulse"
+    style="animation-duration: 10s; animation-delay: 1s; background-color: var(--proof-glow-b);"></div>
+  <div class="proof-glow absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] rounded-full animate-pulse"
+    style="animation-duration: 12s; animation-delay: 2s; background-color: var(--proof-glow-c);"></div>
 
-          <!-- Description with better spacing -->
-          <p class="text-base sm:text-lg text-white/85 leading-relaxed font-light mb-12 max-w-[520px]">
-            Fluentory is designed to place you correctly, guide you with checkpoints, and certify you with proof that can be verified.
-          </p>
+  <div class="max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-16 relative z-10">
+    <div class="grid grid-cols-1 lg:grid-cols-[42%_58%] gap-14 lg:gap-20 items-start">
 
-          <!-- Enhanced benefits list with accent highlights -->
-          <ul class="space-y-5">
-            <li class="flex items-start gap-4 text-lg text-white group/benefit">
-              <span class="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#254346]/70 border-2 border-[#82C293]/30 text-[#82C293] shadow-[0_4px_12px_rgba(130,194,147,0.15)] group-hover/benefit:bg-[#82C293]/20 group-hover/benefit:border-[#82C293]/50 transition-all">
-                <i class="fas fa-check text-xs"></i>
-              </span>
-              <span class="font-light pt-0.5">You start at the right level.</span>
-            </li>
-
-            <li class="flex items-start gap-4 text-lg text-white group/benefit">
-              <span class="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#254346]/70 border-2 border-[#82C293]/30 text-[#82C293] shadow-[0_4px_12px_rgba(130,194,147,0.15)] group-hover/benefit:bg-[#82C293]/20 group-hover/benefit:border-[#82C293]/50 transition-all">
-                <i class="fas fa-check text-xs"></i>
-              </span>
-              <span class="font-light pt-0.5">You advance with milestones.</span>
-            </li>
-
-            <li class="flex items-start gap-4 text-lg text-white group/benefit">
-              <span class="mt-0.5 inline-flex h-8 w-8 items-center justify-center rounded-full bg-[#254346]/70 border-2 border-[#82C293]/30 text-[#82C293] shadow-[0_4px_12px_rgba(130,194,147,0.15)] group-hover/benefit:bg-[#82C293]/20 group-hover/benefit:border-[#82C293]/50 transition-all">
-                <i class="fas fa-check text-xs"></i>
-              </span>
-              <span class="font-light pt-0.5">You graduate with proof.</span>
-            </li>
-          </ul>
+      <!-- LEFT: Premium narrative rail -->
+      <div class="lg:sticky lg:top-28">
+        <!-- Eyebrow -->
+        <div class="inline-flex items-center gap-2.5 rounded-full px-5 py-2.5 mb-8 proof-blur"
+          style="
+            background-color: rgba(130,194,147,0.14);
+            border: 1px solid rgba(130,194,147,0.25);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.18);
+          ">
+          <span class="w-9 h-9 rounded-xl grid place-items-center"
+            style="background: rgba(130,194,147,0.18); border: 1px solid rgba(130,194,147,0.25);">
+            <i class="fas fa-award text-sm" style="color: var(--accent-primary);"></i>
+          </span>
+          <span class="text-xs uppercase tracking-wider font-semibold" style="color: var(--text-primary);">
+            Proof of Learning
+          </span>
+          <span class="text-[10px] uppercase tracking-[0.28em] font-semibold"
+            style="color: var(--text-tertiary);">
+            • placement • milestones • verification
+          </span>
         </div>
-  
-        <!-- RIGHT: Premium feature cards with enhanced depth -->
-        <div class="grid grid-cols-1 gap-6">
-          <!-- Card 1: AI Placement Test -->
-          <div class="group relative rounded-[2rem] bg-[#254346]/70 border-2 border-white/10 backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] p-8 sm:p-9 hover:-translate-y-2 hover:shadow-[0_28px_80px_rgba(0,0,0,0.4)] hover:border-[#82C293]/30 transition-all duration-500 overflow-hidden hover:scale-[1.02]">
-            <!-- Inner glow effect -->
-            <div class="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-[#82C293]/10 to-transparent pointer-events-none"></div>
-            <!-- Content wrapper -->
-            <div class="relative z-10">
-              <div class="flex items-start justify-between gap-6 mb-6">
-                <div class="flex items-center gap-5">
-                  <div class="h-14 w-14 rounded-2xl bg-gradient-to-br from-[#82C293]/20 to-[#82C293]/10 border-2 border-[#82C293]/30 grid place-items-center shadow-[0_8px_20px_rgba(130,194,147,0.2)] group-hover:scale-110 group-hover:bg-[#82C293]/25 transition-all duration-300">
-                    <i class="fas fa-brain text-lg text-[#82C293]"></i>
-                  </div>
-                  <div>
-                    <h3 class="text-2xl sm:text-2xl font-semibold text-white leading-tight mb-1.5">AI Placement Test</h3>
-                    <p class="text-base text-white/75 font-light">
-                      Assess your level and get personalized recommendations.
-                    </p>
-                  </div>
-                </div>
 
-                <span class="hidden sm:inline-flex items-center gap-2 text-xs uppercase tracking-wider text-white/80 bg-[#82C293]/20 border border-[#82C293]/30 px-4 py-2 rounded-full font-medium">
-                  Placement
-                </span>
-              </div>
+        <!-- Headline -->
+        <h2 class="text-[2.9rem] sm:text-[3.5rem] lg:text-[3.9rem] font-extralight leading-[1.03] tracking-[-1px] mb-7"
+          style="color: var(--text-primary);">
+          Not more courses.<br />
+          <span style="color: rgba(130,194,147,0.95);">Better outcomes.</span>
+        </h2>
 
-              <div class="pt-2 border-t border-white/10">
-                <a href="{% url 'login' %}?next={% url 'student_placement' %}" class="inline-flex items-center gap-2.5 text-white no-underline font-semibold border-b-2 border-[#82C293]/40 hover:border-[#82C293] transition-colors pb-1">
-                  See example
-                  <i class="fas fa-arrow-right text-xs opacity-80 group-hover:translate-x-1 group-hover:opacity-100 transition-all"></i>
-                </a>
-              </div>
+        <!-- Description -->
+        <p class="proof-muted text-base sm:text-lg leading-relaxed font-light mb-10 max-w-[560px]"
+          style="color: var(--text-secondary);">
+          Fluentory places you correctly, keeps you moving with checkpoints, and certifies you with proof that can be verified.
+          No fluff. No “watched a video = completed.”
+        </p>
+
+        <!-- Outcome rail -->
+        <div class="proof-surface proof-blur rounded-[1.8rem] overflow-hidden">
+          <!-- Top strip -->
+          <div class="flex items-center justify-between px-7 py-5"
+            style="border-bottom: 1px solid var(--border-primary);">
+            <div class="text-xs uppercase tracking-widest font-semibold" style="color: var(--text-secondary);">
+              Outcome System
+            </div>
+            <div class="inline-flex items-center gap-2 text-xs font-semibold"
+              style="color: rgba(130,194,147,0.95);">
+              <span class="w-2 h-2 rounded-full animate-pulse" style="background-color: rgba(130,194,147,0.95);"></span>
+              Live progress tracking
             </div>
           </div>
-  
-          <!-- Card 2: Milestone Quizzes -->
-          <div class="group relative rounded-[2rem] bg-[#254346]/70 border-2 border-white/10 backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] p-8 sm:p-9 hover:-translate-y-2 hover:shadow-[0_28px_80px_rgba(0,0,0,0.4)] hover:border-[#82C293]/30 transition-all duration-500 overflow-hidden hover:scale-[1.02]">
-            <!-- Inner glow effect -->
-            <div class="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-[#82C293]/10 to-transparent pointer-events-none"></div>
-            <!-- Content wrapper -->
-            <div class="relative z-10">
-              <div class="flex items-start justify-between gap-6 mb-6">
-                <div class="flex items-center gap-5">
-                  <div class="h-14 w-14 rounded-2xl bg-gradient-to-br from-[#82C293]/20 to-[#82C293]/10 border-2 border-[#82C293]/30 grid place-items-center shadow-[0_8px_20px_rgba(130,194,147,0.2)] group-hover:scale-110 group-hover:bg-[#82C293]/25 transition-all duration-300">
-                    <i class="fas fa-tasks text-lg text-[#82C293]"></i>
-                  </div>
-                  <div>
-                    <h3 class="text-2xl sm:text-2xl font-semibold text-white leading-tight mb-1.5">Milestone Quizzes</h3>
-                    <p class="text-base text-white/75 font-light">
-                      Track progress with structured assessments.
-                    </p>
-                  </div>
-                </div>
 
-                <span class="hidden sm:inline-flex items-center gap-2 text-xs uppercase tracking-wider text-white/80 bg-[#82C293]/20 border border-[#82C293]/30 px-4 py-2 rounded-full font-medium">
-                  Milestones
-                </span>
+          <!-- Steps -->
+          <div class="px-7 py-7 space-y-5">
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-2xl grid place-items-center shrink-0"
+                style="background-color: rgba(130,194,147,0.16); border: 1px solid rgba(130,194,147,0.22);">
+                <span class="text-xs font-bold" style="color: rgba(130,194,147,0.95);">01</span>
               </div>
-
-              <div class="pt-2 border-t border-white/10">
-                <a href="#courses" class="inline-flex items-center gap-2.5 text-white no-underline font-semibold border-b-2 border-[#82C293]/40 hover:border-[#82C293] transition-colors pb-1 smooth-scroll">
-                  See example
-                  <i class="fas fa-arrow-right text-xs opacity-80 group-hover:translate-x-1 group-hover:opacity-100 transition-all"></i>
-                </a>
+              <div>
+                <div class="text-base font-semibold mb-1" style="color: var(--text-primary);">Start at the right level</div>
+                <div class="proof-muted text-sm font-light" style="color: var(--text-secondary);">AI placement removes repetition and guesswork.</div>
               </div>
             </div>
-          </div>
-  
-          <!-- Card 3: QR Verified Certificates -->
-          <div class="group relative rounded-[2rem] bg-[#254346]/70 border-2 border-white/10 backdrop-blur-2xl shadow-[0_20px_60px_rgba(0,0,0,0.3)] p-8 sm:p-9 hover:-translate-y-2 hover:shadow-[0_28px_80px_rgba(0,0,0,0.4)] hover:border-[#82C293]/30 transition-all duration-500 overflow-hidden hover:scale-[1.02]">
-            <!-- Inner glow effect -->
-            <div class="absolute inset-0 rounded-[2rem] bg-gradient-to-br from-[#82C293]/10 to-transparent pointer-events-none"></div>
-            <!-- Content wrapper -->
-            <div class="relative z-10">
-              <div class="flex items-start justify-between gap-6 mb-6">
-                <div class="flex items-center gap-5">
-                  <div class="h-14 w-14 rounded-2xl bg-gradient-to-br from-[#82C293]/20 to-[#82C293]/10 border-2 border-[#82C293]/30 grid place-items-center shadow-[0_8px_20px_rgba(130,194,147,0.2)] group-hover:scale-110 group-hover:bg-[#82C293]/25 transition-all duration-300">
-                    <i class="fas fa-qrcode text-lg text-[#82C293]"></i>
-                  </div>
-                  <div>
-                    <h3 class="text-2xl sm:text-2xl font-semibold text-white leading-tight mb-1.5">QR Verified Certificates</h3>
-                    <p class="text-base text-white/75 font-light">
-                      Share credentials that employers trust.
-                    </p>
-                  </div>
-                </div>
 
-                <span class="hidden sm:inline-flex items-center gap-2 text-xs uppercase tracking-wider text-white/80 bg-[#82C293]/20 border border-[#82C293]/30 px-4 py-2 rounded-full font-medium">
-                  Proof
-                </span>
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-2xl grid place-items-center shrink-0"
+                style="background-color: rgba(130,194,147,0.16); border: 1px solid rgba(130,194,147,0.22);">
+                <span class="text-xs font-bold" style="color: rgba(130,194,147,0.95);">02</span>
               </div>
-
-              <div class="pt-2 border-t border-white/10">
-                <a href="#certificates" class="inline-flex items-center gap-2.5 text-white no-underline font-semibold border-b-2 border-[#82C293]/40 hover:border-[#82C293] transition-colors pb-1 smooth-scroll">
-                  See example
-                  <i class="fas fa-arrow-right text-xs opacity-80 group-hover:translate-x-1 group-hover:opacity-100 transition-all"></i>
-                </a>
+              <div>
+                <div class="text-base font-semibold mb-1" style="color: var(--text-primary);">Advance with milestones</div>
+                <div class="proof-muted text-sm font-light" style="color: var(--text-secondary);">Quizzes verify understanding before moving on.</div>
               </div>
             </div>
+
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-2xl grid place-items-center shrink-0"
+                style="background-color: rgba(130,194,147,0.16); border: 1px solid rgba(130,194,147,0.22);">
+                <span class="text-xs font-bold" style="color: rgba(130,194,147,0.95);">03</span>
+              </div>
+              <div>
+                <div class="text-base font-semibold mb-1" style="color: var(--text-primary);">Graduate with proof</div>
+                <div class="proof-muted text-sm font-light" style="color: var(--text-secondary);">QR + Certificate ID verification for employers.</div>
+              </div>
+            </div>
+
+            <!-- Mini CTA row -->
+            <div class="pt-6 flex flex-wrap gap-3"
+              style="border-top: 1px solid var(--border-primary);">
+              <a href="{% url 'login' %}?next={% url 'student_placement' %}"
+                class="inline-flex items-center gap-2.5 rounded-2xl px-6 py-4 no-underline font-semibold transition-all duration-300 transform hover:scale-[1.02]"
+                style="background: linear-gradient(to right, var(--accent-cta), var(--accent-primary)); color: white; box-shadow: 0 16px 40px rgba(0,101,95,0.35);">
+                Take the Placement Test
+                <i class="fas fa-arrow-right text-sm" style="color: rgba(255,255,255,0.9);"></i>
+              </a>
+
+              <a href="#certificates"
+                class="inline-flex items-center gap-2.5 rounded-2xl px-6 py-4 no-underline font-semibold transition-all duration-300 smooth-scroll"
+                style="border: 1px solid var(--border-primary); color: var(--text-primary);">
+                Verify a Certificate
+                <i class="fas fa-qrcode text-sm" style="color: var(--accent-primary);"></i>
+              </a>
+            </div>
           </div>
-  
         </div>
       </div>
+
+      <!-- RIGHT: Proof cards -->
+      <div class="grid grid-cols-1 gap-6">
+
+        <!-- Card 1 -->
+        <div class="proof-card proof-blur group relative rounded-[2rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:scale-[1.01]">
+          <div class="absolute inset-0 pointer-events-none"
+            style="background: radial-gradient(circle at 30% 20%, rgba(130,194,147,0.16), transparent 55%);"></div>
+
+          <div class="relative z-10 p-8 sm:p-9">
+            <div class="flex items-start justify-between gap-6 mb-6">
+              <div class="flex items-start gap-5">
+                <div class="h-14 w-14 rounded-2xl grid place-items-center shrink-0 transition-all duration-300 group-hover:scale-110"
+                  style="background: rgba(130,194,147,0.16); border: 1px solid rgba(130,194,147,0.25); box-shadow: 0 10px 26px rgba(130,194,147,0.16);">
+                  <i class="fas fa-brain text-lg" style="color: rgba(130,194,147,0.95);"></i>
+                </div>
+                <div>
+                  <h3 class="text-2xl font-semibold mb-1.5" style="color: var(--text-primary);">AI Placement Test</h3>
+                  <p class="proof-muted text-base font-light" style="color: var(--text-secondary);">
+                    Fast assessment + course recommendation tailored to your level.
+                  </p>
+                </div>
+              </div>
+
+              <span class="hidden sm:inline-flex items-center gap-2 text-xs uppercase tracking-wider px-4 py-2 rounded-full font-semibold"
+                style="background-color: rgba(130,194,147,0.12); border: 1px solid rgba(130,194,147,0.22); color: rgba(130,194,147,0.95);">
+                Placement
+              </span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 mb-6">
+              <div class="proof-chip rounded-2xl px-4 py-3">
+                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">Time</div>
+                <div class="text-sm font-semibold" style="color: var(--text-primary);">5–10 min</div>
+              </div>
+              <div class="proof-chip rounded-2xl px-4 py-3">
+                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">Result</div>
+                <div class="text-sm font-semibold" style="color: var(--text-primary);">Instant</div>
+              </div>
+              <div class="proof-chip rounded-2xl px-4 py-3">
+                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">Fit</div>
+                <div class="text-sm font-semibold" style="color: var(--text-primary);">Accurate</div>
+              </div>
+            </div>
+
+            <div class="pt-4 flex items-center justify-between"
+              style="border-top: 1px solid var(--border-primary);">
+              <a href="{% url 'login' %}?next={% url 'student_placement' %}"
+                class="inline-flex items-center gap-2.5 no-underline font-semibold"
+                style="color: var(--accent-primary);">
+                See example
+                <i class="fas fa-arrow-right text-xs opacity-80 group-hover:translate-x-1 transition-all"></i>
+              </a>
+              <span class="text-xs font-semibold" style="color: var(--text-tertiary);">
+                Eliminates wasted time
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2 -->
+        <div class="proof-card proof-blur group relative rounded-[2rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:scale-[1.01]">
+          <div class="absolute inset-0 pointer-events-none"
+            style="background: radial-gradient(circle at 25% 15%, rgba(130,194,147,0.14), transparent 55%);"></div>
+
+          <div class="relative z-10 p-8 sm:p-9">
+            <div class="flex items-start justify-between gap-6 mb-6">
+              <div class="flex items-start gap-5">
+                <div class="h-14 w-14 rounded-2xl grid place-items-center shrink-0 transition-all duration-300 group-hover:scale-110"
+                  style="background: rgba(130,194,147,0.16); border: 1px solid rgba(130,194,147,0.25); box-shadow: 0 10px 26px rgba(130,194,147,0.16);">
+                  <i class="fas fa-tasks text-lg" style="color: rgba(130,194,147,0.95);"></i>
+                </div>
+                <div>
+                  <h3 class="text-2xl font-semibold mb-1.5" style="color: var(--text-primary);">Milestone Quizzes</h3>
+                  <p class="proof-muted text-base font-light" style="color: var(--text-secondary);">
+                    Checkpoints tied to lessons so progress is real—not assumed.
+                  </p>
+                </div>
+              </div>
+
+              <span class="hidden sm:inline-flex items-center gap-2 text-xs uppercase tracking-wider px-4 py-2 rounded-full font-semibold"
+                style="background-color: rgba(130,194,147,0.12); border: 1px solid rgba(130,194,147,0.22); color: rgba(130,194,147,0.95);">
+                Milestones
+              </span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 mb-6">
+              <div class="proof-chip rounded-2xl px-4 py-3">
+                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">Format</div>
+                <div class="text-sm font-semibold" style="color: var(--text-primary);">Lesson-tied</div>
+              </div>
+              <div class="proof-chip rounded-2xl px-4 py-3">
+                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">Goal</div>
+                <div class="text-sm font-semibold" style="color: var(--text-primary);">Mastery</div>
+              </div>
+              <div class="proof-chip rounded-2xl px-4 py-3">
+                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">Path</div>
+                <div class="text-sm font-semibold" style="color: var(--text-primary);">Structured</div>
+              </div>
+            </div>
+
+            <div class="pt-4 flex items-center justify-between"
+              style="border-top: 1px solid var(--border-primary);">
+              <a href="#courses"
+                class="inline-flex items-center gap-2.5 no-underline font-semibold smooth-scroll"
+                style="color: var(--accent-primary);">
+                See example
+                <i class="fas fa-arrow-right text-xs opacity-80 group-hover:translate-x-1 transition-all"></i>
+              </a>
+              <span class="text-xs font-semibold" style="color: var(--text-tertiary);">
+                Prevents drop-off
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3 -->
+        <div class="proof-card proof-blur group relative rounded-[2rem] overflow-hidden transition-all duration-500 hover:-translate-y-2 hover:scale-[1.01]">
+          <div class="absolute inset-0 pointer-events-none"
+            style="background: radial-gradient(circle at 22% 18%, rgba(130,194,147,0.14), transparent 55%);"></div>
+
+          <div class="relative z-10 p-8 sm:p-9">
+            <div class="flex items-start justify-between gap-6 mb-6">
+              <div class="flex items-start gap-5">
+                <div class="h-14 w-14 rounded-2xl grid place-items-center shrink-0 transition-all duration-300 group-hover:scale-110"
+                  style="background: rgba(130,194,147,0.16); border: 1px solid rgba(130,194,147,0.25); box-shadow: 0 10px 26px rgba(130,194,147,0.16);">
+                  <i class="fas fa-qrcode text-lg" style="color: rgba(130,194,147,0.95);"></i>
+                </div>
+                <div>
+                  <h3 class="text-2xl font-semibold mb-1.5" style="color: var(--text-primary);">QR Verified Certificates</h3>
+                  <p class="proof-muted text-base font-light" style="color: var(--text-secondary);">
+                    Share proof that employers can verify instantly—no screenshots needed.
+                  </p>
+                </div>
+              </div>
+
+              <span class="hidden sm:inline-flex items-center gap-2 text-xs uppercase tracking-wider px-4 py-2 rounded-full font-semibold"
+                style="background-color: rgba(130,194,147,0.12); border: 1px solid rgba(130,194,147,0.22); color: rgba(130,194,147,0.95);">
+                Proof
+              </span>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 mb-6">
+              <div class="proof-chip rounded-2xl px-4 py-3">
+                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">Verify</div>
+                <div class="text-sm font-semibold" style="color: var(--text-primary);">QR + ID</div>
+              </div>
+              <div class="proof-chip rounded-2xl px-4 py-3">
+                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">Status</div>
+                <div class="text-sm font-semibold" style="color: var(--text-primary);">Tamper-safe</div>
+              </div>
+              <div class="proof-chip rounded-2xl px-4 py-3">
+                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">Share</div>
+                <div class="text-sm font-semibold" style="color: var(--text-primary);">Global</div>
+              </div>
+            </div>
+
+            <div class="pt-4 flex items-center justify-between"
+              style="border-top: 1px solid var(--border-primary);">
+              <a href="#certificates"
+                class="inline-flex items-center gap-2.5 no-underline font-semibold smooth-scroll"
+                style="color: var(--accent-primary);">
+                See example
+                <i class="fas fa-arrow-right text-xs opacity-80 group-hover:translate-x-1 transition-all"></i>
+              </a>
+              <span class="text-xs font-semibold" style="color: var(--text-tertiary);">
+                Employer-ready
+              </span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
     </div>
-  </section>
-  
+  </div>
+</section>
