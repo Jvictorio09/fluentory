@@ -153,10 +153,13 @@
     {% endif %}
     
     {% else %}
-    <div class="text-center py-16 bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] animate-fade-in">
-        <i class="fas fa-images text-6xl text-white/40/30 mb-4"></i>
-        <p class="text-lg text-white/70 mb-4">No media found</p>
-        <a href="{% url 'dashboard:media_add' %}" class="inline-flex items-center gap-2 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white px-6 py-3 rounded-xl no-underline font-medium hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] hover:scale-105 transition-all">
+    <div class="empty-state page-enter-content">
+        <div class="empty-state-icon">
+            <i class="fas fa-images"></i>
+        </div>
+        <h3 class="empty-state-title">No media found</h3>
+        <p class="empty-state-description">Get started by uploading your first image or video to the media library.</p>
+        <a href="{% url 'dashboard:media_add' %}" class="btn-cta-primary">
             <i class="fas fa-plus"></i>
             <span>Upload Your First Media</span>
         </a>

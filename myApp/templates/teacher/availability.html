@@ -1,22 +1,23 @@
 {% extends 'teacher/base.html' %}
 
 {% block content %}
-<div class="space-y-6 sm:space-y-8">
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+<div class="space-y-8 sm:space-y-10">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
         <div>
-            <h1 class="text-3xl sm:text-4xl font-bold text-white mb-2">Availability Schedule</h1>
-            <p class="text-white/60">Manage your available time slots for live sessions</p>
+            <h1 class="text-4xl sm:text-5xl font-bold mb-3 tracking-tight" style="color: var(--text-primary); font-weight: 700;">Availability Schedule</h1>
+            <p class="text-base sm:text-lg font-normal tracking-wide" style="color: var(--text-secondary);">Manage your available time slots for live sessions</p>
         </div>
-        <a href="{% url 'teacher_schedule_calendar' %}" class="inline-flex items-center gap-2 bg-[#254346] text-white px-5 py-3 rounded-lg hover:bg-[#82C293]/20 transition font-medium border border-white/10">
+        <a href="{% url 'teacher_schedule_calendar' %}" class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl transition-all duration-300 font-medium" style="background: linear-gradient(to right, var(--accent-cta), var(--accent-primary)); color: white; box-shadow: 0 4px 14px rgba(0, 101, 95, 0.25); border: 1px solid rgba(130, 194, 147, 0.25);" onmouseover="this.style.boxShadow='0 8px 24px rgba(0, 101, 95, 0.35)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='0 4px 14px rgba(0, 101, 95, 0.25)'; this.style.transform='translateY(0)'">
             <i class="fas fa-calendar"></i>
             Calendar View
         </a>
     </div>
+    <div class="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent mb-8"></div>
     
     <!-- Add Availability Form -->
-    <div class="bg-[#04363a]/50 backdrop-blur-sm border border-white/10 rounded-xl p-6 sm:p-8 shadow-lg">
-        <h2 class="text-xl sm:text-2xl font-bold text-white mb-6 flex items-center gap-2">
-            <i class="fas fa-plus-circle text-[#82C293]"></i>
+    <div class="bg-white/5 backdrop-blur-2xl border border-white/8 rounded-2xl p-8 sm:p-10 shadow-xl">
+        <h2 class="text-2xl sm:text-3xl font-bold text-white mb-8 tracking-tight flex items-center gap-3">
+            <i class="fas fa-plus-circle text-[#82C293]/80 text-xl"></i>
             Add Availability Slot
         </h2>
         <form method="post" class="space-y-5">
@@ -108,23 +109,23 @@
                 </div>
             </div>
             
-            <button type="submit" class="w-full sm:w-auto bg-gradient-to-r from-[#00655F] to-[#82C293] text-white px-6 py-3 rounded-lg hover:opacity-90 transition font-medium">
+            <button type="submit" class="w-full sm:w-auto bg-gradient-to-r from-[#82C293] via-[#6fb380] to-[#82C293] text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-[#82C293]/30 hover:shadow-xl hover:shadow-[#82C293]/40 hover:scale-105 transition-all duration-300">
                 <i class="fas fa-plus mr-2"></i>Add Availability Slot
             </button>
         </form>
     </div>
     
     <!-- Existing Availability Slots -->
-    <div class="bg-[#04363a]/50 backdrop-blur-sm border border-white/10 rounded-xl p-6 sm:p-8 shadow-lg">
-        <h2 class="text-xl sm:text-2xl font-bold text-white mb-6 flex items-center gap-2">
-            <i class="fas fa-list text-[#82C293]"></i>
+    <div class="bg-white/5 backdrop-blur-2xl border border-white/8 rounded-2xl p-8 sm:p-10 shadow-xl">
+        <h2 class="text-2xl sm:text-3xl font-bold text-white mb-8 tracking-tight flex items-center gap-3">
+            <i class="fas fa-list text-[#82C293]/80 text-xl"></i>
             Your Availability Slots
         </h2>
         
         {% if availability_slots %}
         <div class="space-y-4">
             {% for slot in availability_slots %}
-            <div class="bg-[#254346]/50 border border-white/10 rounded-lg p-4 {% if not slot.is_active %}opacity-50{% endif %} {% if slot.is_blocked %}border-red-500/50{% endif %}">
+            <div class="bg-white/3 border border-white/10 rounded-xl p-5 hover:bg-white/8 hover:border-[#82C293]/20 transition-all duration-300 {% if not slot.is_active %}opacity-50{% endif %} {% if slot.is_blocked %}border-red-500/50{% endif %}">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div class="flex-1">
                         <div class="flex items-center gap-3 mb-2">
@@ -194,9 +195,10 @@
             {% endfor %}
         </div>
         {% else %}
-        <div class="text-center py-12 text-white/60">
-            <i class="fas fa-calendar-times text-4xl mb-4 opacity-50"></i>
-            <p>No availability slots created yet. Add one above to get started!</p>
+        <div class="text-center py-12">
+            <i class="fas fa-calendar-times text-5xl text-white/15 mb-4"></i>
+            <p class="text-white/50 mb-1 text-base">No availability slots created yet</p>
+            <p class="text-sm text-white/40">Add one above to get started!</p>
         </div>
         {% endif %}
     </div>
@@ -204,7 +206,7 @@
 
 <!-- Block Modal -->
 <div id="blockModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-    <div class="bg-[#04363a] border border-white/10 rounded-xl p-6 max-w-md w-full">
+    <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-xl">
         <h3 class="text-xl font-bold text-white mb-4">Block Availability Slot</h3>
         <form id="blockForm" method="post" class="space-y-4">
             {% csrf_token %}

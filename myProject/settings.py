@@ -15,11 +15,11 @@ import os
 from dotenv import load_dotenv
 import dj_database_url
 
-# Load environment variables from .env file
-load_dotenv()
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load environment variables from .env file in project root
+load_dotenv(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
@@ -86,6 +86,9 @@ WSGI_APPLICATION = 'myProject.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 # Get DATABASE_URL from environment variable - REQUIRED for all environments
+# Recommended: Use PostgreSQL for local development (same as production)
+# Format: postgresql://[user[:password]@][host][:port][/database]
+# Example: postgresql://postgres@localhost:5432/fluentory_dev
 DATABASE_URL = os.getenv('DATABASE_URL')
 
 if not DATABASE_URL:
@@ -94,15 +97,26 @@ if not DATABASE_URL:
         "Please set it in your .env file or environment variables."
     )
 
-# Always use DATABASE_URL (PostgreSQL) for all environments including local development
+# Parse DATABASE_URL (supports PostgreSQL, SQLite, and other databases)
+# Automatically detects database engine from URL scheme:
+# - postgresql:// or postgres:// -> PostgreSQL
+# - sqlite:// -> SQLite
 db_config = dj_database_url.parse(DATABASE_URL, conn_max_age=600)
-# Add connection pool settings and retry logic
-db_config['OPTIONS'] = {
-    'connect_timeout': 10,
-    'options': '-c statement_timeout=30000'  # 30 second query timeout
-}
-# Enable connection pooling
-db_config['CONN_MAX_AGE'] = 600
+
+# Only apply PostgreSQL-specific options for PostgreSQL databases
+if db_config.get('ENGINE') == 'django.db.backends.postgresql':
+    db_config['OPTIONS'] = {
+        'connect_timeout': 10,
+        'options': '-c statement_timeout=30000'  # 30 second query timeout
+    }
+    # Disable SSL for local connections (common issue on Windows)
+    # Check if host is localhost/127.0.0.1 to disable SSL locally
+    host = db_config.get('HOST', '').lower()
+    if host in ('localhost', '127.0.0.1', ''):
+        db_config['OPTIONS']['sslmode'] = 'disable'
+    # Enable connection pooling for PostgreSQL
+    db_config['CONN_MAX_AGE'] = 600
+
 DATABASES = {
     'default': db_config
 }

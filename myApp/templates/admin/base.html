@@ -31,6 +31,79 @@
         .scrollbar-hide::-webkit-scrollbar {
             display: none;
         }
+        
+        /* Premium Light Mode Background Gradient */
+        [data-theme="light"] body {
+            background: linear-gradient(to bottom, var(--bg-gradient-top), var(--bg-gradient-middle), var(--bg-gradient-bottom));
+        }
+        
+        /* Premium Card Base Styling */
+        [data-theme="light"] .rounded-2xl.bg-white {
+            background-color: #FFFFFF !important;
+            border-color: var(--border-primary) !important;
+            box-shadow: var(--card-shadow) !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        [data-theme="light"] .rounded-2xl.bg-white:hover {
+            box-shadow: var(--card-shadow-hover) !important;
+            transform: translateY(-2px);
+        }
+        
+        /* Premium Icon Containers - Light Mode - Override colored backgrounds */
+        [data-theme="light"] .rounded-xl.bg-green-50,
+        [data-theme="light"] .rounded-xl.bg-blue-50,
+        [data-theme="light"] .rounded-xl.bg-purple-50,
+        [data-theme="light"] .rounded-xl.bg-orange-50,
+        [data-theme="light"] .rounded-xl.bg-indigo-50,
+        [data-theme="light"] .rounded-xl.bg-red-50 {
+            background-color: rgba(130, 194, 147, 0.08) !important;
+            border-color: rgba(130, 194, 147, 0.15) !important;
+        }
+        
+        [data-theme="light"] .rounded-xl.bg-green-50 i,
+        [data-theme="light"] .rounded-xl.bg-blue-50 i,
+        [data-theme="light"] .rounded-xl.bg-purple-50 i,
+        [data-theme="light"] .rounded-xl.bg-orange-50 i,
+        [data-theme="light"] .rounded-xl.bg-indigo-50 i,
+        [data-theme="light"] .rounded-xl.bg-red-50 i {
+            color: var(--icon-color) !important;
+        }
+        
+        /* Premium Badge Styling - Light Mode - Override colored badges */
+        [data-theme="light"] .rounded-full.bg-green-50,
+        [data-theme="light"] .rounded-full.bg-blue-50,
+        [data-theme="light"] .rounded-full.bg-purple-50,
+        [data-theme="light"] .rounded-full.bg-orange-50,
+        [data-theme="light"] .rounded-full.bg-indigo-50,
+        [data-theme="light"] .rounded-full.bg-red-50 {
+            background-color: rgba(130, 194, 147, 0.10) !important;
+            border-color: rgba(130, 194, 147, 0.20) !important;
+            color: var(--badge-text) !important;
+        }
+        
+        [data-theme="light"] .rounded-full.text-green-700,
+        [data-theme="light"] .rounded-full.text-blue-700,
+        [data-theme="light"] .rounded-full.text-purple-700,
+        [data-theme="light"] .rounded-full.text-orange-700,
+        [data-theme="light"] .rounded-full.text-indigo-700,
+        [data-theme="light"] .rounded-full.text-red-700 {
+            color: var(--badge-text) !important;
+        }
+        
+        /* Premium Typography - Heavy, Crisp Headings in Light Mode */
+        [data-theme="light"] h1.font-extralight,
+        [data-theme="light"] h1.font-light {
+            font-weight: 700 !important;
+        }
+        
+        /* Premium Metric Numbers - Light Mode */
+        [data-theme="light"] .font-extralight.text-deep-charcoal,
+        [data-theme="light"] .text-3xl.font-extralight,
+        [data-theme="light"] .text-4xl.font-extralight {
+            font-weight: 700 !important;
+            letter-spacing: -0.02em;
+        }
     </style>
 </head>
 <body class="font-sans" style="background-color: var(--bg-primary); color: var(--text-primary);">

@@ -69,7 +69,21 @@ class UserProfile(models.Model):
 
 class Teacher(models.Model):
     """Teacher profile with approval status"""
+    PERMISSION_LEVEL_CHOICES = [
+        ('standard', 'Standard'),
+        ('premium', 'Premium'),
+        ('admin', 'Admin'),
+    ]
+    
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='teacher_profile')
+    
+    # Permission level
+    permission_level = models.CharField(
+        max_length=20,
+        choices=PERMISSION_LEVEL_CHOICES,
+        default='standard',
+        help_text='Permission level for the teacher'
+    )
     
     # Status
     is_approved = models.BooleanField(default=False)

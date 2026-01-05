@@ -3,27 +3,28 @@
 {% block content %}
 <div class="w-full space-y-6 sm:space-y-8">
     <div class="mb-6 sm:mb-8">
-        <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2">
+        <h1 class="text-2xl sm:text-3xl font-bold mb-2" style="color: var(--text-primary); font-weight: 700;">
             Settings
         </h1>
-        <p class="text-sm sm:text-base text-white/60">
+        <p class="text-sm sm:text-base" style="color: var(--text-secondary);">
             {% if is_preview_mode %}Preview mode (read-only){% else %}Manage your partner account settings{% endif %}
         </p>
     </div>
     
     {% if is_preview_mode %}
-    <div class="mb-4 p-4 bg-blue-500/20 border border-blue-500/50 rounded-lg">
-        <div class="flex items-center gap-2 text-blue-200">
+    <div class="mb-4 p-4 rounded-xl border transition-all duration-300" style="background-color: rgba(59, 130, 246, 0.08); border-color: rgba(59, 130, 246, 0.2);">
+        <div class="flex items-center gap-2" style="color: rgba(10, 31, 31, 0.85);">
             <i class="fas fa-info-circle"></i>
             <span class="font-medium">Preview Mode: Settings are read-only</span>
         </div>
     </div>
     {% endif %}
     
-    <!-- Company Information -->
-    <div class="bg-[#04363a]/50 backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-white/10 shadow-lg">
-        <h2 class="text-lg sm:text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <i class="fas fa-building text-[#82C293]"></i>
+    <!-- Company Information - Premium White Surface -->
+    <div class="rounded-2xl bg-white p-6 sm:p-8 border transition-all duration-300" style="border-color: var(--border-primary); box-shadow: var(--card-shadow); position: relative; overflow: hidden;">
+        <div class="absolute top-0 left-0 right-0 h-1" style="background: linear-gradient(to right, rgba(130, 194, 147, 0.6), rgba(130, 194, 147, 0.4));"></div>
+        <h2 class="text-lg sm:text-xl font-bold mb-6 flex items-center gap-2" style="color: var(--text-primary); font-weight: 600;">
+            <i class="fas fa-building" style="color: #4A8F5F;"></i>
             Company Information
         </h2>
         
@@ -31,57 +32,69 @@
             {% csrf_token %}
             
             <div>
-                <label for="company_name" class="block text-sm font-medium text-white mb-2">Company Name</label>
+                <label for="company_name" class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Company Name</label>
                 <input 
                     type="text" 
                     id="company_name" 
                     name="company_name" 
                     value="{{ partner.company_name }}" 
                     {% if is_preview_mode %}readonly{% endif %}
-                    class="w-full px-4 py-3 bg-[#254346] border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50 {% if is_preview_mode %}opacity-50 cursor-not-allowed{% endif %}"
+                    class="w-full px-4 py-3 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 {% if is_preview_mode %}opacity-50 cursor-not-allowed{% endif %}"
+                    style="background-color: var(--bg-elevated); border: 1px solid var(--border-primary); color: var(--text-primary);"
+                    onfocus="this.style.borderColor='var(--accent-primary)'; this.style.boxShadow='0 0 0 3px rgba(130, 194, 147, 0.1)'"
+                    onblur="this.style.borderColor='var(--border-primary)'; this.style.boxShadow='none'"
                 >
             </div>
             
             <div>
-                <label for="contact_email" class="block text-sm font-medium text-white mb-2">Contact Email</label>
+                <label for="contact_email" class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Contact Email</label>
                 <input 
                     type="email" 
                     id="contact_email" 
                     name="contact_email" 
                     value="{{ partner.contact_email }}" 
                     {% if is_preview_mode %}readonly{% endif %}
-                    class="w-full px-4 py-3 bg-[#254346] border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50 {% if is_preview_mode %}opacity-50 cursor-not-allowed{% endif %}"
+                    class="w-full px-4 py-3 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 {% if is_preview_mode %}opacity-50 cursor-not-allowed{% endif %}"
+                    style="background-color: var(--bg-elevated); border: 1px solid var(--border-primary); color: var(--text-primary);"
+                    onfocus="this.style.borderColor='var(--accent-primary)'; this.style.boxShadow='0 0 0 3px rgba(130, 194, 147, 0.1)'"
+                    onblur="this.style.borderColor='var(--border-primary)'; this.style.boxShadow='none'"
                 >
             </div>
             
             <div>
-                <label for="contact_phone" class="block text-sm font-medium text-white mb-2">Contact Phone</label>
+                <label for="contact_phone" class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Contact Phone</label>
                 <input 
                     type="tel" 
                     id="contact_phone" 
                     name="contact_phone" 
                     value="{{ partner.contact_phone|default:'' }}" 
                     {% if is_preview_mode %}readonly{% endif %}
-                    class="w-full px-4 py-3 bg-[#254346] border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50 {% if is_preview_mode %}opacity-50 cursor-not-allowed{% endif %}"
+                    class="w-full px-4 py-3 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 {% if is_preview_mode %}opacity-50 cursor-not-allowed{% endif %}"
+                    style="background-color: var(--bg-elevated); border: 1px solid var(--border-primary); color: var(--text-primary);"
+                    onfocus="this.style.borderColor='var(--accent-primary)'; this.style.boxShadow='0 0 0 3px rgba(130, 194, 147, 0.1)'"
+                    onblur="this.style.borderColor='var(--border-primary)'; this.style.boxShadow='none'"
                 >
             </div>
             
             <div>
-                <label for="website" class="block text-sm font-medium text-white mb-2">Website</label>
+                <label for="website" class="block text-sm font-medium mb-2" style="color: var(--text-primary);">Website</label>
                 <input 
                     type="url" 
                     id="website" 
                     name="website" 
                     value="{{ partner.website|default:'' }}" 
                     {% if is_preview_mode %}readonly{% endif %}
-                    class="w-full px-4 py-3 bg-[#254346] border border-white/10 rounded-lg text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50 {% if is_preview_mode %}opacity-50 cursor-not-allowed{% endif %}"
+                    class="w-full px-4 py-3 rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 {% if is_preview_mode %}opacity-50 cursor-not-allowed{% endif %}"
+                    style="background-color: var(--bg-elevated); border: 1px solid var(--border-primary); color: var(--text-primary);"
                     placeholder="https://example.com"
+                    onfocus="this.style.borderColor='var(--accent-primary)'; this.style.boxShadow='0 0 0 3px rgba(130, 194, 147, 0.1)'"
+                    onblur="this.style.borderColor='var(--border-primary)'; this.style.boxShadow='none'"
                 >
             </div>
             
             {% if not is_preview_mode %}
             <div class="pt-4">
-                <button type="submit" class="px-6 py-3 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-lg hover:opacity-90 transition font-medium">
+                <button type="submit" class="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-300" style="background: linear-gradient(to right, var(--accent-cta), var(--accent-primary)); color: white; box-shadow: 0 4px 14px rgba(0, 101, 95, 0.25);" onmouseover="this.style.boxShadow='0 8px 24px rgba(0, 101, 95, 0.35)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='0 4px 14px rgba(0, 101, 95, 0.25)'; this.style.transform='translateY(0)'">
                     Save Changes
                 </button>
             </div>
@@ -89,46 +102,47 @@
         </form>
     </div>
     
-    <!-- Account Details -->
-    <div class="bg-[#04363a]/50 backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-white/10 shadow-lg">
-        <h2 class="text-lg sm:text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <i class="fas fa-user-cog text-[#82C293]"></i>
+    <!-- Account Details - Premium White Surface -->
+    <div class="rounded-2xl bg-white p-6 sm:p-8 border transition-all duration-300" style="border-color: var(--border-primary); box-shadow: var(--card-shadow); position: relative; overflow: hidden;">
+        <div class="absolute top-0 left-0 right-0 h-1" style="background: linear-gradient(to right, rgba(130, 194, 147, 0.6), rgba(130, 194, 147, 0.4));"></div>
+        <h2 class="text-lg sm:text-xl font-bold mb-6 flex items-center gap-2" style="color: var(--text-primary); font-weight: 600;">
+            <i class="fas fa-user-cog" style="color: #4A8F5F;"></i>
             Account Details
         </h2>
         
         <div class="space-y-4">
-            <div class="flex justify-between items-center py-3 border-b border-white/10">
-                <span class="text-sm text-white/60">Commission Rate</span>
-                <span class="text-sm font-semibold text-white">
+            <div class="flex justify-between items-center py-3 border-b" style="border-color: var(--border-primary);">
+                <span class="text-sm" style="color: var(--text-secondary);">Commission Rate</span>
+                <span class="text-sm font-semibold" style="color: var(--text-primary);">
                     {% if partner.commission_rate %}{{ partner.commission_rate|floatformat:0 }}%{% else %}20% (default){% endif %}
                 </span>
             </div>
             
-            <div class="flex justify-between items-center py-3 border-b border-white/10">
-                <span class="text-sm text-white/60">Account Status</span>
-                <span class="text-sm font-semibold {% if partner.is_active %}text-[#82C293]{% else %}text-red-400{% endif %}">
+            <div class="flex justify-between items-center py-3 border-b" style="border-color: var(--border-primary);">
+                <span class="text-sm" style="color: var(--text-secondary);">Account Status</span>
+                <span class="text-sm font-semibold" style="{% if partner.is_active %}color: #4A8F5F;{% else %}color: #DC2626;{% endif %}">
                     {% if partner.is_active %}Active{% else %}Inactive{% endif %}
                 </span>
             </div>
             
             <div class="flex justify-between items-center py-3">
-                <span class="text-sm text-white/60">Joined</span>
-                <span class="text-sm text-white">
+                <span class="text-sm" style="color: var(--text-secondary);">Joined</span>
+                <span class="text-sm" style="color: var(--text-primary);">
                     {% if partner.joined_at %}{{ partner.joined_at|date:"M d, Y" }}{% else %}N/A{% endif %}
                 </span>
             </div>
         </div>
     </div>
     
-    <!-- Danger Zone -->
+    <!-- Danger Zone - Premium Styled -->
     {% if not is_preview_mode %}
-    <div class="bg-red-500/10 rounded-xl p-6 sm:p-8 border border-red-500/30 shadow-lg">
-        <h2 class="text-lg sm:text-xl font-bold text-red-400 mb-4 flex items-center gap-2">
+    <div class="rounded-2xl p-6 sm:p-8 border transition-all duration-300" style="background-color: rgba(239, 68, 68, 0.04); border-color: rgba(239, 68, 68, 0.2); box-shadow: var(--card-shadow);">
+        <h2 class="text-lg sm:text-xl font-bold mb-4 flex items-center gap-2" style="color: #DC2626; font-weight: 600;">
             <i class="fas fa-exclamation-triangle"></i>
             Danger Zone
         </h2>
-        <p class="text-sm text-white/60 mb-4">Irreversible actions that affect your account</p>
-        <button class="px-4 py-2 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition font-medium" disabled>
+        <p class="text-sm mb-4" style="color: var(--text-secondary);">Irreversible actions that affect your account</p>
+        <button class="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300" style="background-color: #DC2626; color: white; opacity: 0.6;" disabled>
             Deactivate Account
         </button>
     </div>

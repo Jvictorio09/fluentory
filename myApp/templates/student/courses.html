@@ -154,14 +154,15 @@
     
     {% else %}
     <!-- Empty State -->
-    <div class="text-center py-16">
-        <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-[#254346]/50 border border-white/10 grid place-items-center">
-            <i class="fas fa-book text-3xl text-[#82C293]"></i>
+    <div class="empty-state page-enter-content">
+        <div class="empty-state-icon">
+            <i class="fas fa-book"></i>
         </div>
-        <h3 class="text-xl font-medium text-white mb-2">No courses found</h3>
-        <p class="text-white/60 mb-6">Try adjusting your search or filters</p>
-        <a href="{% url 'student_courses' %}" class="px-6 py-3 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl font-medium hover:opacity-90 transition">
-            View All Courses
+        <h3 class="empty-state-title">No courses found</h3>
+        <p class="empty-state-description">Try adjusting your search terms or filters to discover more courses.</p>
+        <a href="{% url 'student_courses' %}" class="btn-cta-primary">
+            <i class="fas fa-search"></i>
+            <span>View All Courses</span>
         </a>
     </div>
     {% endif %}

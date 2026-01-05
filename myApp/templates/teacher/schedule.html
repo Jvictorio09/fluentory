@@ -1,15 +1,16 @@
 {% extends 'teacher/base.html' %}
 
 {% block content %}
-<div class="space-y-6 sm:space-y-8">
-    <div>
-        <h1 class="text-3xl sm:text-4xl font-bold text-white mb-2">Live Class Schedule</h1>
-        <p class="text-white/60">Schedule and manage your live class sessions</p>
+<div class="space-y-8 sm:space-y-10">
+    <div class="mb-10">
+        <h1 class="text-4xl sm:text-5xl font-bold text-white mb-3 tracking-tight drop-shadow-[0_0_20px_rgba(130,194,147,0.3)]">Live Class Schedule</h1>
+        <p class="text-base sm:text-lg font-normal text-white/50 tracking-wide">Schedule and manage your live class sessions</p>
     </div>
+    <div class="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent mb-8"></div>
     
-    <div class="bg-[#04363a]/50 backdrop-blur-sm border border-white/10 rounded-xl p-6 sm:p-8 shadow-lg">
-        <h2 class="text-xl sm:text-2xl font-bold text-white mb-6 flex items-center gap-2">
-            <i class="fas fa-calendar-plus text-[#82C293]"></i>
+    <div class="bg-white/5 backdrop-blur-2xl border border-white/8 rounded-2xl p-8 sm:p-10 shadow-xl">
+        <h2 class="text-2xl sm:text-3xl font-bold text-white mb-8 tracking-tight flex items-center gap-3">
+            <i class="fas fa-calendar-plus text-[#82C293]/80 text-xl"></i>
             Schedule New Class
         </h2>
         <form method="post" class="space-y-5">
@@ -30,24 +31,24 @@
                 <label class="block mb-2 text-white font-medium">Scheduled Start</label>
                 <input type="datetime-local" name="scheduled_start" required class="w-full bg-[#254346] border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50">
             </div>
-            <button type="submit" class="w-full sm:w-auto bg-gradient-to-r from-[#00655F] to-[#82C293] text-white px-6 py-3 rounded-lg hover:opacity-90 transition font-medium">
+            <button type="submit" class="w-full sm:w-auto bg-gradient-to-r from-[#82C293] via-[#6fb380] to-[#82C293] text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-[#82C293]/30 hover:shadow-xl hover:shadow-[#82C293]/40 hover:scale-105 transition-all duration-300">
                 <i class="fas fa-calendar-check mr-2"></i>
                 Schedule Class
             </button>
         </form>
     </div>
     
-    <div class="bg-[#04363a]/50 backdrop-blur-sm border border-white/10 rounded-xl shadow-lg overflow-hidden">
-        <div class="p-6 sm:p-8 border-b border-white/10">
-            <h2 class="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
-                <i class="fas fa-list text-[#82C293]"></i>
+    <div class="bg-white/5 backdrop-blur-2xl border border-white/8 rounded-2xl shadow-xl overflow-hidden">
+        <div class="p-8 sm:p-10 border-b border-white/10">
+            <h2 class="text-2xl sm:text-3xl font-bold text-white tracking-tight flex items-center gap-3">
+                <i class="fas fa-list text-[#82C293]/80 text-xl"></i>
                 Upcoming Classes
             </h2>
         </div>
         {% if live_classes %}
         <div class="overflow-x-auto">
             <table class="w-full">
-                <thead class="bg-[#254346]/50 border-b border-white/10">
+                <thead class="bg-white/5 border-b border-white/10">
                     <tr>
                         <th class="text-left px-6 py-4 text-sm font-semibold text-white">Title</th>
                         <th class="text-left px-6 py-4 text-sm font-semibold text-white">Course</th>
@@ -57,7 +58,7 @@
                 </thead>
                 <tbody class="divide-y divide-white/10">
                     {% for class in live_classes %}
-                    <tr class="hover:bg-[#254346]/30 transition">
+                    <tr class="hover:bg-white/5 transition-all duration-300">
                         <td class="px-6 py-4 font-medium text-white">{{ class.title }}</td>
                         <td class="px-6 py-4 text-white/80">{{ class.course.title }}</td>
                         <td class="px-6 py-4 text-white/60 text-sm">
@@ -93,9 +94,9 @@
         </div>
         {% else %}
         <div class="p-12 text-center">
-            <i class="fas fa-calendar-times text-5xl text-white/20 mb-4"></i>
+            <i class="fas fa-calendar-times text-5xl text-white/15 mb-4"></i>
             <h3 class="text-xl font-semibold text-white mb-2">No live classes scheduled</h3>
-            <p class="text-white/60">Schedule your first live class session above</p>
+            <p class="text-white/50">Schedule your first live class session above</p>
         </div>
         {% endif %}
     </div>

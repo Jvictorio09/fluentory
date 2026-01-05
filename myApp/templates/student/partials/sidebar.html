@@ -1,34 +1,96 @@
-<aside class="hidden lg:block fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-[#04363a]/90 backdrop-blur-xl border-r border-white/10 z-40">
+<aside class="hidden lg:block fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 overflow-y-auto z-40 scrollbar-hide transition-all duration-300" style="background-color: var(--sidebar-bg); border-right: 1px solid var(--border-primary);">
+    <style>
+        .sidebar-nav-link {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.875rem 1rem;
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+        
+        .sidebar-nav-link:hover {
+            color: var(--text-primary);
+            background-color: rgba(130, 194, 147, 0.1);
+            border: 1px solid rgba(130, 194, 147, 0.2);
+        }
+        
+        .sidebar-nav-link.active {
+            color: var(--accent-primary);
+            background-color: rgba(130, 194, 147, 0.15);
+            border: 1px solid rgba(130, 194, 147, 0.3);
+            font-weight: 500;
+        }
+        
+        .sidebar-nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 60%;
+            background: linear-gradient(to bottom, var(--accent-primary), var(--accent-cta));
+            border-radius: 0 2px 2px 0;
+            box-shadow: 0 0 12px rgba(130, 194, 147, 0.5);
+            animation: accentLineSlide 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes accentLineSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-50%) scaleY(0);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(-50%) scaleY(1);
+            }
+        }
+        
+        .sidebar-nav-link i {
+            width: 1.25rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-nav-link:hover i,
+        .sidebar-nav-link.active i {
+            color: var(--accent-primary);
+        }
+    </style>
     <nav class="p-6 space-y-1">
-        <a href="/student/" class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-white bg-[#82C293]/20 border border-[#82C293]/30 font-medium transition group">
-            <i class="fas fa-home w-5 text-base text-white"></i>
-            <span class="text-sm">Home</span>
+        <a href="{% url 'student_home' %}" class="sidebar-nav-link {% if request.resolver_match.url_name == 'student_home' %}active{% endif %}">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
         </a>
         
-        <a href="/student/courses/" class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-white/70 hover:bg-[#254346]/50 hover:text-white hover:border hover:border-white/10 transition group">
-            <i class="fas fa-book w-5 text-base"></i>
-            <span class="text-sm font-light">Courses</span>
+        <a href="{% url 'student_courses' %}" class="sidebar-nav-link {% if 'courses' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-book"></i>
+            <span>Courses</span>
         </a>
         
-        <a href="/student/placement/" class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-white/70 hover:bg-[#254346]/50 hover:text-white hover:border hover:border-white/10 transition group">
-            <i class="fas fa-clipboard-check w-5 text-base"></i>
-            <span class="text-sm font-light">Placement Test</span>
+        <a href="{% url 'student_placement' %}" class="sidebar-nav-link {% if 'placement' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-clipboard-check"></i>
+            <span>Placement Test</span>
         </a>
         
-        <a href="/student/learning/" class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-white/70 hover:bg-[#254346]/50 hover:text-white hover:border hover:border-white/10 transition group">
-            <i class="fas fa-graduation-cap w-5 text-base"></i>
-            <span class="text-sm font-light">My Learning</span>
+        <a href="{% url 'student_learning' %}" class="sidebar-nav-link {% if 'learning' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-graduation-cap"></i>
+            <span>My Learning</span>
         </a>
         
-        <a href="/student/certificates/" class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-white/70 hover:bg-[#254346]/50 hover:text-white hover:border hover:border-white/10 transition group">
-            <i class="fas fa-certificate w-5 text-base"></i>
-            <span class="text-sm font-light">Certificates</span>
+        <a href="{% url 'student_certificates' %}" class="sidebar-nav-link {% if 'certificates' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-certificate"></i>
+            <span>Certificates</span>
         </a>
         
-        <a href="/student/settings/" class="flex items-center gap-3 px-4 py-3.5 rounded-xl text-white/70 hover:bg-[#254346]/50 hover:text-white hover:border hover:border-white/10 transition group">
-            <i class="fas fa-cog w-5 text-base"></i>
-            <span class="text-sm font-light">Settings</span>
+        <a href="{% url 'student_settings' %}" class="sidebar-nav-link {% if 'settings' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-cog"></i>
+            <span>Settings</span>
         </a>
     </nav>
 </aside>
-

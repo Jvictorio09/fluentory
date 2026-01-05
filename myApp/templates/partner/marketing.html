@@ -3,33 +3,35 @@
 {% block content %}
 <div class="w-full space-y-6 sm:space-y-8">
     <div class="mb-6 sm:mb-8">
-        <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2">
+        <h1 class="text-2xl sm:text-3xl font-bold mb-2" style="color: var(--text-primary); font-weight: 700;">
             Marketing Assets
         </h1>
-        <p class="text-sm sm:text-base text-white/60">
+        <p class="text-sm sm:text-base" style="color: var(--text-secondary);">
             {% if is_preview_mode %}Platform-wide marketing assets (read-only preview){% else %}Access your promo codes and marketing materials{% endif %}
         </p>
     </div>
     
     {% if is_preview_mode %}
-    <div class="mb-4 p-4 bg-blue-500/20 border border-blue-500/50 rounded-lg">
-        <div class="flex items-center gap-2 text-blue-200">
+    <div class="mb-4 p-4 rounded-xl border transition-all duration-300" style="background-color: rgba(59, 130, 246, 0.08); border-color: rgba(59, 130, 246, 0.2);">
+        <div class="flex items-center gap-2" style="color: rgba(10, 31, 31, 0.85);">
             <i class="fas fa-info-circle"></i>
             <span class="font-medium">Preview Mode: Showing platform-wide marketing assets (read-only)</span>
         </div>
     </div>
     {% endif %}
     
-    <!-- Promo Codes -->
-    <div class="bg-[#04363a]/50 backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-white/10 shadow-lg">
+    <!-- Promo Codes - Premium White Surface -->
+    <div class="rounded-2xl bg-white p-6 sm:p-8 border transition-all duration-300" style="border-color: var(--border-primary); box-shadow: var(--card-shadow); position: relative; overflow: hidden;">
+        <div class="absolute top-0 left-0 right-0 h-1" style="background: linear-gradient(to right, rgba(130, 194, 147, 0.6), rgba(130, 194, 147, 0.4));"></div>
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-            <h2 class="text-lg sm:text-xl font-bold text-white flex items-center gap-2">
-                <i class="fas fa-ticket-alt text-[#82C293]"></i>
+            <h2 class="text-lg sm:text-xl font-bold flex items-center gap-2" style="color: var(--text-primary); font-weight: 600;">
+                <i class="fas fa-ticket-alt" style="color: #4A8F5F;"></i>
                 Promo Codes
             </h2>
             {% if not is_preview_mode %}
-            <button class="w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-lg text-sm font-medium hover:opacity-90 transition">
-                <i class="fas fa-plus mr-2"></i>Create Promo Code
+            <button class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-medium transition-all duration-300" style="background: linear-gradient(to right, var(--accent-cta), var(--accent-primary)); color: white; box-shadow: 0 4px 14px rgba(0, 101, 95, 0.25);" onmouseover="this.style.boxShadow='0 8px 24px rgba(0, 101, 95, 0.35)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='0 4px 14px rgba(0, 101, 95, 0.25)'; this.style.transform='translateY(0)'">
+                <i class="fas fa-plus"></i>
+                <span>Create Promo Code</span>
             </button>
             {% endif %}
         </div>
@@ -37,11 +39,11 @@
         {% if cohorts %}
         <div class="space-y-4">
             {% for cohort in cohorts %}
-            <div class="bg-[#254346]/50 p-5 rounded-lg border border-white/5 hover:border-[#82C293]/30 transition">
+            <div class="bg-white p-5 rounded-xl border transition-all duration-300 hover:shadow-md" style="border-color: var(--border-primary); box-shadow: var(--card-shadow);" onmouseover="this.style.boxShadow='var(--card-shadow-hover)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='var(--card-shadow)'; this.style.transform='translateY(0)'">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div class="flex-1">
-                        <div class="text-lg font-semibold text-white mb-2">{{ cohort.name }}</div>
-                        <div class="flex flex-wrap gap-4 text-sm text-white/60 mb-4">
+                        <div class="text-lg font-semibold mb-2" style="color: rgba(10, 31, 31, 0.95); font-weight: 600;">{{ cohort.name }}</div>
+                        <div class="flex flex-wrap gap-4 text-sm mb-4" style="color: rgba(10, 31, 31, 0.70);">
                             <span class="flex items-center gap-1"><i class="fas fa-calendar"></i> {{ cohort.start_date|date:"M d, Y" }}</span>
                             {% if cohort.discount_percentage %}
                             <span class="flex items-center gap-1"><i class="fas fa-percent"></i> {{ cohort.discount_percentage }}% off</span>
@@ -49,10 +51,10 @@
                             <span class="flex items-center gap-1"><i class="fas fa-users"></i> {{ cohort.students.count }} students</span>
                         </div>
                         <div class="flex items-center gap-3">
-                            <code class="px-4 py-2 bg-[#04363a] text-[#82C293] rounded-lg text-sm font-mono border border-[#82C293]/30">
+                            <code class="px-4 py-2 rounded-lg text-sm font-mono border transition-all duration-300" style="background-color: var(--bg-elevated); border-color: var(--border-accent); color: #4A8F5F;">
                                 {{ cohort.promo_code }}
                             </code>
-                            <button class="px-4 py-2 text-sm text-white bg-[#254346] hover:bg-[#82C293]/20 rounded-lg transition" onclick="copyToClipboard('{{ cohort.promo_code }}')">
+                            <button class="px-4 py-2 text-sm rounded-xl transition-all duration-300 font-medium" style="background-color: var(--bg-elevated); border: 1px solid var(--border-primary); color: var(--text-primary);" onmouseover="this.style.backgroundColor='rgba(130, 194, 147, 0.08)'; this.style.borderColor='rgba(130, 194, 147, 0.25)'" onmouseout="this.style.backgroundColor='var(--bg-elevated)'; this.style.borderColor='var(--border-primary)'" onclick="copyToClipboard('{{ cohort.promo_code }}')">
                                 <i class="fas fa-copy mr-1"></i> Copy
                             </button>
                         </div>
@@ -62,52 +64,55 @@
             {% endfor %}
         </div>
         {% else %}
-        <div class="text-center py-12">
-            <i class="fas fa-bullhorn text-5xl text-white/20 mb-4"></i>
-            <p class="text-white/60 mb-4 text-lg">No promo codes found</p>
+        <div class="text-center py-12 px-4">
+            <i class="fas fa-bullhorn text-4xl mb-4" style="color: rgba(10, 31, 31, 0.30);"></i>
+            <h3 class="text-lg font-semibold mb-2" style="color: var(--text-primary);">No promo codes found</h3>
+            <p class="text-sm mb-6" style="color: var(--text-secondary);">Create your first promo code to get started</p>
             {% if not is_preview_mode %}
-            <button class="px-5 py-3 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-lg text-sm font-medium hover:opacity-90 transition">
-                <i class="fas fa-plus mr-2"></i>Create Your First Promo Code
+            <button class="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium transition-all duration-300" style="background: linear-gradient(to right, var(--accent-cta), var(--accent-primary)); color: white; box-shadow: 0 4px 14px rgba(0, 101, 95, 0.25);">
+                <i class="fas fa-plus"></i>
+                <span>Create Your First Promo Code</span>
             </button>
             {% endif %}
         </div>
         {% endif %}
     </div>
     
-    <!-- Marketing Materials -->
-    <div class="bg-[#04363a]/50 backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-white/10 shadow-lg">
-        <h2 class="text-lg sm:text-xl font-bold text-white mb-6 flex items-center gap-2">
-            <i class="fas fa-file-download text-[#82C293]"></i>
+    <!-- Marketing Materials - Premium White Surface -->
+    <div class="rounded-2xl bg-white p-6 sm:p-8 border transition-all duration-300" style="border-color: var(--border-primary); box-shadow: var(--card-shadow); position: relative; overflow: hidden;">
+        <div class="absolute top-0 left-0 right-0 h-1" style="background: linear-gradient(to right, rgba(130, 194, 147, 0.6), rgba(130, 194, 147, 0.4));"></div>
+        <h2 class="text-lg sm:text-xl font-bold mb-6 flex items-center gap-2" style="color: var(--text-primary); font-weight: 600;">
+            <i class="fas fa-file-download" style="color: #4A8F5F;"></i>
             Marketing Materials
         </h2>
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-            <div class="bg-[#254346]/50 p-6 rounded-lg border border-white/5 hover:border-[#82C293]/30 transition">
+            <div class="bg-white p-6 rounded-xl border transition-all duration-300 hover:shadow-md" style="border-color: var(--border-primary); box-shadow: var(--card-shadow);" onmouseover="this.style.boxShadow='var(--card-shadow-hover)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='var(--card-shadow)'; this.style.transform='translateY(0)'">
                 <div class="flex items-center gap-4 mb-4">
-                    <div class="w-12 h-12 rounded-lg bg-[#82C293]/20 flex items-center justify-center">
-                        <i class="fas fa-image text-[#82C293] text-xl"></i>
+                    <div class="w-12 h-12 rounded-xl grid place-items-center transition-all duration-300" style="background-color: rgba(130, 194, 147, 0.09); border: 1px solid rgba(130, 194, 147, 0.18);">
+                        <i class="fas fa-image" style="color: #4A8F5F;"></i>
                     </div>
                     <div>
-                        <div class="font-semibold text-white">Brand Assets</div>
-                        <div class="text-sm text-white/60">Logos, banners, and images</div>
+                        <div class="font-semibold" style="color: var(--text-primary); font-weight: 600;">Brand Assets</div>
+                        <div class="text-sm" style="color: var(--text-secondary);">Logos, banners, and images</div>
                     </div>
                 </div>
-                <button class="mt-4 text-sm text-[#82C293] hover:text-[#82C293]/80 font-medium">
+                <button class="mt-4 text-sm font-medium transition-all duration-300" style="color: #4A8F5F;" onmouseover="this.style.color='#3D7A4F'" onmouseout="this.style.color='#4A8F5F'">
                     Download <i class="fas fa-arrow-down ml-1"></i>
                 </button>
             </div>
             
-            <div class="bg-[#254346]/50 p-6 rounded-lg border border-white/5 hover:border-[#82C293]/30 transition">
+            <div class="bg-white p-6 rounded-xl border transition-all duration-300 hover:shadow-md" style="border-color: var(--border-primary); box-shadow: var(--card-shadow);" onmouseover="this.style.boxShadow='var(--card-shadow-hover)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='var(--card-shadow)'; this.style.transform='translateY(0)'">
                 <div class="flex items-center gap-4 mb-4">
-                    <div class="w-12 h-12 rounded-lg bg-[#82C293]/20 flex items-center justify-center">
-                        <i class="fas fa-file-pdf text-[#82C293] text-xl"></i>
+                    <div class="w-12 h-12 rounded-xl grid place-items-center transition-all duration-300" style="background-color: rgba(130, 194, 147, 0.09); border: 1px solid rgba(130, 194, 147, 0.18);">
+                        <i class="fas fa-file-pdf" style="color: #4A8F5F;"></i>
                     </div>
                     <div>
-                        <div class="font-semibold text-white">Marketing Kit</div>
-                        <div class="text-sm text-white/60">Templates and guidelines</div>
+                        <div class="font-semibold" style="color: var(--text-primary); font-weight: 600;">Marketing Kit</div>
+                        <div class="text-sm" style="color: var(--text-secondary);">Templates and guidelines</div>
                     </div>
                 </div>
-                <button class="mt-4 text-sm text-[#82C293] hover:text-[#82C293]/80 font-medium">
+                <button class="mt-4 text-sm font-medium transition-all duration-300" style="color: #4A8F5F;" onmouseover="this.style.color='#3D7A4F'" onmouseout="this.style.color='#4A8F5F'">
                     Download <i class="fas fa-arrow-down ml-1"></i>
                 </button>
             </div>

@@ -1,61 +1,131 @@
-<aside class="hidden lg:block fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 bg-[#04363a]/70 backdrop-blur-xl border-r border-[#254346]/60 overflow-y-auto z-40 scrollbar-hide animate-slide-in-left">
+<aside class="hidden lg:block fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 overflow-y-auto z-40 scrollbar-hide transition-all duration-300" style="background-color: var(--sidebar-bg); border-right: 1px solid var(--border-primary);">
+    <style>
+        .sidebar-nav-link {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.625rem 0.75rem;
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--text-secondary);
+        }
+        
+        .sidebar-nav-link:hover {
+            color: var(--accent-primary);
+            background-color: rgba(130, 194, 147, 0.1);
+            transform: translateX(4px);
+        }
+        
+        .sidebar-nav-link.active {
+            color: var(--accent-primary);
+            background-color: rgba(130, 194, 147, 0.12);
+            font-weight: 500;
+        }
+        
+        .sidebar-nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 60%;
+            background: linear-gradient(to bottom, var(--accent-primary), var(--accent-cta));
+            border-radius: 0 2px 2px 0;
+            box-shadow: 0 0 12px rgba(130, 194, 147, 0.5);
+            animation: accentLineSlide 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes accentLineSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-50%) scaleY(0);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(-50%) scaleY(1);
+            }
+        }
+        
+        .sidebar-nav-link i {
+            width: 1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-nav-link:hover i,
+        .sidebar-nav-link.active i {
+            color: var(--accent-primary);
+        }
+        
+        .sidebar-section-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 500;
+            padding: 0 0.5rem;
+            margin-bottom: 0.75rem;
+            color: var(--text-tertiary);
+        }
+    </style>
     <nav class="p-6 space-y-6">
         <!-- Core -->
-        <div class="animate-fade-in stagger-1">
-            <div class="text-xs uppercase tracking-wider text-white/50 mb-3 px-2 font-medium">Core</div>
+        <div>
+            <div class="sidebar-section-label">Core</div>
             <div class="space-y-1">
-                <a href="{% url 'dashboard:overview' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white bg-[#82C293]/20 border border-[#82C293]/30 font-medium transition-all duration-300 text-sm group hover:bg-[#82C293]/30 hover:border-[#82C293]/50 hover:scale-105 hover:shadow-[0_4px_12px_rgba(130,194,147,0.3)]">
-                    <i class="fas fa-chart-line w-4 text-[#82C293] transition-transform duration-300 group-hover:scale-110"></i>
+                <a href="{% url 'dashboard:overview' %}" class="sidebar-nav-link {% if request.resolver_match.url_name == 'overview' %}active{% endif %}">
+                    <i class="fas fa-chart-line"></i>
                     <span>Overview</span>
                 </a>
-                <a href="{% url 'dashboard:users' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:bg-[#82C293]/10 hover:text-white hover:border hover:border-[#82C293]/20 transition-all duration-300 text-sm font-light group hover:scale-105 hover:translate-x-1">
-                    <i class="fas fa-users w-4 text-white/60 transition-colors duration-300 group-hover:text-[#82C293]"></i>
+                <a href="{% url 'dashboard:users' %}" class="sidebar-nav-link {% if 'users' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-users"></i>
                     <span>Users</span>
                 </a>
-                <a href="{% url 'dashboard:courses' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:bg-[#82C293]/10 hover:text-white hover:border hover:border-[#82C293]/20 transition-all duration-300 text-sm font-light group hover:scale-105 hover:translate-x-1">
-                    <i class="fas fa-book w-4 text-white/60 transition-colors duration-300 group-hover:text-[#82C293]"></i>
+                <a href="{% url 'dashboard:courses' %}" class="sidebar-nav-link {% if 'courses' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-book"></i>
                     <span>Courses</span>
                 </a>
-                <a href="{% url 'dashboard:payments' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:bg-[#82C293]/10 hover:text-white hover:border hover:border-[#82C293]/20 transition-all duration-300 text-sm font-light group hover:scale-105 hover:translate-x-1">
-                    <i class="fas fa-credit-card w-4 text-white/60 transition-colors duration-300 group-hover:text-[#82C293]"></i>
+                <a href="{% url 'dashboard:payments' %}" class="sidebar-nav-link {% if 'payments' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-credit-card"></i>
                     <span>Payments</span>
                 </a>
-                <a href="{% url 'dashboard:analytics' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:bg-[#82C293]/10 hover:text-white hover:border hover:border-[#82C293]/20 transition-all duration-300 text-sm font-light group hover:scale-105 hover:translate-x-1">
-                    <i class="fas fa-chart-bar w-4 text-white/60 transition-colors duration-300 group-hover:text-[#82C293]"></i>
+                <a href="{% url 'dashboard:analytics' %}" class="sidebar-nav-link {% if 'analytics' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-chart-bar"></i>
                     <span>Analytics</span>
                 </a>
-                <a href="{% url 'dashboard:media' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:bg-[#82C293]/10 hover:text-white hover:border hover:border-[#82C293]/20 transition-all duration-300 text-sm font-light group hover:scale-105 hover:translate-x-1">
-                    <i class="fas fa-images w-4 text-white/60 transition-colors duration-300 group-hover:text-[#82C293]"></i>
+                <a href="{% url 'dashboard:media' %}" class="sidebar-nav-link {% if 'media' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-images"></i>
                     <span>Media Library</span>
                 </a>
             </div>
         </div>
         
         <!-- Content -->
-        <div class="animate-fade-in stagger-2">
-            <div class="text-xs uppercase tracking-wider text-white/50 mb-3 px-2 font-medium">Content</div>
+        <div>
+            <div class="sidebar-section-label">Content</div>
             <div class="space-y-1">
-                <a href="{% url 'dashboard:hero' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:bg-[#82C293]/10 hover:text-white hover:border hover:border-[#82C293]/20 transition-all duration-300 text-sm font-light group hover:scale-105 hover:translate-x-1">
-                    <i class="fas fa-home w-4 text-white/60 transition-colors duration-300 group-hover:text-[#82C293]"></i>
+                <a href="{% url 'dashboard:hero' %}" class="sidebar-nav-link {% if 'hero' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-home"></i>
                     <span>Hero Section</span>
                 </a>
-                <a href="{% url 'dashboard:site_images' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:bg-[#82C293]/10 hover:text-white hover:border hover:border-[#82C293]/20 transition-all duration-300 text-sm font-light group hover:scale-105 hover:translate-x-1">
-                    <i class="fas fa-palette w-4 text-white/60 transition-colors duration-300 group-hover:text-[#82C293]"></i>
+                <a href="{% url 'dashboard:site_images' %}" class="sidebar-nav-link {% if 'site_images' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-palette"></i>
                     <span>Site Images</span>
                 </a>
             </div>
         </div>
         
         <!-- System -->
-        <div class="animate-fade-in stagger-3">
-            <div class="text-xs uppercase tracking-wider text-white/50 mb-3 px-2 font-medium">System</div>
+        <div>
+            <div class="sidebar-section-label">System</div>
             <div class="space-y-1">
-                <a href="/django-admin/" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-white/70 hover:bg-[#82C293]/10 hover:text-white hover:border hover:border-[#82C293]/20 transition-all duration-300 text-sm font-light group hover:scale-105 hover:translate-x-1">
-                    <i class="fas fa-cog w-4 text-white/60 transition-transform duration-300 group-hover:rotate-90 group-hover:text-[#82C293]"></i>
+                <a href="/django-admin/" class="sidebar-nav-link">
+                    <i class="fas fa-cog"></i>
                     <span>Django Admin</span>
                 </a>
             </div>
         </div>
     </nav>
 </aside>
-

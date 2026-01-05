@@ -1,28 +1,85 @@
-<aside class="fixed left-0 top-[4rem] h-[calc(100vh-4rem)] w-64 bg-[#04363a]/90 backdrop-blur-xl border-r border-white/10 z-40 hidden lg:block overflow-y-auto scrollbar-hide">
-    <nav class="p-4 space-y-1">
-        <a href="{% url 'teacher_dashboard' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#254346]/50 hover:text-[#82C293] transition group {% if request.resolver_match.url_name == 'teacher_dashboard' %}bg-[#254346]/50 text-[#82C293] border-l-2 border-[#82C293]{% endif %}">
-            <i class="fas fa-tachometer-alt w-5 text-center"></i>
-            <span class="font-medium">Dashboard</span>
+<aside class="fixed left-0 top-[4.5rem] h-[calc(100vh-4.5rem)] w-56 backdrop-blur-xl border-r z-40 hidden lg:block overflow-y-auto scrollbar-hide transition-all duration-300" style="background-color: var(--sidebar-bg); border-color: var(--border-primary);">
+    <style>
+        .sidebar-nav-link {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.875rem 1rem;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--text-secondary);
+        }
+        
+        .sidebar-nav-link:hover {
+            color: var(--accent-primary);
+            background-color: rgba(130, 194, 147, 0.1);
+            transform: translateX(4px);
+        }
+        
+        .sidebar-nav-link.active {
+            color: var(--accent-primary);
+            background-color: rgba(130, 194, 147, 0.12);
+        }
+        
+        .sidebar-nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 60%;
+            background: linear-gradient(to bottom, var(--accent-primary), var(--accent-cta));
+            border-radius: 0 2px 2px 0;
+            box-shadow: 0 0 12px rgba(130, 194, 147, 0.5);
+            animation: accentLineSlide 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes accentLineSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-50%) scaleY(0);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(-50%) scaleY(1);
+            }
+        }
+        
+        .sidebar-nav-link i {
+            width: 1.25rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-nav-link:hover i,
+        .sidebar-nav-link.active i {
+            color: var(--accent-primary);
+        }
+    </style>
+    <nav class="p-6 space-y-2">
+        <a href="{% url 'teacher_dashboard' %}" class="sidebar-nav-link {% if request.resolver_match.url_name == 'teacher_dashboard' %}active{% endif %}">
+            <i class="fas fa-tachometer-alt"></i>
+            <span>Dashboard</span>
         </a>
-        <a href="{% url 'teacher_courses' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#254346]/50 hover:text-[#82C293] transition group {% if 'courses' in request.resolver_match.url_name %}bg-[#254346]/50 text-[#82C293] border-l-2 border-[#82C293]{% endif %}">
-            <i class="fas fa-book w-5 text-center"></i>
-            <span class="font-medium">My Courses</span>
+        <a href="{% url 'teacher_courses' %}" class="sidebar-nav-link {% if 'courses' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-book"></i>
+            <span>My Courses</span>
         </a>
-        <a href="{% url 'teacher_my_students' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#254346]/50 hover:text-[#82C293] transition group {% if 'students' in request.resolver_match.url_name %}bg-[#254346]/50 text-[#82C293] border-l-2 border-[#82C293]{% endif %}">
-            <i class="fas fa-users w-5 text-center"></i>
-            <span class="font-medium">My Students</span>
+        <a href="{% url 'teacher_my_students' %}" class="sidebar-nav-link {% if 'students' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-users"></i>
+            <span>My Students</span>
         </a>
-        <a href="{% url 'teacher_schedule' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#254346]/50 hover:text-[#82C293] transition group {% if 'schedule' in request.resolver_match.url_name or 'live' in request.resolver_match.url_name %}bg-[#254346]/50 text-[#82C293] border-l-2 border-[#82C293]{% endif %}">
-            <i class="fas fa-calendar w-5 text-center"></i>
-            <span class="font-medium">Live Classes</span>
+        <a href="{% url 'teacher_schedule' %}" class="sidebar-nav-link {% if 'schedule' in request.resolver_match.url_name or 'live' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-calendar"></i>
+            <span>Live Classes</span>
         </a>
-        <a href="{% url 'teacher_availability' %}" class="flex items-center gap-3 px-4 py-3 rounded-lg text-white hover:bg-[#254346]/50 hover:text-[#82C293] transition group {% if 'availability' in request.resolver_match.url_name %}bg-[#254346]/50 text-[#82C293] border-l-2 border-[#82C293]{% endif %}">
-            <i class="fas fa-clock w-5 text-center"></i>
-            <span class="font-medium">Availability</span>
+        <a href="{% url 'teacher_availability' %}" class="sidebar-nav-link {% if 'availability' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-clock"></i>
+            <span>Availability</span>
         </a>
     </nav>
 </aside>
-
-
-
-

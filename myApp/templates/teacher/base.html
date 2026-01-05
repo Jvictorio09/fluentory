@@ -30,19 +30,210 @@
         .scrollbar-hide::-webkit-scrollbar {
             display: none;
         }
+        body {
+            background: linear-gradient(to bottom, var(--bg-gradient-top) 0%, var(--bg-gradient-middle) 50%, var(--bg-gradient-bottom) 100%);
+            min-height: 100vh;
+        }
+        
+        /* Light mode: Ensure navbar has proper shadow and crisp appearance */
+        [data-theme="light"] nav {
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(255, 255, 255, 0.5) inset;
+        }
+        
+        /* Dark mode: Subtle glow effect */
+        [data-theme="dark"] nav {
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* Logo polish - ensure it's always crisp */
+        .teacher-logo {
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
+        
+        /* Light mode: Sidebar contrast */
+        [data-theme="light"] aside {
+            box-shadow: 1px 0 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Light mode: Active sidebar item - better contrast */
+        [data-theme="light"] .sidebar-link.active {
+            background-color: rgba(95, 163, 114, 0.08) !important;
+            color: #5FA372 !important;
+        }
+        
+        /* Light mode: Sidebar hover */
+        [data-theme="light"] .sidebar-link:hover:not(.active) {
+            background-color: rgba(10, 31, 31, 0.04) !important;
+            color: #5FA372 !important;
+        }
+        
+        /* Light mode: Icon containers - keep green but more visible */
+        [data-theme="light"] .bg-gradient-to-br.from-\[#82C293\]\/20 {
+            background: linear-gradient(to bottom right, rgba(95, 163, 114, 0.15), rgba(95, 163, 114, 0.08)) !important;
+        }
+        
+        /* Light mode: Icons in stat cards - darker green for better contrast */
+        [data-theme="light"] .text-\[#82C293\] {
+            color: #5FA372 !important;
+        }
+        
+        /* Light mode: Section icons */
+        [data-theme="light"] .text-\[#82C293\]\/80 {
+            color: #5FA372 !important;
+        }
+        
+        /* Light mode: Links */
+        [data-theme="light"] a.text-\[#82C293\] {
+            color: #5FA372 !important;
+        }
+        
+        [data-theme="light"] a.text-\[#82C293\]:hover {
+            color: #4A8F5F !important;
+        }
+        
+        /* Light mode: Fix nested card backgrounds - use light gray instead of transparent */
+        [data-theme="light"] .glass-card > div > div[style*="background-color: rgba(255,255,255,0.03)"] {
+            background-color: #FAFCFB !important;
+            border-color: rgba(10, 31, 31, 0.08) !important;
+        }
+        
+        [data-theme="light"] .glass-card > div > div[style*="background-color: rgba(255,255,255,0.03)"]:hover {
+            background-color: #F5F7F6 !important;
+            border-color: rgba(95, 163, 114, 0.3) !important;
+        }
+        
+        /* Light mode: Ensure stat card numbers are dark */
+        [data-theme="light"] .text-4xl.font-extrabold {
+            color: var(--text-primary) !important;
+        }
+        
+        /* Light mode: Stat card labels */
+        [data-theme="light"] .text-xs.font-medium[style*="color: var(--text-muted)"] {
+            color: var(--text-tertiary) !important;
+        }
+        
+        /* Light mode: Text in empty states - ensure readability */
+        [data-theme="light"] [style*="opacity: 0.3"] {
+            opacity: 0.5 !important;
+            color: var(--text-muted) !important;
+        }
+        
+        [data-theme="light"] [style*="opacity: 0.7"] {
+            opacity: 0.75 !important;
+            color: var(--text-tertiary) !important;
+        }
+        
+        /* Light mode: Empty state icons - visible but subtle */
+        [data-theme="light"] .text-5xl[style*="color: var(--text-muted)"] {
+            color: var(--text-tertiary) !important;
+            opacity: 0.4 !important;
+        }
+        
+        /* Light mode: Primary buttons - solid green with white text */
+        [data-theme="light"] .bg-gradient-to-r.from-\[#82C293\] {
+            background: linear-gradient(to right, #5FA372, #4A8F5F, #5FA372) !important;
+            color: #FFFFFF !important;
+            font-weight: 600 !important;
+        }
+        
+        [data-theme="light"] .bg-gradient-to-r.from-\[#82C293\]:hover {
+            background: linear-gradient(to right, #4A8F5F, #3D7A4F, #4A8F5F) !important;
+            box-shadow: 0 4px 12px rgba(95, 163, 114, 0.3) !important;
+        }
+        
+        /* Light mode: Remove green tint from card backgrounds */
+        [data-theme="light"] .bg-white\/5,
+        [data-theme="light"] .bg-white\/3,
+        [data-theme="light"] .bg-white\/8 {
+            background-color: #FFFFFF !important;
+        }
+        
+        /* Light mode: Ensure all headings are dark */
+        [data-theme="light"] h1,
+        [data-theme="light"] h2,
+        [data-theme="light"] h3 {
+            color: var(--text-primary) !important;
+        }
+        
+        /* Light mode: Profile pill visibility */
+        [data-theme="light"] button[onclick="toggleUserMenu()"] {
+            background-color: rgba(10, 31, 31, 0.04) !important;
+            border-color: rgba(10, 31, 31, 0.12) !important;
+        }
+        
+        [data-theme="light"] button[onclick="toggleUserMenu()"]:hover {
+            background-color: rgba(10, 31, 31, 0.08) !important;
+            border-color: rgba(10, 31, 31, 0.2) !important;
+        }
+        
+        /* Light mode: Dropdown menu items */
+        [data-theme="light"] #user-menu a:hover {
+            background-color: rgba(10, 31, 31, 0.06) !important;
+        }
+        
+        /* Light mode: Dashboard link in navbar */
+        [data-theme="light"] a[href*="teacher_dashboard"]:not(.sidebar-link) {
+            color: var(--text-secondary) !important;
+        }
+        
+        [data-theme="light"] a[href*="teacher_dashboard"]:not(.sidebar-link):hover {
+            color: #5FA372 !important;
+        }
+        /* Theme-aware text colors */
+        .text-theme-primary { color: var(--text-primary); }
+        .text-theme-secondary { color: var(--text-secondary); }
+        .text-theme-tertiary { color: var(--text-tertiary); }
+        .text-theme-muted { color: var(--text-muted); }
+        
+        /* Theme-aware backgrounds */
+        .bg-theme-secondary { background-color: var(--bg-secondary); }
+        .bg-theme-elevated { background-color: var(--bg-elevated); }
+        
+        /* Theme-aware borders */
+        .border-theme-primary { border-color: var(--border-primary); }
+        
+        /* Glass card background that works in both themes */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+        }
+        
+        /* Light mode: Pure white cards with soft shadows */
+        [data-theme="light"] .glass-card {
+            background: #FFFFFF !important;
+            border-color: rgba(10, 31, 31, 0.12) !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+        }
+        
+        /* Light mode card hover state */
+        [data-theme="light"] .glass-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.06) !important;
+        }
+        
+        /* Light mode: Fix stat card backgrounds */
+        [data-theme="light"] .glass-card .bg-white\/3,
+        [data-theme="light"] .bg-white\/3 {
+            background-color: rgba(250, 252, 251, 0.8) !important;
+        }
+        
+        [data-theme="light"] .glass-card .bg-white\/3:hover,
+        [data-theme="light"] .bg-white\/3:hover {
+            background-color: rgba(245, 247, 246, 0.9) !important;
+        }
     </style>
 </head>
 <body class="font-sans" style="background-color: var(--bg-primary); color: var(--text-primary);">
     {% include 'partials/role_preview_banner.html' %}
     {% include 'teacher/partials/navbar.html' %}
     
-    <div class="flex min-h-[calc(100vh-4rem)] relative" {% if request.session.preview_role %}style="margin-top: 3.5rem; padding-top: 4rem;"{% else %}style="padding-top: 4rem;"{% endif %}>
+    <div class="flex min-h-[calc(100vh-4.5rem)] relative" {% if request.session.preview_role %}style="margin-top: 3.5rem; padding-top: 4.5rem;"{% else %}style="padding-top: 4.5rem;"{% endif %}>
         {% include 'teacher/partials/sidebar.html' %}
         
-        <main class="flex-1 w-full lg:ml-64 pt-8 pb-6 px-6 sm:pt-10 sm:pb-8 sm:px-8 lg:pt-12 lg:pb-10 lg:px-10">
+        <main class="flex-1 w-full lg:ml-56 pt-8 pb-6 px-6 sm:pt-10 sm:pb-8 sm:px-8 lg:pt-12 lg:pb-10 lg:px-10">
             {% if messages %}
                 {% for message in messages %}
-                    <div class="mb-4 p-4 rounded-lg {% if message.tags == 'error' %}bg-red-500/20 border border-red-500/50 text-red-200{% elif message.tags == 'success' %}bg-green-500/20 border border-green-500/50 text-green-200{% elif message.tags == 'warning' %}bg-yellow-500/20 border border-yellow-500/50 text-yellow-200{% else %}bg-[#04363a]/50 border border-white/10 text-white{% endif %}">
+                    <div class="mb-4 p-4 rounded-lg {% if message.tags == 'error' %}bg-red-500/20 border border-red-500/50 text-red-200{% elif message.tags == 'success' %}bg-green-500/20 border border-green-500/50 text-green-200{% elif message.tags == 'warning' %}bg-yellow-500/20 border border-yellow-500/50 text-yellow-200{% else %}" style="background-color: var(--bg-secondary); border-color: var(--border-primary); color: var(--text-primary);"{% endif %}>
                         {{ message }}
                     </div>
                 {% endfor %}

@@ -1,17 +1,18 @@
 {% extends 'teacher/base.html' %}
 
 {% block content %}
-<div class="space-y-6 sm:space-y-8">
-    <div>
-        <h1 class="text-3xl sm:text-4xl font-bold text-white mb-2">My Students</h1>
-        <p class="text-white/60">View and manage your students across all courses</p>
+<div class="space-y-8 sm:space-y-10">
+    <div class="mb-10">
+        <h1 class="text-4xl sm:text-5xl font-bold text-white mb-3 tracking-tight drop-shadow-[0_0_20px_rgba(130,194,147,0.3)]">My Students</h1>
+        <p class="text-base sm:text-lg font-normal text-white/50 tracking-wide">View and manage your students across all courses</p>
     </div>
+    <div class="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent mb-8"></div>
     
-    <div class="bg-[#04363a]/50 backdrop-blur-sm border border-white/10 rounded-xl shadow-lg overflow-hidden">
+    <div class="bg-white/5 backdrop-blur-2xl border border-white/8 rounded-2xl shadow-xl overflow-hidden">
         {% if students %}
         <div class="overflow-x-auto">
             <table class="w-full">
-                <thead class="bg-[#254346]/50 border-b border-white/10">
+                <thead class="bg-white/5 border-b border-white/10">
                     <tr>
                         <th class="text-left px-6 py-4 text-sm font-semibold text-white">Student</th>
                         <th class="text-left px-6 py-4 text-sm font-semibold text-white">Email</th>
@@ -21,7 +22,7 @@
                 </thead>
                 <tbody class="divide-y divide-white/10">
                     {% for student_data in students %}
-                    <tr class="hover:bg-[#254346]/30 transition">
+                    <tr class="hover:bg-white/5 transition-all duration-300">
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-full bg-[#254346] border border-white/10 flex items-center justify-center">
@@ -55,9 +56,9 @@
         </div>
         {% else %}
         <div class="p-12 text-center">
-            <i class="fas fa-users text-5xl text-white/20 mb-4"></i>
+            <i class="fas fa-users text-5xl text-white/15 mb-4"></i>
             <h3 class="text-xl font-semibold text-white mb-2">No students yet</h3>
-            <p class="text-white/60">Students will appear here once they enroll in your courses</p>
+            <p class="text-white/50">Students will appear here once they enroll in your courses</p>
         </div>
         {% endif %}
     </div>

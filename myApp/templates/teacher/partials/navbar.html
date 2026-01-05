@@ -1,47 +1,65 @@
-<nav class="fixed top-0 left-0 right-0 h-16 bg-[#04363a]/70 backdrop-blur-xl border-b border-[#254346]/60 z-50 flex items-center justify-between px-6">
+<nav class="fixed top-0 left-0 right-0 h-[4.5rem] backdrop-blur-xl border-b z-50 flex items-center justify-between px-6 transition-all duration-300" style="background-color: var(--navbar-bg); border-color: var(--border-primary); box-shadow: var(--navbar-shadow);">
+    <style>
+        /* Premium logo handling - Dark mode: light logo, Light mode: dark logo */
+        html[data-theme="dark"] .teacher-logo,
+        .theme-dark .teacher-logo {
+            filter: none;
+            opacity: 1;
+        }
+        
+        html[data-theme="light"] .teacher-logo,
+        .theme-light .teacher-logo {
+            filter: brightness(0) saturate(100%) invert(8%) sepia(25%) saturate(1500%) hue-rotate(145deg) brightness(0.7);
+            opacity: 1;
+        }
+        
+        .teacher-logo {
+            transition: filter 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
+        }
+    </style>
     <div class="flex items-center gap-4 flex-1 min-w-0">
         <a href="{% url 'teacher_dashboard' %}" class="flex items-center gap-3 group shrink-0">
             <img src="https://res.cloudinary.com/dkjtfjnlf/image/upload/v1766498125/Fluentory-Trsp-LS_xlra0r.png" 
                  alt="Fluentory Logo" 
-                 class="h-[110px] w-auto transition-transform duration-300 group-hover:scale-105" />
-            <span class="hidden sm:inline text-sm text-white/60">Teacher Portal</span>
+                 class="teacher-logo h-[110px] w-auto group-hover:scale-105" />
+            <span class="hidden sm:inline text-sm font-medium" style="color: var(--text-tertiary);">Teacher Portal</span>
         </a>
     </div>
     
     <div class="flex items-center gap-4 shrink-0">
             {% include 'partials/theme_toggle.html' %}
-            <a href="{% url 'teacher_dashboard' %}" class="text-white hover:text-[#82C293] transition px-3 py-2 rounded-lg hover:bg-white/5">
+            <a href="{% url 'teacher_dashboard' %}" class="transition-all duration-300 px-3 py-2 rounded-lg" style="color: var(--text-secondary);" onmouseover="this.style.color='var(--accent-primary)'; this.style.backgroundColor='rgba(130, 194, 147, 0.1)'" onmouseout="this.style.color='var(--text-secondary)'; this.style.backgroundColor='transparent'">
                 <i class="fas fa-home mr-2"></i>
                 <span class="hidden sm:inline">Dashboard</span>
             </a>
             
             <!-- User Dropdown -->
             <div class="relative" id="user-dropdown">
-                <button class="flex items-center gap-2 cursor-pointer hover:opacity-80 transition" onclick="toggleUserMenu()">
-                    <div class="w-8 h-8 rounded-full bg-[#254346] border border-white/10 grid place-items-center overflow-hidden">
+                <button class="flex items-center gap-3 cursor-pointer rounded-full px-4 py-2 border transition-all duration-300" style="background-color: var(--bg-elevated); border-color: var(--border-primary);" onmouseover="this.style.backgroundColor='rgba(130, 194, 147, 0.1)'; this.style.borderColor='var(--accent-primary)'" onmouseout="this.style.backgroundColor='var(--bg-elevated)'; this.style.borderColor='var(--border-primary)'" onclick="toggleUserMenu()">
+                    <div class="w-9 h-9 rounded-full grid place-items-center overflow-hidden border transition-all duration-300" style="background-color: var(--bg-secondary); border-color: var(--border-primary);">
                         {% if request.user.profile.avatar %}
                         <img src="{{ request.user.profile.avatar.url }}" alt="" class="w-full h-full object-cover">
                         {% else %}
-                        <i class="fas fa-user text-sm text-white/70"></i>
+                        <i class="fas fa-user text-sm" style="color: var(--text-secondary);"></i>
                         {% endif %}
                     </div>
-                    <span class="hidden sm:inline text-sm text-white">{{ request.user.first_name|default:request.user.username }}</span>
-                    <i class="fas fa-chevron-down text-xs text-white/60 hidden sm:inline"></i>
+                    <span class="hidden sm:inline text-sm font-medium" style="color: var(--text-primary);">{{ request.user.first_name|default:request.user.username }}</span>
+                    <i class="fas fa-chevron-down text-xs hidden sm:inline" style="color: var(--text-muted);"></i>
                 </button>
                 
                 <!-- Dropdown Menu -->
-                <div id="user-menu" class="hidden absolute right-0 top-full mt-2 w-48 bg-[#04363a]/90 backdrop-blur-xl rounded-xl border border-white/10 shadow-lg py-2 z-50">
-                    <div class="px-4 py-2 border-b border-white/10">
-                        <div class="font-medium text-white">{{ request.user.first_name }} {{ request.user.last_name }}</div>
-                        <div class="text-xs text-white/60">{{ request.user.email }}</div>
+                <div id="user-menu" class="hidden absolute right-0 top-full mt-2 w-48 backdrop-blur-xl rounded-2xl border py-2 z-50 transition-all duration-300" style="background-color: var(--dropdown-bg); border-color: var(--border-primary); box-shadow: var(--card-shadow-hover);">
+                    <div class="px-4 py-2 border-b" style="border-color: var(--border-primary);">
+                        <div class="font-medium" style="color: var(--text-primary);">{{ request.user.first_name }} {{ request.user.last_name }}</div>
+                        <div class="text-xs" style="color: var(--text-tertiary);">{{ request.user.email }}</div>
                     </div>
-                    <a href="{% url 'teacher_dashboard' %}" class="block px-4 py-2 text-sm text-white hover:bg-[#254346]/50 transition">
+                    <a href="{% url 'teacher_dashboard' %}" class="block px-4 py-2 text-sm transition-all duration-200" style="color: var(--text-primary);" onmouseover="this.style.backgroundColor='var(--bg-elevated)'" onmouseout="this.style.backgroundColor='transparent'">
                         <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
                     </a>
-                    <a href="{% url 'student_home' %}" class="block px-4 py-2 text-sm text-white hover:bg-[#254346]/50 transition">
+                    <a href="{% url 'student_home' %}" class="block px-4 py-2 text-sm transition-all duration-200" style="color: var(--text-primary);" onmouseover="this.style.backgroundColor='var(--bg-elevated)'" onmouseout="this.style.backgroundColor='transparent'">
                         <i class="fas fa-user-graduate mr-2"></i> Student View
                     </a>
-                    <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm text-red-400 hover:bg-red-500/20 transition border-t border-white/10 mt-2 pt-2">
+                    <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm transition-all duration-200 border-t mt-2 pt-2" style="border-color: var(--border-primary); color: #ef4444;" onmouseover="this.style.backgroundColor='rgba(239, 68, 68, 0.1)'" onmouseout="this.style.backgroundColor='transparent'">
                         <i class="fas fa-sign-out-alt mr-2"></i> Logout
                     </a>
                 </div>

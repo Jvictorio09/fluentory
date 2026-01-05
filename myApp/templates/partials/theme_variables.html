@@ -6,15 +6,25 @@
         --bg-secondary: #04363A;
         --bg-elevated: #254346;
         --text-primary: #FFFFFF;
-        --text-secondary: rgba(255, 255, 255, 0.7);
-        --text-tertiary: rgba(255, 255, 255, 0.6);
-        --text-muted: rgba(255, 255, 255, 0.5);
+        --text-secondary: rgba(255, 255, 255, 0.9);
+        --text-tertiary: rgba(255, 255, 255, 0.8);
+        --text-muted: rgba(255, 255, 255, 0.7);
         --border-primary: rgba(255, 255, 255, 0.1);
         --border-accent: rgba(130, 194, 147, 0.3);
         --accent-primary: #82C293;
         --accent-cta: #00655F;
         --gradient-start: #00655F;
         --gradient-end: #82C293;
+        
+        /* Background gradient for dark mode */
+        --bg-gradient-top: #0a1f22;
+        --bg-gradient-middle: #04363a;
+        --bg-gradient-bottom: #021a1c;
+        
+        /* Navbar and sidebar backgrounds for dark mode */
+        --navbar-bg: rgba(4, 54, 58, 0.4);
+        --sidebar-bg: rgba(4, 54, 58, 0.3);
+        --dropdown-bg: rgba(4, 54, 58, 0.8);
         
         /* Hero-specific dark mode gradients and shadows */
         --hero-radial-gradient: radial-gradient(circle at 50% 20%, rgba(130,194,147,0.15), rgba(0,101,95,0.1), transparent 70%);
@@ -30,20 +40,45 @@
     }
     
     [data-theme="light"] {
-        /* Light Mode Colors */
-        --bg-primary: #F7FAF9;
+        /* Light Mode Colors - Premium SaaS, High Contrast, Clean & Crisp */
+        --bg-primary: #FAFBFC;
         --bg-secondary: #FFFFFF;
-        --bg-elevated: #EEF5F3;
-        --text-primary: #0F2E2E;
-        --text-secondary: rgba(15, 46, 46, 0.7);
-        --text-tertiary: rgba(15, 46, 46, 0.6);
-        --text-muted: rgba(15, 46, 46, 0.5);
-        --border-primary: rgba(15, 46, 46, 0.1);
-        --border-accent: rgba(130, 194, 147, 0.3);
+        --bg-elevated: #F8F9FA;
+        --text-primary: #0A1F1F;
+        --text-secondary: rgba(10, 31, 31, 0.72);
+        --text-tertiary: rgba(10, 31, 31, 0.60);
+        --text-muted: rgba(10, 31, 31, 0.50);
+        --border-primary: rgba(10, 31, 31, 0.08);
+        --border-accent: rgba(130, 194, 147, 0.25);
         --accent-primary: #82C293;
         --accent-cta: #00655F;
         --gradient-start: #00655F;
         --gradient-end: #82C293;
+        
+        /* Background gradient for light mode - premium with subtle mint/teal top wash */
+        --bg-gradient-top: #F0F8F5;
+        --bg-gradient-middle: #F8F9FA;
+        --bg-gradient-bottom: #F5F7F8;
+        
+        /* Navbar and sidebar backgrounds for light mode - crisp white */
+        --navbar-bg: rgba(255, 255, 255, 0.98);
+        --sidebar-bg: rgba(255, 255, 255, 0.98);
+        --dropdown-bg: rgba(255, 255, 255, 0.98);
+        
+        /* Premium shadows for light mode - soft, wide, floating */
+        --card-shadow: 0 1px 3px rgba(10, 31, 31, 0.06), 0 1px 2px rgba(10, 31, 31, 0.04);
+        --card-shadow-hover: 0 4px 12px rgba(10, 31, 31, 0.08), 0 2px 4px rgba(10, 31, 31, 0.04);
+        --card-shadow-lifted: 0 8px 24px rgba(10, 31, 31, 0.10), 0 4px 8px rgba(10, 31, 31, 0.06);
+        --navbar-shadow: 0 1px 2px rgba(10, 31, 31, 0.04);
+        
+        /* Premium icon container colors */
+        --icon-bg-tint: rgba(130, 194, 147, 0.08);
+        --icon-color: #5FA372;
+        
+        /* Premium badge colors */
+        --badge-bg: rgba(130, 194, 147, 0.10);
+        --badge-border: rgba(130, 194, 147, 0.20);
+        --badge-text: #0F5A3F;
         
         /* Hero-specific light mode gradients and shadows */
         --hero-radial-gradient: radial-gradient(circle at 50% 18%, rgba(130,194,147,0.22), rgba(130,194,147,0.10), transparent 68%);
@@ -58,11 +93,788 @@
         --hero-cta-shadow: 0 18px 55px rgba(0,101,95,0.35);
     }
     
-    /* Smooth transitions for theme switching */
+    /* Premium shadows for dark mode */
+    :root {
+        --card-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.2);
+        --card-shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.4), 0 4px 8px rgba(0, 0, 0, 0.3);
+        --navbar-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Smooth transitions for theme switching - Premium timing */
     * {
-        transition-property: background-color, border-color, color, fill, stroke, opacity;
+        transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
         transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-        transition-duration: 200ms;
+        transition-duration: 300ms;
+    }
+    
+    /* Text Selection Styles - Dark Mode */
+    ::selection {
+        background-color: rgba(130, 194, 147, 0.3);
+        color: var(--text-primary);
+    }
+    
+    ::-moz-selection {
+        background-color: rgba(130, 194, 147, 0.3);
+        color: var(--text-primary);
+    }
+    
+    /* Text Selection Styles - Light Mode (clean, muted - NO BLUE) */
+    [data-theme="light"] ::selection {
+        background-color: rgba(130, 194, 147, 0.12);
+        color: var(--text-primary);
+    }
+    
+    [data-theme="light"] ::-moz-selection {
+        background-color: rgba(130, 194, 147, 0.12);
+        color: var(--text-primary);
+    }
+    
+    
+    /* Focus states - Dark Mode */
+    *:focus {
+        outline: none;
+    }
+    
+    *:focus-visible {
+        outline: 2px solid rgba(130, 194, 147, 0.5);
+        outline-offset: 2px;
+    }
+    
+    /* Focus states - Light Mode (muted, low-contrast) */
+    [data-theme="light"] *:focus-visible {
+        outline: 2px solid rgba(130, 194, 147, 0.25);
+        outline-offset: 2px;
+    }
+    
+    /* Premium typography enhancements */
+    h1, h2, h3, h4, h5, h6 {
+        font-weight: 600;
+        letter-spacing: -0.02em;
+    }
+    
+    /* Theme-aware text color overrides for Tailwind classes - Global Fix */
+    /* Override text-white for headings in light mode - HIGH CONTRAST */
+    [data-theme="light"] h1.text-white,
+    [data-theme="light"] h2.text-white,
+    [data-theme="light"] h3.text-white,
+    [data-theme="light"] h4.text-white,
+    [data-theme="light"] h5.text-white,
+    [data-theme="light"] h6.text-white {
+        color: var(--text-primary) !important;
+    }
+    
+    /* Override text-white/XX opacity classes for headings in light mode */
+    [data-theme="light"] h1.text-white\/70,
+    [data-theme="light"] h1.text-white\/60,
+    [data-theme="light"] h1.text-white\/75,
+    [data-theme="light"] h1.text-white\/50,
+    [data-theme="light"] h2.text-white\/70,
+    [data-theme="light"] h2.text-white\/60,
+    [data-theme="light"] h2.text-white\/75,
+    [data-theme="light"] h2.text-white\/50,
+    [data-theme="light"] h3.text-white\/70,
+    [data-theme="light"] h3.text-white\/60,
+    [data-theme="light"] h3.text-white\/75,
+    [data-theme="light"] h3.text-white\/50 {
+        color: var(--text-secondary) !important;
+    }
+    
+    /* Override text-white for paragraphs and subtitles in light mode */
+    [data-theme="light"] p.text-white,
+    [data-theme="light"] span.text-white,
+    [data-theme="light"] label.text-white,
+    [data-theme="light"] div.text-white {
+        color: var(--text-primary) !important;
+    }
+    
+    /* Override text-white/XX for paragraphs, spans, and subtitles in light mode */
+    [data-theme="light"] p.text-white\/70,
+    [data-theme="light"] p.text-white\/60,
+    [data-theme="light"] p.text-white\/75,
+    [data-theme="light"] p.text-white\/50,
+    [data-theme="light"] span.text-white\/70,
+    [data-theme="light"] span.text-white\/60,
+    [data-theme="light"] span.text-white\/75,
+    [data-theme="light"] span.text-white\/50,
+    [data-theme="light"] label.text-white\/70,
+    [data-theme="light"] label.text-white\/60,
+    [data-theme="light"] div.text-white\/70,
+    [data-theme="light"] div.text-white\/60 {
+        color: var(--text-secondary) !important;
+    }
+    
+    /* Premium button styling */
+    .btn-primary {
+        background: linear-gradient(to right, var(--accent-cta), var(--accent-primary));
+        color: white;
+        font-weight: 600;
+        box-shadow: 0 4px 14px rgba(0, 101, 95, 0.3);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 101, 95, 0.4);
+    }
+    
+    [data-theme="light"] .btn-primary {
+        box-shadow: 0 4px 14px rgba(0, 101, 95, 0.25);
+    }
+    
+    [data-theme="light"] .btn-primary:hover {
+        box-shadow: 0 8px 24px rgba(0, 101, 95, 0.35);
+    }
+    
+    /* Premium card styling */
+    .card-premium {
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-primary);
+        border-radius: 1rem;
+        box-shadow: var(--card-shadow);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .card-premium:hover {
+        box-shadow: var(--card-shadow-hover);
+        transform: translateY(-2px);
+    }
+    
+    /* Sidebar active accent line animation */
+    @keyframes accentLineSlide {
+        from {
+            opacity: 0;
+            transform: scaleY(0);
+        }
+        to {
+            opacity: 1;
+            transform: scaleY(1);
+        }
+    }
+    
+    .sidebar-active-accent {
+        position: relative;
+    }
+    
+    .sidebar-active-accent::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 3px;
+        height: 60%;
+        background: linear-gradient(to bottom, var(--accent-primary), var(--accent-cta));
+        border-radius: 0 2px 2px 0;
+        box-shadow: 0 0 12px rgba(130, 194, 147, 0.5);
+        animation: accentLineSlide 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* Premium Typography Hierarchy */
+    h1 {
+        font-size: 2.25rem;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        color: var(--text-primary);
+        margin-bottom: 1rem;
+        background-color: transparent !important;
+        background: none !important;
+    }
+    
+    h2 {
+        font-size: 1.875rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        line-height: 1.3;
+        color: var(--text-primary);
+        margin-bottom: 0.875rem;
+        background-color: transparent !important;
+        background: none !important;
+    }
+    
+    h3 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        line-height: 1.4;
+        color: var(--text-primary);
+        margin-bottom: 0.75rem;
+        background-color: transparent !important;
+        background: none !important;
+    }
+    
+    /* Ensure paragraphs and text elements have no backgrounds */
+    p, span:not([class*="bg-"]):not([style*="background"]), 
+    label:not([class*="bg-"]):not([style*="background"]),
+    a:not([class*="bg-"]):not([style*="background"]) {
+        background-color: transparent !important;
+        background: none !important;
+    }
+    
+    /* Premium Empty States */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        border-radius: 1rem;
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-primary);
+    }
+    
+    .empty-state-icon {
+        font-size: 4rem;
+        margin-bottom: 1.5rem;
+        opacity: 0.4;
+        color: var(--text-tertiary);
+        transition: opacity 0.3s ease;
+    }
+    
+    .empty-state-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--text-primary);
+    }
+    
+    .empty-state-description {
+        font-size: 1rem;
+        margin-bottom: 2rem;
+        color: var(--text-secondary);
+        max-width: 32rem;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    /* Premium Button Styles */
+    .btn-cta-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.75rem;
+        padding: 0.875rem 1.75rem;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        font-size: 1rem;
+        background: linear-gradient(to right, var(--accent-cta), var(--accent-primary));
+        color: white;
+        border: none;
+        box-shadow: 0 4px 14px rgba(0, 101, 95, 0.3);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        text-decoration: none;
+    }
+    
+    .btn-cta-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 101, 95, 0.4);
+    }
+    
+    [data-theme="light"] .btn-cta-primary {
+        box-shadow: 0 4px 14px rgba(0, 101, 95, 0.25);
+    }
+    
+    [data-theme="light"] .btn-cta-primary:hover {
+        box-shadow: 0 8px 24px rgba(0, 101, 95, 0.35);
+    }
+    
+    /* Premium Card Styling */
+    .card-premium {
+        background-color: var(--bg-secondary);
+        border: 1px solid var(--border-primary);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        box-shadow: var(--card-shadow);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .card-premium:hover {
+        box-shadow: var(--card-shadow-hover);
+        transform: translateY(-2px);
+    }
+    
+    /* Page Load Animation */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .page-enter-content {
+        animation: fadeInUp 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    /* Stat Numbers - Premium styling */
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        line-height: 1;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-label {
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    /* Context Awareness - Subtle cues */
+    .context-date {
+        font-size: 0.875rem;
+        color: var(--text-tertiary);
+        font-weight: 400;
+    }
+    
+    .context-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.375rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 500;
+        background-color: var(--bg-elevated);
+        border: 1px solid var(--border-primary);
+        color: var(--text-secondary);
+    }
+    
+    /* ============================================
+       PREMIUM LIGHT MODE STYLING - GLOBAL
+       Applied to Admin, Teacher, Student, Partner
+       ============================================ */
+    
+    /* Premium Light Mode Background Gradient - Subtle mint/teal top wash */
+    [data-theme="light"] body {
+        background: linear-gradient(to bottom, var(--bg-gradient-top) 0%, var(--bg-gradient-top) 15%, var(--bg-gradient-middle) 40%, var(--bg-gradient-bottom) 100%);
+    }
+    
+    /* Premium Card Base Styling - Light Mode - Pure White Cards */
+    [data-theme="light"] .rounded-2xl.bg-white {
+        position: relative;
+        background-color: #FFFFFF !important;
+        border: 1px solid var(--border-primary) !important;
+        box-shadow: var(--card-shadow) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+    }
+    
+    /* Thin Accent Line at Top of Cards - Premium Signature Detail */
+    [data-theme="light"] .rounded-2xl.bg-white::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(to right, rgba(130, 194, 147, 0.6), rgba(130, 194, 147, 0.4));
+        z-index: 1;
+        transition: opacity 0.3s ease;
+    }
+    
+    [data-theme="light"] .rounded-2xl.bg-white:hover {
+        box-shadow: var(--card-shadow-hover) !important;
+        transform: translateY(-2px);
+        border-color: var(--border-primary);
+    }
+    
+    /* Accent line brightens slightly on hover */
+    [data-theme="light"] .rounded-2xl.bg-white:hover::before {
+        opacity: 0.9;
+        background: linear-gradient(to right, rgba(130, 194, 147, 0.75), rgba(130, 194, 147, 0.55));
+    }
+    
+    /* Override border-muted-taupe and any colored borders in light mode */
+    [data-theme="light"] .border-muted-taupe\/20,
+    [data-theme="light"] .border-red-200,
+    [data-theme="light"] .border-2.border-red-200 {
+        border-color: var(--border-primary) !important;
+    }
+    
+    /* Ensure ALL cards get accent line - handle edge cases */
+    [data-theme="light"] .rounded-2xl[class*="bg-"]:not(.rounded-2xl.bg-white):not(.rounded-2xl.bg-red-50\/30):not(.rounded-2xl.bg-yellow-50\/30):not(.rounded-2xl.bg-orange-50\/30) {
+        position: relative;
+        overflow: hidden;
+        background-color: #FFFFFF !important;
+    }
+    
+    [data-theme="light"] .rounded-2xl[class*="bg-"]:not(.rounded-2xl.bg-white):not(.rounded-2xl.bg-red-50\/30):not(.rounded-2xl.bg-yellow-50\/30):not(.rounded-2xl.bg-orange-50\/30)::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(to right, rgba(130, 194, 147, 0.6), rgba(130, 194, 147, 0.4));
+        z-index: 1;
+    }
+    
+    /* Premium Icon Pills - Light Mode - Soft Mint Tint, Unified Look */
+    [data-theme="light"] .rounded-xl.bg-green-50,
+    [data-theme="light"] .rounded-xl.bg-blue-50,
+    [data-theme="light"] .rounded-xl.bg-purple-50,
+    [data-theme="light"] .rounded-xl.bg-orange-50,
+    [data-theme="light"] .rounded-xl.bg-indigo-50,
+    [data-theme="light"] .rounded-xl.bg-red-50,
+    [data-theme="light"] .rounded-xl.bg-yellow-50,
+    [data-theme="light"] .rounded-xl.bg-red-100,
+    [data-theme="light"] .rounded-xl.bg-yellow-100,
+    [data-theme="light"] .rounded-xl.bg-orange-100 {
+        background-color: rgba(130, 194, 147, 0.09) !important;
+        border: 1px solid rgba(130, 194, 147, 0.18) !important;
+        border-radius: 0.75rem !important;
+    }
+    
+    [data-theme="light"] .rounded-xl.bg-green-50 i,
+    [data-theme="light"] .rounded-xl.bg-blue-50 i,
+    [data-theme="light"] .rounded-xl.bg-purple-50 i,
+    [data-theme="light"] .rounded-xl.bg-orange-50 i,
+    [data-theme="light"] .rounded-xl.bg-indigo-50 i,
+    [data-theme="light"] .rounded-xl.bg-red-50 i,
+    [data-theme="light"] .rounded-xl.bg-yellow-50 i,
+    [data-theme="light"] .rounded-xl.bg-red-100 i,
+    [data-theme="light"] .rounded-xl.bg-yellow-100 i,
+    [data-theme="light"] .rounded-xl.bg-orange-100 i {
+        color: #4A8F5F !important; /* Darker green for better contrast in light mode */
+    }
+    
+    /* Replace yellow with muted warm amber/coral that complements green theme - Light Mode Only */
+    [data-theme="light"] .bg-yellow-50,
+    [data-theme="light"] .bg-yellow-100 {
+        background-color: rgba(232, 168, 124, 0.12) !important; /* Muted warm coral/peach */
+    }
+    
+    [data-theme="light"] .bg-yellow-50\/30 {
+        background-color: rgba(232, 168, 124, 0.08) !important;
+    }
+    
+    [data-theme="light"] .text-yellow-600 {
+        color: #C98B5F !important; /* Muted warm brown-coral */
+    }
+    
+    [data-theme="light"] .text-yellow-700 {
+        color: #A8764F !important; /* Deeper muted warm tone */
+    }
+    
+    [data-theme="light"] .border-yellow-200,
+    [data-theme="light"] .border-yellow-300 {
+        border-color: rgba(232, 168, 124, 0.25) !important;
+    }
+    
+    [data-theme="light"] .border-yellow-200\/50 {
+        border-color: rgba(232, 168, 124, 0.18) !important;
+    }
+    
+    /* Premium Badge Styling - Light Mode - Light Neutral Pills with Subtle Green */
+    [data-theme="light"] .rounded-full.bg-green-50,
+    [data-theme="light"] .rounded-full.bg-blue-50,
+    [data-theme="light"] .rounded-full.bg-purple-50,
+    [data-theme="light"] .rounded-full.bg-orange-50,
+    [data-theme="light"] .rounded-full.bg-indigo-50,
+    [data-theme="light"] .rounded-full.bg-red-50 {
+        background-color: rgba(248, 250, 249, 0.95) !important;
+        border: 1px solid rgba(130, 194, 147, 0.15) !important;
+        color: var(--badge-text) !important;
+    }
+    
+    [data-theme="light"] .rounded-full.text-green-700,
+    [data-theme="light"] .rounded-full.text-blue-700,
+    [data-theme="light"] .rounded-full.text-purple-700,
+    [data-theme="light"] .rounded-full.text-orange-700,
+    [data-theme="light"] .rounded-full.text-indigo-700,
+    [data-theme="light"] .rounded-full.text-red-700 {
+        color: var(--badge-text) !important;
+    }
+    
+    /* Remove any colored borders from badges */
+    [data-theme="light"] .rounded-full.border-green-200,
+    [data-theme="light"] .rounded-full.border-blue-200,
+    [data-theme="light"] .rounded-full.border-purple-200,
+    [data-theme="light"] .rounded-full.border-orange-200,
+    [data-theme="light"] .rounded-full.border-indigo-200,
+    [data-theme="light"] .rounded-full.border-red-200 {
+        border-color: rgba(130, 194, 147, 0.15) !important;
+    }
+    
+    /* Premium Typography - Heavy, Crisp Headings in Light Mode */
+    [data-theme="light"] h1.font-extralight,
+    [data-theme="light"] h1.font-light {
+        font-weight: 700 !important;
+    }
+    
+    /* Premium Metric Numbers - Light Mode */
+    [data-theme="light"] .text-3xl.font-extralight.text-deep-charcoal,
+    [data-theme="light"] .text-4xl.font-extralight.text-deep-charcoal {
+        font-weight: 700 !important;
+        letter-spacing: -0.02em;
+        color: var(--text-primary) !important;
+    }
+    
+    /* Premium Labels - Light Mode - Crisp Contrast */
+    [data-theme="light"] .text-xs.uppercase.tracking-wider.text-deep-charcoal\/50 {
+        color: var(--text-tertiary) !important;
+        font-weight: 500;
+    }
+    
+    [data-theme="light"] .text-sm.text-deep-charcoal\/60 {
+        color: var(--text-secondary) !important;
+        font-weight: 500;
+    }
+    
+    /* ============================================
+       CARD TEXT CONTRAST FIX - LIGHT MODE
+       Make all text inside cards readable on white backgrounds
+       ============================================ */
+    
+    /* Card Title / Label - Medium-dark neutral, not muted */
+    [data-theme="light"] .rounded-2xl.bg-white .text-xs.uppercase,
+    [data-theme="light"] .rounded-2xl.bg-white .text-xs.uppercase.tracking-wider,
+    [data-theme="light"] .rounded-2xl[class*="bg-"] .text-xs.uppercase,
+    [data-theme="light"] .rounded-2xl[class*="bg-"] .text-xs.uppercase.tracking-wider {
+        color: rgba(10, 31, 31, 0.75) !important; /* Medium-dark neutral */
+        font-weight: 600 !important;
+    }
+    
+    /* Primary Value / Numbers - Near-black, strongest contrast */
+    [data-theme="light"] .rounded-2xl.bg-white .text-3xl,
+    [data-theme="light"] .rounded-2xl.bg-white .text-4xl,
+    [data-theme="light"] .rounded-2xl[class*="bg-"] .text-3xl,
+    [data-theme="light"] .rounded-2xl[class*="bg-"] .text-4xl {
+        color: rgba(10, 31, 31, 0.95) !important; /* Near-black */
+        font-weight: 700 !important;
+    }
+    
+    /* Secondary text / Descriptions - Darker gray, clearly readable */
+    [data-theme="light"] .rounded-2xl.bg-white .text-sm,
+    [data-theme="light"] .rounded-2xl[class*="bg-"] .text-sm {
+        color: rgba(10, 31, 31, 0.70) !important; /* Darker gray */
+        font-weight: 500 !important;
+    }
+    
+    /* Override muted text colors inside cards */
+    [data-theme="light"] .rounded-2xl.bg-white .text-deep-charcoal\/50,
+    [data-theme="light"] .rounded-2xl.bg-white .text-deep-charcoal\/60,
+    [data-theme="light"] .rounded-2xl.bg-white .text-deep-charcoal\/70,
+    [data-theme="light"] .rounded-2xl[class*="bg-"] .text-deep-charcoal\/50,
+    [data-theme="light"] .rounded-2xl[class*="bg-"] .text-deep-charcoal\/60,
+    [data-theme="light"] .rounded-2xl[class*="bg-"] .text-deep-charcoal\/70 {
+        color: rgba(10, 31, 31, 0.70) !important;
+    }
+    
+    /* Fix thin/outlined font look - ensure solid weight */
+    [data-theme="light"] .rounded-2xl.bg-white h2,
+    [data-theme="light"] .rounded-2xl.bg-white h3,
+    [data-theme="light"] .rounded-2xl[class*="bg-"] h2,
+    [data-theme="light"] .rounded-2xl[class*="bg-"] h3 {
+        font-weight: 600 !important;
+        color: rgba(10, 31, 31, 0.95) !important;
+    }
+    
+    /* Icon Pills - Darker icon color for contrast */
+    [data-theme="light"] .rounded-2xl.bg-white .rounded-xl[class*="bg-"] i,
+    [data-theme="light"] .rounded-2xl[class*="bg-"] .rounded-xl[class*="bg-"] i {
+        color: #4A8F5F !important; /* Darker green for better contrast */
+    }
+    
+    /* Badges - Darker text for readability */
+    [data-theme="light"] .rounded-2xl.bg-white .rounded-full[class*="bg-"],
+    [data-theme="light"] .rounded-2xl[class*="bg-"] .rounded-full[class*="bg-"] {
+        color: rgba(10, 31, 31, 0.85) !important; /* Dark readable text */
+        font-weight: 600 !important;
+    }
+    
+    /* Ensure Action Center Cards are White in Light Mode */
+    [data-theme="light"] .rounded-2xl[class*="bg-red-50"],
+    [data-theme="light"] .rounded-2xl[class*="bg-yellow-50"],
+    [data-theme="light"] .rounded-2xl[class*="bg-orange-50"] {
+        background-color: #FFFFFF !important;
+        border: 1px solid var(--border-primary) !important;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    /* Action Center Cards also get accent lines */
+    [data-theme="light"] .rounded-2xl[class*="bg-red-50"]::before,
+    [data-theme="light"] .rounded-2xl[class*="bg-yellow-50"]::before,
+    [data-theme="light"] .rounded-2xl[class*="bg-orange-50"]::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(to right, rgba(130, 194, 147, 0.6), rgba(130, 194, 147, 0.4));
+        z-index: 1;
+    }
+    
+    /* Override any colored borders in action center - use attribute selectors for better specificity */
+    [data-theme="light"] [class*="border-red-200"],
+    [data-theme="light"] [class*="border-yellow-200"],
+    [data-theme="light"] [class*="border-orange-200"],
+    [data-theme="light"] [class*="hover:border-red-300"],
+    [data-theme="light"] [class*="hover:border-yellow-300"],
+    [data-theme="light"] [class*="hover:border-orange-300"] {
+        border-color: var(--border-primary) !important;
+    }
+    
+    /* Ensure all card content is positioned above accent line */
+    [data-theme="light"] .rounded-2xl[class*="bg-"] > * {
+        position: relative;
+        z-index: 2;
+    }
+    
+    /* ============================================
+       PARTNER DASHBOARD DARK MODE FIXES
+       Override hardcoded light-mode colors for dark mode
+       ============================================ */
+    
+    /* Dark Mode: Cards with bg-white class - use theme background */
+    [data-theme="dark"] .rounded-2xl.bg-white {
+        background-color: var(--bg-secondary) !important;
+        border: 1px solid var(--border-primary) !important;
+        box-shadow: var(--card-shadow) !important;
+    }
+    
+    /* Dark Mode: All text inside Partner cards - override hardcoded dark colors with theme variables */
+    /* Target by class combinations since inline styles can't be reliably matched */
+    [data-theme="dark"] .rounded-2xl.bg-white .text-xs.uppercase,
+    [data-theme="dark"] .rounded-2xl.bg-white .text-xs.uppercase.tracking-wider {
+        color: rgba(255, 255, 255, 0.85) !important;
+    }
+    
+    [data-theme="dark"] .rounded-2xl.bg-white .text-2xl,
+    [data-theme="dark"] .rounded-2xl.bg-white .text-3xl,
+    [data-theme="dark"] .rounded-2xl.bg-white .text-4xl {
+        color: #FFFFFF !important;
+        font-weight: 700 !important;
+    }
+    
+    [data-theme="dark"] .rounded-2xl.bg-white .text-sm,
+    [data-theme="dark"] .rounded-2xl.bg-white .text-xs:not(.uppercase) {
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+    
+    [data-theme="dark"] .rounded-2xl.bg-white h2,
+    [data-theme="dark"] .rounded-2xl.bg-white h3,
+    [data-theme="dark"] .rounded-2xl.bg-white .font-semibold,
+    [data-theme="dark"] .rounded-2xl.bg-white .font-bold,
+    [data-theme="dark"] .rounded-2xl.bg-white .font-medium {
+        color: #FFFFFF !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Dark Mode: All text elements in cards - comprehensive override */
+    [data-theme="dark"] .rounded-2xl.bg-white p,
+    [data-theme="dark"] .rounded-2xl.bg-white span,
+    [data-theme="dark"] .rounded-2xl.bg-white div:not(.rounded-xl):not(.rounded-full),
+    [data-theme="dark"] .rounded-2xl.bg-white label {
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+    
+    /* Dark Mode: All headings across the app - brighter */
+    [data-theme="dark"] h1,
+    [data-theme="dark"] h2,
+    [data-theme="dark"] h3 {
+        color: #FFFFFF !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Dark Mode: Body text - brighter */
+    [data-theme="dark"] p,
+    [data-theme="dark"] span:not([class*="badge"]):not([class*="pill"]),
+    [data-theme="dark"] div:not([class*="bg-"]):not([class*="rounded-"]) {
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+    
+    /* Dark Mode: Nested white cards (action panel mini-cards, etc.) */
+    [data-theme="dark"] .rounded-2xl.bg-white .bg-white {
+        background-color: var(--bg-elevated) !important;
+    }
+    
+    /* Dark Mode: Icon pills - make them darker/more visible */
+    [data-theme="dark"] .rounded-2xl.bg-white .rounded-xl[style*="background-color: rgba(130, 194, 147, 0.09)"] {
+        background-color: rgba(130, 194, 147, 0.15) !important;
+        border-color: rgba(130, 194, 147, 0.3) !important;
+    }
+    
+    [data-theme="dark"] .rounded-2xl.bg-white .rounded-xl i {
+        color: var(--accent-primary) !important;
+    }
+    
+    /* Dark Mode: Badges - make them darker/more visible */
+    [data-theme="dark"] .rounded-2xl.bg-white .rounded-full[style*="background-color: rgba(248, 250, 249, 0.95)"] {
+        background-color: rgba(130, 194, 147, 0.2) !important;
+        border-color: rgba(130, 194, 147, 0.35) !important;
+        color: var(--text-primary) !important;
+    }
+    
+    [data-theme="dark"] .rounded-2xl.bg-white .rounded-full {
+        color: #FFFFFF !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Dark Mode: Accent lines - make them more visible */
+    [data-theme="dark"] .rounded-2xl.bg-white .relative[style*="background: linear-gradient"],
+    [data-theme="dark"] .rounded-2xl.bg-white .absolute[style*="background: linear-gradient"] {
+        background: linear-gradient(to right, rgba(130, 194, 147, 0.5), rgba(130, 194, 147, 0.35)) !important;
+    }
+    
+    /* Dark Mode: Preview banners - brighter text */
+    [data-theme="dark"] .rounded-xl[style*="background-color: rgba(59, 130, 246, 0.08)"] {
+        background-color: rgba(59, 130, 246, 0.15) !important;
+        border-color: rgba(59, 130, 246, 0.3) !important;
+    }
+    
+    [data-theme="dark"] .rounded-xl[style*="background-color: rgba(59, 130, 246, 0.08)"] *,
+    [data-theme="dark"] .rounded-xl[style*="background-color: rgba(59, 130, 246, 0.08)"] span,
+    [data-theme="dark"] .rounded-xl[style*="background-color: rgba(59, 130, 246, 0.08)"] div {
+        color: #FFFFFF !important;
+    }
+    
+    /* Dark Mode: Icons - brighter */
+    [data-theme="dark"] .rounded-2xl.bg-white i[style*="color: #4A8F5F"],
+    [data-theme="dark"] .rounded-2xl.bg-white i {
+        color: #82C293 !important;
+    }
+    
+    /* Dark Mode: Empty state and muted elements - brighter */
+    [data-theme="dark"] .rounded-2xl.bg-white .text-4xl i {
+        color: rgba(255, 255, 255, 0.8) !important;
+    }
+    
+    [data-theme="dark"] .rounded-2xl.bg-white .fa-chevron-right {
+        color: rgba(255, 255, 255, 0.8) !important;
+    }
+    
+    /* Dark Mode: Links and interactive elements */
+    [data-theme="dark"] a {
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+    
+    [data-theme="dark"] a:hover {
+        color: #82C293 !important;
+    }
+    
+    /* Dark Mode: Tables */
+    [data-theme="dark"] table th,
+    [data-theme="dark"] table td {
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+    
+    /* Dark Mode: Form inputs and labels */
+    [data-theme="dark"] label {
+        color: rgba(255, 255, 255, 0.9) !important;
+    }
+    
+    [data-theme="dark"] input,
+    [data-theme="dark"] textarea,
+    [data-theme="dark"] select {
+        color: #FFFFFF !important;
     }
 </style>
 

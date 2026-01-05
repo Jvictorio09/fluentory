@@ -85,11 +85,11 @@
                         GET STARTED
                     </div>
                     
-                    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-white mb-3 sm:mb-4 leading-[1.1] tracking-[-0.02em]">
+                    <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-black mb-3 sm:mb-4 leading-[1.1] tracking-[-0.02em]">
                         Welcome, {{ user.first_name|default:user.username }}!
                     </h1>
                     
-                    <p class="text-base sm:text-lg lg:text-xl text-white/75 mb-6 sm:mb-8 font-light">
+                    <p class="text-base sm:text-lg lg:text-xl text-black mb-6 sm:mb-8 font-light">
                         {% if placement_test %}
                             Your recommended level: <strong>{{ placement_test.recommended_level|title }}</strong>
                         {% else %}
@@ -299,8 +299,8 @@
                     <i class="fas fa-robot text-[#82C293] text-base sm:text-lg"></i>
                 </div>
                 <div>
-                    <h3 class="text-xl sm:text-2xl font-light mb-2">Ask your tutor anything</h3>
-                    <p class="text-white/70 text-sm sm:text-base font-light">Get instant help with your learning</p>
+                    <h3 class="text-xl sm:text-2xl font-light mb-2 text-black">Ask your tutor anything</h3>
+                    <p class="text-black text-sm sm:text-base font-light">Get instant help with your learning</p>
                 </div>
             </div>
             

@@ -872,7 +872,13 @@ def dashboard_user_create(request):
         
         # If teacher, create teacher profile and auto-approve
         if role == 'instructor':
-            teacher = Teacher.objects.create(user=user, is_approved=True, approved_by=request.user, approved_at=timezone.now())
+            teacher = Teacher.objects.create(
+                user=user,
+                permission_level='standard',
+                is_approved=True,
+                approved_by=request.user,
+                approved_at=timezone.now()
+            )
             messages.success(request, f'Teacher {username} created and auto-approved!')
         else:
             messages.success(request, f'User {username} created successfully!')

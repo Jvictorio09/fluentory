@@ -1438,9 +1438,13 @@ def teacher_dashboard(request):
             messages.error(request, 'You do not have permission to access the teacher dashboard.')
             return redirect('student_home')
         # Create teacher profile if doesn't exist
-        teacher, _ = Teacher.objects.get_or_create(user=user)
-        teacher.is_approved = True
-        teacher.save()
+        teacher, _ = Teacher.objects.get_or_create(
+            user=user,
+            defaults={'permission_level': 'standard', 'is_approved': True}
+        )
+        if not teacher.is_approved:
+            teacher.is_approved = True
+            teacher.save()
     
     # Update online status (only for real teacher objects)
     if hasattr(teacher, 'save') and teacher.id is not None:
@@ -1567,7 +1571,10 @@ def teacher_courses(request):
 def teacher_course_create(request):
     """Create new course (only for teachers with 'full' permission)"""
     user = request.user
-    teacher, _ = Teacher.objects.get_or_create(user=user)
+    teacher, _ = Teacher.objects.get_or_create(
+        user=user,
+        defaults={'permission_level': 'standard'}
+    )
     
     if request.method == 'POST':
         # Create course
@@ -1610,7 +1617,10 @@ def teacher_course_edit(request, course_id):
     """Edit course"""
     course = get_object_or_404(Course, id=course_id)
     user = request.user
-    teacher, _ = Teacher.objects.get_or_create(user=user)
+    teacher, _ = Teacher.objects.get_or_create(
+        user=user,
+        defaults={'permission_level': 'standard'}
+    )
     
     # Check permissions
     assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
@@ -1654,7 +1664,10 @@ def teacher_lessons(request, course_id):
     """Manage lessons for a course"""
     course = get_object_or_404(Course, id=course_id)
     user = request.user
-    teacher, _ = Teacher.objects.get_or_create(user=user)
+    teacher, _ = Teacher.objects.get_or_create(
+        user=user,
+        defaults={'permission_level': 'standard'}
+    )
     
     # Check permissions
     assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
@@ -1678,7 +1691,10 @@ def teacher_lesson_create(request, course_id):
     """Create new lesson"""
     course = get_object_or_404(Course, id=course_id)
     user = request.user
-    teacher, _ = Teacher.objects.get_or_create(user=user)
+    teacher, _ = Teacher.objects.get_or_create(
+        user=user,
+        defaults={'permission_level': 'standard'}
+    )
     
     # Check permissions
     assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
@@ -1718,7 +1734,10 @@ def teacher_lesson_edit(request, course_id, lesson_id):
     course = get_object_or_404(Course, id=course_id)
     lesson = get_object_or_404(Lesson, id=lesson_id, module__course=course)
     user = request.user
-    teacher, _ = Teacher.objects.get_or_create(user=user)
+    teacher, _ = Teacher.objects.get_or_create(
+        user=user,
+        defaults={'permission_level': 'standard'}
+    )
     
     # Check permissions
     assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
@@ -1759,7 +1778,10 @@ def teacher_lesson_delete(request, course_id, lesson_id):
     course = get_object_or_404(Course, id=course_id)
     lesson = get_object_or_404(Lesson, id=lesson_id, module__course=course)
     user = request.user
-    teacher, _ = Teacher.objects.get_or_create(user=user)
+    teacher, _ = Teacher.objects.get_or_create(
+        user=user,
+        defaults={'permission_level': 'standard'}
+    )
     
     # Check permissions
     assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
@@ -1777,7 +1799,10 @@ def teacher_quizzes(request, course_id):
     """Manage quizzes for a course"""
     course = get_object_or_404(Course, id=course_id)
     user = request.user
-    teacher, _ = Teacher.objects.get_or_create(user=user)
+    teacher, _ = Teacher.objects.get_or_create(
+        user=user,
+        defaults={'permission_level': 'standard'}
+    )
     
     # Check permissions
     assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
@@ -1804,7 +1829,10 @@ def teacher_quiz_create(request, course_id):
     """Create new quiz"""
     course = get_object_or_404(Course, id=course_id)
     user = request.user
-    teacher, _ = Teacher.objects.get_or_create(user=user)
+    teacher, _ = Teacher.objects.get_or_create(
+        user=user,
+        defaults={'permission_level': 'standard'}
+    )
     
     # Check permissions
     assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
@@ -1838,7 +1866,10 @@ def teacher_quiz_edit(request, course_id, quiz_id):
     course = get_object_or_404(Course, id=course_id)
     quiz = get_object_or_404(Quiz, id=quiz_id, course=course)
     user = request.user
-    teacher, _ = Teacher.objects.get_or_create(user=user)
+    teacher, _ = Teacher.objects.get_or_create(
+        user=user,
+        defaults={'permission_level': 'standard'}
+    )
     
     # Check permissions
     assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
@@ -1872,7 +1903,10 @@ def teacher_quiz_delete(request, course_id, quiz_id):
     course = get_object_or_404(Course, id=course_id)
     quiz = get_object_or_404(Quiz, id=quiz_id, course=course)
     user = request.user
-    teacher, _ = Teacher.objects.get_or_create(user=user)
+    teacher, _ = Teacher.objects.get_or_create(
+        user=user,
+        defaults={'permission_level': 'standard'}
+    )
     
     # Check permissions
     assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
@@ -1891,7 +1925,10 @@ def teacher_quiz_questions(request, course_id, quiz_id):
     course = get_object_or_404(Course, id=course_id)
     quiz = get_object_or_404(Quiz, id=quiz_id, course=course)
     user = request.user
-    teacher, _ = Teacher.objects.get_or_create(user=user)
+    teacher, _ = Teacher.objects.get_or_create(
+        user=user,
+        defaults={'permission_level': 'standard'}
+    )
     
     # Check permissions
     assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
@@ -1940,7 +1977,10 @@ def teacher_quiz_questions(request, course_id, quiz_id):
 def teacher_my_students(request):
     """View all students across assigned courses"""
     user = request.user
-    teacher, _ = Teacher.objects.get_or_create(user=user)
+    teacher, _ = Teacher.objects.get_or_create(
+        user=user,
+        defaults={'permission_level': 'standard'}
+    )
     
     # Get assigned courses
     assigned_courses = CourseTeacher.objects.filter(teacher=teacher).select_related('course')
@@ -1998,7 +2038,10 @@ def teacher_students(request, course_id):
     """View students for a specific course"""
     course = get_object_or_404(Course, id=course_id)
     user = request.user
-    teacher, _ = Teacher.objects.get_or_create(user=user)
+    teacher, _ = Teacher.objects.get_or_create(
+        user=user,
+        defaults={'permission_level': 'standard'}
+    )
     
     # Check permissions
     assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
@@ -2033,7 +2076,10 @@ def teacher_students(request, course_id):
 def teacher_schedule(request):
     """Live class schedule"""
     user = request.user
-    teacher, _ = Teacher.objects.get_or_create(user=user)
+    teacher, _ = Teacher.objects.get_or_create(
+        user=user,
+        defaults={'permission_level': 'standard'}
+    )
     
     live_classes = LiveClassSession.objects.filter(teacher=teacher).select_related('course').order_by('-scheduled_start')
     
@@ -2096,7 +2142,10 @@ def teacher_live_classes(request, course_id):
     """Live classes for a specific course"""
     course = get_object_or_404(Course, id=course_id)
     user = request.user
-    teacher, _ = Teacher.objects.get_or_create(user=user)
+    teacher, _ = Teacher.objects.get_or_create(
+        user=user,
+        defaults={'permission_level': 'standard'}
+    )
     
     # Check permissions
     assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
@@ -2121,7 +2170,10 @@ def teacher_announcements(request, course_id):
     """Course announcements"""
     course = get_object_or_404(Course, id=course_id)
     user = request.user
-    teacher, _ = Teacher.objects.get_or_create(user=user)
+    teacher, _ = Teacher.objects.get_or_create(
+        user=user,
+        defaults={'permission_level': 'standard'}
+    )
     
     # Check permissions
     assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
@@ -2171,7 +2223,10 @@ def teacher_ai_settings(request, course_id):
     """Configure AI Tutor settings for a course"""
     course = get_object_or_404(Course, id=course_id)
     user = request.user
-    teacher, _ = Teacher.objects.get_or_create(user=user)
+    teacher, _ = Teacher.objects.get_or_create(
+        user=user,
+        defaults={'permission_level': 'standard'}
+    )
     
     # Check permissions - only teachers with edit or full access can configure AI settings
     assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
@@ -2212,7 +2267,10 @@ def teacher_ai_settings(request, course_id):
 def api_teacher_activity_feed(request):
     """Live activity feed for teacher dashboard (AJAX)"""
     user = request.user
-    teacher, _ = Teacher.objects.get_or_create(user=user)
+    teacher, _ = Teacher.objects.get_or_create(
+        user=user,
+        defaults={'permission_level': 'standard'}
+    )
     
     # Get assigned courses
     assigned_courses = CourseTeacher.objects.filter(teacher=teacher).select_related('course')
@@ -2753,13 +2811,26 @@ def api_update_language(request):
 def teacher_availability(request):
     """Manage teacher availability schedule"""
     user = request.user
-    teacher, _ = Teacher.objects.get_or_create(user=user)
+    teacher, _ = Teacher.objects.get_or_create(
+        user=user,
+        defaults={'permission_level': 'standard'}
+    )
     
     # Get all availability slots
-    availability_slots = TeacherAvailability.objects.filter(teacher=teacher).order_by('day_of_week', 'start_time')
+    # Order by slot type, then by day/time (handles both recurring and one-time slots)
+    availability_slots = TeacherAvailability.objects.filter(teacher=teacher).order_by(
+        'slot_type',
+        'day_of_week',
+        'start_time',
+        'start_datetime'
+    )
     
     # Get teacher's courses for course-specific availability
-    courses = Course.objects.filter(instructor=user).order_by('title')
+    # Include courses where teacher is instructor OR assigned via CourseTeacher
+    assigned_course_ids = CourseTeacher.objects.filter(teacher=teacher).values_list('course_id', flat=True)
+    courses = Course.objects.filter(
+        Q(instructor=user) | Q(id__in=assigned_course_ids)
+    ).distinct().order_by('title')
     
     if request.method == 'POST':
         # Create new availability slot
@@ -2773,8 +2844,20 @@ def teacher_availability(request):
             start_datetime_str = request.POST.get('start_datetime')
             end_datetime_str = request.POST.get('end_datetime')
             
-            start_datetime = datetime.fromisoformat(start_datetime_str.replace('Z', '+00:00')) if start_datetime_str else None
-            end_datetime = datetime.fromisoformat(end_datetime_str.replace('Z', '+00:00')) if end_datetime_str else None
+            if not start_datetime_str or not end_datetime_str:
+                messages.error(request, 'Start datetime and end datetime are required for one-time slots.')
+                return redirect('teacher_availability')
+            
+            try:
+                start_datetime = datetime.fromisoformat(start_datetime_str.replace('Z', '+00:00'))
+                end_datetime = datetime.fromisoformat(end_datetime_str.replace('Z', '+00:00'))
+            except (ValueError, AttributeError) as e:
+                messages.error(request, f'Invalid datetime format: {str(e)}')
+                return redirect('teacher_availability')
+            
+            if end_datetime <= start_datetime:
+                messages.error(request, 'End datetime must be after start datetime.')
+                return redirect('teacher_availability')
             
             TeacherAvailability.objects.create(
                 teacher=teacher,
@@ -2786,11 +2869,25 @@ def teacher_availability(request):
             )
         else:
             # Recurring slot
-            day_of_week = int(request.POST.get('day_of_week'))
+            day_of_week_str = request.POST.get('day_of_week')
+            if not day_of_week_str:
+                messages.error(request, 'Day of week is required for recurring slots.')
+                return redirect('teacher_availability')
+            
+            try:
+                day_of_week = int(day_of_week_str)
+            except (ValueError, TypeError):
+                messages.error(request, 'Invalid day of week.')
+                return redirect('teacher_availability')
+            
             start_time = request.POST.get('start_time')
             end_time = request.POST.get('end_time')
             valid_from = request.POST.get('valid_from') or None
             valid_until = request.POST.get('valid_until') or None
+            
+            if not start_time or not end_time:
+                messages.error(request, 'Start time and end time are required for recurring slots.')
+                return redirect('teacher_availability')
             
             TeacherAvailability.objects.create(
                 teacher=teacher,
@@ -2845,7 +2942,10 @@ def teacher_availability_delete(request, availability_id):
 def teacher_schedule_calendar(request):
     """Teacher schedule calendar view"""
     user = request.user
-    teacher, _ = Teacher.objects.get_or_create(user=user)
+    teacher, _ = Teacher.objects.get_or_create(
+        user=user,
+        defaults={'permission_level': 'standard'}
+    )
     
     # Get all availability slots
     availability_slots = TeacherAvailability.objects.filter(teacher=teacher).order_by('day_of_week', 'start_time', 'start_datetime')
@@ -2869,7 +2969,10 @@ def teacher_schedule_calendar(request):
 @require_POST
 def teacher_toggle_online_status(request):
     """Toggle teacher online status"""
-    teacher, _ = Teacher.objects.get_or_create(user=request.user)
+    teacher, _ = Teacher.objects.get_or_create(
+        user=request.user,
+        defaults={'permission_level': 'standard'}
+    )
     is_online = request.POST.get('is_online') == 'true'
     teacher.update_online_status(is_online)
     

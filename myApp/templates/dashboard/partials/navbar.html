@@ -1,81 +1,99 @@
-<nav class="fixed top-0 left-0 right-0 h-16 bg-[#04363a]/70 backdrop-blur-xl border-b border-[#254346]/60 z-50 flex items-center justify-between px-6 animate-fade-in shadow-[0_4px_20px_rgba(0,0,0,0.3)]">
+<nav class="fixed top-0 left-0 right-0 h-16 z-50 flex items-center justify-between px-6 backdrop-blur-xl border-b transition-all duration-300" style="background-color: var(--navbar-bg); border-color: var(--border-primary); box-shadow: var(--navbar-shadow);">
+    <style>
+        /* Premium logo handling - Dark mode: light logo, Light mode: dark logo */
+        html[data-theme="dark"] .dashboard-logo,
+        .theme-dark .dashboard-logo {
+            filter: none;
+            opacity: 1;
+        }
+        
+        html[data-theme="light"] .dashboard-logo,
+        .theme-light .dashboard-logo {
+            filter: brightness(0) saturate(100%) invert(8%) sepia(25%) saturate(1500%) hue-rotate(145deg) brightness(0.7);
+            opacity: 1;
+        }
+        
+        .dashboard-logo {
+            transition: filter 0.3s ease, opacity 0.3s ease, transform 0.3s ease;
+        }
+    </style>
     <div class="flex items-center gap-4">
-        <a href="{% url 'dashboard:overview' %}" class="flex items-center gap-3 group animate-slide-in-left">
+        <a href="{% url 'dashboard:overview' %}" class="flex items-center gap-3 group">
             <img src="https://res.cloudinary.com/dkjtfjnlf/image/upload/v1766498125/Fluentory-Trsp-LS_xlra0r.png" 
                  alt="Fluentory Logo" 
-                 class="h-[110px] w-auto transition-transform duration-300 group-hover:scale-105" />
+                 class="dashboard-logo h-[110px] w-auto group-hover:scale-105" />
         </a>
-        <span class="text-xs px-3 py-1.5 rounded-full bg-[#82C293]/20 border border-[#82C293]/30 text-[#82C293] font-medium animate-scale-in hover:bg-[#82C293]/30 hover:border-[#82C293]/50 transition-all duration-300">
+        <span class="text-xs px-3 py-1.5 rounded-full font-medium transition-all duration-300" style="background-color: rgba(130, 194, 147, 0.15); border: 1px solid rgba(130, 194, 147, 0.3); color: var(--accent-primary);">
             Admin
         </span>
     </div>
     
-    <div class="flex items-center gap-4 animate-slide-in-right">
+    <div class="flex items-center gap-4">
         {% include 'partials/theme_toggle.html' %}
         <!-- Compact Role Switcher (dashboard header) -->
         <div class="relative group" id="dashboard-role-switcher">
-            <button class="flex items-center gap-2 px-3 py-2 rounded-md bg-[#82C293]/10 border border-[#82C293]/20 text-[#82C293] text-sm font-medium hover:bg-[#82C293]/20 hover:border-[#82C293]/30 transition-all duration-200">
+            <button class="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300" style="background-color: rgba(130, 194, 147, 0.1); border: 1px solid rgba(130, 194, 147, 0.2); color: var(--accent-primary);" onmouseover="this.style.backgroundColor='rgba(130, 194, 147, 0.2)'; this.style.borderColor='rgba(130, 194, 147, 0.3)'" onmouseout="this.style.backgroundColor='rgba(130, 194, 147, 0.1)'; this.style.borderColor='rgba(130, 194, 147, 0.2)'">
                 <i class="fas fa-exchange-alt"></i>
                 <span class="hidden sm:inline">Switch View</span>
                 <i class="fas fa-chevron-down text-xs ml-1"></i>
             </button>
-            <div class="absolute right-0 mt-2 w-56 rounded-xl bg-[#04363a]/95 backdrop-blur-xl border border-[#254346]/60 shadow-[0_15px_40px_rgba(0,0,0,0.5)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50">
+            <div class="absolute right-0 mt-2 w-56 rounded-xl backdrop-blur-xl border opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50" style="background-color: var(--dropdown-bg); border-color: var(--border-primary); box-shadow: var(--card-shadow-hover);">
                 <div class="p-2 space-y-1">
-                    <div class="px-3 py-2 text-xs uppercase tracking-wider text-white/50 font-medium">View As:</div>
-                    <a href="{% url 'dashboard:switch_role' %}?role=admin_dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white bg-[#82C293]/20 border border-[#82C293]/30 hover:bg-[#82C293]/30 hover:border-[#82C293]/50 transition-all duration-300 group/item">
-                        <div class="w-8 h-8 rounded-lg bg-[#82C293]/30 border border-[#82C293]/50 flex items-center justify-center">
-                            <i class="fas fa-shield-alt text-[#82C293] text-sm"></i>
+                    <div class="px-3 py-2 text-xs uppercase tracking-wider font-medium" style="color: var(--text-tertiary);">View As:</div>
+                    <a href="{% url 'dashboard:switch_role' %}?role=admin_dashboard" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group/item" style="background-color: rgba(130, 194, 147, 0.15); border: 1px solid rgba(130, 194, 147, 0.3); color: var(--text-primary);">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgba(130, 194, 147, 0.2); border: 1px solid rgba(130, 194, 147, 0.4);">
+                            <i class="fas fa-shield-alt text-sm" style="color: var(--accent-primary);"></i>
                         </div>
                         <div class="flex-1">
                             <div class="text-sm font-medium">Admin</div>
-                            <div class="text-xs text-white/60">Full control</div>
+                            <div class="text-xs" style="color: var(--text-muted);">Full control</div>
                         </div>
                     </a>
-                    <a href="{% url 'dashboard:switch_role' %}?role=student" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-[#82C293]/10 hover:text-white hover:border hover:border-[#82C293]/20 transition-all duration-300 group/item">
-                        <div class="w-8 h-8 rounded-lg bg-[#259d78]/20 border border-[#259d78]/30 flex items-center justify-center">
-                            <i class="fas fa-graduation-cap text-[#259d78] text-sm"></i>
+                    <a href="{% url 'dashboard:switch_role' %}?role=student" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group/item" style="color: var(--text-secondary);" onmouseover="this.style.backgroundColor='rgba(130, 194, 147, 0.1)'; this.style.color='var(--text-primary)'; this.style.border='1px solid rgba(130, 194, 147, 0.2)'" onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--text-secondary)'; this.style.border='none'">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgba(37, 157, 120, 0.15); border: 1px solid rgba(37, 157, 120, 0.3);">
+                            <i class="fas fa-graduation-cap text-sm" style="color: #259d78;"></i>
                         </div>
                         <div class="flex-1">
                             <div class="text-sm font-medium">Student</div>
-                            <div class="text-xs text-white/60">Learning view</div>
+                            <div class="text-xs" style="color: var(--text-muted);">Learning view</div>
                         </div>
                     </a>
-                    <a href="{% url 'dashboard:switch_role' %}?role=teacher" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-[#82C293]/10 hover:text-white hover:border hover:border-[#82C293]/20 transition-all duration-300 group/item">
-                        <div class="w-8 h-8 rounded-lg bg-[#369dbf]/20 border border-[#369dbf]/30 flex items-center justify-center">
-                            <i class="fas fa-chalkboard-teacher text-[#369dbf] text-sm"></i>
+                    <a href="{% url 'dashboard:switch_role' %}?role=teacher" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group/item" style="color: var(--text-secondary);" onmouseover="this.style.backgroundColor='rgba(130, 194, 147, 0.1)'; this.style.color='var(--text-primary)'; this.style.border='1px solid rgba(130, 194, 147, 0.2)'" onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--text-secondary)'; this.style.border='none'">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgba(54, 157, 191, 0.15); border: 1px solid rgba(54, 157, 191, 0.3);">
+                            <i class="fas fa-chalkboard-teacher text-sm" style="color: #369dbf;"></i>
                         </div>
                         <div class="flex-1">
                             <div class="text-sm font-medium">Teacher</div>
-                            <div class="text-xs text-white/60">Course management</div>
+                            <div class="text-xs" style="color: var(--text-muted);">Course management</div>
                         </div>
                     </a>
-                    <a href="{% url 'dashboard:switch_role' %}?role=partner" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-white/70 hover:bg-[#82C293]/10 hover:text-white hover:border hover:border-[#82C293]/20 transition-all duration-300 group/item">
-                        <div class="w-8 h-8 rounded-lg bg-[#b8c943]/20 border border-[#b8c943]/30 flex items-center justify-center">
-                            <i class="fas fa-handshake text-[#b8c943] text-sm"></i>
+                    <a href="{% url 'dashboard:switch_role' %}?role=partner" class="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-300 group/item" style="color: var(--text-secondary);" onmouseover="this.style.backgroundColor='rgba(130, 194, 147, 0.1)'; this.style.color='var(--text-primary)'; this.style.border='1px solid rgba(130, 194, 147, 0.2)'" onmouseout="this.style.backgroundColor='transparent'; this.style.color='var(--text-secondary)'; this.style.border='none'">
+                        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background-color: rgba(184, 201, 67, 0.15); border: 1px solid rgba(184, 201, 67, 0.3);">
+                            <i class="fas fa-handshake text-sm" style="color: #b8c943;"></i>
                         </div>
                         <div class="flex-1">
                             <div class="text-sm font-medium">Partner</div>
-                            <div class="text-xs text-white/60">Analytics view</div>
+                            <div class="text-xs" style="color: var(--text-muted);">Analytics view</div>
                         </div>
                     </a>
                 </div>
             </div>
         </div>
         
-        <a href="{% url 'home' %}" class="text-sm text-white/80 hover:text-[#82C293] transition-all duration-300 flex items-center gap-2 group hover:scale-105">
+        <a href="{% url 'home' %}" class="text-sm transition-all duration-300 flex items-center gap-2 group" style="color: var(--text-secondary);" onmouseover="this.style.color='var(--accent-primary)'" onmouseout="this.style.color='var(--text-secondary)'">
             <i class="fas fa-globe transition-transform duration-300 group-hover:rotate-12"></i>
             <span>View Site</span>
         </a>
-        <a href="/django-admin/" class="text-sm text-white/80 hover:text-[#82C293] transition-all duration-300 flex items-center gap-2 group hover:scale-105" title="Technical Admin">
+        <a href="/django-admin/" class="text-sm transition-all duration-300 flex items-center gap-2 group" style="color: var(--text-secondary);" title="Technical Admin" onmouseover="this.style.color='var(--accent-primary)'" onmouseout="this.style.color='var(--text-secondary)'">
             <i class="fas fa-cog transition-transform duration-300 group-hover:rotate-90"></i>
             <span>Django Admin</span>
         </a>
-        <a href="{% url 'logout' %}" class="text-sm text-white/80 hover:text-red-400 transition-all duration-300 flex items-center gap-2 group hover:scale-105" title="Logout">
+        <a href="{% url 'logout' %}" class="text-sm transition-all duration-300 flex items-center gap-2 group" style="color: var(--text-secondary);" title="Logout" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='var(--text-secondary)'">
             <i class="fas fa-sign-out-alt transition-transform duration-300 group-hover:rotate-12"></i>
             <span class="hidden sm:inline">Logout</span>
         </a>
-        <div class="w-8 h-8 rounded-full bg-[#254346]/70 border border-white/10 flex items-center justify-center hover:bg-[#82C293]/20 hover:border-[#82C293]/40 transition-all duration-300 cursor-pointer group hover:scale-110">
-            <i class="fas fa-user text-white/70 text-sm group-hover:text-[#82C293] transition-colors duration-300"></i>
+        <div class="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-300 cursor-pointer group" style="background-color: var(--bg-elevated); border: 1px solid var(--border-primary);" onmouseover="this.style.borderColor='var(--accent-primary)'; this.style.backgroundColor='rgba(130, 194, 147, 0.15)'" onmouseout="this.style.borderColor='var(--border-primary)'; this.style.backgroundColor='var(--bg-elevated)'">
+            <i class="fas fa-user text-sm transition-colors duration-300" style="color: var(--text-secondary);"></i>
         </div>
     </div>
 </nav>

@@ -1,39 +1,57 @@
-<nav class="bg-[#04363a]/90 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50 w-full">
+<nav class="sticky top-0 z-50 w-full backdrop-blur-xl border-b transition-all duration-300" style="background-color: var(--navbar-bg); border-color: var(--border-primary); box-shadow: var(--navbar-shadow);">
+    <style>
+        /* Premium logo handling */
+        html[data-theme="dark"] .partner-logo,
+        .theme-dark .partner-logo {
+            filter: none;
+            opacity: 1;
+        }
+        
+        html[data-theme="light"] .partner-logo,
+        .theme-light .partner-logo {
+            filter: brightness(0) saturate(100%) invert(8%) sepia(25%) saturate(1500%) hue-rotate(145deg) brightness(0.7);
+            opacity: 1;
+        }
+        
+        .partner-logo {
+            transition: filter 0.3s ease, opacity 0.3s ease;
+        }
+    </style>
     <div class="px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3 sm:gap-6">
         <div class="flex items-center gap-3 sm:gap-6 flex-1 min-w-0">
-            <a href="/partner/" class="text-xl sm:text-2xl font-semibold text-white shrink-0">Fluentory Partner</a>
-            <span class="hidden sm:inline text-sm text-white/60">Partner Portal</span>
+            <a href="/partner/" class="text-xl sm:text-2xl font-semibold shrink-0 transition-all duration-300" style="color: var(--text-primary);" onmouseover="this.style.color='var(--accent-primary)'" onmouseout="this.style.color='var(--text-primary)'">Fluentory Partner</a>
+            <span class="hidden sm:inline text-sm" style="color: var(--text-tertiary);">Partner Portal</span>
         </div>
         
         <div class="flex items-center gap-3 sm:gap-4 shrink-0">
             {% include 'partials/theme_toggle.html' %}
             <!-- User Dropdown -->
             <div class="relative" id="user-dropdown">
-                <button class="flex items-center gap-2 cursor-pointer hover:opacity-80 transition" onclick="toggleUserMenu()">
-                    <div class="w-8 h-8 rounded-full bg-[#254346] border border-white/10 grid place-items-center overflow-hidden">
+                <button class="flex items-center gap-2 cursor-pointer transition-all duration-300" style="color: var(--text-primary);" onclick="toggleUserMenu()" onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                    <div class="w-8 h-8 rounded-full border grid place-items-center overflow-hidden transition-all duration-300" style="background-color: var(--bg-elevated); border-color: var(--border-primary);">
                         {% if request.user.profile.avatar %}
                         <img src="{{ request.user.profile.avatar.url }}" alt="" class="w-full h-full object-cover">
                         {% else %}
-                        <i class="fas fa-user text-sm text-white/70"></i>
+                        <i class="fas fa-user text-sm" style="color: var(--text-secondary);"></i>
                         {% endif %}
                     </div>
-                    <span class="hidden sm:inline text-sm text-white">{{ request.user.first_name|default:request.user.username }}</span>
-                    <i class="fas fa-chevron-down text-xs text-white/60 hidden sm:inline"></i>
+                    <span class="hidden sm:inline text-sm" style="color: var(--text-primary);">{{ request.user.first_name|default:request.user.username }}</span>
+                    <i class="fas fa-chevron-down text-xs hidden sm:inline" style="color: var(--text-muted);"></i>
                 </button>
                 
                 <!-- Dropdown Menu -->
-                <div id="user-menu" class="hidden absolute right-0 top-full mt-2 w-48 bg-[#04363a]/90 backdrop-blur-xl rounded-xl border border-white/10 shadow-lg py-2 z-50">
-                    <div class="px-4 py-2 border-b border-white/10">
-                        <div class="font-medium text-white">{{ request.user.first_name }} {{ request.user.last_name }}</div>
-                        <div class="text-xs text-white/60">{{ request.user.email }}</div>
+                <div id="user-menu" class="hidden absolute right-0 top-full mt-2 w-48 backdrop-blur-xl rounded-xl border py-2 z-50 transition-all duration-300" style="background-color: var(--dropdown-bg); border-color: var(--border-primary); box-shadow: var(--card-shadow-hover);">
+                    <div class="px-4 py-2 border-b" style="border-color: var(--border-primary);">
+                        <div class="font-medium" style="color: var(--text-primary);">{{ request.user.first_name }} {{ request.user.last_name }}</div>
+                        <div class="text-xs" style="color: var(--text-muted);">{{ request.user.email }}</div>
                     </div>
-                    <a href="/partner/" class="block px-4 py-2 text-sm text-white hover:bg-[#254346]/50 transition">
+                    <a href="/partner/" class="block px-4 py-2 text-sm transition-all duration-200" style="color: var(--text-primary);" onmouseover="this.style.backgroundColor='var(--bg-elevated)'" onmouseout="this.style.backgroundColor='transparent'">
                         <i class="fas fa-chart-line mr-2"></i> Dashboard
                     </a>
-                    <a href="{% url 'student_home' %}" class="block px-4 py-2 text-sm text-white hover:bg-[#254346]/50 transition">
+                    <a href="{% url 'student_home' %}" class="block px-4 py-2 text-sm transition-all duration-200" style="color: var(--text-primary);" onmouseover="this.style.backgroundColor='var(--bg-elevated)'" onmouseout="this.style.backgroundColor='transparent'">
                         <i class="fas fa-user-graduate mr-2"></i> Student View
                     </a>
-                    <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm text-white hover:bg-red-500/20 transition border-t border-white/10 mt-2 pt-2">
+                    <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm transition-all duration-200 border-t mt-2 pt-2" style="border-color: var(--border-primary); color: #ef4444;" onmouseover="this.style.backgroundColor='rgba(239, 68, 68, 0.1)'" onmouseout="this.style.backgroundColor='transparent'">
                         <i class="fas fa-sign-out-alt mr-2"></i> Logout
                     </a>
                 </div>
