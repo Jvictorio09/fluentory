@@ -6,9 +6,8 @@
     <title>{% block title %}Fluentory - Partner{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    {% load static %}
     {% include 'partials/theme_variables.html' %}
-    <script src="{% static 'js/theme.js' %}"></script>
+    {% include 'partials/theme_script.html' %}
     <script>
         tailwind.config = {
             theme: {
