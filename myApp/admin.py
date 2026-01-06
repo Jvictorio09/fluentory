@@ -6,7 +6,7 @@ from .models import (
     Certificate, PlacementTest, TutorConversation, TutorMessage,
     Partner, Cohort, CohortMembership, Payment, Review, FAQ,
     Notification, SiteSettings, Media,
-    TeacherAvailability, Booking, BookingReminder
+    TeacherAvailability, Booking, OneOnOneBooking, BookingReminder
 )
 
 
@@ -450,10 +450,30 @@ class BookingAdmin(admin.ModelAdmin):
     date_hierarchy = 'booked_at'
 
 
+@admin.register(OneOnOneBooking)
+class OneOnOneBookingAdmin(admin.ModelAdmin):
+    list_display = ['booking_id', 'user', 'availability_slot', 'course', 'status', 'booked_at', 'confirmed_at', 'attended']
+    list_filter = ['status', 'attended', 'cancellation_reason', 'booked_at', 'is_recurring']
+    search_fields = ['booking_id', 'user__username', 'user__email', 'availability_slot__teacher__user__username']
+    readonly_fields = ['booking_id', 'booked_at', 'confirmed_at', 'declined_at', 'cancelled_at', 'rescheduled_at']
+    date_hierarchy = 'booked_at'
+    raw_id_fields = ['user', 'availability_slot', 'course']
+
+
 @admin.register(BookingReminder)
 class BookingReminderAdmin(admin.ModelAdmin):
-    list_display = ['booking', 'reminder_type', 'sent_at', 'sent_via']
+    list_display = ['get_booking', 'reminder_type', 'sent_at', 'sent_via']
     list_filter = ['reminder_type', 'sent_via', 'sent_at']
-    search_fields = ['booking__user__username', 'booking__session__title']
+    search_fields = ['group_booking__user__username', 'group_booking__session__title', 
+                     'one_on_one_booking__user__username']
     readonly_fields = ['sent_at']
     date_hierarchy = 'sent_at'
+    
+    def get_booking(self, obj):
+        """Display the booking (either group or 1:1)"""
+        if obj.group_booking:
+            return f"Group: {obj.group_booking.user.get_full_name()} - {obj.group_booking.session.title}"
+        elif obj.one_on_one_booking:
+            return f"1:1: {obj.one_on_one_booking.user.get_full_name()} - {obj.one_on_one_booking.availability_slot}"
+        return "N/A"
+    get_booking.short_description = 'Booking'

@@ -21,7 +21,8 @@ from .models import (
     Partner, Cohort, CohortMembership, Payment, Review, FAQ,
     Notification, SiteSettings, Media, Teacher, CourseTeacher,
     LiveClassSession, CourseAnnouncement, StudentMessage,
-    TeacherAvailability, Booking, BookingReminder
+    TeacherAvailability, Booking, OneOnOneBooking, BookingReminder,
+    LiveClassBooking, TeacherBookingPolicy, BookingSeries, BookingSeriesItem, SessionWaitlist
 )
 
 
@@ -2077,12 +2078,27 @@ def teacher_students(request, course_id):
 def teacher_schedule(request):
     """Live class schedule"""
     user = request.user
-    teacher, _ = Teacher.objects.get_or_create(
-        user=user,
-        defaults={'permission_level': 'standard'}
-    )
     
-    live_classes = LiveClassSession.objects.filter(teacher=teacher).select_related('course').order_by('-scheduled_start')
+    # Get or create teacher profile - handle gracefully if creation fails
+    try:
+        teacher_instance, created = Teacher.objects.get_or_create(
+            user=user,
+            defaults={'permission_level': 'standard'}
+        )
+    except Exception as e:
+        # If we can't create/get teacher profile, show error and redirect
+        messages.error(request, 'Unable to access teacher profile. Please contact support if this issue persists.')
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error getting/creating Teacher for user {user.id}: {e}")
+        return redirect('teacher_dashboard')
+    
+    # Ensure teacher instance is valid
+    if not teacher_instance or not hasattr(teacher_instance, 'id'):
+        messages.error(request, 'Teacher profile not found. Please contact support.')
+        return redirect('teacher_dashboard')
+    
+    live_classes = LiveClassSession.objects.filter(teacher=teacher_instance).select_related('course').order_by('-scheduled_start')
     
     # Filters
     status = request.GET.get('status')
@@ -2095,30 +2111,122 @@ def teacher_schedule(request):
         course = get_object_or_404(Course, id=course_id)
         
         # Check if teacher has permission
-        assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+        assignment = CourseTeacher.objects.filter(teacher=teacher_instance, course=course).first()
         if not assignment or not assignment.can_create_live_classes:
             messages.error(request, 'You do not have permission to create live classes for this course.')
             return redirect('teacher_schedule')
         
-        from datetime import datetime
+        # Validate required fields
         scheduled_start_str = request.POST.get('scheduled_start')
-        if 'T' in scheduled_start_str:
-            scheduled_start = datetime.fromisoformat(scheduled_start_str.replace('Z', '+00:00'))
-        else:
-            scheduled_start = datetime.strptime(scheduled_start_str, '%Y-%m-%d %H:%M:%S')
+        if not scheduled_start_str:
+            messages.error(request, 'Start time is required.')
+            return redirect('teacher_schedule')
         
+        try:
+            duration_minutes = int(request.POST.get('duration_minutes', 60))
+            if duration_minutes < 1:
+                messages.error(request, 'Duration must be at least 1 minute.')
+                return redirect('teacher_schedule')
+        except (ValueError, TypeError):
+            messages.error(request, 'Invalid duration value.')
+            return redirect('teacher_schedule')
+        
+        # Parse and convert start time to timezone-aware datetime (UTC)
+        from datetime import datetime, timedelta
+        import pytz
+        
+        try:
+            if 'T' in scheduled_start_str:
+                # ISO format: '2024-01-01T10:00' or '2024-01-01T10:00Z' or '2024-01-01T10:00+00:00'
+                if scheduled_start_str.endswith('Z'):
+                    scheduled_start_str = scheduled_start_str[:-1] + '+00:00'
+                scheduled_start = datetime.fromisoformat(scheduled_start_str.replace('Z', '+00:00'))
+            else:
+                # Format: '2024-01-01 10:00:00'
+                scheduled_start = datetime.strptime(scheduled_start_str, '%Y-%m-%d %H:%M:%S')
+            
+            # Ensure timezone-aware (if naive, assume it's in teacher's timezone or UTC)
+            if scheduled_start.tzinfo is None:
+                # Try to get teacher's timezone, default to UTC
+                teacher_tz = getattr(teacher_instance, 'timezone', 'UTC') or 'UTC'
+                try:
+                    tz = pytz.timezone(teacher_tz)
+                except:
+                    tz = pytz.UTC
+                scheduled_start = tz.localize(scheduled_start)
+            
+            # Convert to UTC for storage
+            if scheduled_start.tzinfo != pytz.UTC:
+                scheduled_start_utc = scheduled_start.astimezone(pytz.UTC)
+            else:
+                scheduled_start_utc = scheduled_start
+            
+            # Compute end time: start + duration
+            scheduled_end_utc = scheduled_start_utc + timedelta(minutes=duration_minutes)
+            
+            # Convert to naive datetime for scheduled_start/scheduled_end (legacy fields may expect naive)
+            scheduled_start_naive = scheduled_start_utc.replace(tzinfo=None) if scheduled_start_utc.tzinfo else scheduled_start_utc
+            scheduled_end_naive = scheduled_end_utc.replace(tzinfo=None) if scheduled_end_utc.tzinfo else scheduled_end_utc
+            
+            # VALIDATION: Ensure scheduled_end_naive is computed correctly
+            if scheduled_end_naive is None:
+                messages.error(request, 'Failed to compute session end time. Please try again.')
+                return redirect('teacher_schedule')
+            
+            # Double-check: recompute if needed
+            if scheduled_start_naive and duration_minutes:
+                expected_end = scheduled_start_naive + timedelta(minutes=duration_minutes)
+                if abs((scheduled_end_naive - expected_end).total_seconds()) > 1:  # Allow 1 second tolerance
+                    scheduled_end_naive = expected_end
+            
+        except (ValueError, TypeError) as e:
+            messages.error(request, f'Invalid date/time format: {str(e)}')
+            return redirect('teacher_schedule')
+        except Exception as e:
+            messages.error(request, f'Error processing session time: {str(e)}')
+            return redirect('teacher_schedule')
+        
+        # Get seat capacity and waitlist settings for Group Session
+        try:
+            total_seats = int(request.POST.get('total_seats', 10))
+            if total_seats < 1:
+                messages.error(request, 'Total seats must be at least 1.')
+                return redirect('teacher_schedule')
+        except (ValueError, TypeError):
+            messages.error(request, 'Invalid total seats value.')
+            return redirect('teacher_schedule')
+        
+        enable_waitlist = request.POST.get('enable_waitlist') == 'on'
+        # CRITICAL: meeting_url column in DB is NOT NULL, so always provide a value (empty string if not provided)
+        meeting_link = request.POST.get('meeting_link', '').strip() or request.POST.get('zoom_link', '').strip() or request.POST.get('google_meet_link', '').strip() or ''
+        
+        # Get teacher's timezone for snapshot
+        teacher_tz = getattr(teacher_instance, 'timezone', 'UTC') or 'UTC'
+        
+        # Create session with all required fields
+        # CRITICAL: scheduled_end and meeting_link MUST be set here before INSERT to avoid IntegrityError
         live_class = LiveClassSession.objects.create(
             course=course,
-            teacher=teacher,
+            teacher=teacher_instance,
             title=request.POST.get('title'),
             description=request.POST.get('description', ''),
-            scheduled_start=scheduled_start,
-            duration_minutes=int(request.POST.get('duration_minutes', 60)),
+            scheduled_start=scheduled_start_naive,
+            scheduled_end=scheduled_end_naive,  # REQUIRED: Set before INSERT
+            start_at_utc=scheduled_start_utc,
+            end_at_utc=scheduled_end_utc,
+            duration_minutes=duration_minutes,
+            timezone_snapshot=teacher_tz,
+            meeting_link=meeting_link,  # REQUIRED: meeting_url column is NOT NULL
             zoom_link=request.POST.get('zoom_link', ''),
             google_meet_link=request.POST.get('google_meet_link', ''),
             meeting_id=request.POST.get('meeting_id', ''),
             meeting_password=request.POST.get('meeting_password', ''),
-            max_attendees=int(request.POST.get('max_attendees', 0)) or None
+            meeting_passcode=request.POST.get('meeting_password', ''),  # Also set new field
+            total_seats=total_seats,
+            seats_taken=0,  # REQUIRED: current_attendees column is NOT NULL, initialize to 0 for new sessions
+            enable_waitlist=enable_waitlist,
+            max_attendees=total_seats,  # Sync for backwards compatibility
+            capacity=total_seats,  # Phase 2: Set capacity
         )
         
         messages.success(request, 'Live class scheduled successfully!')
@@ -2127,7 +2235,7 @@ def teacher_schedule(request):
     # Get courses teacher can create live classes for
     # Include courses where teacher is assigned with permission, OR courses the teacher created themselves
     assigned_courses = CourseTeacher.objects.filter(
-        teacher=teacher,
+        teacher=teacher_instance,
         can_create_live_classes=True
     ).select_related('course')
     
@@ -2141,17 +2249,17 @@ def teacher_schedule(request):
     
     # Add teacher-created courses to the queryset (create CourseTeacher entries if needed)
     # Only create if teacher object is valid and saved
-    if teacher and hasattr(teacher, 'id') and teacher.id:
+    if teacher_instance.id:
         for course in teacher_created_courses:
             try:
                 # Verify teacher exists in database before creating relationship
-                from myApp.models import Teacher
-                if not Teacher.objects.filter(id=teacher.id).exists():
+                # Use the module-level Teacher import (already imported at top of file)
+                if not Teacher.objects.filter(id=teacher_instance.id).exists():
                     continue
                     
                 assignment, created = CourseTeacher.objects.get_or_create(
                     course=course,
-                    teacher=teacher,
+                    teacher=teacher_instance,
                     defaults={
                         'permission_level': 'full',
                         'can_create_live_classes': True,
@@ -2166,12 +2274,12 @@ def teacher_schedule(request):
                 # Log error but don't break the page - database schema issue
                 import logging
                 logger = logging.getLogger(__name__)
-                logger.error(f"Error creating CourseTeacher for course {course.id}, teacher {teacher.id if hasattr(teacher, 'id') else 'N/A'}: {e}")
+                logger.error(f"Error creating CourseTeacher for course {course.id}, teacher {teacher_instance.id if hasattr(teacher_instance, 'id') else 'N/A'}: {e}")
                 continue
     
     # Refresh the queryset to include newly created assignments
     assigned_courses = CourseTeacher.objects.filter(
-        teacher=teacher,
+        teacher=teacher_instance,
         can_create_live_classes=True
     ).select_related('course').distinct()
     
@@ -3000,7 +3108,10 @@ def teacher_schedule_calendar(request):
     live_sessions = LiveClassSession.objects.filter(teacher=teacher).select_related('course').order_by('scheduled_start')
     
     # Get all bookings
-    bookings = Booking.objects.filter(session__teacher=teacher).select_related('session', 'user').order_by('session__scheduled_start')
+    bookings = LiveClassBooking.objects.filter(
+        teacher=teacher,
+        booking_type='group_session'
+    ).select_related('session', 'student_user').order_by('start_at_utc', 'session__scheduled_start')
     
     context = {
         'availability_slots': availability_slots,
@@ -3035,7 +3146,7 @@ def teacher_toggle_online_status(request):
 
 @login_required
 def student_book_session(request, session_id):
-    """Book a live class session"""
+    """Book a live class session (Phase 2: Using unified LiveClassBooking)"""
     user = request.user
     session = get_object_or_404(LiveClassSession, id=session_id)
     
@@ -3054,44 +3165,101 @@ def student_book_session(request, session_id):
     if request.method == 'POST':
         student_notes = request.POST.get('student_notes', '')
         
-        # Check for conflicts (user already has a booking at this time)
-        conflicting_bookings = Booking.objects.filter(
-            user=user,
-            session__scheduled_start__date=session.scheduled_start.date(),
-            session__scheduled_start__time__gte=session.scheduled_start.time(),
-            session__scheduled_start__time__lt=session.scheduled_end.time(),
-            status__in=['confirmed', 'pending']
+        # Check for conflicts using unified booking model
+        start_utc = session.start_at_utc or session.scheduled_start
+        end_utc = session.end_at_utc or (start_utc + timezone.timedelta(minutes=session.duration_minutes))
+        
+        conflicting_bookings = LiveClassBooking.objects.filter(
+            student_user=user,
+            start_at_utc__lt=end_utc,
+            end_at_utc__gt=start_utc,
+            status__in=['pending', 'confirmed']
         ).exclude(session=session)
         
         if conflicting_bookings.exists():
             messages.error(request, 'You already have a booking at this time.')
             return redirect('student_course_detail', slug=session.course.slug)
         
-        # Determine booking status
-        if session.max_attendees and session.available_spots <= 0:
-            status = 'waitlisted'
-        else:
-            status = 'confirmed'
-        
-        booking = Booking.objects.create(
-            user=user,
+        # Check if already booked this session
+        existing_booking = LiveClassBooking.objects.filter(
+            student_user=user,
             session=session,
-            status=status,
-            student_notes=student_notes
+            booking_type='group_session',
+            status__in=['pending', 'confirmed']
+        ).first()
+        
+        if existing_booking:
+            messages.error(request, 'You already have a booking for this session.')
+            return redirect('student_course_detail', slug=session.course.slug)
+        
+        # Determine booking status based on seat availability and waitlist
+        if session.total_seats and session.remaining_seats <= 0:
+            # Check if waitlist is enabled
+            if session.enable_waitlist:
+                # Add to waitlist instead of creating booking
+                waitlist_entry, created = SessionWaitlist.objects.get_or_create(
+                    session=session,
+                    student_user=user,
+                    defaults={'status': 'waiting'}
+                )
+                if created:
+                    messages.info(request, f'Added to waitlist for "{session.title}". You will be notified if a spot becomes available.')
+                    Notification.objects.create(
+                        user=user,
+                        notification_type='booking_waitlisted',
+                        title='Added to Waitlist',
+                        message=f'You have been added to the waitlist for "{session.title}".'
+                    )
+                else:
+                    messages.info(request, 'You are already on the waitlist for this session.')
+                return redirect('student_bookings')
+            else:
+                messages.error(request, 'Session is full and waitlist is disabled.')
+                return redirect('student_course_detail', slug=session.course.slug)
+        
+        # Check if approval is required (using TeacherBookingPolicy)
+        requires_approval = False
+        policy = TeacherBookingPolicy.objects.filter(
+            teacher=session.teacher,
+            course=session.course
+        ).first()
+        if not policy:
+            policy = TeacherBookingPolicy.objects.filter(
+                teacher=session.teacher,
+                course__isnull=True
+            ).first()
+        if policy:
+            requires_approval = policy.requires_approval_for_group
+        
+        # Create unified booking
+        booking = LiveClassBooking.objects.create(
+            booking_type='group_session',
+            course=session.course,
+            teacher=session.teacher,
+            student_user=user,
+            session=session,
+            start_at_utc=start_utc,
+            end_at_utc=end_utc,
+            status='pending' if requires_approval else 'confirmed',
+            student_note=student_notes,
+            seats_reserved=1
         )
         
-        if status == 'confirmed':
+        if not requires_approval:
             booking.confirm()
+            # Update session seats_taken
+            session.seats_taken = (session.seats_taken or 0) + 1
+            session.save(update_fields=['seats_taken'])
             messages.success(request, f'Successfully booked "{session.title}"!')
         else:
-            messages.info(request, f'Added to waitlist for "{session.title}". You will be notified if a spot becomes available.')
+            messages.success(request, f'Booking request submitted for "{session.title}". The teacher will review your request.')
         
         # Create notification
         Notification.objects.create(
             user=user,
-            notification_type='booking_confirmed' if status == 'confirmed' else 'booking_waitlisted',
-            title=f'Booking {status.title()}',
-            message=f'Your booking for "{session.title}" is {status}.'
+            notification_type='booking_confirmed' if not requires_approval else 'booking_pending',
+            title=f'Booking {"Confirmed" if not requires_approval else "Pending"}',
+            message=f'Your booking for "{session.title}" is {"confirmed" if not requires_approval else "pending approval"}.'
         )
         
         return redirect('student_bookings')
@@ -3105,17 +3273,55 @@ def student_book_session(request, session_id):
 
 @login_required
 def student_bookings(request):
-    """View all student bookings"""
+    """View all student bookings (both Group Session and 1:1) - Phase 2: Using unified LiveClassBooking"""
     user = request.user
-    bookings = Booking.objects.filter(user=user).select_related('session', 'session__course', 'session__teacher__user').order_by('-booked_at')
     
-    # Separate by status
-    upcoming_bookings = bookings.filter(session__scheduled_start__gte=timezone.now(), status__in=['confirmed', 'waitlisted'])
-    past_bookings = bookings.filter(Q(session__scheduled_start__lt=timezone.now()) | Q(status__in=['cancelled', 'attended', 'no_show']))
+    # Get all bookings using unified model
+    all_bookings = LiveClassBooking.objects.filter(
+        student_user=user
+    ).select_related(
+        'session', 'session__course', 'session__teacher__user',
+        'course', 'teacher', 'teacher__user'
+    ).order_by('-created_at')
+    
+    # Separate by booking type and status
+    upcoming_group = []
+    past_group = []
+    upcoming_one_on_one = []
+    past_one_on_one = []
+    
+    now = timezone.now()
+    for booking in all_bookings:
+        if booking.booking_type == 'group_session':
+            # Group session booking
+            if booking.session:
+                session_start = booking.start_at_utc or booking.session.scheduled_start
+                if session_start >= now and booking.status in ['pending', 'confirmed']:
+                    upcoming_group.append(booking)
+                else:
+                    past_group.append(booking)
+        elif booking.booking_type == 'one_on_one':
+            # 1:1 booking
+            if booking.start_at_utc >= now and booking.status in ['pending', 'confirmed']:
+                upcoming_one_on_one.append(booking)
+            else:
+                past_one_on_one.append(booking)
+    
+    # Combine all upcoming and past bookings
+    upcoming_bookings = upcoming_group + upcoming_one_on_one
+    past_bookings = past_group + past_one_on_one
+    
+    # Sort by date
+    upcoming_bookings.sort(key=lambda x: x.start_at_utc or timezone.now(), reverse=False)
+    past_bookings.sort(key=lambda x: x.start_at_utc or timezone.now(), reverse=True)
     
     context = {
         'upcoming_bookings': upcoming_bookings,
         'past_bookings': past_bookings,
+        'upcoming_group': upcoming_group,
+        'past_group': past_group,
+        'upcoming_one_on_one': upcoming_one_on_one,
+        'past_one_on_one': past_one_on_one,
     }
     return render(request, 'student/bookings.html', context)
 
@@ -3123,24 +3329,39 @@ def student_bookings(request):
 @login_required
 @require_POST
 def student_booking_cancel(request, booking_id):
-    """Cancel a booking"""
-    booking = get_object_or_404(Booking, id=booking_id, user=request.user)
+    """Cancel a booking - Phase 2: Using unified LiveClassBooking"""
+    booking = get_object_or_404(LiveClassBooking, id=booking_id, student_user=request.user)
     
-    if not booking.can_cancel:
-        messages.error(request, 'This booking cannot be cancelled (must be cancelled at least 24 hours before the session).')
+    # Check if booking can be cancelled (must be at least 24 hours before start)
+    if booking.start_at_utc:
+        hours_until = (booking.start_at_utc - timezone.now()).total_seconds() / 3600
+        if hours_until < 24:
+            messages.error(request, 'This booking cannot be cancelled (must be cancelled at least 24 hours before the session).')
+            return redirect('student_bookings')
+    
+    if booking.status not in ['pending', 'confirmed']:
+        messages.error(request, 'This booking cannot be cancelled.')
         return redirect('student_bookings')
     
     notes = request.POST.get('notes', '')
-    booking.cancel(reason='student', notes=notes)
+    booking.cancel(cancelled_by=request.user, reason='student', note=notes)
+    
+    # Update session seats_taken if group session
+    if booking.booking_type == 'group_session' and booking.session:
+        session = booking.session
+        if session.seats_taken > 0:
+            session.seats_taken -= 1
+            session.save(update_fields=['seats_taken'])
     
     messages.success(request, 'Booking cancelled successfully.')
     
     # Create notification
+    session_title = booking.session.title if booking.session else '1:1 Session'
     Notification.objects.create(
         user=request.user,
         notification_type='booking_cancelled',
         title='Booking Cancelled',
-        message=f'Your booking for "{booking.session.title}" has been cancelled.'
+        message=f'Your booking for "{session_title}" has been cancelled.'
     )
     
     return redirect('student_bookings')
@@ -3148,8 +3369,12 @@ def student_booking_cancel(request, booking_id):
 
 @login_required
 def student_booking_reschedule(request, booking_id):
-    """Reschedule a booking to a different session"""
-    booking = get_object_or_404(Booking, id=booking_id, user=request.user)
+    """Reschedule a booking to a different session - Phase 2: Using unified LiveClassBooking"""
+    booking = get_object_or_404(LiveClassBooking, id=booking_id, student_user=request.user, booking_type='group_session')
+    
+    if not booking.session:
+        messages.error(request, 'This booking cannot be rescheduled.')
+        return redirect('student_bookings')
     
     if booking.status not in ['confirmed', 'pending']:
         messages.error(request, 'This booking cannot be rescheduled.')
@@ -3157,7 +3382,7 @@ def student_booking_reschedule(request, booking_id):
     
     # Get available sessions for the same course
     available_sessions = LiveClassSession.objects.filter(
-        course=booking.session.course,
+        course=booking.course,
         status='scheduled',
         scheduled_start__gte=timezone.now()
     ).exclude(id=booking.session.id).order_by('scheduled_start')
@@ -3166,7 +3391,7 @@ def student_booking_reschedule(request, booking_id):
         new_session_id = request.POST.get('new_session_id')
         notes = request.POST.get('notes', '')
         
-        new_session = get_object_or_404(LiveClassSession, id=new_session_id, course=booking.session.course)
+        new_session = get_object_or_404(LiveClassSession, id=new_session_id, course=booking.course)
         
         # Check if new session can be booked
         can_book, message = new_session.can_be_booked(request.user)
@@ -3174,21 +3399,48 @@ def student_booking_reschedule(request, booking_id):
             messages.error(request, message)
             return redirect('student_booking_reschedule', booking_id=booking.id)
         
-        new_booking = booking.reschedule_to(new_session, notes)
+        # Create new booking for new session
+        start_utc = new_session.start_at_utc or new_session.scheduled_start
+        end_utc = new_session.end_at_utc or (start_utc + timezone.timedelta(minutes=new_session.duration_minutes))
         
-        if new_booking:
-            messages.success(request, f'Booking rescheduled to {new_session.scheduled_start.strftime("%B %d, %Y at %I:%M %p")}.')
-            
-            # Create notification
-            Notification.objects.create(
-                user=request.user,
-                notification_type='booking_rescheduled',
-                title='Booking Rescheduled',
-                message=f'Your booking has been rescheduled to "{new_session.title}".'
-            )
-            return redirect('student_bookings')
-        else:
-            messages.error(request, 'Failed to reschedule booking.')
+        new_booking = LiveClassBooking.objects.create(
+            booking_type='group_session',
+            course=booking.course,
+            teacher=booking.teacher,
+            student_user=request.user,
+            session=new_session,
+            start_at_utc=start_utc,
+            end_at_utc=end_utc,
+            status=booking.status,  # Preserve original status
+            student_note=notes or booking.student_note,
+            seats_reserved=1
+        )
+        
+        # Mark old booking as rescheduled
+        booking.status = 'rescheduled'
+        booking.teacher_note = f'Rescheduled to session on {new_session.scheduled_start}'
+        booking.save()
+        
+        # Update session seats
+        if booking.session:
+            if booking.session.seats_taken > 0:
+                booking.session.seats_taken -= 1
+                booking.session.save(update_fields=['seats_taken'])
+        
+        if new_booking.status == 'confirmed':
+            new_session.seats_taken = (new_session.seats_taken or 0) + 1
+            new_session.save(update_fields=['seats_taken'])
+        
+        messages.success(request, f'Booking rescheduled to {new_session.scheduled_start.strftime("%B %d, %Y at %I:%M %p")}.')
+        
+        # Create notification
+        Notification.objects.create(
+            user=request.user,
+            notification_type='booking_rescheduled',
+            title='Booking Rescheduled',
+            message=f'Your booking has been rescheduled to "{new_session.title}".'
+        )
+        return redirect('student_bookings')
     
     context = {
         'booking': booking,
@@ -3203,9 +3455,12 @@ def student_booking_reschedule(request, booking_id):
 
 @login_required
 def teacher_session_bookings(request, session_id):
-    """View all bookings for a session (teacher view)"""
+    """View all bookings for a session (teacher view) - Phase 2: Using unified LiveClassBooking"""
     session = get_object_or_404(LiveClassSession, id=session_id, teacher__user=request.user)
-    bookings = Booking.objects.filter(session=session).select_related('user', 'user__profile').order_by('booked_at')
+    bookings = LiveClassBooking.objects.filter(
+        session=session,
+        booking_type='group_session'
+    ).select_related('student_user', 'student_user__profile').order_by('created_at')
     
     context = {
         'session': session,
@@ -3217,8 +3472,13 @@ def teacher_session_bookings(request, session_id):
 @login_required
 @require_POST
 def teacher_booking_cancel(request, booking_id):
-    """Teacher cancels a booking"""
-    booking = get_object_or_404(Booking, id=booking_id)
+    """Teacher cancels a booking - Phase 2: Using unified LiveClassBooking"""
+    booking = get_object_or_404(LiveClassBooking, id=booking_id, booking_type='group_session')
+    
+    if not booking.session:
+        messages.error(request, 'Invalid booking.')
+        return redirect('teacher_dashboard')
+    
     session = booking.session
     
     # Check if user is teacher for this session
@@ -3227,13 +3487,18 @@ def teacher_booking_cancel(request, booking_id):
         return redirect('teacher_live_classes', course_id=session.course.id)
     
     notes = request.POST.get('notes', '')
-    booking.cancel(reason='teacher', notes=notes)
+    booking.cancel(cancelled_by=request.user, reason='teacher', note=notes)
+    
+    # Update session seats_taken
+    if session.seats_taken > 0:
+        session.seats_taken -= 1
+        session.save(update_fields=['seats_taken'])
     
     messages.success(request, 'Booking cancelled successfully.')
     
     # Create notification for student
     Notification.objects.create(
-        user=booking.user,
+        user=booking.student_user,
         notification_type='booking_cancelled',
         title='Booking Cancelled by Teacher',
         message=f'Your booking for "{session.title}" has been cancelled by the teacher.'
@@ -3245,8 +3510,13 @@ def teacher_booking_cancel(request, booking_id):
 @login_required
 @require_POST
 def teacher_mark_attendance(request, booking_id):
-    """Mark student attendance"""
-    booking = get_object_or_404(Booking, id=booking_id)
+    """Mark student attendance - Phase 2: Using unified LiveClassBooking"""
+    booking = get_object_or_404(LiveClassBooking, id=booking_id, booking_type='group_session')
+    
+    if not booking.session:
+        messages.error(request, 'Invalid booking.')
+        return redirect('teacher_dashboard')
+    
     session = booking.session
     
     # Check if user is teacher for this session
@@ -3255,10 +3525,320 @@ def teacher_mark_attendance(request, booking_id):
         return redirect('teacher_live_classes', course_id=session.course.id)
     
     attended = request.POST.get('attended') == 'true'
-    booking.attended = attended
     booking.status = 'attended' if attended else 'no_show'
-    booking.attended_at = timezone.now() if attended else None
-    booking.save()
+    booking.save(update_fields=['status'])
     
     messages.success(request, f'Attendance marked as {"Attended" if attended else "No Show"}.')
     return redirect('teacher_session_bookings', session_id=session.id)
+
+
+# ============================================
+# 1:1 BOOKING SYSTEM - STUDENT BOOKING
+# ============================================
+
+@login_required
+def student_book_one_on_one(request, course_id):
+    """View available slots and book a 1:1 session"""
+    user = request.user
+    course = get_object_or_404(Course, id=course_id)
+    
+    # Check if course has 1:1 booking enabled
+    if course.booking_type != 'one_on_one':
+        messages.error(request, '1:1 booking is not enabled for this course.')
+        return redirect('student_course_detail', slug=course.slug)
+    
+    # Check if user is enrolled
+    enrollment = Enrollment.objects.filter(user=user, course=course, status='active').first()
+    if not enrollment:
+        messages.error(request, 'You must be enrolled in this course to book a session.')
+        return redirect('student_course_detail', slug=course.slug)
+    
+    # Get available teachers for this course
+    course_teachers = CourseTeacher.objects.filter(
+        course=course,
+        teacher__is_approved=True
+    ).select_related('teacher', 'teacher__user')
+    
+    # Get available slots for these teachers
+    available_slots = TeacherAvailability.objects.filter(
+        course=course,
+        teacher__in=[ct.teacher for ct in course_teachers],
+        is_active=True,
+        is_blocked=False
+    ).select_related('teacher', 'teacher__user').order_by('start_datetime', 'day_of_week', 'start_time')
+    
+    # Filter out slots that are already booked or unavailable
+    available_slots = [slot for slot in available_slots if slot.is_available_for_booking]
+    
+    # Filter by teacher if requested
+    teacher_id = request.GET.get('teacher_id')
+    if teacher_id:
+        available_slots = [slot for slot in available_slots if slot.teacher.id == int(teacher_id)]
+    
+    context = {
+        'course': course,
+        'enrollment': enrollment,
+        'available_slots': available_slots,
+        'course_teachers': course_teachers,
+        'selected_teacher_id': teacher_id,
+    }
+    return render(request, 'student/book_one_on_one.html', context)
+
+
+@login_required
+@require_POST
+def student_book_one_on_one_submit(request, availability_id):
+    """Submit a 1:1 booking request"""
+    user = request.user
+    availability = get_object_or_404(TeacherAvailability, id=availability_id)
+    
+    # Check if slot can be booked
+    can_book, message = availability.can_be_booked(user=user, course=availability.course)
+    if not can_book:
+        messages.error(request, message)
+        return redirect('student_book_one_on_one', course_id=availability.course.id)
+    
+    # Get course to check enrollment
+    course = availability.course
+    enrollment = Enrollment.objects.filter(user=user, course=course, status='active').first()
+    if not enrollment:
+        messages.error(request, 'You must be enrolled in this course.')
+        return redirect('student_course_detail', slug=course.slug)
+    
+    # Check if approval is required (using TeacherBookingPolicy)
+    requires_approval = False
+    policy = TeacherBookingPolicy.objects.filter(
+        teacher=availability.teacher,
+        course=course
+    ).first()
+    if not policy:
+        policy = TeacherBookingPolicy.objects.filter(
+            teacher=availability.teacher,
+            course__isnull=True
+        ).first()
+    if policy:
+        requires_approval = policy.requires_approval_for_one_on_one
+    else:
+        # Fallback to course-level setting
+        requires_approval = course.requires_booking_approval
+        course_teacher = CourseTeacher.objects.filter(course=course, teacher=availability.teacher).first()
+        if course_teacher and course_teacher.get_requires_approval():
+            requires_approval = True
+    
+    # Get start/end times from availability slot
+    if availability.slot_type == 'one_time':
+        start_utc = availability.start_datetime
+        end_utc = availability.end_datetime
+    else:
+        # For recurring slots, we need to calculate the next occurrence
+        # For now, use current time + duration as placeholder
+        # In production, you'd calculate the actual next occurrence
+        start_utc = timezone.now() + timezone.timedelta(days=1)
+        end_utc = start_utc + timezone.timedelta(hours=1)
+    
+    # Create unified booking
+    student_notes = request.POST.get('student_notes', '')
+    
+    booking = LiveClassBooking.objects.create(
+        booking_type='one_on_one',
+        course=course,
+        teacher=availability.teacher,
+        student_user=user,
+        session=None,  # 1:1 bookings don't have a session
+        start_at_utc=start_utc,
+        end_at_utc=end_utc,
+        status='pending' if requires_approval else 'confirmed',
+        student_note=student_notes,
+        seats_reserved=1
+    )
+    
+    if not requires_approval:
+        # Auto-confirm if no approval needed
+        booking.confirm()
+        messages.success(request, f'Successfully booked 1:1 session with {availability.teacher.user.get_full_name()}!')
+    else:
+        messages.success(request, f'Booking request submitted! {availability.teacher.user.get_full_name()} will review your request.')
+    
+    # Create notification
+    Notification.objects.create(
+        user=user,
+        notification_type='booking_confirmed' if not requires_approval else 'booking_pending',
+        title=f'1:1 Booking {"Confirmed" if not requires_approval else "Pending"}',
+        message=f'Your 1:1 booking with {availability.teacher.user.get_full_name()} is {"confirmed" if not requires_approval else "pending approval"}.'
+    )
+    
+    # Notify teacher if approval is required
+    if requires_approval:
+        Notification.objects.create(
+            user=availability.teacher.user,
+            notification_type='booking_pending',
+            title='New 1:1 Booking Request',
+            message=f'{user.get_full_name()} has requested a 1:1 session. Please review and approve or decline.',
+            action_url=f'/teacher/one-on-one-bookings/{booking.id}/'
+        )
+    
+    return redirect('student_bookings')
+
+
+@login_required
+def student_booking_one_on_one_cancel(request, booking_id):
+    """Cancel a 1:1 booking - Phase 2: Using unified LiveClassBooking"""
+    booking = get_object_or_404(LiveClassBooking, id=booking_id, student_user=request.user, booking_type='one_on_one')
+    
+    # Check if booking can be cancelled (must be at least 24 hours before start)
+    if booking.start_at_utc:
+        hours_until = (booking.start_at_utc - timezone.now()).total_seconds() / 3600
+        if hours_until < 24:
+            messages.error(request, 'This booking cannot be cancelled (must be cancelled at least 24 hours before the session).')
+            return redirect('student_bookings')
+    
+    if booking.status not in ['pending', 'confirmed']:
+        messages.error(request, 'This booking cannot be cancelled.')
+        return redirect('student_bookings')
+    
+    notes = request.POST.get('notes', '') if request.method == 'POST' else ''
+    booking.cancel(cancelled_by=request.user, reason='student', note=notes)
+    
+    messages.success(request, '1:1 booking cancelled successfully.')
+    
+    # Create notification
+    Notification.objects.create(
+        user=request.user,
+        notification_type='booking_cancelled',
+        title='1:1 Booking Cancelled',
+        message=f'Your 1:1 booking has been cancelled.'
+    )
+    
+    return redirect('student_bookings')
+
+
+# ============================================
+# 1:1 BOOKING SYSTEM - TEACHER APPROVAL & MANAGEMENT
+# ============================================
+
+@login_required
+def teacher_one_on_one_bookings(request):
+    """View all 1:1 booking requests for teacher - Phase 2: Using unified LiveClassBooking"""
+    user = request.user
+    teacher, _ = Teacher.objects.get_or_create(user=user, defaults={'permission_level': 'standard'})
+    
+    # Get all 1:1 bookings for this teacher
+    bookings = LiveClassBooking.objects.filter(
+        teacher=teacher,
+        booking_type='one_on_one'
+    ).select_related('student_user', 'course').order_by('-created_at')
+    
+    # Filter by status
+    status_filter = request.GET.get('status')
+    if status_filter:
+        bookings = bookings.filter(status=status_filter)
+    
+    # Separate pending, confirmed, and past bookings
+    now = timezone.now()
+    pending_bookings = bookings.filter(status='pending')
+    confirmed_bookings = bookings.filter(status='confirmed', start_at_utc__gte=now)
+    past_bookings = bookings.filter(
+        Q(status__in=['confirmed', 'attended', 'no_show', 'cancelled']) |
+        Q(start_at_utc__lt=now)
+    )
+    
+    context = {
+        'pending_bookings': pending_bookings,
+        'confirmed_bookings': confirmed_bookings,
+        'past_bookings': past_bookings,
+        'status_filter': status_filter,
+    }
+    return render(request, 'teacher/one_on_one_bookings.html', context)
+
+
+@login_required
+@require_POST
+def teacher_one_on_one_approve(request, booking_id):
+    """Approve a 1:1 booking request - Phase 2: Using unified LiveClassBooking"""
+    booking = get_object_or_404(LiveClassBooking, id=booking_id, booking_type='one_on_one')
+    
+    # Check if user is the teacher
+    if booking.teacher.user != request.user:
+        messages.error(request, 'You do not have permission to approve this booking.')
+        return redirect('teacher_one_on_one_bookings')
+    
+    if booking.status != 'pending':
+        messages.error(request, 'This booking cannot be approved.')
+        return redirect('teacher_one_on_one_bookings')
+    
+    # Optionally set meeting link (store in teacher_note for now, or add meeting_link field to LiveClassBooking)
+    meeting_link = request.POST.get('meeting_link', '')
+    if meeting_link:
+        booking.teacher_note = f'Meeting link: {meeting_link}'
+    
+    booking.confirm(decided_by=request.user)
+    
+    messages.success(request, 'Booking approved successfully.')
+    
+    # Notify student
+    Notification.objects.create(
+        user=booking.student_user,
+        notification_type='booking_confirmed',
+        title='1:1 Booking Approved',
+        message=f'Your 1:1 booking with {request.user.get_full_name()} has been approved.'
+    )
+    
+    return redirect('teacher_one_on_one_bookings')
+
+
+@login_required
+@require_POST
+def teacher_one_on_one_decline(request, booking_id):
+    """Decline a 1:1 booking request - Phase 2: Using unified LiveClassBooking"""
+    booking = get_object_or_404(LiveClassBooking, id=booking_id, booking_type='one_on_one')
+    
+    # Check if user is the teacher
+    if booking.teacher.user != request.user:
+        messages.error(request, 'You do not have permission to decline this booking.')
+        return redirect('teacher_one_on_one_bookings')
+    
+    if booking.status != 'pending':
+        messages.error(request, 'This booking cannot be declined.')
+        return redirect('teacher_one_on_one_bookings')
+    
+    reason = request.POST.get('reason', '')
+    booking.decline(decided_by=request.user, reason=reason)
+    
+    messages.success(request, 'Booking declined.')
+    
+    # Notify student
+    Notification.objects.create(
+        user=booking.student_user,
+        notification_type='booking_cancelled',
+        title='1:1 Booking Declined',
+        message=f'Your 1:1 booking request with {request.user.get_full_name()} has been declined.'
+    )
+    
+    return redirect('teacher_one_on_one_bookings')
+
+
+@login_required
+@require_POST
+def teacher_one_on_one_cancel(request, booking_id):
+    """Teacher cancels a 1:1 booking - Phase 2: Using unified LiveClassBooking"""
+    booking = get_object_or_404(LiveClassBooking, id=booking_id, booking_type='one_on_one')
+    
+    # Check if user is the teacher
+    if booking.teacher.user != request.user:
+        messages.error(request, 'You do not have permission to cancel this booking.')
+        return redirect('teacher_one_on_one_bookings')
+    
+    notes = request.POST.get('notes', '')
+    booking.cancel(cancelled_by=request.user, reason='teacher', note=notes)
+    
+    messages.success(request, 'Booking cancelled.')
+    
+    # Notify student
+    Notification.objects.create(
+        user=booking.student_user,
+        notification_type='booking_cancelled',
+        title='1:1 Booking Cancelled',
+        message=f'Your 1:1 booking with {request.user.get_full_name()} has been cancelled by the teacher.'
+    )
+    
+    return redirect('teacher_one_on_one_bookings')

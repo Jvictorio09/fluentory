@@ -23,3 +23,9 @@ if db_url:
     print(f"   ENGINE: {config.get('ENGINE', 'NOT SET')}")
 else:
     print("2. ERROR: DATABASE_URL is not set!")
+
+
+
+
+
+

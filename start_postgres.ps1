@@ -110,3 +110,9 @@ Write-Host "Your .env file should have:" -ForegroundColor Cyan
 Write-Host "  DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:5432/fluentory_dev" -ForegroundColor White
 Write-Host ""
 
+
+
+
+
+
+

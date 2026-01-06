@@ -1,53 +1,84 @@
 {% extends 'teacher/base.html' %}
 
 {% block content %}
-<div class="space-y-8 sm:space-y-10">
+<div class="space-y-8 max-w-7xl mx-auto">
+    <!-- Page Header -->
     <div class="mb-10">
-        <h1 class="text-4xl sm:text-5xl font-bold text-white mb-3 tracking-tight drop-shadow-[0_0_20px_rgba(130,194,147,0.3)]">My Students</h1>
-        <p class="text-base sm:text-lg font-normal text-white/50 tracking-wide">View and manage your students across all courses</p>
+        <h1 class="text-4xl sm:text-5xl font-bold mb-3 tracking-tight text-slate-900 dark:text-white">My Students</h1>
+        <p class="text-base sm:text-lg font-normal text-slate-600 dark:text-slate-400 tracking-wide">View and manage your students across all courses</p>
     </div>
-    <div class="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent mb-8"></div>
     
-    <div class="bg-white/5 backdrop-blur-2xl border border-white/8 rounded-2xl shadow-xl overflow-hidden">
+    <div class="h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-white/10 to-transparent mb-8"></div>
+    
+    <!-- Search and Filter Bar -->
+    <div class="glass-card backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-white/10 p-6 shadow-xl dark:shadow-2xl">
+        <div class="flex flex-col sm:flex-row gap-4">
+            <div class="flex-1">
+                <div class="relative">
+                    <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500 dark:text-slate-500 z-10"></i>
+                    <input type="text" placeholder="Search students by name or email..." class="form-input pl-11">
+                </div>
+            </div>
+            <div class="flex gap-3">
+                <button class="btn-secondary">
+                    <i class="fas fa-filter"></i>
+                    Filter
+                </button>
+                <button class="btn-secondary">
+                    <i class="fas fa-sort"></i>
+                    Sort
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Students Table -->
+    <div class="glass-card backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-white/10 shadow-xl dark:shadow-2xl overflow-hidden">
         {% if students %}
         <div class="overflow-x-auto">
             <table class="w-full">
-                <thead class="bg-white/5 border-b border-white/10">
+                <thead class="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10">
                     <tr>
-                        <th class="text-left px-6 py-4 text-sm font-semibold text-white">Student</th>
-                        <th class="text-left px-6 py-4 text-sm font-semibold text-white">Email</th>
-                        <th class="text-left px-6 py-4 text-sm font-semibold text-white">Courses</th>
-                        <th class="text-left px-6 py-4 text-sm font-semibold text-white">Avg Progress</th>
+                        <th class="text-left px-6 py-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Student</th>
+                        <th class="text-left px-6 py-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Email</th>
+                        <th class="text-left px-6 py-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Courses</th>
+                        <th class="text-left px-6 py-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Avg Progress</th>
+                        <th class="text-left px-6 py-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-white/10">
+                <tbody class="divide-y divide-slate-200 dark:divide-white/10">
                     {% for student_data in students %}
-                    <tr class="hover:bg-white/5 transition-all duration-300">
+                    <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-full bg-[#254346] border border-white/10 flex items-center justify-center">
+                                <div class="w-10 h-10 rounded-full bg-emerald-500/10 dark:bg-emerald-500/20 border border-slate-200 dark:border-white/10 flex items-center justify-center font-semibold text-sm text-emerald-700 dark:text-emerald-400">
                                     {% if student_data.user.profile.avatar %}
                                     <img src="{{ student_data.user.profile.avatar.url }}" alt="" class="w-full h-full object-cover rounded-full">
                                     {% else %}
-                                    <i class="fas fa-user text-white/60"></i>
+                                    {{ student_data.user.first_name|first|default:student_data.user.username|first|upper }}
                                     {% endif %}
                                 </div>
-                                <span class="font-medium text-white">{{ student_data.user.get_full_name|default:student_data.user.username }}</span>
+                                <span class="font-medium text-slate-900 dark:text-white">{{ student_data.user.get_full_name|default:student_data.user.username }}</span>
                             </div>
                         </td>
-                        <td class="px-6 py-4 text-white/60 text-sm">{{ student_data.user.email }}</td>
+                        <td class="px-6 py-4 text-slate-600 dark:text-slate-400 text-sm">{{ student_data.user.email }}</td>
                         <td class="px-6 py-4">
-                            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#82C293]/20 text-[#82C293] font-semibold text-sm">
+                            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 font-semibold text-sm border border-emerald-200 dark:border-emerald-500/30">
                                 {{ student_data.courses_count }}
                             </span>
                         </td>
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
-                                <div class="flex-1 bg-[#254346] rounded-full h-2 max-w-[100px]">
-                                    <div class="bg-gradient-to-r from-[#00655F] to-[#82C293] h-2 rounded-full" style="width: {{ student_data.avg_progress }}%"></div>
+                                <div class="flex-1 bg-slate-200 dark:bg-white/10 rounded-full h-2 max-w-[100px]">
+                                    <div class="bg-gradient-to-r from-emerald-600 to-emerald-400 h-2 rounded-full transition-all duration-300" style="width: {{ student_data.avg_progress }}%"></div>
                                 </div>
-                                <span class="text-white font-medium text-sm min-w-[3rem]">{{ student_data.avg_progress|floatformat:1 }}%</span>
+                                <span class="text-slate-700 dark:text-slate-300 font-medium text-sm min-w-[3rem]">{{ student_data.avg_progress|floatformat:1 }}%</span>
                             </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <button class="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 transition-colors text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white">
+                                <i class="fas fa-ellipsis-v"></i>
+                            </button>
                         </td>
                     </tr>
                     {% endfor %}
@@ -56,15 +87,17 @@
         </div>
         {% else %}
         <div class="p-12 text-center">
-            <i class="fas fa-users text-5xl text-white/15 mb-4"></i>
-            <h3 class="text-xl font-semibold text-white mb-2">No students yet</h3>
-            <p class="text-white/50">Students will appear here once they enroll in your courses</p>
+            <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-users text-3xl text-slate-500 dark:text-slate-500"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-2">No students yet</h3>
+            <p class="text-slate-600 dark:text-slate-400 mb-6">Students will appear here once they enroll in your courses</p>
+            <a href="{% url 'teacher_courses' %}" class="btn-secondary">
+                <i class="fas fa-book"></i>
+                View My Courses
+            </a>
         </div>
         {% endif %}
     </div>
 </div>
 {% endblock %}
-
-
-
-

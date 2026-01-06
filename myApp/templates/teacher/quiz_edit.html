@@ -1,26 +1,59 @@
 {% extends 'teacher/base.html' %}
 
 {% block content %}
-<h1 class="text-3xl font-bold mb-6">Edit Quiz: {{ quiz.title }}</h1>
-<form method="post" class="bg-white p-6 rounded shadow space-y-4">
-    {% csrf_token %}
-    <div>
-        <label class="block mb-2">Title</label>
-        <input type="text" name="title" value="{{ quiz.title }}" required class="w-full border rounded p-2">
+<div class="max-w-3xl mx-auto">
+    <!-- Page Header -->
+    <div class="mb-10">
+        <h1 class="text-4xl sm:text-5xl font-bold mb-3 tracking-tight text-slate-900 dark:text-white">Edit Quiz</h1>
+        <p class="text-base sm:text-lg font-normal text-slate-700 dark:text-slate-200 tracking-wide">{{ quiz.title }}</p>
     </div>
-    <div>
-        <label class="block mb-2">Passing Score (%)</label>
-        <input type="number" name="passing_score" value="{{ quiz.passing_score }}" class="w-full border rounded p-2">
+    
+    <div class="h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-white/10 to-transparent mb-8"></div>
+    
+    <!-- Form Card -->
+    <div class="bg-white dark:bg-white/5 backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-white/10 p-8 sm:p-10 shadow-sm dark:shadow-2xl">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Basics Section -->
+            <div class="space-y-6">
+                <div class="form-section-header">
+                    <div class="form-section-icon">
+                        <i class="fas fa-info-circle text-emerald-600 dark:text-emerald-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h2 class="form-section-title">Basics</h2>
+                        <p class="form-section-subtitle">Essential quiz information</p>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="form-label">Title</label>
+                    <input type="text" name="title" value="{{ quiz.title }}" required class="form-input" placeholder="Enter quiz title">
+                </div>
+                
+                <div>
+                    <label class="form-label">Passing Score (%)</label>
+                    <input type="number" name="passing_score" value="{{ quiz.passing_score }}" min="0" max="100" class="form-input" placeholder="70">
+                    <p class="form-helper">Minimum percentage score required to pass the quiz (0-100)</p>
+                </div>
+            </div>
+            
+            <!-- Submit -->
+            <div class="pt-6 border-t border-slate-200 dark:border-white/10">
+                <button type="submit" class="btn-primary w-full sm:w-auto">
+                    <i class="fas fa-save"></i>
+                    Update Quiz
+                </button>
+            </div>
+        </form>
+        
+        <div class="mt-6 pt-6 border-t border-slate-200 dark:border-white/10">
+            <a href="{% url 'teacher_quiz_questions' course.id quiz.id %}" class="btn-secondary">
+                <i class="fas fa-question-circle"></i>
+                Manage Questions
+            </a>
+        </div>
     </div>
-    <button type="submit" class="bg-deep-charcoal text-white px-4 py-2 rounded">Update</button>
-</form>
-<div class="mt-4">
-    <a href="{% url 'teacher_quiz_questions' course.id quiz.id %}" class="text-blue-600">Manage Questions →</a>
 </div>
 {% endblock %}
-
-
-
-
-
-

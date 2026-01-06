@@ -1,83 +1,84 @@
 {% extends 'teacher/base.html' %}
 
 {% block content %}
-<div class="space-y-8 sm:space-y-10">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
-        <div>
-            <h1 class="text-4xl sm:text-5xl font-bold mb-3 tracking-tight" style="color: var(--text-primary);">Teacher Dashboard</h1>
-            <p class="text-base sm:text-lg font-normal tracking-wide" style="color: var(--text-tertiary);">Welcome back, {{ request.user.first_name|default:request.user.username }}!</p>
-        </div>
+<div class="space-y-8 max-w-7xl mx-auto">
+    <!-- Page Header -->
+    <div class="mb-10">
+        <h1 class="text-4xl sm:text-5xl font-bold mb-3 tracking-tight text-slate-900 dark:text-white">Teacher Dashboard</h1>
+        <p class="text-base sm:text-lg font-normal text-slate-700 dark:text-slate-300 tracking-wide">Welcome back, {{ request.user.first_name|default:request.user.username }}!</p>
     </div>
-    <div class="h-px bg-gradient-to-r from-transparent mb-8" style="background: linear-gradient(to right, transparent, var(--border-primary), transparent);"></div>
+    
+    <div class="h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-white/10 to-transparent mb-8"></div>
     
     <!-- Stats Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div class="glass-card backdrop-blur-xl p-7 rounded-2xl border shadow-xl hover:shadow-[0_12px_40px_rgba(130,194,147,0.3)] hover:-translate-y-1 hover:border-[#82C293]/30 transition-all duration-500 ease-out" style="border-color: var(--border-primary);">
-            <div class="flex items-center justify-between mb-3">
-                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#82C293]/20 via-[#82C293]/15 to-[#82C293]/10 flex items-center justify-center shadow-[0_0_20px_rgba(130,194,147,0.2)]">
-                    <i class="fas fa-users text-[#82C293] text-xl"></i>
+        <div class="glass-card backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-white/10 p-7 shadow-xl dark:shadow-2xl hover:shadow-2xl dark:hover:shadow-emerald-500/10 hover:-translate-y-1 hover:border-emerald-400/30 transition-all duration-300">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-14 h-14 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center">
+                    <i class="fas fa-users text-emerald-600 dark:text-emerald-400 text-xl"></i>
                 </div>
             </div>
-            <h3 class="text-xs font-medium mb-2 tracking-wide" style="color: var(--text-muted);">Total Students</h3>
-            <p class="text-4xl font-extrabold tracking-tight" style="color: var(--text-primary);">{{ total_students }}</p>
+            <h3 class="text-xs font-semibold mb-2 tracking-wide uppercase text-slate-600 dark:text-slate-400">Total Students</h3>
+            <p class="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">{{ total_students }}</p>
         </div>
         
-        <div class="glass-card backdrop-blur-xl p-7 rounded-2xl border shadow-xl hover:shadow-[0_12px_40px_rgba(130,194,147,0.3)] hover:-translate-y-1 hover:border-[#82C293]/30 transition-all duration-500 ease-out" style="border-color: var(--border-primary);">
-            <div class="flex items-center justify-between mb-3">
-                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#82C293]/20 via-[#82C293]/15 to-[#82C293]/10 flex items-center justify-center shadow-[0_0_20px_rgba(130,194,147,0.2)]">
-                    <i class="fas fa-user-check text-[#82C293] text-xl"></i>
+        <div class="glass-card backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-white/10 p-7 shadow-xl dark:shadow-2xl hover:shadow-2xl dark:hover:shadow-emerald-500/10 hover:-translate-y-1 hover:border-emerald-400/30 transition-all duration-300">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-14 h-14 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center">
+                    <i class="fas fa-user-check text-emerald-600 dark:text-emerald-400 text-xl"></i>
                 </div>
             </div>
-            <h3 class="text-xs font-medium mb-2 tracking-wide" style="color: var(--text-muted);">Active Students</h3>
-            <p class="text-4xl font-extrabold tracking-tight" style="color: var(--text-primary);">{{ active_students }}</p>
+            <h3 class="text-xs font-semibold mb-2 tracking-wide uppercase text-slate-600 dark:text-slate-400">Active Students</h3>
+            <p class="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">{{ active_students }}</p>
         </div>
         
-        <div class="glass-card backdrop-blur-xl p-7 rounded-2xl border shadow-xl hover:shadow-[0_12px_40px_rgba(130,194,147,0.3)] hover:-translate-y-1 hover:border-[#82C293]/30 transition-all duration-500 ease-out" style="border-color: var(--border-primary);">
-            <div class="flex items-center justify-between mb-3">
-                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#82C293]/20 via-[#82C293]/15 to-[#82C293]/10 flex items-center justify-center shadow-[0_0_20px_rgba(130,194,147,0.2)]">
-                    <i class="fas fa-book text-[#82C293] text-xl"></i>
+        <div class="glass-card backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-white/10 p-7 shadow-xl dark:shadow-2xl hover:shadow-2xl dark:hover:shadow-emerald-500/10 hover:-translate-y-1 hover:border-emerald-400/30 transition-all duration-300">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-14 h-14 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center">
+                    <i class="fas fa-book text-emerald-600 dark:text-emerald-400 text-xl"></i>
                 </div>
             </div>
-            <h3 class="text-xs font-medium mb-2 tracking-wide" style="color: var(--text-muted);">Total Courses</h3>
-            <p class="text-4xl font-extrabold tracking-tight" style="color: var(--text-primary);">{{ total_courses }}</p>
+            <h3 class="text-xs font-semibold mb-2 tracking-wide uppercase text-slate-600 dark:text-slate-400">Total Courses</h3>
+            <p class="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">{{ total_courses }}</p>
         </div>
         
-        <div class="glass-card backdrop-blur-xl p-7 rounded-2xl border shadow-xl hover:shadow-[0_12px_40px_rgba(130,194,147,0.3)] hover:-translate-y-1 hover:border-[#82C293]/30 transition-all duration-500 ease-out" style="border-color: var(--border-primary);">
-            <div class="flex items-center justify-between mb-3">
-                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#82C293]/20 via-[#82C293]/15 to-[#82C293]/10 flex items-center justify-center shadow-[0_0_20px_rgba(130,194,147,0.2)]">
-                    <i class="fas fa-envelope text-[#82C293] text-xl"></i>
+        <div class="glass-card backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-white/10 p-7 shadow-xl dark:shadow-2xl hover:shadow-2xl dark:hover:shadow-emerald-500/10 hover:-translate-y-1 hover:border-emerald-400/30 transition-all duration-300">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-14 h-14 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center">
+                    <i class="fas fa-envelope text-emerald-600 dark:text-emerald-400 text-xl"></i>
                 </div>
             </div>
-            <h3 class="text-xs font-medium mb-2 tracking-wide" style="color: var(--text-muted);">Unread Messages</h3>
-            <p class="text-4xl font-extrabold tracking-tight" style="color: var(--text-primary);">{{ unread_messages_count }}</p>
+            <h3 class="text-xs font-semibold mb-2 tracking-wide uppercase text-slate-600 dark:text-slate-400">Unread Messages</h3>
+            <p class="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">{{ unread_messages_count }}</p>
         </div>
     </div>
     
     <!-- Two Column Layout -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <!-- Upcoming Live Classes -->
-        <div class="glass-card backdrop-blur-2xl p-8 sm:p-10 rounded-2xl border shadow-xl" style="border-color: var(--border-primary);">
+        <div class="glass-card backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-white/10 p-8 shadow-xl dark:shadow-2xl">
             <div class="flex items-center justify-between mb-8">
-                <h2 class="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-3" style="color: var(--text-primary);">
-                    <i class="fas fa-calendar-alt text-[#82C293]/80 text-xl"></i>
-                    Upcoming Live Classes
-                </h2>
-                <a href="{% url 'teacher_schedule' %}" class="text-[#82C293] hover:text-[#82C293]/80 text-sm font-medium hover:scale-105 transition-all duration-300">View All →</a>
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center">
+                        <i class="fas fa-calendar-alt text-emerald-600 dark:text-emerald-400 text-xl"></i>
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Upcoming Live Classes</h2>
+                </div>
+                <a href="{% url 'teacher_schedule' %}" class="btn-link text-sm">View All →</a>
             </div>
             {% if upcoming_classes %}
                 <div class="space-y-3">
                     {% for class in upcoming_classes|slice:":5" %}
-                    <div class="p-5 rounded-xl border hover:border-[#82C293]/20 transition-all duration-300" style="background-color: rgba(255,255,255,0.03); border-color: var(--border-primary);" onmouseover="this.style.backgroundColor='rgba(255,255,255,0.08)'" onmouseout="this.style.backgroundColor='rgba(255,255,255,0.03)'">
+                    <div class="p-5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 hover:border-emerald-400/30 hover:bg-slate-100 dark:hover:bg-white/10 transition-all duration-300">
                         <div class="flex items-start justify-between gap-3">
                             <div class="flex-1 min-w-0">
-                                <h3 class="font-semibold mb-1 truncate" style="color: var(--text-primary);">{{ class.title }}</h3>
-                                <p class="text-sm flex items-center gap-2" style="color: var(--text-tertiary);">
+                                <h3 class="font-semibold mb-1 truncate text-slate-900 dark:text-white">{{ class.title }}</h3>
+                                <p class="text-sm flex items-center gap-2 text-slate-600 dark:text-slate-400">
                                     <i class="fas fa-clock text-xs"></i>
                                     {{ class.scheduled_start|date:"M d, Y" }} at {{ class.scheduled_start|date:"H:i" }}
                                 </p>
                                 {% if class.course %}
-                                <p class="text-xs mt-1" style="color: var(--text-muted);">{{ class.course.title }}</p>
+                                <p class="text-xs mt-1 text-slate-600 dark:text-slate-400">{{ class.course.title }}</p>
                                 {% endif %}
                             </div>
                         </div>
@@ -86,36 +87,43 @@
                 </div>
             {% else %}
                 <div class="text-center py-12">
-                    <i class="fas fa-calendar-times text-5xl mb-4" style="color: var(--text-muted); opacity: 0.3;"></i>
-                    <p class="mb-1 text-base" style="color: var(--text-muted);">No upcoming classes scheduled</p>
-                    <p class="text-sm mb-6" style="color: var(--text-muted); opacity: 0.7;">Get started by scheduling your first live class</p>
-                    <a href="{% url 'teacher_schedule' %}" class="inline-block px-6 py-3 bg-gradient-to-r from-[#82C293] via-[#6fb380] to-[#82C293] text-white font-semibold rounded-xl shadow-lg shadow-[#82C293]/30 hover:shadow-xl hover:shadow-[#82C293]/40 hover:scale-105 transition-all duration-300">Schedule a Class</a>
+                    <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-calendar-times text-3xl text-slate-500 dark:text-slate-500"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-1 text-slate-900 dark:text-white">No upcoming classes scheduled</h3>
+                    <p class="text-sm mb-6 text-slate-600 dark:text-slate-400">Get started by scheduling your first live class</p>
+                    <a href="{% url 'teacher_schedule' %}" class="btn-primary">
+                        <i class="fas fa-calendar-plus"></i>
+                        Schedule a Class
+                    </a>
                 </div>
             {% endif %}
         </div>
         
         <!-- Recent Announcements -->
-        <div class="glass-card backdrop-blur-2xl p-8 sm:p-10 rounded-2xl border shadow-xl" style="border-color: var(--border-primary);">
+        <div class="glass-card backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-white/10 p-8 shadow-xl dark:shadow-2xl">
             <div class="flex items-center justify-between mb-8">
-                <h2 class="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-3" style="color: var(--text-primary);">
-                    <i class="fas fa-bullhorn text-[#82C293]/80 text-xl"></i>
-                    Recent Announcements
-                </h2>
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center">
+                        <i class="fas fa-bullhorn text-emerald-600 dark:text-emerald-400 text-xl"></i>
+                    </div>
+                    <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Recent Announcements</h2>
+                </div>
             </div>
             {% if recent_announcements %}
                 <div class="space-y-3">
                     {% for announcement in recent_announcements|slice:":5" %}
-                    <div class="p-5 rounded-xl border hover:border-[#82C293]/20 transition-all duration-300" style="background-color: rgba(255,255,255,0.03); border-color: var(--border-primary);" onmouseover="this.style.backgroundColor='rgba(255,255,255,0.08)'" onmouseout="this.style.backgroundColor='rgba(255,255,255,0.03)'">
+                    <div class="p-5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 hover:border-emerald-400/30 hover:bg-slate-100 dark:hover:bg-white/10 transition-all duration-300">
                         <div class="flex items-start justify-between gap-3">
                             <div class="flex-1 min-w-0">
                                 <div class="flex items-center gap-2 mb-1">
                                     {% if announcement.is_pinned %}
-                                    <i class="fas fa-thumbtack text-[#82C293] text-xs"></i>
+                                    <i class="fas fa-thumbtack text-emerald-600 dark:text-emerald-400 text-xs"></i>
                                     {% endif %}
-                                    <h3 class="font-semibold truncate" style="color: var(--text-primary);">{{ announcement.title }}</h3>
+                                    <h3 class="font-semibold truncate text-slate-900 dark:text-white">{{ announcement.title }}</h3>
                                 </div>
-                                <p class="text-sm line-clamp-2 mb-2" style="color: var(--text-tertiary);">{{ announcement.message|truncatewords:15 }}</p>
-                                <p class="text-xs flex items-center gap-2" style="color: var(--text-muted);">
+                                <p class="text-sm line-clamp-2 mb-2 text-slate-600 dark:text-slate-400">{{ announcement.message|truncatewords:15 }}</p>
+                                <p class="text-xs flex items-center gap-2 text-slate-600 dark:text-slate-400">
                                     <i class="fas fa-clock text-xs"></i>
                                     {{ announcement.created_at|date:"M d, Y" }}
                                 </p>
@@ -126,36 +134,40 @@
                 </div>
             {% else %}
                 <div class="text-center py-12">
-                    <i class="fas fa-bullhorn text-5xl mb-4" style="color: var(--text-muted); opacity: 0.3;"></i>
-                    <p class="mb-1 text-base" style="color: var(--text-muted);">No recent announcements</p>
-                    <p class="text-sm" style="color: var(--text-muted); opacity: 0.7;">Your announcements will appear here</p>
+                    <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-bullhorn text-3xl text-slate-500 dark:text-slate-500"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold mb-1 text-slate-900 dark:text-white">No recent announcements</h3>
+                    <p class="text-sm text-slate-600 dark:text-slate-400">Your announcements will appear here</p>
                 </div>
             {% endif %}
         </div>
     </div>
     
     <!-- My Courses -->
-    <div class="glass-card backdrop-blur-2xl p-8 sm:p-10 rounded-2xl border shadow-xl" style="border-color: var(--border-primary);">
+    <div class="glass-card backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-white/10 p-8 shadow-xl dark:shadow-2xl">
         <div class="flex items-center justify-between mb-8">
-            <h2 class="text-2xl sm:text-3xl font-bold tracking-tight flex items-center gap-3" style="color: var(--text-primary);">
-                <i class="fas fa-book-open text-[#82C293]/80 text-xl"></i>
-                My Courses
-            </h2>
-            <a href="{% url 'teacher_courses' %}" class="text-[#82C293] hover:text-[#82C293]/80 text-sm font-medium hover:scale-105 transition-all duration-300">View All →</a>
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center">
+                    <i class="fas fa-book-open text-emerald-600 dark:text-emerald-400 text-xl"></i>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">My Courses</h2>
+            </div>
+            <a href="{% url 'teacher_courses' %}" class="btn-link text-sm">View All →</a>
         </div>
         {% if assigned_courses %}
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {% for assignment in assigned_courses|slice:":6" %}
-                <div class="p-5 rounded-xl border hover:border-[#82C293]/20 transition-all duration-300 group" style="background-color: rgba(255,255,255,0.03); border-color: var(--border-primary);" onmouseover="this.style.backgroundColor='rgba(255,255,255,0.08)'" onmouseout="this.style.backgroundColor='rgba(255,255,255,0.03)'">
+                <div class="p-5 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-white/5 hover:border-emerald-400/30 hover:bg-slate-100 dark:hover:bg-white/10 transition-all duration-300 group">
                     <div class="flex items-start justify-between mb-3">
                         <div class="flex-1 min-w-0">
-                            <h3 class="font-semibold mb-2 line-clamp-2" style="color: var(--text-primary);">{{ assignment.course.title }}</h3>
-                            <span class="inline-block px-2 py-1 text-xs font-medium rounded bg-[#82C293]/20 text-[#82C293] border border-[#82C293]/30">
+                            <h3 class="font-semibold mb-2 line-clamp-2 text-slate-900 dark:text-white">{{ assignment.course.title }}</h3>
+                            <span class="inline-block px-2 py-1 text-xs font-medium rounded-full bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30">
                                 {{ assignment.get_permission_level_display }}
                             </span>
                         </div>
                     </div>
-                    <a href="{% url 'teacher_course_edit' assignment.course.id %}" class="inline-flex items-center gap-2 mt-4 text-[#82C293] hover:text-[#82C293]/80 text-sm font-medium group-hover:gap-3 transition-all">
+                    <a href="{% url 'teacher_course_edit' assignment.course.id %}" class="btn-link text-sm group-hover:gap-3 transition-all inline-flex items-center">
                         Manage Course <i class="fas fa-arrow-right"></i>
                     </a>
                 </div>
@@ -163,15 +175,13 @@
             </div>
         {% else %}
             <div class="text-center py-12">
-                <i class="fas fa-book text-5xl mb-4" style="color: var(--text-muted); opacity: 0.3;"></i>
-                <p class="mb-1 text-base" style="color: var(--text-muted);">No courses assigned yet</p>
-                <p class="text-sm" style="color: var(--text-muted); opacity: 0.7;">Contact an administrator to get assigned to courses.</p>
+                <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-book text-3xl text-slate-500 dark:text-slate-500"></i>
+                </div>
+                <h3 class="text-lg font-semibold mb-1 text-slate-900 dark:text-white">No courses assigned yet</h3>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Contact an administrator to get assigned to courses.</p>
             </div>
         {% endif %}
     </div>
 </div>
 {% endblock %}
-
-
-
-

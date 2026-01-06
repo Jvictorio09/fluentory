@@ -1,31 +1,90 @@
 {% extends 'teacher/base.html' %}
 
 {% block content %}
-<h1 class="text-3xl font-bold mb-6">Edit Lesson</h1>
-<form method="post" class="bg-white p-6 rounded shadow space-y-4">
-    {% csrf_token %}
-    <div>
-        <label class="block mb-2">Title</label>
-        <input type="text" name="title" value="{{ lesson.title }}" required class="w-full border rounded p-2">
+<div class="max-w-3xl mx-auto">
+    <!-- Page Header -->
+    <div class="mb-10">
+        <h1 class="text-4xl sm:text-5xl font-bold mb-3 tracking-tight text-slate-900 dark:text-white">Edit Lesson</h1>
+        <p class="text-base sm:text-lg font-normal text-slate-700 dark:text-slate-200 tracking-wide">Update lesson information</p>
     </div>
-    <div>
-        <label class="block mb-2">Description</label>
-        <textarea name="description" class="w-full border rounded p-2" rows="3">{{ lesson.description }}</textarea>
+    
+    <div class="h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-white/10 to-transparent mb-8"></div>
+    
+    <!-- Form Card -->
+    <div class="bg-white dark:bg-white/5 backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-white/10 p-8 sm:p-10 shadow-sm dark:shadow-2xl">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Basics Section -->
+            <div class="space-y-6">
+                <div class="form-section-header">
+                    <div class="form-section-icon">
+                        <i class="fas fa-info-circle text-emerald-600 dark:text-emerald-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h2 class="form-section-title">Basics</h2>
+                        <p class="form-section-subtitle">Essential lesson information</p>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="form-label">Title</label>
+                    <input type="text" name="title" value="{{ lesson.title }}" required class="form-input" placeholder="Enter lesson title">
+                </div>
+                
+                <div>
+                    <label class="form-label">Description</label>
+                    <textarea name="description" class="form-textarea" rows="4" placeholder="Enter lesson description">{{ lesson.description }}</textarea>
+                    <p class="form-helper">Provide a brief overview of what students will learn in this lesson</p>
+                </div>
+            </div>
+            
+            <!-- Content Section -->
+            <div class="space-y-6 pt-6 border-t border-slate-200 dark:border-white/10">
+                <div class="form-section-header">
+                    <div class="form-section-icon">
+                        <i class="fas fa-video text-emerald-600 dark:text-emerald-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h2 class="form-section-title">Content</h2>
+                        <p class="form-section-subtitle">Video and media resources</p>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="form-label">Video URL</label>
+                    <input type="url" name="video_url" value="{{ lesson.video_url }}" class="form-input" placeholder="https://youtube.com/watch?v=... or https://vimeo.com/...">
+                    <p class="form-helper">Paste the URL of your lesson video (YouTube, Vimeo, or other supported platforms)</p>
+                </div>
+            </div>
+            
+            <!-- Settings Section -->
+            <div class="space-y-6 pt-6 border-t border-slate-200 dark:border-white/10">
+                <div class="form-section-header">
+                    <div class="form-section-icon">
+                        <i class="fas fa-cog text-emerald-600 dark:text-emerald-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h2 class="form-section-title">Settings</h2>
+                        <p class="form-section-subtitle">Display and ordering options</p>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="form-label">Order</label>
+                    <input type="number" name="order" value="{{ lesson.order }}" min="0" class="form-input" placeholder="0">
+                    <p class="form-helper">Display order within the module (lower numbers appear first)</p>
+                </div>
+            </div>
+            
+            <!-- Submit -->
+            <div class="pt-6 border-t border-slate-200 dark:border-white/10">
+                <button type="submit" class="btn-primary w-full sm:w-auto">
+                    <i class="fas fa-save"></i>
+                    Update Lesson
+                </button>
+            </div>
+        </form>
     </div>
-    <div>
-        <label class="block mb-2">Video URL</label>
-        <input type="url" name="video_url" value="{{ lesson.video_url }}" class="w-full border rounded p-2">
-    </div>
-    <div>
-        <label class="block mb-2">Order</label>
-        <input type="number" name="order" value="{{ lesson.order }}" class="w-full border rounded p-2">
-    </div>
-    <button type="submit" class="bg-deep-charcoal text-white px-4 py-2 rounded">Update</button>
-</form>
+</div>
 {% endblock %}
-
-
-
-
-
-

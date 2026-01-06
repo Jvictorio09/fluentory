@@ -1,0 +1,205 @@
+{% extends 'teacher/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="p-4 sm:p-6 lg:p-8 xl:p-10 w-full">
+    <!-- Breadcrumb -->
+    <nav class="mb-6 text-sm">
+        <a href="{% url 'teacher_dashboard' %}" class="text-slate-600 dark:text-slate-300/80 hover:text-slate-900 dark:hover:text-white transition">Dashboard</a>
+        <span class="mx-2 text-slate-500 dark:text-slate-400">/</span>
+        <span class="text-slate-900 dark:text-white">1:1 Bookings</span>
+    </nav>
+
+    <div class="mb-10">
+        <h1 class="text-4xl sm:text-5xl font-bold text-slate-900 dark:text-white mb-3 tracking-tight">1:1 Booking Management</h1>
+        <p class="text-base sm:text-lg font-normal text-slate-600 dark:text-slate-300 tracking-wide">Manage and approve 1:1 session bookings</p>
+    </div>
+    <div class="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent mb-8"></div>
+
+    <!-- Status Filter -->
+    <div class="mb-6 flex gap-3 flex-wrap">
+        <a href="{% url 'teacher_one_on_one_bookings' %}" class="px-4 py-2 rounded-lg {% if not status_filter %}bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30{% else %}bg-slate-100 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/10 hover:border-emerald-400/30{% endif %} transition">
+            All
+        </a>
+        <a href="{% url 'teacher_one_on_one_bookings' %}?status=pending" class="px-4 py-2 rounded-lg {% if status_filter == 'pending' %}bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/30{% else %}bg-slate-100 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/10 hover:border-emerald-400/30{% endif %} transition">
+            Pending
+        </a>
+        <a href="{% url 'teacher_one_on_one_bookings' %}?status=confirmed" class="px-4 py-2 rounded-lg {% if status_filter == 'confirmed' %}bg-green-500/20 text-green-700 dark:text-green-300 border border-green-500/30{% else %}bg-slate-100 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/10 hover:border-emerald-400/30{% endif %} transition">
+            Confirmed
+        </a>
+        <a href="{% url 'teacher_one_on_one_bookings' %}?status=cancelled" class="px-4 py-2 rounded-lg {% if status_filter == 'cancelled' %}bg-red-500/20 text-red-700 dark:text-red-300 border border-red-500/30{% else %}bg-slate-100 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/10 hover:border-emerald-400/30{% endif %} transition">
+            Cancelled
+        </a>
+    </div>
+
+    <!-- Pending Bookings -->
+    {% if pending_bookings %}
+    <div class="mb-12">
+        <h2 class="text-2xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+            <i class="fas fa-clock text-blue-600 dark:text-blue-400"></i>
+            Pending Approval ({{ pending_bookings.count }})
+        </h2>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {% for booking in pending_bookings %}
+            <div class="bg-blue-500/10 backdrop-blur-xl rounded-3xl p-6 border border-blue-500/20 shadow-xl">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-1">{{ booking.user.get_full_name|default:booking.user.username }}</h3>
+                        <p class="text-slate-600 dark:text-slate-300/80 text-sm">{{ booking.course.title|default:"Private Session" }}</p>
+                    </div>
+                    <span class="px-3 py-1 text-xs font-medium rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                        Pending
+                    </span>
+                </div>
+                
+                <div class="space-y-2 mb-4 text-slate-700 dark:text-slate-200 text-sm">
+                    {% if booking.availability_slot.slot_type == 'recurring' %}
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-redo text-blue-400"></i>
+                            <span>{{ booking.availability_slot.get_day_of_week_display }} - {{ booking.availability_slot.start_time|time:"g:i A" }} to {{ booking.availability_slot.end_time|time:"g:i A" }}</span>
+                        </div>
+                    {% else %}
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-calendar text-blue-400"></i>
+                            <span>{{ booking.availability_slot.start_datetime|date:"F d, Y" }}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-clock text-blue-400"></i>
+                            <span>{{ booking.availability_slot.start_datetime|time:"g:i A" }} - {{ booking.availability_slot.end_datetime|time:"g:i A" }}</span>
+                        </div>
+                    {% endif %}
+                    {% if booking.student_notes %}
+                    <div class="mt-3 p-3 bg-[#254346] rounded-lg">
+                        <p class="text-slate-600 dark:text-slate-300/80 text-xs italic">"{{ booking.student_notes }}"</p>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="flex gap-3">
+                    <form method="post" action="{% url 'teacher_one_on_one_approve' booking_id=booking.id %}" class="flex-1">
+                        {% csrf_token %}
+                        <div class="mb-2">
+                            <input type="url" name="meeting_link" placeholder="Meeting Link (optional)" class="w-full bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 rounded-lg p-2 text-slate-900 dark:text-white text-sm placeholder:text-slate-400 dark:placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50">
+                        </div>
+                        <button type="submit" class="w-full px-4 py-2 bg-green-500/20 text-green-300 border border-green-500/30 rounded-lg hover:bg-green-500/30 transition font-medium">
+                            <i class="fas fa-check mr-2"></i>Approve
+                        </button>
+                    </form>
+                    <form method="post" action="{% url 'teacher_one_on_one_decline' booking_id=booking.id %}" class="flex-1">
+                        {% csrf_token %}
+                        <button type="submit" class="w-full px-4 py-2 bg-red-500/20 text-red-300 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition font-medium">
+                            <i class="fas fa-times mr-2"></i>Decline
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Confirmed Bookings -->
+    {% if confirmed_bookings %}
+    <div class="mb-12">
+        <h2 class="text-2xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+            <i class="fas fa-check-circle text-green-600 dark:text-green-400"></i>
+            Confirmed ({{ confirmed_bookings.count }})
+        </h2>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {% for booking in confirmed_bookings %}
+            <div class="bg-[#04363a]/90 backdrop-blur-xl rounded-3xl p-6 border border-white/10 shadow-xl">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-1">{{ booking.user.get_full_name|default:booking.user.username }}</h3>
+                        <p class="text-slate-600 dark:text-slate-300/80 text-sm">{{ booking.course.title|default:"Private Session" }}</p>
+                    </div>
+                    <span class="px-3 py-1 text-xs font-medium rounded-full bg-green-500/20 text-green-300 border border-green-500/30">
+                        Confirmed
+                    </span>
+                </div>
+                
+                <div class="space-y-2 mb-4 text-slate-700 dark:text-slate-200 text-sm">
+                    {% if booking.availability_slot.slot_type == 'recurring' %}
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-redo text-[#82C293]"></i>
+                            <span>{{ booking.availability_slot.get_day_of_week_display }} - {{ booking.availability_slot.start_time|time:"g:i A" }} to {{ booking.availability_slot.end_time|time:"g:i A" }}</span>
+                        </div>
+                    {% else %}
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-calendar text-[#82C293]"></i>
+                            <span>{{ booking.availability_slot.start_datetime|date:"F d, Y" }}</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-clock text-[#82C293]"></i>
+                            <span>{{ booking.availability_slot.start_datetime|time:"g:i A" }} - {{ booking.availability_slot.end_datetime|time:"g:i A" }}</span>
+                        </div>
+                    {% endif %}
+                    {% if booking.meeting_link %}
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-video text-[#82C293]"></i>
+                        <a href="{{ booking.meeting_link }}" target="_blank" class="text-[#82C293] hover:underline">Join Meeting</a>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <form method="post" action="{% url 'teacher_one_on_one_cancel' booking_id=booking.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="w-full px-4 py-2 bg-red-500/20 text-red-300 border border-red-500/30 rounded-lg hover:bg-red-500/30 transition font-medium">
+                        Cancel Booking
+                    </button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Past Bookings -->
+    {% if past_bookings %}
+    <div>
+        <h2 class="text-2xl font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+            <i class="fas fa-history text-slate-600 dark:text-slate-300/80"></i>
+            Past Bookings ({{ past_bookings.count }})
+        </h2>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {% for booking in past_bookings %}
+            <div class="bg-[#254346]/50 backdrop-blur-xl rounded-3xl p-6 border border-white/5 shadow-xl opacity-75">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-1">{{ booking.user.get_full_name|default:booking.user.username }}</h3>
+                        <p class="text-slate-600 dark:text-slate-300/80 text-sm">{{ booking.course.title|default:"Private Session" }}</p>
+                    </div>
+                    <span class="px-3 py-1 text-xs font-medium rounded-full bg-gray-500/20 text-gray-300 border border-gray-500/30">
+                        {{ booking.get_status_display }}
+                    </span>
+                </div>
+                <div class="text-slate-600 dark:text-slate-300/80 text-sm">
+                    {% if booking.availability_slot.start_datetime %}
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-calendar text-xs"></i>
+                        <span>{{ booking.availability_slot.start_datetime|date:"M d, Y" }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if not pending_bookings and not confirmed_bookings and not past_bookings %}
+    <div class="text-center py-12 bg-[#04363a]/90 backdrop-blur-xl rounded-3xl border border-white/10">
+        <i class="fas fa-calendar-times text-5xl text-slate-400 dark:text-slate-500 mb-4"></i>
+        <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-2">No 1:1 Bookings Yet</h3>
+        <p class="text-slate-600 dark:text-slate-300/80">No booking requests have been made yet.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+
+
+

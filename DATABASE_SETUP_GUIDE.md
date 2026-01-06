@@ -151,3 +151,9 @@ python manage.py check --database default
 
 This will verify the database connection without running migrations.
 
+
+
+
+
+
+

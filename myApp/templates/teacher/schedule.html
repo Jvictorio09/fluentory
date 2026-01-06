@@ -1,104 +1,173 @@
 {% extends 'teacher/base.html' %}
 
 {% block content %}
-<div class="space-y-8 sm:space-y-10">
+<div class="space-y-8 max-w-7xl mx-auto">
+    <!-- Page Header -->
     <div class="mb-10">
-        <h1 class="text-4xl sm:text-5xl font-bold text-white mb-3 tracking-tight drop-shadow-[0_0_20px_rgba(130,194,147,0.3)]">Live Class Schedule</h1>
-        <p class="text-base sm:text-lg font-normal text-white/50 tracking-wide">Schedule and manage your live class sessions</p>
+        <h1 class="text-4xl sm:text-5xl font-bold mb-3 tracking-tight text-slate-900 dark:text-white">Live Class Schedule</h1>
+        <p class="text-base sm:text-lg font-normal text-slate-700 dark:text-slate-200 tracking-wide">Schedule and manage your live class sessions</p>
     </div>
-    <div class="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent mb-8"></div>
     
-    <div class="bg-white/5 backdrop-blur-2xl border border-white/8 rounded-2xl p-8 sm:p-10 shadow-xl">
-        <h2 class="text-2xl sm:text-3xl font-bold text-white mb-8 tracking-tight flex items-center gap-3">
-            <i class="fas fa-calendar-plus text-[#82C293]/80 text-xl"></i>
-            Schedule New Class
-        </h2>
-        <form method="post" class="space-y-5">
+    <div class="h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-white/10 to-transparent mb-8"></div>
+    
+    <!-- Schedule Form Card -->
+    <div class="bg-white dark:bg-white/5 backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-white/10 p-8 sm:p-10 shadow-sm dark:shadow-2xl">
+        <div class="flex items-center gap-3 mb-8">
+            <div class="size-9 rounded-lg bg-white/10 flex items-center justify-center">
+                <i class="fas fa-calendar-plus text-emerald-600 dark:text-emerald-400 text-lg"></i>
+            </div>
+            <div>
+                <h2 class="section-title">Schedule New Class</h2>
+                <p class="section-description mt-1">Create a new live class session</p>
+            </div>
+        </div>
+        
+        <form method="post" class="space-y-6">
             {% csrf_token %}
+            
+            <!-- Course Selection -->
             <div>
                 <div class="flex items-center justify-between mb-2">
-                    <label class="block text-white font-medium">Course</label>
-                    <a href="{% url 'teacher_course_create' %}" class="text-sm text-[#82C293] hover:text-[#82C293]/80 font-medium flex items-center gap-1 hover:gap-2 transition-all">
+                    <label for="course" class="form-label">Course</label>
+                    <a href="{% url 'teacher_course_create' %}" class="btn-link text-sm">
                         <i class="fas fa-plus text-xs"></i>
                         Create New Course
                     </a>
                 </div>
                 {% if assigned_courses %}
-                <select name="course" required class="w-full bg-[#254346] border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50">
+                <select name="course" id="course" required class="form-select">
                     {% for assignment in assigned_courses %}
-                    <option value="{{ assignment.course.id }}" class="bg-[#254346]">{{ assignment.course.title }} {% if assignment.course.course_type == 'live' %}(Live){% elif assignment.course.course_type == 'hybrid' %}(Hybrid){% endif %}</option>
+                    <option value="{{ assignment.course.id }}">{{ assignment.course.title }} {% if assignment.course.course_type == 'live' %}(Live){% elif assignment.course.course_type == 'hybrid' %}(Hybrid){% endif %}</option>
                     {% endfor %}
                 </select>
                 {% else %}
-                <div class="w-full bg-[#254346]/50 border border-white/10 rounded-lg p-4 text-center">
-                    <p class="text-white/70 mb-3">You don't have any courses yet.</p>
-                    <a href="{% url 'teacher_course_create' %}" class="inline-flex items-center gap-2 bg-gradient-to-r from-[#82C293] via-[#6fb380] to-[#82C293] text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-[#82C293]/30 hover:shadow-xl hover:shadow-[#82C293]/40 hover:scale-105 transition-all duration-300">
+                <div class="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-6 text-center">
+                    <p class="text-slate-600 dark:text-slate-400 mb-4">You don't have any courses yet.</p>
+                    <a href="{% url 'teacher_course_create' %}" class="btn-cta-primary">
                         <i class="fas fa-plus"></i>
                         Create Your First Course
                     </a>
                 </div>
                 {% endif %}
             </div>
+            
+            <!-- Title -->
             <div>
-                <label class="block mb-2 text-white font-medium">Title</label>
-                <input type="text" name="title" required class="w-full bg-[#254346] border border-white/10 rounded-lg p-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50" placeholder="Enter class title">
+                <label for="title" class="form-label">Title</label>
+                <input type="text" name="title" id="title" required class="form-input" placeholder="Enter class title">
             </div>
+            
+            <!-- Date/Time -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="scheduled_start" class="form-label">Scheduled Start</label>
+                    <input type="datetime-local" name="scheduled_start" id="scheduled_start" required class="form-input">
+                </div>
+                <div>
+                    <label for="duration_minutes" class="form-label">Duration (minutes)</label>
+                    <input type="number" name="duration_minutes" id="duration_minutes" value="60" min="15" step="15" required class="form-input" placeholder="60">
+                    <p class="form-helper">Minimum 15 minutes, increments of 15</p>
+                </div>
+            </div>
+            
+            <!-- Meeting Link -->
             <div>
-                <label class="block mb-2 text-white font-medium">Scheduled Start</label>
-                <input type="datetime-local" name="scheduled_start" required class="w-full bg-[#254346] border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50">
+                <label for="meeting_link" class="form-label">Meeting Link</label>
+                <input type="url" name="meeting_link" id="meeting_link" class="form-input" placeholder="https://zoom.us/j/123456 or https://meet.google.com/abc-defg-hij">
+                <p class="form-helper">Zoom, Google Meet, or custom meeting link</p>
             </div>
-            <button type="submit" class="w-full sm:w-auto bg-gradient-to-r from-[#82C293] via-[#6fb380] to-[#82C293] text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-[#82C293]/30 hover:shadow-xl hover:shadow-[#82C293]/40 hover:scale-105 transition-all duration-300">
-                <i class="fas fa-calendar-check mr-2"></i>
-                Schedule Class
-            </button>
+            
+            <!-- Seats & Waitlist -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="total_seats" class="form-label">Total Seats</label>
+                    <input type="number" name="total_seats" id="total_seats" value="10" min="1" required class="form-input" placeholder="10">
+                    <p class="form-helper">Maximum number of students that can book this session</p>
+                </div>
+                <div class="flex items-center gap-3 pt-8">
+                    <input type="checkbox" name="enable_waitlist" id="enable_waitlist" value="1" class="form-checkbox">
+                    <label for="enable_waitlist" class="form-label mb-0 cursor-pointer">Enable Waitlist</label>
+                </div>
+            </div>
+            
+            <div class="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl p-4">
+                <p class="text-sm text-slate-600 dark:text-slate-300/80">
+                    <i class="fas fa-info-circle text-emerald-600 dark:text-emerald-400 mr-2"></i>
+                    When waitlist is enabled, students can join a waitlist if all seats are taken. Waitlisted students will be automatically promoted when seats become available.
+                </p>
+            </div>
+            
+            <div class="pt-4">
+                <button type="submit" class="btn-cta-primary w-full sm:w-auto">
+                    <i class="fas fa-calendar-check"></i>
+                    Schedule Class
+                </button>
+            </div>
         </form>
     </div>
     
-    <div class="bg-white/5 backdrop-blur-2xl border border-white/8 rounded-2xl shadow-xl overflow-hidden">
-        <div class="p-8 sm:p-10 border-b border-white/10">
-            <h2 class="text-2xl sm:text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-                <i class="fas fa-list text-[#82C293]/80 text-xl"></i>
-                Upcoming Classes
-            </h2>
+    <!-- Upcoming Classes List -->
+    <div class="glass-card backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-white/10 shadow-xl dark:shadow-2xl overflow-hidden">
+        <div class="p-8 sm:p-10 border-b border-slate-200 dark:border-white/10">
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center">
+                    <i class="fas fa-list text-emerald-600 dark:text-emerald-400 text-xl"></i>
+                </div>
+                <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Upcoming Classes</h2>
+            </div>
         </div>
+        
         {% if live_classes %}
         <div class="overflow-x-auto">
             <table class="w-full">
-                <thead class="bg-white/5 border-b border-white/10">
+                <thead class="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10">
                     <tr>
-                        <th class="text-left px-6 py-4 text-sm font-semibold text-white">Title</th>
-                        <th class="text-left px-6 py-4 text-sm font-semibold text-white">Course</th>
-                        <th class="text-left px-6 py-4 text-sm font-semibold text-white">Scheduled</th>
-                        <th class="text-left px-6 py-4 text-sm font-semibold text-white">Status</th>
+                        <th class="text-left px-6 py-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Title</th>
+                        <th class="text-left px-6 py-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Course</th>
+                        <th class="text-left px-6 py-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Scheduled</th>
+                        <th class="text-left px-6 py-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Seats</th>
+                        <th class="text-left px-6 py-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Status</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-white/10">
+                <tbody class="divide-y divide-slate-200 dark:divide-white/10">
                     {% for class in live_classes %}
-                    <tr class="hover:bg-white/5 transition-all duration-300">
-                        <td class="px-6 py-4 font-medium text-white">{{ class.title }}</td>
-                        <td class="px-6 py-4 text-white/80">{{ class.course.title }}</td>
-                        <td class="px-6 py-4 text-white/60 text-sm">
+                    <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                        <td class="px-6 py-4 font-medium text-slate-900 dark:text-white">{{ class.title }}</td>
+                        <td class="px-6 py-4 text-slate-600 dark:text-slate-400">{{ class.course.title }}</td>
+                        <td class="px-6 py-4 text-slate-600 dark:text-slate-400 text-sm">
                             <div class="flex items-center gap-2">
-                                <i class="fas fa-clock text-xs"></i>
-                                {{ class.scheduled_start|date:"M d, Y" }}<br>
-                                <span class="text-white/40">{{ class.scheduled_start|date:"H:i" }}</span>
+                                <i class="fas fa-clock text-xs text-slate-500 dark:text-slate-500"></i>
+                                <div>
+                                    <div>{{ class.scheduled_start|date:"M d, Y" }}</div>
+                                    <div class="text-slate-500 dark:text-slate-500">{{ class.scheduled_start|date:"H:i" }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 text-slate-600 dark:text-slate-400 text-sm">
+                            <div class="flex flex-col gap-1">
+                                <span class="font-medium">{{ class.remaining_seats }} / {{ class.total_seats }} available</span>
+                                {% if class.enable_waitlist %}
+                                <span class="text-xs text-slate-500 dark:text-slate-500">
+                                    <i class="fas fa-list text-xs"></i> Waitlist: {{ class.waitlisted_count }}
+                                </span>
+                                {% endif %}
                             </div>
                         </td>
                         <td class="px-6 py-4">
                             {% if class.status == 'scheduled' %}
-                            <span class="inline-block px-3 py-1 text-xs font-medium rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                            <span class="inline-block px-3 py-1 text-xs font-medium rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30">
                                 Scheduled
                             </span>
                             {% elif class.status == 'live' %}
-                            <span class="inline-block px-3 py-1 text-xs font-medium rounded-full bg-green-500/20 text-green-400 border border-green-500/30">
+                            <span class="inline-block px-3 py-1 text-xs font-medium rounded-full bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-500/30">
                                 Live
                             </span>
                             {% elif class.status == 'completed' %}
-                            <span class="inline-block px-3 py-1 text-xs font-medium rounded-full bg-gray-500/20 text-gray-400 border border-gray-500/30">
+                            <span class="inline-block px-3 py-1 text-xs font-medium rounded-full bg-slate-100 dark:bg-slate-500/20 text-slate-700 dark:text-slate-400 border border-slate-200 dark:border-slate-500/30">
                                 Completed
                             </span>
                             {% else %}
-                            <span class="inline-block px-3 py-1 text-xs font-medium rounded-full bg-red-500/20 text-red-400 border border-red-500/30">
+                            <span class="inline-block px-3 py-1 text-xs font-medium rounded-full bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-500/30">
                                 Cancelled
                             </span>
                             {% endif %}
@@ -110,15 +179,17 @@
         </div>
         {% else %}
         <div class="p-12 text-center">
-            <i class="fas fa-calendar-times text-5xl text-white/15 mb-4"></i>
-            <h3 class="text-xl font-semibold text-white mb-2">No live classes scheduled</h3>
-            <p class="text-white/50">Schedule your first live class session above</p>
+            <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-calendar-times text-3xl text-slate-500 dark:text-slate-500"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-2">No live classes scheduled</h3>
+            <p class="text-slate-600 dark:text-slate-400 mb-6">Schedule your first live class session above</p>
+            <a href="#" onclick="document.querySelector('form').scrollIntoView({behavior: 'smooth'});" class="btn-secondary">
+                <i class="fas fa-plus"></i>
+                Schedule a Class
+            </a>
         </div>
         {% endif %}
     </div>
 </div>
 {% endblock %}
-
-
-
-

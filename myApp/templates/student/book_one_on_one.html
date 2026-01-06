@@ -1,0 +1,115 @@
+{% extends 'student/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="p-4 sm:p-6 lg:p-8 xl:p-10 w-full">
+    <!-- Breadcrumb -->
+    <nav class="mb-6 text-sm">
+        <a href="{% url 'student_courses' %}" class="text-white/60 hover:text-white transition">Courses</a>
+        <span class="mx-2 text-white/40">/</span>
+        <a href="{% url 'student_course_detail' slug=course.slug %}" class="text-white/60 hover:text-white transition">{{ course.title }}</a>
+        <span class="mx-2 text-white/40">/</span>
+        <span class="text-white">Book 1:1 Session</span>
+    </nav>
+
+    <div class="max-w-5xl mx-auto">
+        <div class="bg-[#04363a]/90 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-white/10 shadow-xl mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-white mb-2">Book 1:1 Session</h1>
+            <p class="text-white/60 mb-6">{{ course.title }}</p>
+
+            <!-- Filter by Teacher -->
+            {% if course_teachers|length > 1 %}
+            <div class="mb-6">
+                <label for="teacher_filter" class="block text-white font-medium mb-2">Filter by Teacher</label>
+                <select 
+                    id="teacher_filter" 
+                    class="w-full bg-[#254346] border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/50"
+                    onchange="window.location.href = '?teacher_id=' + this.value"
+                >
+                    <option value="">All Teachers</option>
+                    {% for ct in course_teachers %}
+                    <option value="{{ ct.teacher.id }}" {% if selected_teacher_id|stringformat:"s" == ct.teacher.id|stringformat:"s" %}selected{% endif %}>
+                        {{ ct.teacher.user.get_full_name|default:ct.teacher.user.username }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            {% endif %}
+
+            {% if available_slots %}
+            <div class="space-y-4">
+                <h2 class="text-xl font-semibold text-white mb-4">Available Time Slots</h2>
+                
+                {% regroup available_slots by teacher as slots_by_teacher %}
+                {% for teacher_group in slots_by_teacher %}
+                <div class="mb-8">
+                    <h3 class="text-lg font-medium text-white mb-4">
+                        <i class="fas fa-user text-[#82C293] mr-2"></i>
+                        {{ teacher_group.grouper.user.get_full_name|default:teacher_group.grouper.user.username }}
+                    </h3>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {% for slot in teacher_group.list %}
+                        <div class="bg-[#254346] border border-white/10 rounded-xl p-4 hover:border-[#82C293]/50 transition">
+                            <div class="mb-3">
+                                {% if slot.slot_type == 'recurring' %}
+                                    <div class="flex items-center gap-2 text-white/80 mb-1">
+                                        <i class="fas fa-redo text-[#82C293] text-sm"></i>
+                                        <span class="text-sm font-medium">{{ slot.get_day_of_week_display }}</span>
+                                    </div>
+                                    <div class="text-white text-sm">
+                                        {{ slot.start_time|time:"g:i A" }} - {{ slot.end_time|time:"g:i A" }}
+                                    </div>
+                                    {% if slot.valid_from or slot.valid_until %}
+                                    <div class="text-white/50 text-xs mt-1">
+                                        {% if slot.valid_from %}From {{ slot.valid_from|date:"M d" }}{% endif %}
+                                        {% if slot.valid_until %}Until {{ slot.valid_until|date:"M d" }}{% endif %}
+                                    </div>
+                                    {% endif %}
+                                {% else %}
+                                    <div class="flex items-center gap-2 text-white/80 mb-1">
+                                        <i class="fas fa-calendar-day text-[#82C293] text-sm"></i>
+                                        <span class="text-sm font-medium">{{ slot.start_datetime|date:"M d, Y" }}</span>
+                                    </div>
+                                    <div class="text-white text-sm">
+                                        {{ slot.start_datetime|time:"g:i A" }} - {{ slot.end_datetime|time:"g:i A" }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <form method="post" action="{% url 'student_book_one_on_one_submit' availability_id=slot.id %}">
+                                {% csrf_token %}
+                                <button 
+                                    type="submit" 
+                                    class="w-full bg-gradient-to-r from-[#00655F] to-[#82C293] text-white px-4 py-2 rounded-lg font-medium hover:opacity-90 transition text-sm"
+                                >
+                                    <i class="fas fa-calendar-check mr-2"></i>Book Slot
+                                </button>
+                            </form>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-12">
+                <i class="fas fa-calendar-times text-5xl text-white/20 mb-4"></i>
+                <h3 class="text-xl font-semibold text-white mb-2">No Available Slots</h3>
+                <p class="text-white/60">There are no available time slots at the moment. Please check back later.</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="text-center">
+            <a href="{% url 'student_course_detail' slug=course.slug %}" class="text-white/60 hover:text-white transition">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Course
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+

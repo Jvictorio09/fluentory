@@ -10,6 +10,7 @@
     {% include 'partials/theme_script.html' %}
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -142,6 +143,213 @@
             box-shadow: 0 4px 12px rgba(95, 163, 114, 0.3) !important;
         }
         
+        /* Light mode: Premium buttons - enhanced contrast */
+        [data-theme="light"] .btn-primary,
+        [data-theme="light"] .btn-cta-primary {
+            background: linear-gradient(to right, #059669, #047857, #059669) !important;
+            background-size: 200% 100%;
+            color: #FFFFFF !important;
+            box-shadow: 0 4px 14px rgba(5, 150, 105, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1) inset !important;
+        }
+        
+        [data-theme="light"] .btn-primary:hover:not(:disabled),
+        [data-theme="light"] .btn-cta-primary:hover:not(:disabled) {
+            box-shadow: 0 8px 20px rgba(5, 150, 105, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.15) inset !important;
+        }
+        
+        /* Light mode: Ensure dropdown selected text is visible */
+        [data-theme="light"] .form-select option {
+            background-color: #FFFFFF !important;
+            color: #0f172a !important;
+        }
+        
+        [data-theme="light"] .form-select {
+            background-color: #FFFFFF !important;
+            color: #0f172a !important;
+        }
+        
+        /* Light mode: Enhanced input readability */
+        [data-theme="light"] .form-input,
+        [data-theme="light"] .form-textarea {
+            background-color: #FFFFFF !important;
+            border-color: #e2e8f0 !important;
+            color: #0f172a !important;
+        }
+        
+        [data-theme="light"] .form-input::placeholder,
+        [data-theme="light"] .form-textarea::placeholder {
+            color: #64748b !important; /* slate-500 - more visible */
+        }
+        
+        /* Fix all washed out text in light mode - ensure readable contrast */
+        [data-theme="light"] .text-slate-100\/50,
+        [data-theme="light"] .text-white\/60 {
+            color: rgb(71 85 105) !important; /* slate-600 */
+        }
+        
+        [data-theme="light"] .text-slate-400 {
+            color: rgb(71 85 105) !important; /* slate-600 for better readability */
+        }
+        
+        /* Light mode: Ensure helper text is always readable */
+        [data-theme="light"] .form-helper {
+            color: rgb(71 85 105) !important; /* slate-600 */
+        }
+        
+        /* Light mode: Ensure all subtitle and descriptive text is readable */
+        [data-theme="light"] p.text-slate-600,
+        [data-theme="light"] p.text-slate-400,
+        [data-theme="light"] .text-slate-600:not(.dark),
+        [data-theme="light"] .text-slate-400:not(.dark) {
+            color: rgb(51 65 85) !important; /* slate-700 - darker and more readable */
+        }
+        
+        /* Ensure page subtitles are always readable in light mode - HIGH SPECIFICITY */
+        [data-theme="light"] div.mb-10 > p,
+        [data-theme="light"] div.mb-10 > p.text-base,
+        [data-theme="light"] div.mb-10 > p.text-sm,
+        [data-theme="light"] div.mb-10 > p.text-lg,
+        [data-theme="light"] .mb-10 p.text-base,
+        [data-theme="light"] .mb-10 p.text-sm,
+        [data-theme="light"] .mb-10 p.text-lg {
+            color: rgb(51 65 85) !important; /* slate-700 */
+        }
+        
+        /* Force readable subtitle text in light mode */
+        [data-theme="light"] p.text-base.text-slate-600,
+        [data-theme="light"] p.text-lg.text-slate-600,
+        [data-theme="light"] p.text-base.text-slate-400,
+        [data-theme="light"] p.text-lg.text-slate-400 {
+            color: rgb(51 65 85) !important; /* slate-700 */
+        }
+        
+        /* ============================================
+           GLOBAL TEACHER CONTENT TYPOGRAPHY BASELINE
+           CRITICAL: This sets the base text color for ALL teacher pages
+           ============================================ */
+        .teacher-content {
+            /* Base text color - applies to all children unless overridden */
+            color: #0f172a !important; /* slate-900 for light mode - HIGH CONTRAST */
+        }
+        
+        .dark .teacher-content,
+        [data-theme="dark"] .teacher-content {
+            color: #f1f5f9 !important; /* slate-100 for dark mode */
+        }
+        
+        /* AGGRESSIVE OVERRIDES: Force readable text in light mode */
+        /* Target all possible text-white variants (Tailwind generates these with escaped slashes) */
+        [data-theme="light"] .teacher-content [class*="text-white"],
+        [data-theme="light"] .teacher-content .text-white,
+        [data-theme="light"] .teacher-content [class*="text-white/10"],
+        [data-theme="light"] .teacher-content [class*="text-white/20"],
+        [data-theme="light"] .teacher-content [class*="text-white/30"],
+        [data-theme="light"] .teacher-content [class*="text-white/40"],
+        [data-theme="light"] .teacher-content [class*="text-white/50"],
+        [data-theme="light"] .teacher-content [class*="text-white/60"],
+        [data-theme="light"] .teacher-content [class*="text-white/70"],
+        [data-theme="light"] .teacher-content [class*="text-white/80"],
+        [data-theme="light"] .teacher-content [class*="text-white/90"] {
+            color: #475569 !important; /* slate-600 - readable muted text */
+        }
+        
+        /* Override light slate colors that are too faint in light mode */
+        [data-theme="light"] .teacher-content .text-slate-100,
+        [data-theme="light"] .teacher-content .text-slate-200,
+        [data-theme="light"] .teacher-content .text-slate-300,
+        [data-theme="light"] .teacher-content [class*="text-slate-100"],
+        [data-theme="light"] .teacher-content [class*="text-slate-200"],
+        [data-theme="light"] .teacher-content [class*="text-slate-300"] {
+            color: #475569 !important; /* slate-600 */
+        }
+        
+        /* Headings - ALWAYS strong contrast in light mode */
+        [data-theme="light"] .teacher-content h1,
+        [data-theme="light"] .teacher-content h2,
+        [data-theme="light"] .teacher-content h3,
+        [data-theme="light"] .teacher-content h4,
+        [data-theme="light"] .teacher-content h5,
+        [data-theme="light"] .teacher-content h6 {
+            color: #0f172a !important; /* slate-900 - maximum contrast */
+        }
+        
+        /* Paragraphs and body text without explicit text classes */
+        [data-theme="light"] .teacher-content p:not([class*="text-"]):not([class*="dark:"]),
+        [data-theme="light"] .teacher-content span:not([class*="text-"]):not([class*="dark:"]),
+        [data-theme="light"] .teacher-content div:not([class*="text-"]):not([class*="dark:"]) {
+            color: #334155 !important; /* slate-700 */
+        }
+        
+        /* Card text readability - ensure text inside cards is dark in light mode */
+        [data-theme="light"] .teacher-content .glass-card,
+        [data-theme="light"] .teacher-content [class*="bg-white"],
+        [data-theme="light"] .teacher-content [class*="bg-slate-50"],
+        [data-theme="light"] .teacher-content [class*="bg-slate-100"] {
+            color: #0f172a !important;
+        }
+        
+        /* Labels and helper text - ensure they're visible */
+        [data-theme="light"] .teacher-content label:not([class*="text-"]),
+        [data-theme="light"] .teacher-content small:not([class*="text-"]) {
+            color: #475569 !important; /* slate-600 */
+        }
+        
+        /* Icons - ensure they have good contrast */
+        [data-theme="light"] .teacher-content i.fas,
+        [data-theme="light"] .teacher-content i.far,
+        [data-theme="light"] .teacher-content i.fal,
+        [data-theme="light"] .teacher-content i.fab {
+            color: #475569 !important; /* slate-600 - icons should be visible */
+        }
+        
+        /* EXTRA SPECIFICITY: Override any Tailwind text color classes in light mode */
+        /* These selectors have maximum specificity to override Tailwind utilities */
+        [data-theme="light"] .teacher-content *[class*="text-white"],
+        [data-theme="light"] .teacher-content *.text-white {
+            color: #475569 !important;
+        }
+        
+        /* Ensure subtitle text is always readable */
+        [data-theme="light"] .teacher-content p.text-base,
+        [data-theme="light"] .teacher-content p.text-lg,
+        [data-theme="light"] .teacher-content p.text-sm {
+            color: #334155 !important; /* slate-700 */
+        }
+        
+        /* Stat card labels and descriptions */
+        [data-theme="light"] .teacher-content .text-xs,
+        [data-theme="light"] .teacher-content .text-sm {
+            color: #475569 !important; /* slate-600 - readable but muted */
+        }
+        
+        /* Override any text color that's too light */
+        [data-theme="light"] .teacher-content .text-slate-400 {
+            color: #64748b !important; /* slate-500 - more visible */
+        }
+        
+        /* FALLBACK: Also target when dark class is NOT present (alternative theme switching) */
+        body:not(.dark) .teacher-content,
+        html:not(.dark) .teacher-content {
+            color: #0f172a !important; /* slate-900 for light mode */
+        }
+        
+        body:not(.dark) .teacher-content [class*="text-white"],
+        html:not(.dark) .teacher-content [class*="text-white"],
+        body:not(.dark) .teacher-content .text-slate-200,
+        body:not(.dark) .teacher-content .text-slate-300,
+        body:not(.dark) .teacher-content .text-slate-400 {
+            color: #475569 !important; /* slate-600 */
+        }
+        
+        body:not(.dark) .teacher-content h1,
+        body:not(.dark) .teacher-content h2,
+        body:not(.dark) .teacher-content h3,
+        html:not(.dark) .teacher-content h1,
+        html:not(.dark) .teacher-content h2,
+        html:not(.dark) .teacher-content h3 {
+            color: #0f172a !important; /* slate-900 */
+        }
+        
         /* Light mode: Remove green tint from card backgrounds */
         [data-theme="light"] .bg-white\/5,
         [data-theme="light"] .bg-white\/3,
@@ -221,16 +429,502 @@
         [data-theme="light"] .bg-white\/3:hover {
             background-color: rgba(245, 247, 246, 0.9) !important;
         }
+        
+        /* Premium Button System */
+        .btn-primary,
+        .btn-cta-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1.25rem;
+            font-weight: 600;
+            background-color: #10b981;
+            color: white;
+            box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2);
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-primary:hover:not(:disabled),
+        .btn-cta-primary:hover:not(:disabled) {
+            background-color: #34d399;
+        }
+        
+        .btn-primary:active:not(:disabled),
+        .btn-cta-primary:active:not(:disabled) {
+            transform: scale(0.99);
+        }
+        
+        .btn-primary:focus-visible,
+        .btn-cta-primary:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.3), 0 10px 15px -3px rgba(16, 185, 129, 0.2);
+        }
+        
+        .btn-primary:disabled,
+        .btn-cta-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn-primary:disabled:hover,
+        .btn-cta-primary:disabled:hover {
+            background-color: #10b981;
+            transform: none;
+        }
+        
+        .btn-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            height: 2.75rem;
+            padding: 0 1.25rem;
+            font-weight: 600;
+            border-radius: 0.75rem;
+            border: 1px solid #e2e8f0;
+            background-color: transparent;
+            color: #334155;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .dark .btn-secondary,
+        [data-theme="dark"] .btn-secondary {
+            border-color: rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            background-color: #f8fafc;
+            transform: translateY(-0.5px);
+        }
+        
+        .dark .btn-secondary:hover:not(:disabled),
+        [data-theme="dark"] .btn-secondary:hover:not(:disabled) {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+        
+        .btn-secondary:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        
+        .btn-secondary:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.3);
+        }
+        
+        .btn-secondary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-danger {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            min-height: 44px;
+            font-weight: 600;
+            border-radius: 0.75rem;
+            background: linear-gradient(to right, #dc2626, #ef4444);
+            color: white;
+            box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3);
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn-danger:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+        }
+        
+        .btn-danger:active:not(:disabled) {
+            transform: translateY(0);
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.3);
+        }
+        
+        .btn-danger:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.5);
+        }
+        
+        .btn-danger:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            color: #059669;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .dark .btn-link,
+        [data-theme="dark"] .btn-link {
+            color: #34d399;
+        }
+        
+        .btn-link:hover {
+            text-decoration: underline;
+        }
+        
+        .btn-link:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.5);
+            border-radius: 0.25rem;
+        }
+        
+        /* Premium Form Inputs - Glass Effect in Dark, Clean White in Light */
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            border-radius: 0.75rem;
+            padding: 0.75rem 1rem;
+            transition: all 0.2s;
+            font-size: 0.9375rem;
+            line-height: 1.5;
+            
+            /* Focus states */
+            outline: none;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.4), 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+        
+        .form-input:hover:not(:disabled),
+        .form-select:hover:not(:disabled),
+        .form-textarea:hover:not(:disabled) {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border-color: rgba(16, 185, 129, 0.3);
+        }
+        
+        .form-input:disabled,
+        .form-select:disabled,
+        .form-textarea:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        /* Light mode: Clean white fields */
+        .form-input,
+        .form-select,
+        .form-textarea {
+            background-color: #ffffff;
+            border: 1px solid #e2e8f0;
+            color: #0f172a;
+        }
+        
+        .form-input::placeholder,
+        .form-textarea::placeholder {
+            color: #64748b;
+        }
+        
+        /* Dark mode: Premium glass fields */
+        .dark .form-input,
+        .dark .form-select,
+        .dark .form-textarea,
+        [data-theme="dark"] .form-input,
+        [data-theme="dark"] .form-select,
+        [data-theme="dark"] .form-textarea {
+            background-color: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #f1f5f9;
+        }
+        
+        .dark .form-input::placeholder,
+        .dark .form-textarea::placeholder,
+        [data-theme="dark"] .form-input::placeholder,
+        [data-theme="dark"] .form-textarea::placeholder {
+            color: #94a3b8;
+        }
+        
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        /* Premium Select - Enhanced for readability */
+        .form-select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+            background-position: right 0.75rem center;
+            background-repeat: no-repeat;
+            background-size: 1.25em 1.25em;
+            padding-right: 2.75rem;
+        }
+        
+        /* Dark mode select arrow - lighter color */
+        [data-theme="dark"] .form-select,
+        .dark .form-select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+        }
+        
+        /* Focus state - emerald arrow */
+        .form-select:focus {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%2310b981' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
+        }
+        
+        /* Ensure select options are readable in light mode */
+        .form-select option {
+            background-color: #ffffff;
+            color: #0f172a;
+        }
+        
+        [data-theme="dark"] .form-select option,
+        .dark .form-select option {
+            background-color: #1e293b;
+            color: #f1f5f9;
+        }
+        
+        /* Invalid/Error State */
+        .form-input:invalid,
+        .form-textarea:invalid,
+        .form-select:invalid,
+        .form-input.error,
+        .form-textarea.error,
+        .form-select.error {
+            border-color: rgba(248, 113, 113, 0.6);
+        }
+        
+        .form-input:invalid:focus,
+        .form-textarea:invalid:focus,
+        .form-select:invalid:focus,
+        .form-input.error:focus,
+        .form-textarea.error:focus,
+        .form-select.error:focus {
+            box-shadow: 0 0 0 2px rgba(248, 113, 113, 0.15);
+            border-color: rgba(248, 113, 113, 0.6);
+        }
+        
+        /* Premium Labels - Semibold and Readable */
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            margin-bottom: 0.625rem;
+            color: #1e293b;
+        }
+        
+        .dark .form-label,
+        [data-theme="dark"] .form-label {
+            color: #e2e8f0;
+        }
+        
+        /* Helper Text - Highly Readable in Both Modes */
+        .form-helper {
+            margin-top: 0.5rem;
+            font-size: 0.875rem;
+            line-height: 1.625;
+            color: #475569;
+        }
+        
+        .dark .form-helper,
+        [data-theme="dark"] .form-helper {
+            color: rgba(203, 213, 225, 0.8);
+        }
+        
+        /* Error Messages - Styled and Readable */
+        .form-error {
+            margin-top: 0.375rem;
+            font-size: 0.875rem;
+            color: #dc2626;
+            background-color: #fef2f2;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #fecaca;
+        }
+        
+        .dark .form-error,
+        [data-theme="dark"] .form-error {
+            color: #f87171;
+            background-color: rgba(127, 29, 29, 0.2);
+            border-color: rgba(127, 29, 29, 0.3);
+        }
+        
+        /* Success Messages */
+        .form-success {
+            margin-top: 0.375rem;
+            font-size: 0.875rem;
+            color: #16a34a;
+            background-color: #f0fdf4;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #bbf7d0;
+        }
+        
+        .dark .form-success,
+        [data-theme="dark"] .form-success {
+            color: #4ade80;
+            background-color: rgba(20, 83, 45, 0.2);
+            border-color: rgba(20, 83, 45, 0.3);
+        }
+        
+        /* Premium Section Header - Icon Pill + Title + Subtle Divider */
+        .form-section-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.25rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .dark .form-section-header,
+        [data-theme="dark"] .form-section-header {
+            border-bottom-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .form-section-icon {
+            width: 2.25rem;
+            height: 2.25rem;
+            border-radius: 0.5rem;
+            background-color: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .form-section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            letter-spacing: -0.025em;
+            color: #0f172a;
+            margin-bottom: 0.125rem;
+        }
+        
+        .dark .form-section-title,
+        [data-theme="dark"] .form-section-title {
+            color: #ffffff;
+        }
+        
+        .form-section-subtitle {
+            font-size: 0.875rem;
+            color: #475569;
+            margin-top: 0;
+        }
+        
+        .dark .form-section-subtitle,
+        [data-theme="dark"] .form-section-subtitle {
+            color: #cbd5e1;
+        }
+        
+        /* Section titles outside form sections (like "Course Details") */
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            letter-spacing: -0.025em;
+            color: #0f172a;
+        }
+        
+        .dark .section-title,
+        [data-theme="dark"] .section-title {
+            color: #ffffff;
+        }
+        
+        .section-description {
+            font-size: 0.875rem;
+            color: #475569;
+        }
+        
+        .dark .section-description,
+        [data-theme="dark"] .section-description {
+            color: #cbd5e1;
+        }
+        
+        /* Premium Checkbox/Toggle Styling */
+        .form-checkbox {
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 0.25rem;
+            border: 2px solid #cbd5e1;
+            background-color: #ffffff;
+            color: #059669;
+            cursor: pointer;
+            transition: all 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+            position: relative;
+        }
+        
+        .form-checkbox:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.4);
+        }
+        
+        .form-checkbox:hover {
+            border-color: #34d399;
+        }
+        
+        .form-checkbox:checked {
+            background-color: #059669;
+            border-color: #059669;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='white'%3E%3Cpath fill-rule='evenodd' d='M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z' clip-rule='evenodd'/%3E%3C/svg%3E");
+            background-size: 100% 100%;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        
+        .dark .form-checkbox,
+        [data-theme="dark"] .form-checkbox {
+            border-color: rgba(255, 255, 255, 0.2);
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #34d399;
+        }
+        
+        .dark .form-checkbox:hover,
+        [data-theme="dark"] .form-checkbox:hover {
+            border-color: rgba(52, 211, 153, 0.6);
+        }
+        
+        .dark .form-checkbox:checked,
+        [data-theme="dark"] .form-checkbox:checked {
+            background-color: #10b981;
+            border-color: #10b981;
+        }
     </style>
 </head>
-<body class="font-sans" style="background-color: var(--bg-primary); color: var(--text-primary);">
+<body class="font-sans" style="background-color: var(--bg-primary); color: var(--text-primary);" data-theme="dark">
+    <script>
+        // Sync dark class with data-theme attribute
+        function updateDarkClass() {
+            const html = document.documentElement;
+            const theme = html.getAttribute('data-theme');
+            if (theme === 'light') {
+                html.classList.remove('dark');
+            } else {
+                html.classList.add('dark');
+            }
+        }
+        updateDarkClass();
+        // Watch for theme changes
+        const observer = new MutationObserver(updateDarkClass);
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    </script>
     {% include 'partials/role_preview_banner.html' %}
     {% include 'teacher/partials/navbar.html' %}
     
     <div class="flex min-h-[calc(100vh-4.5rem)] relative" {% if request.session.preview_role %}style="margin-top: 3.5rem; padding-top: 4.5rem;"{% else %}style="padding-top: 4.5rem;"{% endif %}>
         {% include 'teacher/partials/sidebar.html' %}
         
-        <main class="flex-1 w-full lg:ml-56 pt-8 pb-6 px-6 sm:pt-10 sm:pb-8 sm:px-8 lg:pt-12 lg:pb-10 lg:px-10">
+        <main class="flex-1 w-full lg:ml-56 pt-8 pb-6 px-6 sm:pt-10 sm:pb-8 sm:px-8 lg:pt-12 lg:pb-10 lg:px-10 teacher-content">
             {% if messages %}
                 {% for message in messages %}
                     <div class="mb-4 p-4 rounded-lg {% if message.tags == 'error' %}bg-red-500/20 border border-red-500/50 text-red-200{% elif message.tags == 'success' %}bg-green-500/20 border border-green-500/50 text-green-200{% elif message.tags == 'warning' %}bg-yellow-500/20 border border-yellow-500/50 text-yellow-200{% else %}" style="background-color: var(--bg-secondary); border-color: var(--border-primary); color: var(--text-primary);"{% endif %}>

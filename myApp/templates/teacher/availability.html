@@ -16,8 +16,8 @@
     
     <!-- Add Availability Form -->
     <div class="bg-white/5 backdrop-blur-2xl border border-white/8 rounded-2xl p-8 sm:p-10 shadow-xl">
-        <h2 class="text-2xl sm:text-3xl font-bold text-white mb-8 tracking-tight flex items-center gap-3">
-            <i class="fas fa-plus-circle text-[#82C293]/80 text-xl"></i>
+        <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-8 tracking-tight flex items-center gap-3">
+            <i class="fas fa-plus-circle text-emerald-600 dark:text-emerald-400 text-xl"></i>
             Add Availability Slot
         </h2>
         <form method="post" class="space-y-5">
@@ -25,10 +25,10 @@
             
             <!-- Slot Type -->
             <div>
-                <label class="block mb-2 text-white font-medium">Slot Type <span class="text-red-500">*</span></label>
-                <select name="slot_type" id="slot_type" required class="w-full bg-[#254346] border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50">
-                    <option value="recurring" class="bg-[#254346]">Recurring (Weekly)</option>
-                    <option value="one_time" class="bg-[#254346]">One-Time Slot</option>
+                <label class="block mb-2 text-slate-800 dark:text-white font-medium">Slot Type <span class="text-red-500">*</span></label>
+                <select name="slot_type" id="slot_type" required class="form-select">
+                    <option value="recurring">Recurring (Weekly)</option>
+                    <option value="one_time">One-Time Slot</option>
                 </select>
             </div>
             
@@ -36,34 +36,34 @@
             <div id="recurring_fields">
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                        <label class="block mb-2 text-white font-medium">Day of Week <span class="text-red-500">*</span></label>
-                        <select name="day_of_week" class="w-full bg-[#254346] border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50">
-                            <option value="0" class="bg-[#254346]">Monday</option>
-                            <option value="1" class="bg-[#254346]">Tuesday</option>
-                            <option value="2" class="bg-[#254346]">Wednesday</option>
-                            <option value="3" class="bg-[#254346]">Thursday</option>
-                            <option value="4" class="bg-[#254346]">Friday</option>
-                            <option value="5" class="bg-[#254346]">Saturday</option>
-                            <option value="6" class="bg-[#254346]">Sunday</option>
+                        <label class="form-label">Day of Week <span class="text-red-500">*</span></label>
+                        <select name="day_of_week" class="form-select">
+                            <option value="0">Monday</option>
+                            <option value="1">Tuesday</option>
+                            <option value="2">Wednesday</option>
+                            <option value="3">Thursday</option>
+                            <option value="4">Friday</option>
+                            <option value="5">Saturday</option>
+                            <option value="6">Sunday</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block mb-2 text-white font-medium">Start Time <span class="text-red-500">*</span></label>
-                        <input type="time" name="start_time" class="w-full bg-[#254346] border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50">
+                        <label class="form-label">Start Time <span class="text-red-500">*</span></label>
+                        <input type="time" name="start_time" class="form-input">
                     </div>
                     <div>
-                        <label class="block mb-2 text-white font-medium">End Time <span class="text-red-500">*</span></label>
-                        <input type="time" name="end_time" class="w-full bg-[#254346] border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50">
+                        <label class="form-label">End Time <span class="text-red-500">*</span></label>
+                        <input type="time" name="end_time" class="form-input">
                     </div>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                     <div>
-                        <label class="block mb-2 text-white font-medium">Valid From</label>
-                        <input type="date" name="valid_from" class="w-full bg-[#254346] border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50">
+                        <label class="form-label">Valid From</label>
+                        <input type="date" name="valid_from" class="form-input">
                     </div>
                     <div>
-                        <label class="block mb-2 text-white font-medium">Valid Until</label>
-                        <input type="date" name="valid_until" class="w-full bg-[#254346] border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50">
+                        <label class="form-label">Valid Until</label>
+                        <input type="date" name="valid_until" class="form-input">
                     </div>
                 </div>
             </div>
@@ -72,12 +72,12 @@
             <div id="one_time_fields" style="display: none;">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="block mb-2 text-white font-medium">Start Date & Time <span class="text-red-500">*</span></label>
-                        <input type="datetime-local" name="start_datetime" class="w-full bg-[#254346] border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50">
+                        <label class="form-label">Start Date & Time <span class="text-red-500">*</span></label>
+                        <input type="datetime-local" name="start_datetime" class="form-input">
                     </div>
                     <div>
-                        <label class="block mb-2 text-white font-medium">End Date & Time <span class="text-red-500">*</span></label>
-                        <input type="datetime-local" name="end_datetime" class="w-full bg-[#254346] border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50">
+                        <label class="form-label">End Date & Time <span class="text-red-500">*</span></label>
+                        <input type="datetime-local" name="end_datetime" class="form-input">
                     </div>
                 </div>
             </div>
@@ -85,26 +85,26 @@
             <!-- Common Fields -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="block mb-2 text-white font-medium">Course (Optional)</label>
-                    <select name="course" class="w-full bg-[#254346] border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50">
-                        <option value="" class="bg-[#254346]">All Courses</option>
+                    <label class="form-label">Course (Optional)</label>
+                    <select name="course" class="form-select">
+                        <option value="">All Courses</option>
                         {% for course in courses %}
-                        <option value="{{ course.id }}" class="bg-[#254346]">{{ course.title }}</option>
+                        <option value="{{ course.id }}">{{ course.title }}</option>
                         {% endfor %}
                     </select>
                 </div>
                 <div>
-                    <label class="block mb-2 text-white font-medium">Timezone <span class="text-red-500">*</span></label>
-                    <select name="timezone" class="w-full bg-[#254346] border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50">
-                        <option value="UTC" class="bg-[#254346]">UTC</option>
-                        <option value="America/New_York" class="bg-[#254346]">Eastern Time (ET)</option>
-                        <option value="America/Chicago" class="bg-[#254346]">Central Time (CT)</option>
-                        <option value="America/Denver" class="bg-[#254346]">Mountain Time (MT)</option>
-                        <option value="America/Los_Angeles" class="bg-[#254346]">Pacific Time (PT)</option>
-                        <option value="Europe/London" class="bg-[#254346]">London (GMT)</option>
-                        <option value="Europe/Paris" class="bg-[#254346]">Paris (CET)</option>
-                        <option value="Asia/Dubai" class="bg-[#254346]">Dubai (GST)</option>
-                        <option value="Asia/Riyadh" class="bg-[#254346]">Riyadh (AST)</option>
+                    <label class="form-label">Timezone <span class="text-red-500">*</span></label>
+                    <select name="timezone" class="form-select">
+                        <option value="UTC">UTC</option>
+                        <option value="America/New_York">Eastern Time (ET)</option>
+                        <option value="America/Chicago">Central Time (CT)</option>
+                        <option value="America/Denver">Mountain Time (MT)</option>
+                        <option value="America/Los_Angeles">Pacific Time (PT)</option>
+                        <option value="Europe/London">London (GMT)</option>
+                        <option value="Europe/Paris">Paris (CET)</option>
+                        <option value="Asia/Dubai">Dubai (GST)</option>
+                        <option value="Asia/Riyadh">Riyadh (AST)</option>
                     </select>
                 </div>
             </div>
@@ -117,8 +117,8 @@
     
     <!-- Existing Availability Slots -->
     <div class="bg-white/5 backdrop-blur-2xl border border-white/8 rounded-2xl p-8 sm:p-10 shadow-xl">
-        <h2 class="text-2xl sm:text-3xl font-bold text-white mb-8 tracking-tight flex items-center gap-3">
-            <i class="fas fa-list text-[#82C293]/80 text-xl"></i>
+        <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-8 tracking-tight flex items-center gap-3">
+            <i class="fas fa-list text-emerald-600 dark:text-emerald-400 text-xl"></i>
             Your Availability Slots
         </h2>
         
@@ -129,7 +129,7 @@
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div class="flex-1">
                         <div class="flex items-center gap-3 mb-2">
-                            <h3 class="text-lg font-semibold text-white">
+                            <h3 class="text-lg font-semibold text-slate-900 dark:text-white">
                                 {% if slot.slot_type == 'one_time' %}
                                     One-Time: {{ slot.start_datetime|date:"M d, Y H:i" }} - {{ slot.end_datetime|date:"H:i" }}
                                 {% else %}
@@ -150,7 +150,7 @@
                             </span>
                             {% endif %}
                         </div>
-                        <div class="flex flex-wrap items-center gap-4 text-sm text-white/60">
+                        <div class="flex flex-wrap items-center gap-4 text-sm text-slate-600 dark:text-slate-300/80">
                             <span><i class="fas fa-clock mr-1"></i>{{ slot.timezone }}</span>
                             {% if slot.course %}
                             <span><i class="fas fa-book mr-1"></i>{{ slot.course.title }}</span>
@@ -196,9 +196,9 @@
         </div>
         {% else %}
         <div class="text-center py-12">
-            <i class="fas fa-calendar-times text-5xl text-white/15 mb-4"></i>
-            <p class="text-white/50 mb-1 text-base">No availability slots created yet</p>
-            <p class="text-sm text-white/40">Add one above to get started!</p>
+            <i class="fas fa-calendar-times text-5xl text-slate-400 dark:text-slate-500 mb-4"></i>
+            <p class="text-slate-600 dark:text-slate-300/80 mb-1 text-base">No availability slots created yet</p>
+            <p class="text-sm text-slate-600 dark:text-slate-400">Add one above to get started!</p>
         </div>
         {% endif %}
     </div>
@@ -207,12 +207,12 @@
 <!-- Block Modal -->
 <div id="blockModal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
     <div class="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 max-w-md w-full shadow-xl">
-        <h3 class="text-xl font-bold text-white mb-4">Block Availability Slot</h3>
+        <h3 class="text-xl font-bold text-slate-900 dark:text-white mb-4">Block Availability Slot</h3>
         <form id="blockForm" method="post" class="space-y-4">
             {% csrf_token %}
             <div>
-                <label class="block mb-2 text-white font-medium">Reason (Optional)</label>
-                <textarea name="blocked_reason" rows="3" class="w-full bg-[#254346] border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50" placeholder="Enter reason for blocking this slot..."></textarea>
+                <label class="form-label">Reason (Optional)</label>
+                <textarea name="blocked_reason" rows="3" class="form-textarea" placeholder="Enter reason for blocking this slot..."></textarea>
             </div>
             <div class="flex gap-3">
                 <button type="submit" class="flex-1 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition font-medium">

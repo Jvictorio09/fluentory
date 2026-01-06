@@ -1,0 +1,97 @@
+{% extends 'student/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="p-4 sm:p-6 lg:p-8 xl:p-10 w-full">
+    <!-- Breadcrumb -->
+    <nav class="mb-6 text-sm">
+        <a href="{% url 'student_courses' %}" class="text-white/60 hover:text-white transition">Courses</a>
+        <span class="mx-2 text-white/40">/</span>
+        <a href="{% url 'student_course_detail' slug=session.course.slug %}" class="text-white/60 hover:text-white transition">{{ session.course.title }}</a>
+        <span class="mx-2 text-white/40">/</span>
+        <span class="text-white">Book Session</span>
+    </nav>
+
+    <div class="max-w-3xl mx-auto">
+        <div class="bg-[#04363a]/90 backdrop-blur-xl rounded-3xl p-6 sm:p-8 border border-white/10 shadow-xl mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-white mb-2">{{ session.title }}</h1>
+            <p class="text-white/60 mb-6">{{ session.course.title }}</p>
+            
+            <div class="space-y-4 mb-8">
+                <div class="flex items-center gap-3 text-white/80">
+                    <i class="fas fa-calendar text-[#82C293]"></i>
+                    <span>{{ session.scheduled_start|date:"F d, Y" }}</span>
+                </div>
+                <div class="flex items-center gap-3 text-white/80">
+                    <i class="fas fa-clock text-[#82C293]"></i>
+                    <span>{{ session.scheduled_start|time:"g:i A" }} - {{ session.scheduled_end|time:"g:i A" }}</span>
+                </div>
+                <div class="flex items-center gap-3 text-white/80">
+                    <i class="fas fa-users text-[#82C293]"></i>
+                    <span>{{ session.remaining_seats }} / {{ session.total_seats }} seats available</span>
+                </div>
+                {% if session.meeting_link %}
+                <div class="flex items-center gap-3 text-white/80">
+                    <i class="fas fa-video text-[#82C293]"></i>
+                    <a href="{{ session.meeting_link }}" target="_blank" class="text-[#82C293] hover:underline">{{ session.meeting_link|truncatechars:50 }}</a>
+                </div>
+                {% endif %}
+            </div>
+
+            {% if session.description %}
+            <div class="mb-8">
+                <h3 class="text-lg font-semibold text-white mb-2">Description</h3>
+                <p class="text-white/70">{{ session.description }}</p>
+            </div>
+            {% endif %}
+
+            {% if session.is_full and not session.enable_waitlist %}
+                <div class="bg-red-500/20 border border-red-500/30 rounded-xl p-4 mb-6">
+                    <p class="text-red-300"><i class="fas fa-exclamation-circle mr-2"></i>This session is full and waitlist is not enabled.</p>
+                </div>
+            {% elif session.remaining_seats <= 0 and session.enable_waitlist %}
+                <div class="bg-yellow-500/20 border border-yellow-500/30 rounded-xl p-4 mb-6">
+                    <p class="text-yellow-300"><i class="fas fa-clock mr-2"></i>This session is full, but you can join the waitlist.</p>
+                </div>
+            {% endif %}
+
+            <form method="post" class="space-y-6">
+                {% csrf_token %}
+                
+                <div>
+                    <label for="student_notes" class="block text-white font-medium mb-2">Notes (Optional)</label>
+                    <textarea 
+                        name="student_notes" 
+                        id="student_notes" 
+                        rows="4" 
+                        class="w-full bg-[#254346] border border-white/10 rounded-lg p-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/50"
+                        placeholder="Any questions or special requests for the teacher..."
+                    ></textarea>
+                </div>
+
+                <button 
+                    type="submit" 
+                    class="w-full bg-gradient-to-r from-[#00655F] to-[#82C293] text-white px-6 py-4 rounded-xl font-semibold hover:opacity-90 transition shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                    {% if session.is_full and not session.enable_waitlist %}disabled{% endif %}
+                >
+                    {% if session.is_full and session.enable_waitlist %}
+                        <i class="fas fa-list mr-2"></i>Join Waitlist
+                    {% else %}
+                        <i class="fas fa-calendar-check mr-2"></i>Book Now
+                    {% endif %}
+                </button>
+            </form>
+        </div>
+
+        <div class="text-center">
+            <a href="{% url 'student_course_detail' slug=session.course.slug %}" class="text-white/60 hover:text-white transition">
+                <i class="fas fa-arrow-left mr-2"></i>Back to Course
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+

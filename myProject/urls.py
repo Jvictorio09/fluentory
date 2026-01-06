@@ -41,6 +41,10 @@ urlpatterns = [
     path('student/sessions/<int:session_id>/book/', views.student_book_session, name='student_book_session'),
     path('student/bookings/<int:booking_id>/cancel/', views.student_booking_cancel, name='student_booking_cancel'),
     path('student/bookings/<int:booking_id>/reschedule/', views.student_booking_reschedule, name='student_booking_reschedule'),
+    # 1:1 Booking routes
+    path('student/courses/<int:course_id>/book-one-on-one/', views.student_book_one_on_one, name='student_book_one_on_one'),
+    path('student/availability/<int:availability_id>/book/', views.student_book_one_on_one_submit, name='student_book_one_on_one_submit'),
+    path('student/one-on-one-bookings/<int:booking_id>/cancel/', views.student_booking_one_on_one_cancel, name='student_booking_one_on_one_cancel'),
     path('student/player/', views.student_course_player, name='student_course_player'),
     path('student/player/<int:enrollment_id>/', views.student_course_player, name='student_course_player_enrollment'),
     path('student/player/<int:enrollment_id>/lesson/<int:lesson_id>/', views.student_course_player, name='student_course_player_lesson'),
@@ -90,6 +94,11 @@ urlpatterns = [
     path('teacher/sessions/<int:session_id>/bookings/', views.teacher_session_bookings, name='teacher_session_bookings'),
     path('teacher/bookings/<int:booking_id>/cancel/', views.teacher_booking_cancel, name='teacher_booking_cancel'),
     path('teacher/bookings/<int:booking_id>/attendance/', views.teacher_mark_attendance, name='teacher_mark_attendance'),
+    # 1:1 Booking management routes
+    path('teacher/one-on-one-bookings/', views.teacher_one_on_one_bookings, name='teacher_one_on_one_bookings'),
+    path('teacher/one-on-one-bookings/<int:booking_id>/approve/', views.teacher_one_on_one_approve, name='teacher_one_on_one_approve'),
+    path('teacher/one-on-one-bookings/<int:booking_id>/decline/', views.teacher_one_on_one_decline, name='teacher_one_on_one_decline'),
+    path('teacher/one-on-one-bookings/<int:booking_id>/cancel/', views.teacher_one_on_one_cancel, name='teacher_one_on_one_cancel'),
     
     # Partner routes
     path('partner/', views.partner_overview, name='partner_overview'),

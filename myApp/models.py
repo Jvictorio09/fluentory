@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.validators import MinValueValidator, MaxValueValidator
+from datetime import timedelta
 import uuid
 import qrcode
 from io import BytesIO
@@ -140,6 +141,7 @@ class CourseTeacher(models.Model):
     permission_level = models.CharField(max_length=20, choices=PERMISSION_CHOICES, default='view_only')
     can_create_live_classes = models.BooleanField(default=False)
     can_manage_schedule = models.BooleanField(default=False, help_text='Can manage schedule and availability for this course')
+    requires_booking_approval = models.BooleanField(null=True, blank=True, help_text='Override course-level approval setting for this teacher. If null, uses course setting.')
     
     # Timestamps
     assigned_at = models.DateTimeField(auto_now_add=True)
@@ -150,6 +152,12 @@ class CourseTeacher(models.Model):
     
     def __str__(self):
         return f"{self.teacher.user.username} - {self.course.title} ({self.permission_level})"
+    
+    def get_requires_approval(self):
+        """Get approval requirement, checking teacher override first, then course setting"""
+        if self.requires_booking_approval is not None:
+            return self.requires_booking_approval
+        return self.course.requires_booking_approval
 
 
 # ============================================
@@ -190,6 +198,12 @@ class Course(models.Model):
         ('hybrid', 'Hybrid'),
     ]
     
+    BOOKING_TYPE_CHOICES = [
+        ('none', 'No Booking System'),
+        ('group_session', 'Group Session (Seat-Based)'),
+        ('one_on_one', '1:1 Booking (Availability-Based)'),
+    ]
+    
     title = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
     description = models.TextField()
@@ -204,6 +218,10 @@ class Course(models.Model):
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='courses')
     level = models.CharField(max_length=20, choices=LEVEL_CHOICES, default='beginner')
     course_type = models.CharField(max_length=20, choices=COURSE_TYPE_CHOICES, default='recorded', help_text='Type of course: Recorded (self-paced), Live (scheduled sessions), or Hybrid (combination)')
+    
+    # Booking System
+    booking_type = models.CharField(max_length=20, choices=BOOKING_TYPE_CHOICES, default='none', help_text='Type of booking system enabled for this course: Group Session (seat-based) or 1:1 (availability-based)')
+    requires_booking_approval = models.BooleanField(default=False, help_text='For 1:1 bookings: Requires teacher approval before confirmation')
     
     # Instructor
     instructor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='courses_taught')
@@ -975,12 +993,13 @@ class Notification(models.Model):
 # ============================================
 
 class LiveClassSession(models.Model):
-    """Scheduled live class sessions"""
+    """Group Session (Seat-Based) - Scheduled live class sessions with seat capacity"""
     STATUS_CHOICES = [
         ('scheduled', 'Scheduled'),
         ('live', 'Live'),
         ('completed', 'Completed'),
         ('cancelled', 'Cancelled'),
+        ('booking_closed', 'Booking Closed'),  # Automatically closed when full
     ]
     
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='live_classes')
@@ -989,19 +1008,34 @@ class LiveClassSession(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     
-    # Scheduling
-    scheduled_start = models.DateTimeField()
+    # Scheduling (Phase 2: Unified UTC-based)
+    scheduled_start = models.DateTimeField(help_text='Legacy field - use start_at_utc')
+    scheduled_end = models.DateTimeField(help_text='Legacy field - computed as scheduled_start + duration_minutes')
+    start_at_utc = models.DateTimeField(null=True, blank=True, help_text='Session start time in UTC')
+    end_at_utc = models.DateTimeField(null=True, blank=True, help_text='Session end time in UTC')
+    timezone_snapshot = models.CharField(max_length=50, blank=True, help_text='Teacher timezone at creation time (e.g., "America/New_York")')
     duration_minutes = models.PositiveIntegerField(default=60)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='scheduled')
     
-    # Video conferencing links
-    zoom_link = models.URLField(blank=True)
-    google_meet_link = models.URLField(blank=True)
+    # Video conferencing links (Phase 2: Enhanced)
+    meeting_provider = models.CharField(max_length=20, choices=[
+        ('zoom', 'Zoom'),
+        ('google_meet', 'Google Meet'),
+        ('microsoft_teams', 'Microsoft Teams'),
+        ('custom', 'Custom'),
+    ], default='zoom', blank=True)
+    meeting_link = models.URLField(blank=True, help_text='Zoom / Google Meet / Custom meeting link', db_column='meeting_url', default='')
+    zoom_link = models.URLField(blank=True)  # Legacy field, use meeting_link instead
+    google_meet_link = models.URLField(blank=True)  # Legacy field, use meeting_link instead
     meeting_id = models.CharField(max_length=100, blank=True)
-    meeting_password = models.CharField(max_length=50, blank=True)
+    meeting_passcode = models.CharField(max_length=50, blank=True, help_text='Meeting passcode/password')
+    meeting_password = models.CharField(max_length=50, blank=True)  # Legacy field, use meeting_passcode
     
-    # Attendance
-    max_attendees = models.PositiveIntegerField(null=True, blank=True)
+    # Seat-based booking (Group Session) - Phase 2: Unified naming
+    total_seats = models.PositiveIntegerField(null=False, default=10, help_text='Total seat capacity for this group session')
+    capacity = models.PositiveIntegerField(null=True, blank=True, help_text='Phase 2: Alias for total_seats')
+    seats_taken = models.PositiveIntegerField(default=0, help_text='Cached count of confirmed bookings (updated via signal)', db_column='current_attendees')
+    enable_waitlist = models.BooleanField(default=False, help_text='Allow waitlist after all seats are taken')
     
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
@@ -1009,17 +1043,86 @@ class LiveClassSession(models.Model):
     started_at = models.DateTimeField(null=True, blank=True)
     ended_at = models.DateTimeField(null=True, blank=True)
     
+    # Legacy field for backwards compatibility
+    max_attendees = models.PositiveIntegerField(null=True, blank=True)
+    
     class Meta:
         ordering = ['-scheduled_start']
+        verbose_name = 'Group Session'
+        verbose_name_plural = 'Group Sessions'
     
     def __str__(self):
         return f"{self.title} - {self.course.title} - {self.scheduled_start}"
     
-    @property
-    def scheduled_end(self):
-        """Calculate end time based on start and duration"""
+    def save(self, *args, **kwargs):
         from datetime import timedelta
-        return self.scheduled_start + timedelta(minutes=self.duration_minutes)
+        
+        # CRITICAL: Compute scheduled_end BEFORE save to avoid IntegrityError
+        # scheduled_end is a required column in the database, so it MUST be set before INSERT
+        # Priority: use explicitly set value, then compute from scheduled_start + duration
+        if self.scheduled_start and self.duration_minutes:
+            # If scheduled_end is None or not set, compute it
+            # Use getattr with default None to check actual value (not just attribute existence)
+            current_scheduled_end = getattr(self, 'scheduled_end', None)
+            if current_scheduled_end is None:
+                # Compute scheduled_end from scheduled_start + duration_minutes
+                self.scheduled_end = self.scheduled_start + timedelta(minutes=self.duration_minutes)
+        
+        # Sync max_attendees with total_seats for backwards compatibility
+        if self.max_attendees is None:
+            self.max_attendees = self.total_seats
+        elif self.total_seats != self.max_attendees:
+            # If total_seats is set differently, use it
+            self.max_attendees = self.total_seats
+        
+        # Phase 2: Auto-populate start_at_utc and end_at_utc from scheduled_start if not set
+        if self.scheduled_start and not self.start_at_utc:
+            # Ensure scheduled_start is timezone-aware for start_at_utc
+            if hasattr(self.scheduled_start, 'tzinfo') and self.scheduled_start.tzinfo is None:
+                from django.utils import timezone as tz
+                # Assume UTC if naive
+                self.start_at_utc = tz.make_aware(self.scheduled_start, tz.utc)
+            else:
+                self.start_at_utc = self.scheduled_start
+        
+        # Compute end_at_utc if not set
+        if self.start_at_utc and not self.end_at_utc:
+            self.end_at_utc = self.start_at_utc + timedelta(minutes=self.duration_minutes)
+        
+        # FINAL CHECK: Ensure scheduled_end is set (use end_at_utc as fallback if needed)
+        # This is a safety net in case scheduled_start wasn't available earlier
+        if getattr(self, 'scheduled_end', None) is None:
+            if self.end_at_utc:
+                # Convert end_at_utc to naive datetime for scheduled_end
+                self.scheduled_end = self.end_at_utc.replace(tzinfo=None) if hasattr(self.end_at_utc, 'replace') and self.end_at_utc.tzinfo else self.end_at_utc
+            elif self.scheduled_start and self.duration_minutes:
+                # Last resort: compute from scheduled_start + duration
+                self.scheduled_end = self.scheduled_start + timedelta(minutes=self.duration_minutes)
+        
+        # Sync capacity with total_seats
+        if self.capacity is None:
+            self.capacity = self.total_seats
+        
+        # Sync timezone snapshot if not set (use teacher's timezone or default UTC)
+        if not self.timezone_snapshot and hasattr(self, 'teacher') and self.teacher:
+            # Get teacher's timezone if available, otherwise default to UTC
+            self.timezone_snapshot = getattr(self.teacher, 'timezone', 'UTC') or 'UTC'
+        
+        # CRITICAL: Ensure meeting_link (maps to meeting_url column) is never None
+        # meeting_url column in database is NOT NULL, so must have a value (empty string is acceptable)
+        if not hasattr(self, 'meeting_link') or self.meeting_link is None:
+            self.meeting_link = ''
+        
+        # CRITICAL: Ensure seats_taken (maps to current_attendees column) is never None
+        # current_attendees column in database is NOT NULL, so must have a value (0 for new sessions)
+        if not hasattr(self, 'seats_taken') or self.seats_taken is None:
+            self.seats_taken = 0
+        
+        # Save the model - scheduled_end, meeting_link, and seats_taken are now guaranteed to be set
+        super().save(*args, **kwargs)
+    
+    # Note: scheduled_end is now a real database field, not a property
+    # The property has been removed to avoid conflicts with the field
     
     @property
     def is_past(self):
@@ -1027,27 +1130,77 @@ class LiveClassSession(models.Model):
         return self.scheduled_start < timezone.now()
     
     @property
+    def booked_seats(self):
+        """Get number of confirmed bookings (seats taken)"""
+        # Phase 2: Use unified LiveClassBooking if available, fallback to legacy Booking
+        try:
+            from django.db.models import Sum
+            total = self.live_class_bookings.filter(status__in=['confirmed', 'attended']).aggregate(
+                total=Sum('seats_reserved')
+            )['total']
+            if total is not None:
+                return total
+        except:
+            pass
+        # Fallback to legacy Booking model
+        return self.bookings.filter(status__in=['confirmed', 'attended']).count()
+    
+    @property
+    def seats_taken_cached(self):
+        """Get cached seats_taken value (updated via signal)"""
+        return self.seats_taken
+    
+    @property
+    def waitlisted_count(self):
+        """Get number of waitlisted bookings"""
+        return self.bookings.filter(status='waitlisted').count()
+    
+    @property
+    def remaining_seats(self):
+        """Get number of remaining seats in real-time"""
+        return max(0, self.total_seats - self.booked_seats)
+    
+    @property
     def available_spots(self):
-        """Get number of available booking spots"""
-        if not self.max_attendees:
-            return None  # Unlimited
-        booked_count = self.bookings.filter(status__in=['confirmed', 'attended']).count()
-        return max(0, self.max_attendees - booked_count)
+        """Legacy property for backwards compatibility"""
+        return self.remaining_seats
+    
+    @property
+    def is_full(self):
+        """Check if all seats are taken"""
+        return self.remaining_seats <= 0
+    
+    @property
+    def booking_open(self):
+        """Check if booking is still open"""
+        if self.status not in ['scheduled']:
+            return False
+        if self.is_past:
+            return False
+        if self.is_full and not self.enable_waitlist:
+            return False
+        return True
     
     def can_be_booked(self, user=None):
-        """Check if session can be booked"""
-        if self.status != 'scheduled':
+        """Check if session can be booked by a user"""
+        if self.status not in ['scheduled']:
             return False, "Session is not available for booking"
         if self.is_past:
             return False, "Session has already passed"
-        if self.max_attendees and self.available_spots <= 0:
-            return False, "No available spots"
+        if self.is_full and not self.enable_waitlist:
+            return False, "Session is full and waitlist is disabled"
         if user:
-            # Check if user already has a booking
+            # Check if user already has a booking (1 seat per user per session)
             existing_booking = self.bookings.filter(user=user, status__in=['confirmed', 'waitlisted']).first()
             if existing_booking:
                 return False, "You already have a booking for this session"
         return True, "Available"
+    
+    def update_booking_status(self):
+        """Automatically close booking when full if waitlist is disabled"""
+        if self.is_full and not self.enable_waitlist and self.status == 'scheduled':
+            self.status = 'booking_closed'
+            self.save(update_fields=['status'])
 
 
 class TeacherAvailability(models.Model):
@@ -1125,10 +1278,96 @@ class TeacherAvailability(models.Model):
     def save(self, *args, **kwargs):
         self.clean()
         super().save(*args, **kwargs)
+    
+    @property
+    def is_booked(self):
+        """Check if this slot is already booked"""
+        if self.slot_type == 'one_time':
+            # For one-time slots, check if there's a confirmed booking
+            return self.bookings.filter(status='confirmed').exists()
+        else:
+            # For recurring slots, check if the slot is blocked or has active bookings
+            return self.is_blocked or not self.is_active
+    
+    @property
+    def is_available_for_booking(self):
+        """Check if slot is available for 1:1 booking"""
+        if not self.is_active:
+            return False
+        if self.is_blocked:
+            return False
+        if self.slot_type == 'one_time':
+            # Check if it's in the past
+            if self.start_datetime and self.start_datetime < timezone.now():
+                return False
+            # Check if already booked
+            if self.is_booked:
+                return False
+        else:
+            # For recurring slots, check valid_from/valid_until
+            today = timezone.now().date()
+            if self.valid_from and today < self.valid_from:
+                return False
+            if self.valid_until and today > self.valid_until:
+                return False
+        
+        return True
+    
+    def can_be_booked(self, user=None, course=None):
+        """Check if this availability slot can be booked by a user"""
+        if not self.is_available_for_booking:
+            return False, "Slot is not available for booking"
+        
+        # Check course match if specified
+        if course and self.course and self.course != course:
+            return False, "Slot is not available for this course"
+        
+        if user:
+            # Check if user already has a booking for this slot
+            existing_booking = self.bookings.filter(
+                user=user,
+                status__in=['pending', 'confirmed']
+            ).first()
+            if existing_booking:
+                return False, "You already have a booking for this slot"
+            
+            # Check for time conflicts with other bookings
+            if self.slot_type == 'one_time':
+                # Check if user has other bookings at the same time
+                conflicting_bookings = OneOnOneBooking.objects.filter(
+                    user=user,
+                    status__in=['pending', 'confirmed'],
+                    availability_slot__slot_type='one_time',
+                    availability_slot__start_datetime__date=self.start_datetime.date(),
+                    availability_slot__start_datetime__time__gte=self.start_datetime.time(),
+                    availability_slot__start_datetime__time__lt=self.end_datetime.time(),
+                ).exclude(availability_slot=self)
+                
+                if conflicting_bookings.exists():
+                    return False, "You already have a booking at this time"
+        
+        return True, "Available"
+    
+    def get_duration_minutes(self):
+        """Calculate duration in minutes"""
+        if self.slot_type == 'one_time':
+            if self.start_datetime and self.end_datetime:
+                delta = self.end_datetime - self.start_datetime
+                return int(delta.total_seconds() / 60)
+        elif self.start_time and self.end_time:
+            # For recurring slots, calculate from time fields
+            from datetime import datetime, date
+            start_dt = datetime.combine(date.today(), self.start_time)
+            end_dt = datetime.combine(date.today(), self.end_time)
+            if end_dt < start_dt:
+                end_dt += timedelta(days=1)
+            delta = end_dt - start_dt
+            return int(delta.total_seconds() / 60)
+        return 60  # Default 1 hour
 
 
 class Booking(models.Model):
-    """Student bookings for live class sessions"""
+    """Group Session Booking (Seat-Based) - Student bookings for group sessions"""
     STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('confirmed', 'Confirmed'),
@@ -1147,7 +1386,7 @@ class Booking(models.Model):
     ]
     
     booking_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='bookings')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='group_bookings')
     session = models.ForeignKey(LiveClassSession, on_delete=models.CASCADE, related_name='bookings')
     
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
@@ -1170,24 +1409,49 @@ class Booking(models.Model):
     # Notes
     student_notes = models.TextField(blank=True, help_text='Student notes or questions')
     
+    # Seat assignment (each booking consumes exactly 1 seat)
+    seats_booked = models.PositiveIntegerField(default=1, help_text='Number of seats (always 1 per booking)')
+    
     class Meta:
         ordering = ['-booked_at']
-        unique_together = [['user', 'session']]  # One booking per user per session
+        unique_together = [['user', 'session']]  # One booking per user per session (1 seat per booking)
+        verbose_name = 'Group Session Booking'
+        verbose_name_plural = 'Group Session Bookings'
     
     def __str__(self):
         return f"{self.user.get_full_name()} - {self.session.title} - {self.get_status_display()}"
     
+    @property
+    def booking_type(self):
+        """Return booking type for UI display"""
+        return 'group_session'
+    
+    @property
+    def booking_type(self):
+        """Return booking type for UI display"""
+        return 'group_session'
+    
     def confirm(self):
-        """Confirm the booking"""
+        """Confirm the booking and update session seat count"""
         if self.status == 'pending':
             self.status = 'confirmed'
             self.confirmed_at = timezone.now()
             self.save()
+            # Update session booking status
+            self.session.update_booking_status()
             return True
+        elif self.status == 'waitlisted':
+            # Check if seats are available before confirming from waitlist
+            if self.session.remaining_seats > 0:
+                self.status = 'confirmed'
+                self.confirmed_at = timezone.now()
+                self.save()
+                self.session.update_booking_status()
+                return True
         return False
     
     def cancel(self, reason='student', notes=''):
-        """Cancel the booking"""
+        """Cancel the booking and free up seat"""
         if self.status in ['pending', 'confirmed', 'waitlisted']:
             self.status = 'cancelled'
             self.cancelled_at = timezone.now()
@@ -1195,26 +1459,42 @@ class Booking(models.Model):
             self.cancellation_notes = notes
             self.save()
             
-            # If there's a waitlist, confirm next booking
-            if self.session.max_attendees:
+            # If there's a waitlist, confirm next booking automatically
+            if self.session.enable_waitlist:
                 next_waitlisted = self.session.bookings.filter(status='waitlisted').order_by('booked_at').first()
                 if next_waitlisted:
                     next_waitlisted.confirm()
+            
+            # Reopen booking if it was closed
+            if self.session.status == 'booking_closed' and self.session.remaining_seats > 0:
+                self.session.status = 'scheduled'
+                self.session.save(update_fields=['status'])
+            
             return True
         return False
     
     def reschedule_to(self, new_session, notes=''):
         """Reschedule booking to a new session"""
         if self.status in ['confirmed', 'pending']:
+            # Check if new session can accept booking
+            can_book, message = new_session.can_be_booked(self.user)
+            if not can_book:
+                return None
+            
             # Create new booking
             new_booking = Booking.objects.create(
                 user=self.user,
                 session=new_session,
-                status='confirmed',
+                status='confirmed' if new_session.remaining_seats > 0 else 'waitlisted',
                 original_session=self,
                 rescheduled_at=timezone.now(),
                 student_notes=notes
             )
+            
+            # Confirm if there's a seat
+            if new_booking.status == 'confirmed':
+                new_booking.confirm()
+            
             # Cancel old booking
             self.cancel(reason='conflict', notes=f'Rescheduled to session on {new_session.scheduled_start}')
             return new_booking
@@ -1230,8 +1510,175 @@ class Booking(models.Model):
         return hours_until >= 24
 
 
+class OneOnOneBooking(models.Model):
+    """1:1 Booking (Availability-Based) - Student bookings from teacher availability slots"""
+    STATUS_CHOICES = [
+        ('pending', 'Pending Approval'),  # Waiting for teacher approval (if required)
+        ('confirmed', 'Confirmed'),
+        ('declined', 'Declined by Teacher'),
+        ('cancelled', 'Cancelled'),
+        ('attended', 'Attended'),
+        ('no_show', 'No Show'),
+    ]
+    
+    CANCELLATION_REASON_CHOICES = [
+        ('student', 'Cancelled by student'),
+        ('teacher', 'Cancelled by teacher'),
+        ('system', 'Cancelled by system'),
+        ('conflict', 'Scheduling conflict'),
+        ('emergency', 'Emergency'),
+    ]
+    
+    booking_id = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='one_on_one_bookings')
+    availability_slot = models.ForeignKey(TeacherAvailability, on_delete=models.CASCADE, related_name='bookings')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='one_on_one_bookings', null=True, blank=True)
+    
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    
+    # Booking details
+    booked_at = models.DateTimeField(auto_now_add=True)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+    declined_at = models.DateTimeField(null=True, blank=True)
+    declined_reason = models.TextField(blank=True, help_text='Reason for declining (if applicable)')
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    cancellation_reason = models.CharField(max_length=20, choices=CANCELLATION_REASON_CHOICES, blank=True)
+    cancellation_notes = models.TextField(blank=True)
+    
+    # Meeting link (set by teacher or auto-generated)
+    meeting_link = models.URLField(blank=True, help_text='Zoom / Google Meet / Custom meeting link for 1:1 session')
+    
+    # Reschedule
+    original_booking = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='rescheduled_bookings')
+    rescheduled_at = models.DateTimeField(null=True, blank=True)
+    
+    # Attendance
+    attended = models.BooleanField(default=False)
+    attended_at = models.DateTimeField(null=True, blank=True)
+    
+    # Notes
+    student_notes = models.TextField(blank=True, help_text='Student notes or questions')
+    teacher_notes = models.TextField(blank=True, help_text='Teacher notes (internal)')
+    
+    # Recurring series (if booking is part of a series)
+    is_recurring = models.BooleanField(default=False)
+    recurring_series_id = models.UUIDField(null=True, blank=True, help_text='ID to group recurring bookings together')
+    recurring_cadence = models.CharField(max_length=20, blank=True, choices=[
+        ('weekly', 'Weekly'),
+        ('biweekly', 'Bi-Weekly'),
+        ('monthly', 'Monthly'),
+        ('custom', 'Custom'),
+    ])
+    next_booking_date = models.DateTimeField(null=True, blank=True, help_text='Next booking in series')
+    
+    class Meta:
+        ordering = ['-booked_at']
+        unique_together = [['user', 'availability_slot']]  # One booking per user per slot
+        verbose_name = '1:1 Booking'
+        verbose_name_plural = '1:1 Bookings'
+    
+    def __str__(self):
+        slot_display = self.availability_slot.start_datetime if self.availability_slot.slot_type == 'one_time' else f"{self.availability_slot.get_day_of_week_display()} {self.availability_slot.start_time}"
+        return f"{self.user.get_full_name()} - {slot_display} - {self.get_status_display()}"
+    
+    @property
+    def booking_type(self):
+        """Return booking type for UI display"""
+        return 'one_on_one'
+    
+    @property
+    def session_datetime(self):
+        """Get the actual datetime for this booking"""
+        if self.availability_slot.slot_type == 'one_time':
+            return self.availability_slot.start_datetime
+        # For recurring slots, we'd need to calculate the next occurrence
+        # This is a simplified version - in production you'd calculate based on the booking date
+        return None
+    
+    @property
+    def requires_approval(self):
+        """Check if this booking requires teacher approval"""
+        if self.course:
+            # Check course-level setting
+            if self.course.requires_booking_approval:
+                return True
+            # Check teacher-level override
+            course_teacher = CourseTeacher.objects.filter(
+                course=self.course,
+                teacher=self.availability_slot.teacher
+            ).first()
+            if course_teacher and course_teacher.get_requires_approval():
+                return True
+        return False
+    
+    def confirm(self, approved_by=None):
+        """Confirm the booking (auto or after teacher approval)"""
+        if self.status == 'pending':
+            # Remove slot from availability (prevent double booking)
+            self.availability_slot.is_active = False
+            self.availability_slot.save(update_fields=['is_active'])
+            
+            self.status = 'confirmed'
+            self.confirmed_at = timezone.now()
+            self.save()
+            return True
+        return False
+    
+    def decline(self, reason='', declined_by=None):
+        """Decline the booking"""
+        if self.status == 'pending':
+            self.status = 'declined'
+            self.declined_at = timezone.now()
+            self.declined_reason = reason
+            self.save()
+            # Slot remains available for others
+            return True
+        return False
+    
+    def cancel(self, reason='student', notes=''):
+        """Cancel the booking and free up the slot"""
+        if self.status in ['pending', 'confirmed']:
+            self.status = 'cancelled'
+            self.cancelled_at = timezone.now()
+            self.cancellation_reason = reason
+            self.cancellation_notes = notes
+            self.save()
+            
+            # Free up the availability slot for others
+            if self.availability_slot.slot_type == 'one_time':
+                # For one-time slots, reactivate them
+                self.availability_slot.is_active = True
+                self.availability_slot.save(update_fields=['is_active'])
+            # For recurring slots, the slot pattern remains but this instance is cancelled
+            
+            return True
+        return False
+    
+    @property
+    def can_cancel(self):
+        """Check if booking can be cancelled"""
+        if self.status not in ['pending', 'confirmed']:
+            return False
+        # Allow cancellation up to 24 hours before session
+        session_dt = self.session_datetime
+        if not session_dt:
+            return True  # Can cancel if no specific datetime yet
+        
+        hours_until = (session_dt - timezone.now()).total_seconds() / 3600
+        return hours_until >= 24
+    
+    def get_scheduled_time(self):
+        """Get the scheduled time for display"""
+        if self.availability_slot.slot_type == 'one_time':
+            return self.availability_slot.start_datetime
+        else:
+            # For recurring, we need to compute the next occurrence
+            # Simplified: return the slot pattern
+            return f"{self.availability_slot.get_day_of_week_display()} {self.availability_slot.start_time}"
+
+
 class BookingReminder(models.Model):
-    """Track sent reminders for bookings"""
+    """Track sent reminders for bookings (both Group and 1:1)"""
     REMINDER_TYPE_CHOICES = [
         ('24h', '24 Hours Before'),
         ('1h', '1 Hour Before'),
@@ -1240,17 +1687,32 @@ class BookingReminder(models.Model):
         ('rescheduled', 'Booking Rescheduled'),
     ]
     
-    booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='reminders')
+    # Support both booking types
+    group_booking = models.ForeignKey(Booking, on_delete=models.CASCADE, related_name='reminders', null=True, blank=True)
+    one_on_one_booking = models.ForeignKey(OneOnOneBooking, on_delete=models.CASCADE, related_name='reminders', null=True, blank=True)
+    
     reminder_type = models.CharField(max_length=20, choices=REMINDER_TYPE_CHOICES)
     sent_at = models.DateTimeField(auto_now_add=True)
     sent_via = models.CharField(max_length=20, default='email', choices=[('email', 'Email'), ('sms', 'SMS'), ('push', 'Push Notification')])
     
     class Meta:
         ordering = ['-sent_at']
-        unique_together = [['booking', 'reminder_type']]  # One reminder of each type per booking
+    
+    def clean(self):
+        """Ensure exactly one booking is set"""
+        from django.core.exceptions import ValidationError
+        if not self.group_booking and not self.one_on_one_booking:
+            raise ValidationError('Either group_booking or one_on_one_booking must be set')
+        if self.group_booking and self.one_on_one_booking:
+            raise ValidationError('Cannot set both group_booking and one_on_one_booking')
+    
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
     
     def __str__(self):
-        return f"{self.booking} - {self.get_reminder_type_display()} - {self.sent_at}"
+        booking = self.group_booking or self.one_on_one_booking
+        return f"{booking} - {self.get_reminder_type_display()} - {self.sent_at}"
 
 
 # ============================================
@@ -1448,6 +1910,313 @@ class Media(models.Model):
         if not self.tags:
             return []
         return [tag.strip() for tag in self.tags.split(',') if tag.strip()]
+
+
+# ============================================
+# PHASE 2: UNIFIED BOOKING SYSTEM
+# ============================================
+
+class TeacherBookingPolicy(models.Model):
+    """Teacher booking policies for approval rules and limits"""
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name='booking_policies')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='booking_policies', null=True, blank=True, 
+                                help_text='If null, applies as default policy for teacher')
+    
+    # Approval requirements
+    requires_approval_for_one_on_one = models.BooleanField(default=False, help_text='Require approval for 1:1 bookings')
+    requires_approval_for_group = models.BooleanField(default=False, help_text='Require approval for group session bookings (usually false)')
+    
+    # Time constraints
+    min_notice_hours = models.PositiveIntegerField(default=24, help_text='Minimum hours notice before booking allowed')
+    cancel_window_hours = models.PositiveIntegerField(default=24, help_text='Hours before start when cancellation is allowed')
+    buffer_before_minutes = models.PositiveIntegerField(default=0, help_text='Buffer time before session (minutes)')
+    buffer_after_minutes = models.PositiveIntegerField(default=0, help_text='Buffer time after session (minutes)')
+    
+    # Limits
+    max_bookings_per_day = models.PositiveIntegerField(null=True, blank=True, help_text='Optional limit on bookings per day')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Teacher Booking Policy'
+        verbose_name_plural = 'Teacher Booking Policies'
+        unique_together = [['teacher', 'course']]  # One policy per teacher per course
+    
+    def __str__(self):
+        if self.course:
+            return f"{self.teacher.user.get_full_name()} - {self.course.title} Policy"
+        return f"{self.teacher.user.get_full_name()} - Default Policy"
+    
+    def get_requires_approval(self, booking_type):
+        """Get approval requirement for booking type"""
+        if booking_type == 'one_on_one':
+            return self.requires_approval_for_one_on_one
+        elif booking_type == 'group_session':
+            return self.requires_approval_for_group
+        return False
+
+
+class LiveClassBooking(models.Model):
+    """Unified booking model for both Group Sessions and 1:1 bookings"""
+    BOOKING_TYPE_CHOICES = [
+        ('group_session', 'Group Session'),
+        ('one_on_one', '1:1 Booking'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),  # Student requested, waiting for approval
+        ('confirmed', 'Confirmed'),
+        ('declined', 'Declined'),
+        ('cancelled', 'Cancelled'),
+        ('attended', 'Attended'),
+        ('no_show', 'No Show'),
+        ('rescheduled', 'Rescheduled'),  # Old booking marked as this
+    ]
+    
+    CANCEL_REASON_CHOICES = [
+        ('student', 'Cancelled by student'),
+        ('teacher', 'Cancelled by teacher'),
+        ('admin', 'Cancelled by admin'),
+        ('system', 'Cancelled by system'),
+        ('conflict', 'Scheduling conflict'),
+        ('emergency', 'Emergency'),
+    ]
+    
+    # Core fields
+    booking_type = models.CharField(max_length=20, choices=BOOKING_TYPE_CHOICES)
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='live_class_bookings')
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name='live_class_bookings')
+    student_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='live_class_bookings')
+    
+    # Scheduling (UTC-based)
+    start_at_utc = models.DateTimeField(help_text='Session start time in UTC')
+    end_at_utc = models.DateTimeField(help_text='Session end time in UTC')
+    
+    # Status
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    
+    # Notes
+    student_note = models.TextField(blank=True, help_text='Student notes or questions')
+    teacher_note = models.TextField(blank=True, help_text='Teacher notes (internal)')
+    
+    # Group-specific fields
+    session = models.ForeignKey(LiveClassSession, on_delete=models.CASCADE, related_name='live_class_bookings', 
+                                null=True, blank=True, help_text='FK to LiveClassSession (nullable for 1:1)')
+    seats_reserved = models.PositiveIntegerField(default=1, help_text='Number of seats reserved (default 1)')
+    
+    # Approval & audit fields
+    decision_at = models.DateTimeField(null=True, blank=True, help_text='When approval decision was made')
+    decided_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, 
+                                    related_name='booking_decisions', help_text='Teacher or admin who decided')
+    
+    cancelled_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, 
+                                     related_name='booking_cancellations', help_text='Who cancelled the booking')
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    cancel_reason = models.CharField(max_length=20, choices=CANCEL_REASON_CHOICES, blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Live Class Booking'
+        verbose_name_plural = 'Live Class Bookings'
+        indexes = [
+            models.Index(fields=['booking_type', 'status']),
+            models.Index(fields=['student_user', 'start_at_utc']),
+            models.Index(fields=['teacher', 'start_at_utc']),
+        ]
+        # Unique constraints: prevent duplicate bookings
+        # For group sessions: one booking per student per session per time
+        # For 1:1: one booking per student per teacher per time
+        constraints = [
+            models.UniqueConstraint(
+                fields=['student_user', 'session', 'start_at_utc'],
+                condition=models.Q(booking_type='group_session'),
+                name='unique_group_booking'
+            ),
+            models.UniqueConstraint(
+                fields=['student_user', 'teacher', 'start_at_utc'],
+                condition=models.Q(booking_type='one_on_one'),
+                name='unique_one_on_one_booking'
+            ),
+        ]
+        # Unique constraints: prevent duplicate bookings
+        # Note: Django doesn't support conditional unique_together, so we use database-level constraints
+        # For group sessions: (student_user, session, start_at_utc) should be unique
+        # For 1:1 bookings: (student_user, teacher, start_at_utc) should be unique
+        # We'll enforce this in the save() method or via database constraints
+    
+    def __str__(self):
+        return f"{self.student_user.get_full_name()} - {self.get_booking_type_display()} - {self.get_status_display()}"
+    
+    def confirm(self, decided_by=None):
+        """Confirm the booking"""
+        if self.status == 'pending':
+            self.status = 'confirmed'
+            self.decision_at = timezone.now()
+            if decided_by:
+                self.decided_by = decided_by
+            self.save()
+            return True
+        return False
+    
+    def decline(self, decided_by=None, reason=''):
+        """Decline the booking"""
+        if self.status == 'pending':
+            self.status = 'declined'
+            self.decision_at = timezone.now()
+            if decided_by:
+                self.decided_by = decided_by
+            if reason:
+                self.teacher_note = reason
+            self.save()
+            return True
+        return False
+    
+    def cancel(self, cancelled_by=None, reason='student', note=''):
+        """Cancel the booking"""
+        if self.status in ['pending', 'confirmed']:
+            self.status = 'cancelled'
+            self.cancelled_at = timezone.now()
+            if cancelled_by:
+                self.cancelled_by = cancelled_by
+            self.cancel_reason = reason
+            if note:
+                self.teacher_note = note
+            self.save()
+            return True
+        return False
+
+
+class BookingSeries(models.Model):
+    """Recurring booking series for both group and 1:1 bookings"""
+    TYPE_CHOICES = [
+        ('one_on_one_series', '1:1 Series'),
+        ('group_series', 'Group Series'),
+    ]
+    
+    STATUS_CHOICES = [
+        ('active', 'Active'),
+        ('paused', 'Paused'),
+        ('cancelled', 'Cancelled'),
+        ('completed', 'Completed'),
+    ]
+    
+    FREQUENCY_CHOICES = [
+        ('weekly', 'Weekly'),
+        ('biweekly', 'Bi-Weekly'),
+        ('monthly', 'Monthly'),
+        ('custom', 'Custom'),
+    ]
+    
+    student_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='booking_series')
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name='booking_series')
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='booking_series')
+    
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    
+    # Recurrence rules
+    frequency = models.CharField(max_length=20, choices=FREQUENCY_CHOICES, default='weekly')
+    interval = models.PositiveIntegerField(default=1, help_text='Interval for frequency (e.g., every 2 weeks)')
+    days_of_week = models.CharField(max_length=50, blank=True, help_text='Comma-separated days (0=Monday, 6=Sunday) for weekly recurrences')
+    occurrence_count = models.PositiveIntegerField(null=True, blank=True, help_text='Total number of occurrences')
+    until_date = models.DateTimeField(null=True, blank=True, help_text='Series end date')
+    
+    # Default meeting info snapshot
+    default_meeting_link = models.URLField(blank=True)
+    default_meeting_id = models.CharField(max_length=100, blank=True)
+    default_meeting_passcode = models.CharField(max_length=50, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Booking Series'
+        verbose_name_plural = 'Booking Series'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.student_user.get_full_name()} - {self.get_type_display()} - {self.get_status_display()}"
+
+
+class BookingSeriesItem(models.Model):
+    """Individual booking occurrence within a series"""
+    series = models.ForeignKey(BookingSeries, on_delete=models.CASCADE, related_name='items')
+    booking = models.ForeignKey(LiveClassBooking, on_delete=models.CASCADE, related_name='series_items')
+    occurrence_index = models.PositiveIntegerField(help_text='Occurrence number in series (1, 2, 3, ...)')
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = 'Booking Series Item'
+        verbose_name_plural = 'Booking Series Items'
+        unique_together = [['series', 'occurrence_index']]
+        ordering = ['occurrence_index']
+    
+    def __str__(self):
+        return f"{self.series} - Occurrence {self.occurrence_index}"
+
+
+class SessionWaitlist(models.Model):
+    """Waitlist for group sessions"""
+    STATUS_CHOICES = [
+        ('waiting', 'Waiting'),
+        ('offered', 'Offered'),
+        ('accepted', 'Accepted'),
+        ('expired', 'Expired'),
+    ]
+    
+    session = models.ForeignKey(LiveClassSession, on_delete=models.CASCADE, related_name='waitlist_entries')
+    student_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='waitlist_entries')
+    
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='waiting')
+    created_at = models.DateTimeField(auto_now_add=True)
+    offered_at = models.DateTimeField(null=True, blank=True)
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    expired_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        verbose_name = 'Session Waitlist'
+        verbose_name_plural = 'Session Waitlists'
+        unique_together = [['session', 'student_user']]  # One waitlist entry per student per session
+        ordering = ['created_at']  # FIFO order
+    
+    def __str__(self):
+        return f"{self.student_user.get_full_name()} - {self.session.title} - {self.get_status_display()}"
+    
+    def offer_seat(self):
+        """Offer seat to this waitlist entry"""
+        if self.status == 'waiting':
+            self.status = 'offered'
+            self.offered_at = timezone.now()
+            self.save()
+            # TODO: Send notification
+            return True
+        return False
+    
+    def accept_offer(self):
+        """Accept the offered seat"""
+        if self.status == 'offered':
+            self.status = 'accepted'
+            self.accepted_at = timezone.now()
+            self.save()
+            # TODO: Create booking
+            return True
+        return False
+    
+    def expire_offer(self):
+        """Mark offer as expired"""
+        if self.status == 'offered':
+            self.status = 'expired'
+            self.expired_at = timezone.now()
+            self.save()
+            # TODO: Offer to next in line
+            return True
+        return False
 
 
 # ============================================

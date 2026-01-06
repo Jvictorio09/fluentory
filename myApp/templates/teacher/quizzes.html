@@ -1,48 +1,87 @@
 {% extends 'teacher/base.html' %}
 
 {% block content %}
-<div class="space-y-6">
-    <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-bold">{{ course.title }} - Quizzes</h1>
-        <a href="{% url 'teacher_quiz_create' course.id %}" class="bg-deep-charcoal text-white px-4 py-2 rounded">Create Quiz</a>
+<div class="space-y-8 max-w-7xl mx-auto">
+    <!-- Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
+        <div>
+            <h1 class="text-4xl sm:text-5xl font-bold mb-3 tracking-tight text-slate-900 dark:text-white">{{ course.title }} - Quizzes</h1>
+            <p class="text-base sm:text-lg font-normal text-slate-600 dark:text-slate-400 tracking-wide">Manage quizzes and assessments</p>
+        </div>
+        <a href="{% url 'teacher_quiz_create' course.id %}" class="btn-primary">
+            <i class="fas fa-plus"></i>
+            Create Quiz
+        </a>
     </div>
     
-    <div class="bg-white border rounded p-4">
-        <table class="w-full">
-            <thead>
-                <tr class="border-b">
-                    <th class="text-left p-2">Title</th>
-                    <th class="text-left p-2">Type</th>
-                    <th class="text-left p-2">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for quiz in quizzes %}
-                <tr class="border-b">
-                    <td class="p-2">{{ quiz.title }}</td>
-                    <td class="p-2">{{ quiz.get_quiz_type_display }}</td>
-                    <td class="p-2">
-                        <a href="{% url 'teacher_quiz_questions' course.id quiz.id %}" class="text-blue-600 text-sm">Manage</a>
-                        <a href="{% url 'teacher_quiz_edit' course.id quiz.id %}" class="text-blue-600 text-sm ml-2">Edit</a>
-                        <form method="post" action="{% url 'teacher_quiz_delete' course.id quiz.id %}" class="inline ml-2">
-                            {% csrf_token %}
-                            <button type="submit" class="text-red-600 text-sm" onclick="return confirm('Delete this quiz?')">Delete</button>
-                        </form>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="3" class="p-2 text-muted-taupe">No quizzes yet</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-white/10 to-transparent mb-8"></div>
+    
+    <!-- Quizzes List -->
+    <div class="glass-card backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-white/10 shadow-xl dark:shadow-2xl overflow-hidden">
+        {% if quizzes %}
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-slate-50 dark:bg-white/5 border-b border-slate-200 dark:border-white/10">
+                    <tr>
+                        <th class="text-left px-6 py-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Title</th>
+                        <th class="text-left px-6 py-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Type</th>
+                        <th class="text-left px-6 py-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Passing Score</th>
+                        <th class="text-left px-6 py-4 text-sm font-semibold text-slate-700 dark:text-slate-300">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200 dark:divide-white/10">
+                    {% for quiz in quizzes %}
+                    <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20 flex items-center justify-center">
+                                    <i class="fas fa-question-circle text-emerald-600 dark:text-emerald-400"></i>
+                                </div>
+                                <span class="font-medium text-slate-900 dark:text-white">{{ quiz.title }}</span>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="inline-block px-3 py-1 text-xs font-medium rounded-full {% if quiz.quiz_type == 'final' %}bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-400 border border-purple-200 dark:border-purple-500/30{% else %}bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/30{% endif %}">
+                                {{ quiz.get_quiz_type_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 text-slate-600 dark:text-slate-400">
+                            {{ quiz.passing_score }}%
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-2">
+                                <a href="{% url 'teacher_quiz_questions' course.id quiz.id %}" class="btn-link text-sm">
+                                    <i class="fas fa-cog"></i> Manage
+                                </a>
+                                <a href="{% url 'teacher_quiz_edit' course.id quiz.id %}" class="btn-link text-sm">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                                <form method="post" action="{% url 'teacher_quiz_delete' course.id quiz.id %}" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-link text-sm text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300" onclick="return confirm('Are you sure you want to delete this quiz? This action cannot be undone.')">
+                                        <i class="fas fa-trash"></i> Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-12 text-center">
+            <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-question-circle text-3xl text-slate-500 dark:text-slate-500"></i>
+            </div>
+            <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-2">No quizzes yet</h3>
+            <p class="text-slate-600 dark:text-slate-400 mb-6">Create your first quiz to assess student learning</p>
+            <a href="{% url 'teacher_quiz_create' course.id %}" class="btn-primary">
+                <i class="fas fa-plus"></i>
+                Create Quiz
+            </a>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
-
-
-
-
-
-
