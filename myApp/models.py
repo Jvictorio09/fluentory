@@ -139,6 +139,7 @@ class CourseTeacher(models.Model):
     # Permissions
     permission_level = models.CharField(max_length=20, choices=PERMISSION_CHOICES, default='view_only')
     can_create_live_classes = models.BooleanField(default=False)
+    can_manage_schedule = models.BooleanField(default=False, help_text='Can manage schedule and availability for this course')
     
     # Timestamps
     assigned_at = models.DateTimeField(auto_now_add=True)

@@ -1599,6 +1599,7 @@ def teacher_course_create(request):
             teacher=teacher,
             permission_level='full',
             can_create_live_classes=True,
+            can_manage_schedule=True,
             assigned_by=user
         )
         
@@ -2123,11 +2124,56 @@ def teacher_schedule(request):
         messages.success(request, 'Live class scheduled successfully!')
         return redirect('teacher_schedule')
     
-    # Get assigned courses for dropdown
+    # Get courses teacher can create live classes for
+    # Include courses where teacher is assigned with permission, OR courses the teacher created themselves
     assigned_courses = CourseTeacher.objects.filter(
         teacher=teacher,
         can_create_live_classes=True
     ).select_related('course')
+    
+    # Also include courses created by this teacher (they should have full control)
+    teacher_created_courses = Course.objects.filter(
+        instructor=user,
+        course_type__in=['live', 'hybrid']
+    ).exclude(
+        id__in=assigned_courses.values_list('course_id', flat=True)
+    )
+    
+    # Add teacher-created courses to the queryset (create CourseTeacher entries if needed)
+    # Only create if teacher object is valid and saved
+    if teacher and hasattr(teacher, 'id') and teacher.id:
+        for course in teacher_created_courses:
+            try:
+                # Verify teacher exists in database before creating relationship
+                from myApp.models import Teacher
+                if not Teacher.objects.filter(id=teacher.id).exists():
+                    continue
+                    
+                assignment, created = CourseTeacher.objects.get_or_create(
+                    course=course,
+                    teacher=teacher,
+                    defaults={
+                        'permission_level': 'full',
+                        'can_create_live_classes': True,
+                        'can_manage_schedule': True,
+                        'assigned_by': user
+                    }
+                )
+                if not assignment.can_create_live_classes:
+                    assignment.can_create_live_classes = True
+                    assignment.save()
+            except Exception as e:
+                # Log error but don't break the page - database schema issue
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Error creating CourseTeacher for course {course.id}, teacher {teacher.id if hasattr(teacher, 'id') else 'N/A'}: {e}")
+                continue
+    
+    # Refresh the queryset to include newly created assignments
+    assigned_courses = CourseTeacher.objects.filter(
+        teacher=teacher,
+        can_create_live_classes=True
+    ).select_related('course').distinct()
     
     context = {
         'live_classes': live_classes,

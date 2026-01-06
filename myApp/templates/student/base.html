@@ -43,6 +43,208 @@
         .animate-shimmer {
             animation: shimmer 2s infinite;
         }
+        
+        /* Premium Light Mode Background Gradient */
+        [data-theme="light"] body {
+            background: linear-gradient(to bottom, var(--bg-gradient-top), var(--bg-gradient-middle), var(--bg-gradient-bottom));
+            min-height: 100vh;
+        }
+        
+        /* Light mode: Navbar styling */
+        [data-theme="light"] nav {
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 0 rgba(255, 255, 255, 0.5) inset;
+        }
+        
+        /* Light mode: Sidebar contrast */
+        [data-theme="light"] aside {
+            box-shadow: 1px 0 3px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Light mode: Hero cards - white background with premium shadows */
+        /* More aggressive: Target ALL rounded cards that might have dark backgrounds */
+        [data-theme="light"] main .rounded-3xl,
+        [data-theme="light"] main .rounded-2xl {
+            /* Check if element has dark background by looking at computed style */
+        }
+        
+        /* Direct approach: Target cards with dark backgrounds using multiple selectors */
+        [data-theme="light"] div[class*="04363a"] {
+            background-color: #FFFFFF !important;
+            border-color: rgba(10, 31, 31, 0.12) !important;
+            box-shadow: 0 20px 60px rgba(4, 54, 58, 0.12), 0 8px 24px rgba(4, 54, 58, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+        }
+        
+        [data-theme="light"] div[class*="04363a"]:hover {
+            box-shadow: 0 24px 72px rgba(4, 54, 58, 0.15), 0 12px 32px rgba(4, 54, 58, 0.10), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+        }
+        
+        /* Also target the escaped version Tailwind uses */
+        [data-theme="light"] div[class*="04363a"] {
+            background-color: #FFFFFF !important;
+        }
+        
+        /* Light mode: Text colors in dark cards - make them readable */
+        [data-theme="light"] div[class*="04363a"] .text-white,
+        [data-theme="light"] div[class*="04363a"] [class*="text-white"] {
+            color: var(--text-primary) !important;
+        }
+        
+        [data-theme="light"] div[class*="04363a"] [class*="text-white/"] {
+            color: var(--text-muted) !important;
+        }
+        
+        /* Light mode: Remove dark overlay gradients in light mode */
+        [data-theme="light"] div[class*="04363a"] .absolute.inset-0 {
+            opacity: 0 !important;
+        }
+        
+        [data-theme="light"] div[class*="04363a"] .absolute.top-0.right-0 {
+            opacity: 0 !important;
+        }
+        
+        /* Light mode: Progress bars background */
+        [data-theme="light"] [class*="254346"] {
+            background-color: rgba(10, 31, 31, 0.08) !important;
+        }
+        
+        /* Light mode: Card backgrounds in lists - target by color code */
+        [data-theme="light"] div[class*="254346"]:not([class*="04363a"]) {
+            background-color: rgba(250, 252, 251, 0.8) !important;
+            border-color: rgba(10, 31, 31, 0.10) !important;
+        }
+        
+        [data-theme="light"] div[class*="254346"]:not([class*="04363a"]):hover {
+            background-color: rgba(245, 247, 246, 0.95) !important;
+            border-color: rgba(130, 194, 147, 0.25) !important;
+        }
+        
+        /* Light mode: Icon containers - lighter green tint */
+        [data-theme="light"] div[class*="82C293"][class*="bg-"] {
+            background-color: rgba(130, 194, 147, 0.12) !important;
+            border-color: rgba(130, 194, 147, 0.20) !important;
+        }
+        
+        /* Light mode: Green text/icons - darker for contrast */
+        [data-theme="light"] [class*="82C293"][class*="text-"],
+        [data-theme="light"] i[class*="82C293"] {
+            color: #5FA372 !important;
+        }
+        
+        /* Light mode: Section headings - override white text */
+        [data-theme="light"] .text-2xl.text-white,
+        [data-theme="light"] .text-3xl.text-white,
+        [data-theme="light"] .text-4xl.text-white,
+        [data-theme="light"] h1.text-white,
+        [data-theme="light"] h2.text-white,
+        [data-theme="light"] h3.text-white,
+        [data-theme="light"] h4.text-white {
+            color: var(--text-primary) !important;
+        }
+        
+        /* Light mode: Secondary text in sections */
+        [data-theme="light"] [class*="text-white/"] {
+            color: var(--text-muted) !important;
+        }
+        
+        /* Light mode: Input fields */
+        [data-theme="light"] input[class*="254346"],
+        [data-theme="light"] .rounded-xl[class*="254346"] {
+            background-color: rgba(255, 255, 255, 0.9) !important;
+            border-color: rgba(10, 31, 31, 0.15) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        [data-theme="light"] input[class*="254346"]::placeholder,
+        [data-theme="light"] .rounded-xl[class*="254346"]::placeholder,
+        [data-theme="light"] [class*="placeholder-white"] {
+            color: var(--text-muted) !important;
+        }
+        
+        [data-theme="light"] input[class*="254346"]:focus,
+        [data-theme="light"] .rounded-xl[class*="254346"]:focus {
+            border-color: rgba(130, 194, 147, 0.4) !important;
+            box-shadow: 0 0 0 3px rgba(130, 194, 147, 0.1) !important;
+        }
+        
+        /* Light mode: Badges and tags */
+        [data-theme="light"] span[class*="254346"],
+        [data-theme="light"] [class*="254346"].text-white,
+        [data-theme="light"] [class*="254346"] [class*="text-white"] {
+            background-color: rgba(130, 194, 147, 0.10) !important;
+            border-color: rgba(130, 194, 147, 0.20) !important;
+            color: var(--text-primary) !important;
+        }
+        
+        /* Light mode: Buttons - solid green with better contrast */
+        [data-theme="light"] .bg-gradient-to-r[class*="00655F"],
+        [data-theme="light"] a.bg-gradient-to-r {
+            background: linear-gradient(to right, #5FA372, #4A8F5F) !important;
+            box-shadow: 0 4px 14px rgba(95, 163, 114, 0.25), 0 2px 4px rgba(95, 163, 114, 0.15) !important;
+        }
+        
+        [data-theme="light"] .bg-gradient-to-r[class*="00655F"]:hover,
+        [data-theme="light"] a.bg-gradient-to-r:hover {
+            background: linear-gradient(to right, #4A8F5F, #3D7A4F) !important;
+            box-shadow: 0 6px 20px rgba(95, 163, 147, 0.35), 0 4px 8px rgba(95, 163, 114, 0.20) !important;
+        }
+        
+        /* Light mode: Links with borders */
+        [data-theme="light"] [class*="82C293"] {
+            border-color: rgba(95, 163, 114, 0.30) !important;
+        }
+        
+        /* Light mode: Course card image backgrounds */
+        [data-theme="light"] .bg-gradient-to-br[class*="254346"] {
+            background: linear-gradient(to bottom right, rgba(130, 194, 147, 0.08), rgba(130, 194, 147, 0.04)) !important;
+        }
+        
+        /* Light mode: Font weights - make headings bolder */
+        [data-theme="light"] .font-extralight.text-white,
+        [data-theme="light"] h1.font-extralight {
+            font-weight: 600 !important;
+        }
+        
+        /* Light mode: Progress percentage numbers */
+        [data-theme="light"] .text-2xl.font-light.text-white,
+        [data-theme="light"] .text-3xl.font-light.text-white,
+        [data-theme="light"] .text-4xl.font-light.text-white {
+            color: var(--text-primary) !important;
+            font-weight: 600 !important;
+        }
+        
+        /* Light mode: Remove text-black hardcoding (use theme variables) */
+        [data-theme="light"] .text-black {
+            color: var(--text-primary) !important;
+        }
+        
+        /* Light mode: Force white backgrounds on all dark cards using universal selector */
+        [data-theme="light"] div[style*="background-color: var(--bg-primary)"] {
+            background-color: var(--bg-primary) !important;
+        }
+        
+        /* Light mode: Override any remaining dark backgrounds with important */
+        [data-theme="light"] .rounded-3xl,
+        [data-theme="light"] .rounded-2xl {
+            /* Check if it has dark background class and override */
+        }
+        
+        
+        /* Light mode: Sidebar link styling */
+        [data-theme="light"] .sidebar-nav-link {
+            color: var(--text-secondary) !important;
+        }
+        
+        [data-theme="light"] .sidebar-nav-link:hover {
+            background-color: rgba(130, 194, 147, 0.08) !important;
+            border-color: rgba(130, 194, 147, 0.15) !important;
+            color: #5FA372 !important;
+        }
+        
+        [data-theme="light"] .sidebar-nav-link.active {
+            background-color: rgba(130, 194, 147, 0.12) !important;
+            border-color: rgba(130, 194, 147, 0.25) !important;
+            color: #5FA372 !important;
+        }
     </style>
 </head>
 <body class="font-sans" style="background-color: var(--bg-primary); color: var(--text-primary);">

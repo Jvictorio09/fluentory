@@ -579,6 +579,7 @@ def dashboard_teacher_assign_course(request, teacher_id):
     course_id = data.get('course_id')
     permission_level = data.get('permission_level', 'view_only')
     can_create_live_classes = data.get('can_create_live_classes', 'false') == 'true'
+    can_manage_schedule = data.get('can_manage_schedule', 'false') == 'true'
     
     course = get_object_or_404(Course, id=course_id)
     
@@ -589,6 +590,7 @@ def dashboard_teacher_assign_course(request, teacher_id):
         defaults={
             'permission_level': permission_level,
             'can_create_live_classes': can_create_live_classes,
+            'can_manage_schedule': can_manage_schedule,
             'assigned_by': request.user
         }
     )
@@ -596,6 +598,7 @@ def dashboard_teacher_assign_course(request, teacher_id):
     if not created:
         assignment.permission_level = permission_level
         assignment.can_create_live_classes = can_create_live_classes
+        assignment.can_manage_schedule = can_manage_schedule
         assignment.save()
         messages.info(request, 'Assignment updated.')
     else:
