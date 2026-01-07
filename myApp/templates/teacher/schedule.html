@@ -131,8 +131,12 @@
                 </thead>
                 <tbody class="divide-y divide-slate-200 dark:divide-white/10">
                     {% for class in live_classes %}
-                    <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                        <td class="px-6 py-4 font-medium text-slate-900 dark:text-white">{{ class.title }}</td>
+                    <tr class="hover:bg-slate-50 dark:hover:bg-white/5 transition-colors cursor-pointer" onclick="window.location.href='{% url 'teacher_live_class_detail' class.id %}'">
+                        <td class="px-6 py-4 font-medium text-slate-900 dark:text-white">
+                            <a href="{% url 'teacher_live_class_detail' class.id %}" class="hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+                                {{ class.title }}
+                            </a>
+                        </td>
                         <td class="px-6 py-4 text-slate-600 dark:text-slate-400">{{ class.course.title }}</td>
                         <td class="px-6 py-4 text-slate-600 dark:text-slate-400 text-sm">
                             <div class="flex items-center gap-2">

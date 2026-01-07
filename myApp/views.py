@@ -450,18 +450,6 @@ def student_course_detail(request, slug):
     # Check if enrolled
     enrollment = Enrollment.objects.filter(user=user, course=course).first()
     
-    # Course modules and lessons
-    modules = course.modules.prefetch_related('lessons').order_by('order')
-    
-    # Reviews
-    reviews = course.reviews.filter(is_approved=True).select_related('user').order_by('-created_at')[:10]
-    
-    # Similar courses
-    similar_courses = Course.objects.filter(
-        category=course.category,
-        status='published'
-    ).exclude(id=course.id)[:4]
-    
     # Get selected currency from session
     selected_currency = request.session.get('selected_currency', 'USD')
     
@@ -479,6 +467,67 @@ def student_course_detail(request, slug):
             course_price = course.price
             course_currency = course.currency
     
+    # For live courses, show different content
+    if course.course_type == 'live':
+        # Get quizzes for this course
+        quizzes = course.quizzes.all().order_by('-created_at')
+        
+        # Get upcoming live class sessions
+        from django.utils import timezone
+        now = timezone.now()
+        upcoming_sessions = LiveClassSession.objects.filter(
+            course=course,
+            status='scheduled',
+            scheduled_start__gt=now
+        ).select_related('teacher', 'teacher__user').order_by('scheduled_start')[:10]
+        
+        # Get course announcements (activities)
+        announcements = CourseAnnouncement.objects.filter(
+            course=course
+        ).order_by('-created_at')[:10]
+        
+        # Get user's quiz attempts to show status
+        quiz_attempts_dict = {}
+        if enrollment:
+            from myApp.models import QuizAttempt
+            attempts = QuizAttempt.objects.filter(
+                user=user,
+                quiz__course=course
+            ).select_related('quiz').order_by('-started_at')
+            for attempt in attempts:
+                if attempt.quiz_id not in quiz_attempts_dict:
+                    quiz_attempts_dict[attempt.quiz_id] = attempt
+        
+        # Add attempt info to each quiz
+        for quiz in quizzes:
+            quiz.user_attempt = quiz_attempts_dict.get(quiz.id)
+        
+        context = {
+            'course': course,
+            'enrollment': enrollment,
+            'quizzes': quizzes,
+            'upcoming_sessions': upcoming_sessions,
+            'announcements': announcements,
+            'selected_currency': selected_currency,
+            'course_price': course_price,
+            'course_currency': course_currency,
+            'is_live_course': True,
+        }
+        return render(request, 'student/course_detail_live.html', context)
+    
+    # For recorded/hybrid courses, show standard content
+    # Course modules and lessons
+    modules = course.modules.prefetch_related('lessons').order_by('order')
+    
+    # Reviews
+    reviews = course.reviews.filter(is_approved=True).select_related('user').order_by('-created_at')[:10]
+    
+    # Similar courses
+    similar_courses = Course.objects.filter(
+        category=course.category,
+        status='published'
+    ).exclude(id=course.id)[:4]
+    
     context = {
         'course': course,
         'enrollment': enrollment,
@@ -488,6 +537,7 @@ def student_course_detail(request, slug):
         'selected_currency': selected_currency,
         'course_price': course_price,
         'course_currency': course_currency,
+        'is_live_course': False,
     }
     return render(request, 'student/course_detail.html', context)
 
@@ -665,6 +715,12 @@ def student_course_player(request, enrollment_id=None, lesson_id=None):
     
     course = enrollment.course
     
+    # Check if this is a live class course - these don't have lessons
+    if course.course_type == 'live':
+        # Redirect to live classes page for live courses
+        messages.info(request, 'This is a live class course. View available live sessions to book.')
+        return redirect('student_live_classes')
+    
     # Get current lesson
     if lesson_id:
         current_lesson = get_object_or_404(Lesson, id=lesson_id, module__course=course)
@@ -676,17 +732,24 @@ def student_course_player(request, enrollment_id=None, lesson_id=None):
             if first_module:
                 current_lesson = first_module.lessons.order_by('order').first()
     
+    # If no lesson found, show message and redirect
+    if not current_lesson:
+        messages.warning(request, 'This course has no lessons available yet. Please check back later.')
+        return redirect('student_course_detail', slug=course.slug)
+    
     # Update enrollment's current position
     if current_lesson:
         enrollment.current_lesson = current_lesson
         enrollment.current_module = current_lesson.module
         enrollment.save()
     
-    # Get or create lesson progress
-    progress, created = LessonProgress.objects.get_or_create(
-        enrollment=enrollment,
-        lesson=current_lesson
-    )
+    # Get or create lesson progress - only if lesson exists
+    progress = None
+    if current_lesson:
+        progress, created = LessonProgress.objects.get_or_create(
+            enrollment=enrollment,
+            lesson=current_lesson
+        )
     
     # Get all modules with lessons
     modules = course.modules.prefetch_related('lessons').order_by('order')
@@ -697,17 +760,19 @@ def student_course_player(request, enrollment_id=None, lesson_id=None):
         completed=True
     ).values_list('lesson_id', flat=True))
     
-    # AI Tutor conversation
-    conversation = TutorConversation.objects.filter(
-        user=user,
-        lesson=current_lesson
-    ).first()
-    
+    # AI Tutor conversation - only if lesson exists
+    conversation = None
     tutor_messages = []
     conversation_id = None
-    if conversation:
-        tutor_messages = conversation.messages.all()[:20]
-        conversation_id = conversation.id
+    if current_lesson:
+        conversation = TutorConversation.objects.filter(
+            user=user,
+            lesson=current_lesson
+        ).first()
+        
+        if conversation:
+            tutor_messages = conversation.messages.all()[:20]
+            conversation_id = conversation.id
     
     context = {
         'enrollment': enrollment,
@@ -768,30 +833,88 @@ def set_currency(request):
 @require_POST
 def enroll_course(request):
     """Enroll in a course (AJAX)"""
-    data = json.loads(request.body)
-    course_id = data.get('course_id')
-    
-    course = get_object_or_404(Course, id=course_id, status='published')
-    
-    # Check if already enrolled
-    if Enrollment.objects.filter(user=request.user, course=course).exists():
-        return JsonResponse({'success': False, 'error': 'Already enrolled'})
-    
-    # Create enrollment
-    enrollment = Enrollment.objects.create(
-        user=request.user,
-        course=course
-    )
-    
-    # Update course stats
-    course.enrolled_count += 1
-    course.save()
-    
-    return JsonResponse({
-        'success': True,
-        'enrollment_id': enrollment.id,
-        'redirect_url': f'/student/player/{enrollment.id}/'
-    })
+    try:
+        # Try to parse JSON from request body
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+        else:
+            # Fallback to form data
+            data = request.POST
+        
+        course_id = data.get('course_id')
+        
+        if not course_id:
+            return JsonResponse({'success': False, 'error': 'Course ID is required'}, status=400)
+        
+        try:
+            course_id = int(course_id)
+        except (ValueError, TypeError):
+            return JsonResponse({'success': False, 'error': 'Invalid course ID'}, status=400)
+        
+        # Try to get the course - handle both existence and status
+        try:
+            course = Course.objects.get(id=course_id)
+        except Course.DoesNotExist:
+            return JsonResponse({
+                'success': False, 
+                'error': 'Course not found. The course may have been removed.'
+            }, status=404)
+        
+        # Check if course is published
+        if course.status != 'published':
+            return JsonResponse({
+                'success': False, 
+                'error': f'Course is not available for enrollment. Status: {course.get_status_display()}'
+            }, status=403)
+        
+        # Check if already enrolled
+        existing_enrollment = Enrollment.objects.filter(user=request.user, course=course).first()
+        if existing_enrollment:
+            if existing_enrollment.status == 'active':
+                return JsonResponse({
+                    'success': False, 
+                    'error': 'Already enrolled',
+                    'enrollment_id': existing_enrollment.id
+                })
+            else:
+                # Reactivate enrollment if it was paused/expired
+                existing_enrollment.status = 'active'
+                existing_enrollment.save()
+                return JsonResponse({
+                    'success': True,
+                    'enrollment_id': existing_enrollment.id,
+                    'redirect_url': f'/student/player/{existing_enrollment.id}/'
+                })
+        
+        # Create enrollment
+        enrollment = Enrollment.objects.create(
+            user=request.user,
+            course=course,
+            status='active',
+            teacher_notes=''  # Ensure teacher_notes is set to empty string, not None
+        )
+        
+        # Update course stats
+        course.enrolled_count += 1
+        course.save()
+        
+        # Determine redirect URL based on course type
+        if course.course_type == 'live':
+            # For live courses, redirect to live classes page
+            redirect_url = '/student/live-classes/'
+        else:
+            # For recorded/hybrid courses, redirect to course player
+            redirect_url = f'/student/player/{enrollment.id}/'
+        
+        return JsonResponse({
+            'success': True,
+            'enrollment_id': enrollment.id,
+            'redirect_url': redirect_url
+        })
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON data'}, status=400)
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
 # ============================================
@@ -2116,6 +2239,10 @@ def teacher_schedule(request):
             messages.error(request, 'You do not have permission to create live classes for this course.')
             return redirect('teacher_schedule')
         
+        # Warn if course is not published - students won't be able to enroll
+        if course.status != 'published':
+            messages.warning(request, f'Warning: This course is in "{course.get_status_display()}" status. Students will not be able to see or enroll in live classes for unpublished courses. Consider publishing the course first.')
+        
         # Validate required fields
         scheduled_start_str = request.POST.get('scheduled_start')
         if not scheduled_start_str:
@@ -2197,14 +2324,22 @@ def teacher_schedule(request):
             return redirect('teacher_schedule')
         
         enable_waitlist = request.POST.get('enable_waitlist') == 'on'
-        # CRITICAL: meeting_url column in DB is NOT NULL, so always provide a value (empty string if not provided)
-        meeting_link = request.POST.get('meeting_link', '').strip() or request.POST.get('zoom_link', '').strip() or request.POST.get('google_meet_link', '').strip() or ''
+        # CRITICAL: meeting_url column (db_column) in DB is NOT NULL, so always provide a value (empty string if not provided)
+        # Get meeting link from form, fallback to empty string - NEVER allow None
+        # Use or '' to ensure we always have a string, never None
+        meeting_link = (request.POST.get('meeting_link') or '').strip()
+        if not meeting_link:
+            meeting_link = (request.POST.get('zoom_link') or '').strip()
+        if not meeting_link:
+            meeting_link = (request.POST.get('google_meet_link') or '').strip()
+        # Final guarantee - ensure it's always a string, never None (defensive programming)
+        meeting_link = str(meeting_link) if meeting_link else ''
         
         # Get teacher's timezone for snapshot
         teacher_tz = getattr(teacher_instance, 'timezone', 'UTC') or 'UTC'
         
         # Create session with all required fields
-        # CRITICAL: scheduled_end and meeting_link MUST be set here before INSERT to avoid IntegrityError
+        # CRITICAL: scheduled_end, meeting_link, seats_taken, and reminder_sent MUST be set here before INSERT to avoid IntegrityError
         live_class = LiveClassSession.objects.create(
             course=course,
             teacher=teacher_instance,
@@ -2216,7 +2351,7 @@ def teacher_schedule(request):
             end_at_utc=scheduled_end_utc,
             duration_minutes=duration_minutes,
             timezone_snapshot=teacher_tz,
-            meeting_link=meeting_link,  # REQUIRED: meeting_url column is NOT NULL
+            meeting_link=meeting_link,  # REQUIRED: meeting_url column (db_column) is NOT NULL - must be string, never None
             zoom_link=request.POST.get('zoom_link', ''),
             google_meet_link=request.POST.get('google_meet_link', ''),
             meeting_id=request.POST.get('meeting_id', ''),
@@ -2225,6 +2360,7 @@ def teacher_schedule(request):
             total_seats=total_seats,
             seats_taken=0,  # REQUIRED: current_attendees column is NOT NULL, initialize to 0 for new sessions
             enable_waitlist=enable_waitlist,
+            reminder_sent=False,  # REQUIRED: reminder_sent column is NOT NULL, initialize to False for new sessions
             max_attendees=total_seats,  # Sync for backwards compatibility
             capacity=total_seats,  # Phase 2: Set capacity
         )
@@ -2289,6 +2425,162 @@ def teacher_schedule(request):
         'selected_status': status,
     }
     return render(request, 'teacher/schedule.html', context)
+
+
+@login_required
+def teacher_profile_edit(request):
+    """Edit teacher profile with photo upload"""
+    user = request.user
+    
+    # Get or create teacher profile
+    try:
+        teacher, _ = Teacher.objects.get_or_create(
+            user=user,
+            defaults={'permission_level': 'standard'}
+        )
+    except Exception:
+        messages.error(request, 'Unable to access teacher profile.')
+        return redirect('teacher_dashboard')
+    
+    if request.method == 'POST':
+        # Update basic fields
+        teacher.bio = request.POST.get('bio', teacher.bio)
+        teacher.specialization = request.POST.get('specialization', teacher.specialization)
+        years_exp = request.POST.get('years_experience', '0')
+        try:
+            teacher.years_experience = int(years_exp) if years_exp else 0
+        except ValueError:
+            teacher.years_experience = 0
+        
+        # Update user fields
+        user.first_name = request.POST.get('first_name', user.first_name)
+        user.last_name = request.POST.get('last_name', user.last_name)
+        user.email = request.POST.get('email', user.email)
+        user.save()
+        
+        # Handle photo upload
+        if 'photo' in request.FILES:
+            photo_file = request.FILES['photo']
+            
+            # Validate file type
+            if not photo_file.content_type.startswith('image/'):
+                messages.error(request, 'Please upload a valid image file.')
+            else:
+                # Import utility function
+                from myApp.utils.cloudinary_utils import upload_image_to_cloudinary, delete_image_from_cloudinary
+                
+                # Delete old photo from Cloudinary if exists
+                if teacher.photo_url:
+                    # Extract public_id from URL if possible
+                    # Cloudinary URLs format: https://res.cloudinary.com/{cloud_name}/image/upload/{folder}/{public_id}.{format}
+                    try:
+                        # Extract the full path after /image/upload/
+                        url_parts = teacher.photo_url.split('/image/upload/')
+                        if len(url_parts) > 1:
+                            # Get the path with version and transformations removed
+                            path_part = url_parts[1].split('.')[0]  # Remove extension
+                            # Remove version prefix if present (v1234567890/)
+                            if '/' in path_part:
+                                path_parts = path_part.split('/')
+                                # Reconstruct public_id (should include folder)
+                                old_public_id = '/'.join(path_parts)
+                                if old_public_id:
+                                    delete_image_from_cloudinary(old_public_id)
+                    except Exception as e:
+                        print(f"Could not delete old photo: {e}")  # Ignore deletion errors
+                
+                # Upload new photo to Cloudinary (converts to WebP automatically)
+                upload_result = upload_image_to_cloudinary(
+                    photo_file,
+                    folder='teachers/profiles',
+                    public_id=f'teacher_{teacher.id}_{user.username}',
+                    should_convert_to_webp=True
+                )
+                
+                if upload_result and upload_result.get('web_url'):
+                    # Use web_url (optimized) for profile photo
+                    teacher.photo_url = upload_result['web_url']
+                    messages.success(request, 'Profile photo updated successfully!')
+                else:
+                    error_msg = 'Failed to upload photo. '
+                    if upload_result is None:
+                        error_msg += 'Cloudinary upload failed. Please check your Cloudinary account status.'
+                    else:
+                        error_msg += 'Please try again.'
+                    messages.error(request, error_msg)
+        
+        teacher.save()
+        messages.success(request, 'Profile updated successfully!')
+        return redirect('teacher_profile_edit')
+    
+    context = {
+        'teacher': teacher,
+        'user': user,
+    }
+    return render(request, 'teacher/profile_edit.html', context)
+
+
+@login_required
+def teacher_live_class_detail(request, session_id):
+    """Live class details page with enrolled students"""
+    user = request.user
+    
+    # Get or create teacher profile
+    try:
+        teacher_instance, _ = Teacher.objects.get_or_create(
+            user=user,
+            defaults={'permission_level': 'standard'}
+        )
+    except Exception:
+        messages.error(request, 'Unable to access teacher profile.')
+        return redirect('teacher_dashboard')
+    
+    # Get the session
+    session = get_object_or_404(
+        LiveClassSession, 
+        id=session_id,
+        teacher=teacher_instance
+    )
+    
+    # Get all bookings for this session
+    bookings = LiveClassBooking.objects.filter(
+        session=session,
+        booking_type='group_session'
+    ).select_related('student_user', 'student_user__profile').order_by('created_at')
+    
+    # Separate by status
+    confirmed_bookings = bookings.filter(status__in=['confirmed', 'attended'])
+    pending_bookings = bookings.filter(status='pending')
+    cancelled_bookings = bookings.filter(status='cancelled')
+    
+    # Get waitlist entries
+    waitlist_entries = []
+    try:
+        waitlist_entries = SessionWaitlist.objects.filter(
+            session=session,
+            status='waiting'
+        ).select_related('student_user', 'student_user__profile').order_by('created_at')
+    except Exception:
+        pass
+    
+    # Statistics
+    total_bookings = confirmed_bookings.count()
+    total_seats = session.total_seats
+    remaining_seats = session.remaining_seats
+    attendance_count = bookings.filter(status='attended').count()
+    
+    context = {
+        'session': session,
+        'bookings': confirmed_bookings,
+        'pending_bookings': pending_bookings,
+        'cancelled_bookings': cancelled_bookings,
+        'waitlist_entries': waitlist_entries,
+        'total_bookings': total_bookings,
+        'total_seats': total_seats,
+        'remaining_seats': remaining_seats,
+        'attendance_count': attendance_count,
+    }
+    return render(request, 'teacher/live_class_detail.html', context)
 
 
 @login_required
@@ -3269,6 +3561,159 @@ def student_book_session(request, session_id):
         'enrollment': enrollment,
     }
     return render(request, 'student/book_session.html', context)
+
+
+@login_required
+def student_live_class_detail_modal(request, session_id):
+    """Get live class details for modal (AJAX)"""
+    user = request.user
+    session = get_object_or_404(
+        LiveClassSession, 
+        id=session_id
+    )
+    
+    # Check enrollment status
+    enrollment = Enrollment.objects.filter(
+        user=user,
+        course=session.course,
+        status='active'
+    ).first()
+    
+    # Check if can book
+    can_book, booking_message = session.can_be_booked(user)
+    
+    # Get selected currency
+    selected_currency = request.session.get('selected_currency', 'USD')
+    
+    # Get course pricing
+    try:
+        pricing = CoursePricing.objects.get(course=session.course, currency=selected_currency)
+        course_price = pricing.price
+        course_currency = selected_currency
+    except CoursePricing.DoesNotExist:
+        course_price = session.course.price
+        course_currency = session.course.currency
+    
+    context = {
+        'session': session,
+        'enrollment': enrollment,
+        'can_book': can_book,
+        'booking_message': booking_message,
+        'course_price': course_price,
+        'course_currency': course_currency,
+        'selected_currency': selected_currency,
+    }
+    return render(request, 'student/live_class_detail_modal.html', context)
+
+
+@login_required
+def student_live_classes(request):
+    """View available live classes for enrollment"""
+    user = request.user
+    now = timezone.now()
+    
+    # Get all upcoming live classes that are open for booking
+    # Only show classes for published courses - students shouldn't see draft courses
+    live_classes = LiveClassSession.objects.filter(
+        status='scheduled',
+        scheduled_start__gt=now,
+        course__status='published'  # Only show published courses
+    ).select_related('course', 'teacher', 'teacher__user').order_by('scheduled_start')
+    
+    # Filter by course enrollment status
+    enrolled_course_ids = set(Enrollment.objects.filter(
+        user=user,
+        status='active'
+    ).values_list('course_id', flat=True))
+    
+    # Separate classes by enrollment requirement
+    available_classes = []
+    for session in live_classes:
+        # Check if user is enrolled in the course
+        session.user_is_enrolled = session.course.id in enrolled_course_ids
+        # Check if session can be booked
+        can_book, message = session.can_be_booked(user)
+        session.can_book = can_book
+        session.booking_message = message
+        available_classes.append(session)
+    
+    # Filter by search
+    search = request.GET.get('search', '')
+    if search:
+        available_classes = [
+            s for s in available_classes
+            if search.lower() in s.title.lower() or 
+               search.lower() in s.course.title.lower() or
+               search.lower() in s.teacher.user.get_full_name().lower()
+        ]
+    
+    # Filter by teacher
+    teacher_id = request.GET.get('teacher_id')
+    if teacher_id:
+        available_classes = [s for s in available_classes if s.teacher.id == int(teacher_id)]
+    
+    context = {
+        'live_classes': available_classes,
+        'search_query': search,
+        'selected_teacher_id': teacher_id,
+    }
+    return render(request, 'student/live_classes.html', context)
+
+
+@login_required
+def student_teacher_profile(request, teacher_id):
+    """View teacher profile with their courses"""
+    user = request.user
+    teacher = get_object_or_404(Teacher, id=teacher_id, is_approved=True)
+    
+    # Get teacher's courses (published only)
+    teacher_courses = Course.objects.filter(
+        course_teachers__teacher=teacher,
+        status='published'
+    ).distinct().select_related('category').prefetch_related('course_teachers')
+    
+    # Check which courses user is enrolled in
+    enrolled_course_ids = set(Enrollment.objects.filter(
+        user=user,
+        status='active'
+    ).values_list('course_id', flat=True))
+    
+    for course in teacher_courses:
+        course.user_is_enrolled = course.id in enrolled_course_ids
+    
+    # Get teacher's upcoming live classes
+    now = timezone.now()
+    upcoming_classes = LiveClassSession.objects.filter(
+        teacher=teacher,
+        status='scheduled',
+        scheduled_start__gt=now
+    ).select_related('course').order_by('scheduled_start')[:5]
+    
+    # Get selected currency
+    selected_currency = request.session.get('selected_currency', 'USD')
+    
+    # Add pricing info to courses
+    course_ids = [c.id for c in teacher_courses]
+    pricing_objects = CoursePricing.objects.filter(course_id__in=course_ids, currency=selected_currency).select_related('course')
+    course_pricing_map = {}
+    for pricing in pricing_objects:
+        course_pricing_map[pricing.course_id] = pricing.price
+    
+    for course in teacher_courses:
+        if course.id in course_pricing_map:
+            course.display_price = course_pricing_map[course.id]
+            course.display_currency = selected_currency
+        else:
+            course.display_price = course.price
+            course.display_currency = course.currency
+    
+    context = {
+        'teacher': teacher,
+        'teacher_courses': teacher_courses,
+        'upcoming_classes': upcoming_classes,
+        'selected_currency': selected_currency,
+    }
+    return render(request, 'student/teacher_profile.html', context)
 
 
 @login_required

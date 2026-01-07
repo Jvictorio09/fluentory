@@ -73,6 +73,11 @@
             <span>Courses</span>
         </a>
         
+        <a href="{% url 'student_live_classes' %}" class="sidebar-nav-link {% if 'live_classes' in request.resolver_match.url_name %}active{% endif %}">
+            <i class="fas fa-video"></i>
+            <span>Live Classes</span>
+        </a>
+        
         <a href="{% url 'student_placement' %}" class="sidebar-nav-link {% if 'placement' in request.resolver_match.url_name %}active{% endif %}">
             <i class="fas fa-clipboard-check"></i>
             <span>Placement Test</span>

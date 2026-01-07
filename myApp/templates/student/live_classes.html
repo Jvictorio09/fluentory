@@ -1,0 +1,327 @@
+{% extends 'student/base.html' %}
+
+{% block content %}
+<style>
+        /* Fix: ensure primary button text is visible in LIGHT MODE */
+    [data-theme="light"] .btn-primary,
+    html:not(.dark) .btn-primary {
+        color: #ffffff !important;
+    }
+
+    /* icons and spans inside */
+    [data-theme="light"] .btn-primary i,
+    [data-theme="light"] .btn-primary span,
+    html:not(.dark) .btn-primary i,
+    html:not(.dark) .btn-primary span {
+        color: #ffffff !important;
+    }
+</style>
+
+<div class="p-4 sm:p-6 lg:p-8 xl:p-10 w-full">
+    <div class="mb-6 sm:mb-8">
+        <h1 class="text-2xl sm:text-3xl font-light text-white dark:text-white mb-2">Live Classes</h1>
+        <p class="text-sm sm:text-base text-white/70 dark:text-white/70">Join interactive live sessions with expert teachers</p>
+    </div>
+    
+    <!-- Search & Filters -->
+    <form method="GET" class="bg-white dark:bg-[#04363a]/90 backdrop-blur-xl rounded-xl p-4 sm:p-6 border border-slate-200 dark:border-white/10 shadow-md dark:shadow-[0_8px_24px_rgba(0,0,0,0.3)] mb-6 sm:mb-8">
+        <div class="flex flex-col sm:flex-row gap-4 mb-4">
+            <div class="flex-1">
+                <input 
+                    type="text" 
+                    name="search" 
+                    value="{{ search_query|default:'' }}"
+                    placeholder="Search classes, courses, or teachers..."
+                    class="w-full px-4 py-3 rounded-xl border border-slate-300 dark:border-white/10 bg-white dark:bg-[#254346]/70 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition"
+                >
+            </div>
+            <button
+                type="submit"
+                class="btn-primary w-full sm:w-auto inline-flex items-center justify-center gap-2 text-sm px-6 py-3">
+                <i class="fas fa-search"></i>
+                <span>Search</span>
+            </button>
+        </div>
+        
+        {% if search_query %}
+        <a href="{% url 'student_live_classes' %}"
+           class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl border border-red-300 dark:border-red-500/40 bg-red-50 dark:bg-red-500/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-500/30 transition text-xs sm:text-sm">
+            <i class="fas fa-times"></i>
+            <span>Clear Search</span>
+        </a>
+        {% endif %}
+    </form>
+    
+    <!-- Live Classes Grid -->
+    {% if live_classes %}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {% for session in live_classes %}
+        <div class="live-class-card bg-[#04363a]/90 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.3)] overflow-hidden hover:border-[#82C293]/40 transition-all duration-300">
+            <!-- Course Badge -->
+            <div class="px-6 pt-6 pb-4">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-xs px-3 py-1 rounded-full bg-[#82C293]/20 text-[#82C293] border border-[#82C293]/30">
+                        {{ session.course.title }}
+                    </span>
+                    {% if session.user_is_enrolled %}
+                    <span class="text-xs px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 border border-blue-500/30">
+                        <i class="fas fa-check-circle mr-1"></i> Enrolled
+                    </span>
+                    {% endif %}
+                </div>
+                
+                <h3 class="text-xl font-semibold text-white mb-2">{{ session.title }}</h3>
+                
+                <!-- Teacher Info -->
+                <div class="flex items-center gap-3 mb-4">
+                    {% if session.teacher.photo_url %}
+                    <img src="{{ session.teacher.photo_url }}" alt="{{ session.teacher.user.get_full_name }}" class="w-10 h-10 rounded-full object-cover border-2 border-white/20">
+                    {% else %}
+                    <div class="w-10 h-10 rounded-full bg-[#254346] flex items-center justify-center border-2 border-white/20">
+                        <i class="fas fa-user text-white/60"></i>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <a href="{% url 'student_teacher_profile' session.teacher.id %}" class="text-sm font-medium text-white hover:text-[#82C293] transition">
+                            {{ session.teacher.user.get_full_name|default:session.teacher.user.username }}
+                        </a>
+                        <p class="text-xs text-white/50">{{ session.teacher.specialization|default:"Teacher" }}</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Session Details -->
+            <div class="px-6 pb-6 space-y-3">
+                <div class="flex items-center gap-2 text-sm text-white/70">
+                    <i class="fas fa-calendar text-[#82C293]"></i>
+                    <span>{{ session.scheduled_start|date:"M d, Y" }}</span>
+                </div>
+                <div class="flex items-center gap-2 text-sm text-white/70">
+                    <i class="fas fa-clock text-[#82C293]"></i>
+                    <span>{{ session.scheduled_start|date:"H:i" }} - {{ session.scheduled_end|date:"H:i" }}</span>
+                </div>
+                <div class="flex items-center gap-2 text-sm text-white/70">
+                    <i class="fas fa-users text-[#82C293]"></i>
+                    <span>{{ session.remaining_seats }} / {{ session.total_seats }} seats available</span>
+                </div>
+                
+                {% if session.enable_waitlist and session.remaining_seats == 0 %}
+                <div class="flex items-center gap-2 text-sm text-amber-400">
+                    <i class="fas fa-list text-amber-400"></i>
+                    <span>Waitlist available</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- Actions -->
+            <div class="px-6 pb-6 space-y-2">
+                <button 
+                    data-session-id="{{ session.id }}"
+                    onclick="openLiveClassModal(this.dataset.sessionId)"
+                    class="w-full px-4 py-3 bg-white dark:bg-[#254346] text-slate-900 dark:text-white rounded-xl font-medium text-center hover:bg-slate-50 dark:hover:bg-[#254346]/80 transition border border-slate-200 dark:border-white/20">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    View Details
+                </button>
+                {% if session.user_is_enrolled %}
+                    {% if session.can_book %}
+                    <a href="{% url 'student_book_session' session.id %}"
+                       class="btn-primary w-full inline-flex items-center justify-center gap-2 text-center">
+                        <i class="fas fa-calendar-check"></i>
+                        <span>Book Now</span>
+                    </a>
+                    {% else %}
+                    <div class="w-full px-4 py-3 rounded-xl font-medium text-center bg-slate-500/20 dark:bg-slate-500/20 text-slate-700 dark:text-white/60 border border-slate-300 dark:border-white/10">
+                        {{ session.booking_message }}
+                    </div>
+                    {% endif %}
+                {% else %}
+                <button 
+                    data-course-id="{{ session.course.id }}"
+                    data-session-id="{{ session.id }}"
+                    onclick="enrollInCourse(this.dataset.courseId, this.dataset.sessionId)"
+                    class="btn-primary w-full inline-flex items-center justify-center gap-2 text-center">
+                    <i class="fas fa-book"></i>
+                    <span>Enroll & Book</span>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="live-class-card bg-[#04363a]/90 dark:bg-[#04363a]/90 backdrop-blur-xl rounded-2xl border border-white/10 dark:border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.3)] dark:shadow-[0_8px_24px_rgba(0,0,0,0.3)] p-12 text-center">
+        <div class="w-16 h-16 rounded-full bg-[#254346] dark:bg-[#254346] flex items-center justify-center mx-auto mb-4">
+            <i class="fas fa-calendar-times text-3xl text-slate-400 dark:text-white/40"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-2">No live classes available</h3>
+        <p class="text-slate-600 dark:text-white/60 mb-6">Check back later for upcoming sessions</p>
+        <a href="{% url 'student_courses' %}"
+            class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white !text-white px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all duration-200">
+                <i class="fas fa-book-open !text-white text-white"></i>
+                <span class="!text-white text-white">Browse Courses</span>
+        </a>
+
+    </div>
+    {% endif %}
+</div>
+
+<!-- Live Class Detail Modal -->
+<div id="liveClassModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+    <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+        <!-- Backdrop -->
+        <div class="fixed inset-0 transition-opacity bg-black/50 dark:bg-black/70" onclick="closeLiveClassModal()"></div>
+        
+        <!-- Modal Panel -->
+        <div class="inline-block align-bottom bg-white dark:bg-[#04363a]/95 backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-white/10 shadow-xl text-left overflow-hidden transform transition-all sm:my-8 sm:align-middle sm:max-w-3xl sm:w-full">
+            <div class="px-6 py-4 border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
+                <h3 class="text-2xl font-semibold text-slate-900 dark:text-white" id="modalTitle">Live Class Details</h3>
+                <button onclick="closeLiveClassModal()" class="text-slate-400 dark:text-white/60 hover:text-slate-600 dark:hover:text-white transition">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <div class="px-6 py-6" id="modalContent">
+                <!-- Content will be loaded here -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+const csrftoken = getCookie('csrftoken');
+
+// Open modal with live class details
+async function openLiveClassModal(sessionId) {
+    const modal = document.getElementById('liveClassModal');
+    const content = document.getElementById('modalContent');
+    
+    if (!modal || !content) {
+        console.error('Modal elements not found');
+        return;
+    }
+    
+    // Show loading state
+    content.innerHTML = '<div class="text-center py-8"><i class="fas fa-spinner fa-spin text-3xl text-[#82C293] mb-4"></i><p class="text-slate-600 dark:text-white/60">Loading...</p></div>';
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+    
+    try {
+        const url = `/student/live-classes/${sessionId}/detail/`;
+        console.log('Fetching:', url);
+        
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            credentials: 'same-origin'
+        });
+        
+        console.log('Response status:', response.status);
+        
+        if (response.ok) {
+            const html = await response.text();
+            content.innerHTML = html;
+            
+            // Add event listeners to links inside modal to close it
+            const modalLinks = content.querySelectorAll('a.view-course-link, a[href*="/student/courses/"]');
+            modalLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // Close modal immediately - navigation will happen naturally
+                    closeLiveClassModal();
+                });
+            });
+        } else {
+            const errorText = await response.text();
+            console.error('Error response:', errorText);
+            content.innerHTML = '<div class="text-center py-8 text-red-600 dark:text-red-400">Failed to load class details. Please try again.</div>';
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        content.innerHTML = '<div class="text-center py-8 text-red-600 dark:text-red-400">Something went wrong. Please try again.</div>';
+    }
+}
+
+// Close modal (make it globally accessible)
+function closeLiveClassModal() {
+    const modal = document.getElementById('liveClassModal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = ''; // Restore scrolling
+    }
+}
+
+// Make function globally accessible
+window.closeLiveClassModal = closeLiveClassModal;
+
+// Enroll in course and optionally book session
+async function enrollInCourse(courseId, sessionId) {
+    if (!confirm('Enroll in this course to book the live class?')) {
+        return;
+    }
+    
+    console.log('Enrolling in course:', courseId, 'for session:', sessionId);
+    
+    try {
+        const response = await fetch('/api/enroll/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            },
+            body: JSON.stringify({ course_id: courseId }),
+            credentials: 'same-origin'
+        });
+        
+        if (!response.ok) {
+            // Handle HTTP errors
+            if (response.status === 404) {
+                throw new Error('Enrollment endpoint not found. Please contact support.');
+            }
+            const errorData = await response.json().catch(() => ({ error: `Server error (${response.status})` }));
+            throw new Error(errorData.error || `Server error (${response.status})`);
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            // After enrollment, redirect to book the session
+            window.location.href = `/student/sessions/${sessionId}/book/`;
+        } else {
+            if (data.error === 'Already enrolled') {
+                // Already enrolled, just redirect to booking
+                window.location.href = `/student/sessions/${sessionId}/book/`;
+            } else {
+                alert(data.error || 'Failed to enroll');
+            }
+        }
+    } catch (error) {
+        console.error('Enrollment error:', error);
+        alert(error.message || 'Something went wrong. Please try again.');
+    }
+}
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeLiveClassModal();
+    }
+});
+</script>
+{% endblock %}

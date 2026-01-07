@@ -729,7 +729,8 @@ def dashboard_manual_enroll(request):
             user=user,
             course=course,
             defaults={
-                'status': 'active'
+                'status': 'active',
+                'teacher_notes': ''  # Ensure teacher_notes is set to empty string, not None
             }
         )
         

@@ -1,0 +1,184 @@
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-start justify-between">
+        <div class="flex-1">
+            <div class="flex items-center gap-2 mb-3">
+                <span class="text-xs px-3 py-1 rounded-full bg-[#82C293]/20 dark:bg-[#82C293]/20 text-[#82C293] dark:text-[#82C293] border border-[#82C293]/30">
+                    {{ session.course.title }}
+                </span>
+                {% if enrollment %}
+                <span class="text-xs px-3 py-1 rounded-full bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/30">
+                    <i class="fas fa-check-circle mr-1"></i> Enrolled
+                </span>
+                {% endif %}
+            </div>
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">{{ session.title }}</h2>
+            {% if session.description %}
+            <p class="text-slate-600 dark:text-white/70">{{ session.description }}</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Teacher Info -->
+    <div class="flex items-center gap-4 p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
+        {% if session.teacher.photo_url %}
+        <img src="{{ session.teacher.photo_url }}" alt="{{ session.teacher.user.get_full_name }}" class="w-16 h-16 rounded-full object-cover border-2 border-slate-200 dark:border-white/20">
+        {% else %}
+        <div class="w-16 h-16 rounded-full bg-slate-200 dark:bg-[#254346] flex items-center justify-center border-2 border-slate-200 dark:border-white/20">
+            <i class="fas fa-user text-slate-400 dark:text-white/60 text-xl"></i>
+        </div>
+        {% endif %}
+        <div class="flex-1">
+            <a href="{% url 'student_teacher_profile' session.teacher.id %}" class="text-lg font-semibold text-slate-900 dark:text-white hover:text-[#82C293] transition">
+                {{ session.teacher.user.get_full_name|default:session.teacher.user.username }}
+            </a>
+            {% if session.teacher.specialization %}
+            <p class="text-sm text-slate-600 dark:text-white/60">{{ session.teacher.specialization }}</p>
+            {% endif %}
+            {% if session.teacher.years_experience %}
+            <p class="text-xs text-slate-500 dark:text-white/50 mt-1">
+                <i class="fas fa-award mr-1"></i>{{ session.teacher.years_experience }} years experience
+            </p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Session Details Grid -->
+    <div class="grid grid-cols-2 gap-4">
+        <div class="p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
+            <div class="flex items-center gap-2 mb-2">
+                <i class="fas fa-calendar text-[#82C293]"></i>
+                <span class="text-xs font-semibold text-slate-500 dark:text-white/50 uppercase">Date</span>
+            </div>
+            <p class="text-lg font-semibold text-slate-900 dark:text-white">{{ session.scheduled_start|date:"M d, Y" }}</p>
+        </div>
+        
+        <div class="p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
+            <div class="flex items-center gap-2 mb-2">
+                <i class="fas fa-clock text-[#82C293]"></i>
+                <span class="text-xs font-semibold text-slate-500 dark:text-white/50 uppercase">Time</span>
+            </div>
+            <p class="text-lg font-semibold text-slate-900 dark:text-white">
+                {{ session.scheduled_start|date:"H:i" }} - {{ session.scheduled_end|date:"H:i" }}
+            </p>
+        </div>
+        
+        <div class="p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
+            <div class="flex items-center gap-2 mb-2">
+                <i class="fas fa-clock text-[#82C293]"></i>
+                <span class="text-xs font-semibold text-slate-500 dark:text-white/50 uppercase">Duration</span>
+            </div>
+            <p class="text-lg font-semibold text-slate-900 dark:text-white">{{ session.duration_minutes }} minutes</p>
+        </div>
+        
+        <div class="p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
+            <div class="flex items-center gap-2 mb-2">
+                <i class="fas fa-users text-[#82C293]"></i>
+                <span class="text-xs font-semibold text-slate-500 dark:text-white/50 uppercase">Seats</span>
+            </div>
+            <p class="text-lg font-semibold text-slate-900 dark:text-white">
+                {{ session.remaining_seats }} / {{ session.total_seats }} available
+            </p>
+        </div>
+    </div>
+    
+    <!-- Course Info -->
+    <div class="p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
+        <h3 class="text-sm font-semibold text-slate-900 dark:text-white mb-3">Course Information</h3>
+        <div class="space-y-2 text-sm">
+            <div class="flex items-center justify-between">
+                <span class="text-slate-600 dark:text-white/60">Course:</span>
+                {% if session.course.status == 'published' %}
+                <a href="{% url 'student_course_detail' session.course.slug %}" class="font-medium text-[#82C293] hover:underline view-course-link">
+                    {{ session.course.title }}
+                </a>
+                {% else %}
+                <span class="font-medium text-slate-900 dark:text-white">
+                    {{ session.course.title }}
+                    <span class="text-xs text-slate-500 dark:text-white/50 ml-2">(Not available)</span>
+                </span>
+                {% endif %}
+            </div>
+            {% if not session.course.is_free %}
+            <div class="flex items-center justify-between">
+                <span class="text-slate-600 dark:text-white/60">Price:</span>
+                <span class="font-semibold text-slate-900 dark:text-white">
+                    {{ course_currency }} {{ course_price|floatformat:2 }}
+                </span>
+            </div>
+            {% else %}
+            <div class="flex items-center justify-between">
+                <span class="text-slate-600 dark:text-white/60">Price:</span>
+                <span class="font-semibold text-[#82C293]">Free</span>
+            </div>
+            {% endif %}
+            {% if session.meeting_provider %}
+            <div class="flex items-center justify-between">
+                <span class="text-slate-600 dark:text-white/60">Platform:</span>
+                <span class="font-medium text-slate-900 dark:text-white capitalize">{{ session.meeting_provider }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Meeting Link -->
+    {% if session.meeting_link %}
+    <div class="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30">
+        <div class="flex items-center gap-2 mb-2">
+            <i class="fas fa-video text-emerald-600 dark:text-emerald-400"></i>
+            <span class="text-sm font-semibold text-emerald-900 dark:text-emerald-300">Meeting Link</span>
+        </div>
+        <a href="{{ session.meeting_link }}" target="_blank" class="text-sm text-emerald-700 dark:text-emerald-300 hover:underline break-all">
+            {{ session.meeting_link|truncatechars:60 }}
+        </a>
+    </div>
+    {% endif %}
+    
+    <!-- Waitlist Info -->
+    {% if session.enable_waitlist and session.remaining_seats == 0 %}
+    <div class="p-4 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30">
+        <div class="flex items-center gap-2">
+            <i class="fas fa-list text-amber-600 dark:text-amber-400"></i>
+            <span class="text-sm font-medium text-amber-900 dark:text-amber-300">Waitlist available - You'll be notified if a seat opens up</span>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Actions -->
+    <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-slate-200 dark:border-white/10">
+        {% if enrollment %}
+            {% if can_book %}
+            <a href="{% url 'student_book_session' session.id %}" class="btn-primary flex-1 inline-flex items-center justify-center gap-2">
+                <i class="fas fa-calendar-check"></i>
+                <span>Book This Session</span>
+            </a>
+            {% else %}
+            <div class="flex-1 px-4 py-3 rounded-xl font-medium text-center bg-slate-100 dark:bg-slate-500/20 text-slate-700 dark:text-white/60 border border-slate-300 dark:border-white/10">
+                {{ booking_message }}
+            </div>
+            {% endif %}
+        {% else %}
+        <button 
+            data-course-id="{{ session.course.id }}"
+            data-session-id="{{ session.id }}"
+            onclick="enrollInCourse(this.dataset.courseId, this.dataset.sessionId)"
+            class="btn-primary flex-1 inline-flex items-center justify-center gap-2">
+            <i class="fas fa-book"></i>
+            <span>Enroll & Book</span>
+        </button>
+        {% if session.course.status == 'published' %}
+        <a href="{% url 'student_course_detail' session.course.slug %}" 
+           class="btn-secondary flex-1 inline-flex items-center justify-center gap-2 view-course-link">
+            <i class="fas fa-info-circle"></i>
+            <span>View Course</span>
+        </a>
+        {% else %}
+        <div class="btn-secondary flex-1 inline-flex items-center justify-center gap-2 opacity-50 cursor-not-allowed" title="Course not available">
+            <i class="fas fa-info-circle"></i>
+            <span>Course Not Available</span>
+        </div>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+

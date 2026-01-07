@@ -148,22 +148,32 @@
         
         /* Light mode: Input fields */
         [data-theme="light"] input[class*="254346"],
-        [data-theme="light"] .rounded-xl[class*="254346"] {
-            background-color: rgba(255, 255, 255, 0.9) !important;
-            border-color: rgba(10, 31, 31, 0.15) !important;
+        [data-theme="light"] .rounded-xl[class*="254346"],
+        [data-theme="light"] input.bg-white {
+            background-color: #FFFFFF !important;
+            border-color: rgba(148, 163, 184, 0.5) !important;
             color: var(--text-primary) !important;
         }
         
         [data-theme="light"] input[class*="254346"]::placeholder,
         [data-theme="light"] .rounded-xl[class*="254346"]::placeholder,
-        [data-theme="light"] [class*="placeholder-white"] {
-            color: var(--text-muted) !important;
+        [data-theme="light"] [class*="placeholder-white"],
+        [data-theme="light"] input.bg-white::placeholder {
+            color: rgba(100, 116, 139, 0.7) !important;
         }
         
         [data-theme="light"] input[class*="254346"]:focus,
-        [data-theme="light"] .rounded-xl[class*="254346"]:focus {
-            border-color: rgba(130, 194, 147, 0.4) !important;
-            box-shadow: 0 0 0 3px rgba(130, 194, 147, 0.1) !important;
+        [data-theme="light"] .rounded-xl[class*="254346"]:focus,
+        [data-theme="light"] input.bg-white:focus {
+            border-color: rgba(130, 194, 147, 0.6) !important;
+            box-shadow: 0 0 0 3px rgba(130, 194, 147, 0.15) !important;
+        }
+        
+        /* Light mode: Search form container */
+        [data-theme="light"] form.bg-white {
+            background-color: #FFFFFF !important;
+            border-color: rgba(148, 163, 184, 0.3) !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04) !important;
         }
         
         /* Light mode: Badges and tags */
@@ -228,6 +238,97 @@
             /* Check if it has dark background class and override */
         }
         
+        /* Light mode: Live classes page specific fixes */
+        [data-theme="light"] .live-class-card {
+            background-color: #FFFFFF !important;
+            border-color: rgba(10, 31, 31, 0.12) !important;
+            box-shadow: 0 20px 60px rgba(4, 54, 58, 0.12), 0 8px 24px rgba(4, 54, 58, 0.08) !important;
+        }
+        
+        [data-theme="light"] .live-class-card .text-white {
+            color: var(--text-primary) !important;
+        }
+        
+        [data-theme="light"] .live-class-card .text-white\/70,
+        [data-theme="light"] .live-class-card .text-white\/60,
+        [data-theme="light"] .live-class-card .text-white\/50,
+        [data-theme="light"] .live-class-card [class*="text-white/"] {
+            color: var(--text-muted) !important;
+        }
+        
+        [data-theme="light"] .live-class-card .bg-\[#254346\] {
+            background-color: rgba(130, 194, 147, 0.10) !important;
+        }
+        
+        [data-theme="light"] .live-class-card .border-white\/20,
+        [data-theme="light"] .live-class-card .border-white\/10 {
+            border-color: rgba(10, 31, 31, 0.15) !important;
+        }
+        
+        [data-theme="light"] .live-class-card:hover {
+            border-color: rgba(130, 194, 147, 0.30) !important;
+        }
+        
+        /* Light mode: Teacher profile avatar background */
+        [data-theme="light"] .live-class-card .bg-\[#254346\] {
+            background-color: rgba(130, 194, 147, 0.10) !important;
+        }
+        
+        /* Light mode: Empty state icons */
+        [data-theme="light"] .live-class-card .bg-\[#254346\] i,
+        [data-theme="light"] .live-class-card i[class*="text-white"] {
+            color: var(--text-muted) !important;
+        }
+        
+        /* Light mode: Empty state section - ensure all text is visible */
+        [data-theme="light"] .live-class-card.text-center h3,
+        [data-theme="light"] .live-class-card.text-center p {
+            color: var(--text-primary) !important;
+        }
+        
+        [data-theme="light"] .live-class-card.text-center .text-slate-600 {
+            color: var(--text-secondary) !important;
+        }
+        
+        [data-theme="light"] .live-class-card.text-center .text-slate-400 {
+            color: var(--text-muted) !important;
+        }
+        
+        /* Light mode: Empty state button - ensure white text on dark green background */
+        [data-theme="light"] .live-class-card.text-center a[class*="from-[#00655F]"],
+        [data-theme="light"] .live-class-card.text-center a[class*="00655F"] {
+            color: #FFFFFF !important;
+        }
+        
+        [data-theme="light"] .live-class-card.text-center a[class*="from-[#00655F]"] i,
+        [data-theme="light"] .live-class-card.text-center a[class*="from-[#00655F]"] span,
+        [data-theme="light"] .live-class-card.text-center a[class*="00655F"] i,
+        [data-theme="light"] .live-class-card.text-center a[class*="00655F"] span {
+            color: #FFFFFF !important;
+        }
+        
+        /* Light mode: Search form in live classes */
+        [data-theme="light"] form[class*="04363a"] {
+            background-color: #FFFFFF !important;
+            border-color: rgba(10, 31, 31, 0.12) !important;
+        }
+        
+        /* Light mode: Links in live class cards */
+        [data-theme="light"] .live-class-card a.text-white:not([class*="00655F"]):not([class*="from-\[#00655F\]"]) {
+            color: var(--text-primary) !important;
+        }
+        
+        [data-theme="light"] .live-class-card a:hover.text-white:not([class*="00655F"]):not([class*="from-\[#00655F\]"]),
+        [data-theme="light"] .live-class-card a:hover[class*="82C293"]:not([class*="00655F"]):not([class*="from-\[#00655F\]"]) {
+            color: #5FA372 !important;
+        }
+        
+        /* Light mode: Disabled button states */
+        [data-theme="light"] .live-class-card .bg-slate-500\/20 {
+            background-color: rgba(10, 31, 31, 0.08) !important;
+            color: var(--text-muted) !important;
+        }
+        
         
         /* Light mode: Sidebar link styling */
         [data-theme="light"] .sidebar-nav-link {
@@ -244,6 +345,15 @@
             background-color: rgba(130, 194, 147, 0.12) !important;
             border-color: rgba(130, 194, 147, 0.25) !important;
             color: #5FA372 !important;
+        }
+        
+        /* Modal styling */
+        #liveClassModal {
+            z-index: 9999;
+        }
+        
+        #liveClassModal .fixed.inset-0 {
+            backdrop-filter: blur(4px);
         }
     </style>
 </head>
