@@ -24,6 +24,8 @@ urlpatterns = [
     # Authentication
     path('login/', views.login_view, name='login'),
     path('signup/', views.signup_view, name='signup'),
+    path('signup/teacher/', views.teacher_signup_view, name='teacher_signup'),
+    path('signup/teacher/pending/', views.teacher_signup_pending, name='teacher_signup_pending'),
     path('logout/', views.logout_view, name='logout'),
     # Django built-in auth views (password reset, confirm, done, etc.)
     # Namespace the included auth URLs to avoid name collisions with our own views
@@ -59,6 +61,7 @@ urlpatterns = [
     
     # Student API endpoints
     path('api/set-currency/', views.set_currency, name='set_currency'),
+    path('api/course/<int:course_id>/price/', views.get_course_price, name='get_course_price'),
     path('api/mark-complete/', views.mark_lesson_complete, name='mark_lesson_complete'),
     path('api/enroll/', views.enroll_course, name='enroll_course'),
     path('api/tutor/chat/', views.ai_tutor_chat, name='ai_tutor_chat'),
@@ -117,6 +120,7 @@ urlpatterns = [
     
     # Public API
     path('api/courses/', views.api_courses, name='api_courses'),
+    path('api/courses/filter/', views.api_courses_filter, name='api_courses_filter'),
     path('api/notifications/', views.api_notifications, name='api_notifications'),
     path('api/notifications/read/', views.api_mark_notification_read, name='api_mark_notification_read'),
     path('api/update-language/', views.api_update_language, name='api_update_language'),

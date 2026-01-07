@@ -50,6 +50,17 @@
             50% { opacity: 0.8; }
         }
 
+        @keyframes logoEnter {
+            0% {
+                opacity: 0;
+                transform: translateY(12px) scale(0.96);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
         /* Background with gradient */
         body {
             min-height: 100vh;
@@ -157,14 +168,29 @@
 
         /* Logo */
         .login-logo {
-            height: 3.5rem;
+            height: 110px;
             width: auto;
+            max-width: 100%;
+            object-fit: contain;
             filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3));
-            transition: transform 0.3s ease;
+            display: block;
+            margin: 0 auto;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+            /* Initial state for animation */
+            opacity: 0;
+            transform: translateY(12px) scale(0.96);
+            /* Animation */
+            animation: logoEnter 750ms cubic-bezier(0.16, 1, 0.3, 1) 100ms forwards;
         }
 
-        .login-logo:hover {
-            transform: scale(1.05);
+        /* Respect reduced motion preferences */
+        @media (prefers-reduced-motion: reduce) {
+            .login-logo {
+                animation: none;
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
 
         /* Form Inputs */
@@ -342,21 +368,23 @@
                     <img 
                         src="https://res.cloudinary.com/dkjtfjnlf/image/upload/v1766498125/Fluentory-Trsp-LS_xlra0r.png" 
                         alt="Fluentory Logo" 
-                        class="login-logo mx-auto"
+                        class="login-logo"
                     />
                 </a>
                 <h1 class="text-2xl font-semibold text-white mb-2">Welcome Back</h1>
                 <p class="text-sm text-white/60">Sign in to continue your learning journey</p>
             </div>
 
-            <!-- Messages -->
+            <!-- Messages - Only show auth-scoped messages -->
             {% if messages %}
             <div class="mb-6 space-y-3">
                 {% for message in messages %}
-                <div class="alert {% if message.tags == 'error' %}alert-error{% else %}alert-success{% endif %}">
-                    <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %}"></i>
-                    <span>{{ message }}</span>
-                </div>
+                    {% if 'auth' in message.tags %}
+                    <div class="alert {% if message.tags == 'error' or 'error' in message.tags %}alert-error{% else %}alert-success{% endif %}">
+                        <i class="fas {% if message.tags == 'error' or 'error' in message.tags %}fa-exclamation-circle{% else %}fa-check-circle{% endif %}"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                    {% endif %}
                 {% endfor %}
             </div>
             {% endif %}
@@ -394,7 +422,6 @@
                     <button 
                         type="button" 
                         class="password-toggle"
-                        onclick="togglePassword()"
                         id="togglePassword"
                         aria-label="Toggle password visibility"
                     >
@@ -458,6 +485,15 @@
                         Sign up free
                     </a>
                 </p>
+                <p class="text-sm text-white/60 mt-3">
+                    Want to teach?
+                    <a 
+                        href="{% url 'teacher_signup' %}" 
+                        class="link-text font-semibold ml-1"
+                    >
+                        Sign up as a teacher
+                    </a>
+                </p>
             </div>
 
             <!-- Back to Home -->
@@ -474,39 +510,49 @@
     </div>
 
     <script>
-        // Password visibility toggle
-        function togglePassword() {
+        // Wait for DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Password visibility toggle
+            const togglePasswordBtn = document.getElementById('togglePassword');
             const passwordField = document.getElementById('password');
             const toggleIcon = document.getElementById('toggleIcon');
             
-            if (passwordField.type === 'password') {
-                passwordField.type = 'text';
-                toggleIcon.classList.remove('fa-eye');
-                toggleIcon.classList.add('fa-eye-slash');
-            } else {
-                passwordField.type = 'password';
-                toggleIcon.classList.remove('fa-eye-slash');
-                toggleIcon.classList.add('fa-eye');
+            if (togglePasswordBtn && passwordField && toggleIcon) {
+                togglePasswordBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Toggle password visibility
+                    if (passwordField.type === 'password') {
+                        passwordField.type = 'text';
+                        toggleIcon.classList.remove('fa-eye');
+                        toggleIcon.classList.add('fa-eye-slash');
+                        togglePasswordBtn.setAttribute('aria-label', 'Hide password');
+                    } else {
+                        passwordField.type = 'password';
+                        toggleIcon.classList.remove('fa-eye-slash');
+                        toggleIcon.classList.add('fa-eye');
+                        togglePasswordBtn.setAttribute('aria-label', 'Show password');
+                    }
+                });
             }
-        }
 
-        // Form submission with loading state
-        const loginForm = document.getElementById('loginForm');
-        const submitBtn = document.getElementById('submitBtn');
-        const buttonText = document.getElementById('buttonText');
-        const buttonSpinner = document.getElementById('buttonSpinner');
+            // Form submission with loading state
+            const loginForm = document.getElementById('loginForm');
+            const submitBtn = document.getElementById('submitBtn');
+            const buttonText = document.getElementById('buttonText');
+            const buttonSpinner = document.getElementById('buttonSpinner');
 
-        if (loginForm) {
-            loginForm.addEventListener('submit', function(e) {
-                submitBtn.classList.add('loading');
-                buttonText.textContent = 'Signing in...';
-                buttonSpinner.classList.remove('hidden');
-                submitBtn.disabled = true;
-            });
-        }
+            if (loginForm) {
+                loginForm.addEventListener('submit', function(e) {
+                    submitBtn.classList.add('loading');
+                    buttonText.textContent = 'Signing in...';
+                    buttonSpinner.classList.remove('hidden');
+                    submitBtn.disabled = true;
+                });
+            }
 
-        // Auto-focus first input
-        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-focus first input
             const usernameField = document.getElementById('username');
             if (usernameField && !usernameField.value) {
                 usernameField.focus();

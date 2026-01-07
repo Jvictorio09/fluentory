@@ -24,7 +24,8 @@ from django.db.utils import OperationalError, DatabaseError
 from .models import (
     User, UserProfile, Course, Enrollment, LessonProgress, QuizAttempt,
     Payment, Media, SiteSettings, PlacementTest, Teacher, CourseTeacher,
-    Category, Review, TutorMessage, TutorConversation, CoursePricing, Partner
+    Category, Review, TutorMessage, TutorConversation, CoursePricing, Partner,
+    LiveClassSession, SecurityActionLog
 )
 from .views import role_required, get_or_create_profile
 from django.http import JsonResponse
@@ -504,7 +505,12 @@ def dashboard_payments(request):
 @role_required(['admin'])
 def dashboard_teachers(request):
     """Teacher management"""
-    teachers = Teacher.objects.select_related('user').order_by('-created_at')
+    teachers = Teacher.objects.select_related('user', 'approved_by').order_by('-created_at')
+    
+    # Get stats before filtering
+    total_teachers = Teacher.objects.count()
+    pending_count = Teacher.objects.filter(is_approved=False).count()
+    approved_count = Teacher.objects.filter(is_approved=True).count()
     
     # Filters
     status = request.GET.get('status')
@@ -520,7 +526,9 @@ def dashboard_teachers(request):
             Q(user__username__icontains=search) |
             Q(user__email__icontains=search) |
             Q(user__first_name__icontains=search) |
-            Q(user__last_name__icontains=search)
+            Q(user__last_name__icontains=search) |
+            Q(specialization__icontains=search) |
+            Q(bio__icontains=search)
         )
     
     paginator = Paginator(teachers, 20)
@@ -531,6 +539,9 @@ def dashboard_teachers(request):
         'teachers': teachers,
         'selected_status': status,
         'search_query': search,
+        'total_teachers': total_teachers,
+        'pending_count': pending_count,
+        'approved_count': approved_count,
     }
     return render(request, 'dashboard/teachers.html', context)
 
@@ -566,6 +577,195 @@ def dashboard_teacher_reject(request, teacher_id):
     
     messages.success(request, f'Teacher {teacher.user.username} rejected.')
     return redirect('dashboard:teachers')
+
+
+@login_required
+@role_required(['admin'])
+def dashboard_teacher_details(request, teacher_id):
+    """Get teacher details for AJAX modal (JSON response)"""
+    from django.http import JsonResponse
+    from django.db.models import Count
+    
+    teacher = get_object_or_404(Teacher.objects.select_related('user', 'approved_by'), id=teacher_id)
+    
+    # Get course count (courses where user is instructor)
+    courses_count = Course.objects.filter(instructor=teacher.user).count()
+    
+    # Get live classes count
+    live_classes_count = LiveClassSession.objects.filter(teacher=teacher).count()
+    
+    # Build response data
+    data = {
+        'id': teacher.id,
+        'basic_info': {
+            'full_name': teacher.user.get_full_name() or teacher.user.username,
+            'username': teacher.user.username,
+            'email': teacher.user.email,
+            'role': teacher.user.profile.role if hasattr(teacher.user, 'profile') else 'instructor',
+            'date_applied': teacher.created_at.strftime('%B %d, %Y at %I:%M %p') if teacher.created_at else 'N/A',
+            'status': 'Approved' if teacher.is_approved else 'Pending',
+            'is_active': teacher.user.is_active,
+        },
+        'professional': {
+            'specialization': teacher.specialization or 'Not specified',
+            'years_experience': teacher.years_experience or 0,
+            'bio': teacher.bio or 'No bio provided',
+            'courses_created': courses_count,
+            'live_classes_hosted': live_classes_count,
+            'permission_level': teacher.get_permission_level_display(),
+        },
+        'verification': {
+            'is_approved': teacher.is_approved,
+            'approved_by': teacher.approved_by.get_full_name() if teacher.approved_by else None,
+            'approved_by_username': teacher.approved_by.username if teacher.approved_by else None,
+            'approved_at': teacher.approved_at.strftime('%B %d, %Y at %I:%M %p') if teacher.approved_at else None,
+            'approved_at_relative': teacher.approved_at.strftime('%Y-%m-%d %H:%M:%S') if teacher.approved_at else None,
+        },
+        'account': {
+            'date_joined': teacher.user.date_joined.strftime('%B %d, %Y') if teacher.user.date_joined else 'N/A',
+            'last_login': teacher.user.last_login.strftime('%B %d, %Y at %I:%M %p') if teacher.user.last_login else 'Never',
+            'is_staff': teacher.user.is_staff,
+            'is_superuser': teacher.user.is_superuser,
+        }
+    }
+    
+    return JsonResponse(data)
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_teacher_reset_password(request, teacher_id):
+    """Reset teacher password with admin verification"""
+    from django.contrib.auth import authenticate
+    from django.contrib.auth.tokens import default_token_generator
+    from django.utils.http import urlsafe_base64_encode
+    from django.utils.encoding import force_bytes
+    from django.core.mail import send_mail
+    from django.conf import settings
+    import json
+    import secrets
+    import string
+    
+    teacher = get_object_or_404(Teacher.objects.select_related('user'), id=teacher_id)
+    target_user = teacher.user
+    
+    # Get admin password from request
+    try:
+        data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
+    except:
+        data = request.POST
+    
+    admin_password = data.get('admin_password', '')
+    
+    # Verify admin password
+    admin_user = authenticate(request, username=request.user.username, password=admin_password)
+    if not admin_user or admin_user != request.user:
+        return JsonResponse({'success': False, 'error': 'Invalid admin password. Verification failed.'}, status=403)
+    
+    # Generate secure random password
+    alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
+    new_password = ''.join(secrets.choice(alphabet) for i in range(16))
+    
+    # Set new password
+    target_user.set_password(new_password)
+    target_user.save()
+    
+    # Send password reset email
+    try:
+        token = default_token_generator.make_token(target_user)
+        uid = urlsafe_base64_encode(force_bytes(target_user.pk))
+        reset_url = request.build_absolute_uri(f'/accounts/password_reset_confirm/{uid}/{token}/')
+        
+        send_mail(
+            subject='Your Fluentory Password Has Been Reset',
+            message=f'''Hello {target_user.get_full_name() or target_user.username},
+
+Your password has been reset by an administrator.
+
+To set your new password, please click the link below:
+{reset_url}
+
+If you did not request this change, please contact support immediately.
+
+Best regards,
+Fluentory Team''',
+            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'noreply@fluentory.com'),
+            recipient_list=[target_user.email],
+            fail_silently=False,
+        )
+    except Exception as e:
+        # Log error but don't fail the operation
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Failed to send password reset email: {e}")
+    
+    # Log the action
+    SecurityActionLog.objects.create(
+        admin_user=request.user,
+        target_user=target_user,
+        action_type='password_reset',
+        description=f'Password reset initiated by admin {request.user.username}',
+        metadata=json.dumps({
+            'teacher_id': teacher_id,
+            'email_sent': True,
+            'reset_method': 'email'
+        })
+    )
+    
+    return JsonResponse({
+        'success': True,
+        'message': 'Password reset initiated. Teacher will receive instructions by email.'
+    })
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_teacher_force_password_reset(request, teacher_id):
+    """Force password reset on next login"""
+    from django.contrib.auth import authenticate
+    import json
+    
+    teacher = get_object_or_404(Teacher.objects.select_related('user'), id=teacher_id)
+    target_user = teacher.user
+    
+    # Get admin password from request
+    try:
+        data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
+    except:
+        data = request.POST
+    
+    admin_password = data.get('admin_password', '')
+    force_reset = data.get('force_reset', 'true').lower() == 'true'
+    
+    # Verify admin password
+    admin_user = authenticate(request, username=request.user.username, password=admin_password)
+    if not admin_user or admin_user != request.user:
+        return JsonResponse({'success': False, 'error': 'Invalid admin password. Verification failed.'}, status=403)
+    
+    # Update force_password_reset flag
+    profile = get_or_create_profile(target_user)
+    profile.force_password_reset = force_reset
+    profile.save()
+    
+    # Log the action
+    SecurityActionLog.objects.create(
+        admin_user=request.user,
+        target_user=target_user,
+        action_type='force_password_reset',
+        description=f'Force password reset {"enabled" if force_reset else "disabled"} by admin {request.user.username}',
+        metadata=json.dumps({
+            'teacher_id': teacher_id,
+            'force_reset': force_reset
+        })
+    )
+    
+    return JsonResponse({
+        'success': True,
+        'message': f'Password reset requirement {"enabled" if force_reset else "disabled"} successfully.',
+        'force_reset': force_reset
+    })
 
 
 @login_required

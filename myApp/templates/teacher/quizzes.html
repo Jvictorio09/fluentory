@@ -3,15 +3,21 @@
 {% block content %}
 <div class="space-y-8 max-w-7xl mx-auto">
     <!-- Page Header -->
-    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
-        <div>
-            <h1 class="text-4xl sm:text-5xl font-bold mb-3 tracking-tight text-slate-900 dark:text-white">{{ course.title }} - Quizzes</h1>
-            <p class="text-base sm:text-lg font-normal text-slate-600 dark:text-slate-400 tracking-wide">Manage quizzes and assessments</p>
-        </div>
-        <a href="{% url 'teacher_quiz_create' course.id %}" class="btn-primary">
-            <i class="fas fa-plus"></i>
-            Create Quiz
+    <div class="flex flex-col gap-4 mb-10">
+        <a href="{% url 'teacher_course_edit' course.id %}" class="inline-flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors w-fit">
+            <i class="fas fa-arrow-left"></i>
+            <span>Back to Course</span>
         </a>
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-4xl sm:text-5xl font-bold mb-3 tracking-tight text-slate-900 dark:text-white">{{ course.title }} - Quizzes</h1>
+                <p class="text-base sm:text-lg font-normal text-slate-600 dark:text-slate-400 tracking-wide">Manage quizzes and assessments</p>
+            </div>
+            <a href="{% url 'teacher_quiz_create' course.id %}" class="btn-primary">
+                <i class="fas fa-plus"></i>
+                Create Quiz
+            </a>
+        </div>
     </div>
     
     <div class="h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-white/10 to-transparent mb-8"></div>

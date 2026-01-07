@@ -121,8 +121,8 @@
         </div>
     </div>
     
-    <!-- Meeting Link -->
-    {% if session.meeting_link %}
+    <!-- Meeting Link - Only visible to enrolled/confirmed students -->
+    {% if session.meeting_link and has_confirmed_booking %}
     <div class="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30">
         <div class="flex items-center gap-2 mb-2">
             <i class="fas fa-video text-emerald-600 dark:text-emerald-400"></i>

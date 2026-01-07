@@ -46,10 +46,12 @@
                                 <span>{{ booking.session.scheduled_start|time:"g:i A" }} - {{ booking.session.scheduled_end|time:"g:i A" }}</span>
                             </div>
                             {% if booking.session.meeting_link %}
-                            <div class="flex items-center gap-2">
-                                <i class="fas fa-video text-[#82C293]"></i>
-                                <a href="{{ booking.session.meeting_link }}" target="_blank" class="text-[#82C293] hover:underline">Join Meeting</a>
-                            </div>
+                                {% if booking.status == 'confirmed' or booking.status == 'attended' %}
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-video text-[#82C293]"></i>
+                                    <a href="{{ booking.session.meeting_link }}" target="_blank" class="text-[#82C293] hover:underline">Join Meeting</a>
+                                </div>
+                                {% endif %}
                             {% endif %}
                             <div class="flex items-center gap-2">
                                 <i class="fas fa-users text-[#82C293]"></i>
@@ -84,10 +86,12 @@
                             </div>
                             {% endif %}
                             {% if booking.meeting_link %}
-                            <div class="flex items-center gap-2">
-                                <i class="fas fa-video text-[#82C293]"></i>
-                                <a href="{{ booking.meeting_link }}" target="_blank" class="text-[#82C293] hover:underline">Join Meeting</a>
-                            </div>
+                                {% if booking.status == 'confirmed' or booking.status == 'attended' %}
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-video text-[#82C293]"></i>
+                                    <a href="{{ booking.meeting_link }}" target="_blank" class="text-[#82C293] hover:underline">Join Meeting</a>
+                                </div>
+                                {% endif %}
                             {% endif %}
                         </div>
                     {% endif %}

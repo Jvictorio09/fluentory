@@ -2,17 +2,23 @@
 
 {% block content %}
 <div class="max-w-3xl mx-auto">
-    <!-- Page Header -->
-    <div class="mb-10">
-        <h1 class="text-4xl sm:text-5xl font-bold mb-3 tracking-tight text-slate-900 dark:text-white">Create Lesson</h1>
-        <p class="text-base sm:text-lg font-normal text-slate-600 dark:text-slate-300 tracking-wide">Add a new lesson to your course</p>
+    <!-- Page Header with Back Button -->
+    <div class="flex flex-col gap-4 mb-10">
+        <a href="{% url 'teacher_lessons' course.id %}" class="inline-flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors w-fit">
+            <i class="fas fa-arrow-left"></i>
+            <span>Back to Lessons</span>
+        </a>
+        <div>
+            <h1 class="text-4xl sm:text-5xl font-bold mb-3 tracking-tight text-slate-900 dark:text-white">Create Lesson</h1>
+            <p class="text-base sm:text-lg font-normal text-slate-600 dark:text-slate-300 tracking-wide">Add a new lesson to your course</p>
+        </div>
     </div>
     
     <div class="h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-white/10 to-transparent mb-8"></div>
     
     <!-- Form Card -->
     <div class="bg-white dark:bg-white/5 backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-white/10 p-8 sm:p-10 shadow-sm dark:shadow-2xl">
-        <form method="post" class="space-y-6">
+        <form method="post" action="{% url 'teacher_lesson_create' course.id %}" class="space-y-6" id="lessonForm">
             {% csrf_token %}
             
             <!-- Basics Section -->
@@ -30,12 +36,23 @@
                 <div class="space-y-6">
                     <div>
                         <label for="module" class="form-label">Module</label>
+                        {% if modules %}
                         <select name="module" id="module" required class="form-select">
+                            <option value="">-- Select a module --</option>
                             {% for module in modules %}
                             <option value="{{ module.id }}">{{ module.title }}</option>
                             {% endfor %}
                         </select>
                         <p class="form-helper">Select the module this lesson belongs to</p>
+                        {% else %}
+                        <select name="module" id="module" disabled class="form-select">
+                            <option value="">No modules available</option>
+                        </select>
+                        <p class="form-helper text-amber-600 dark:text-amber-400">
+                            <i class="fas fa-exclamation-circle mr-1"></i>
+                            No modules yet. Create a module first in the course editor.
+                        </p>
+                        {% endif %}
                     </div>
                     
                     <div>
@@ -91,12 +108,79 @@
             
             <!-- Submit -->
             <div class="pt-6 border-t border-slate-200 dark:border-white/10">
-                <button type="submit" class="btn-cta-primary w-full sm:w-auto">
+                <button type="submit" id="submitLessonBtn" class="btn-cta-primary w-full sm:w-auto" {% if not modules %}disabled{% endif %}>
                     <i class="fas fa-plus"></i>
                     Create Lesson
                 </button>
+                {% if not modules %}
+                <p class="mt-2 text-sm text-amber-600 dark:text-amber-400">
+                    <i class="fas fa-exclamation-circle mr-1"></i>
+                    You must create at least one module before creating lessons.
+                </p>
+                {% endif %}
             </div>
         </form>
     </div>
 </div>
+
+<script>
+    // Form validation
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('lessonForm');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                // Clear previous errors
+                document.querySelectorAll('.form-error').forEach(el => el.remove());
+                document.querySelectorAll('.border-red-500, .dark\\:border-red-400').forEach(el => {
+                    el.classList.remove('border-red-500', 'dark:border-red-400');
+                });
+                
+                const moduleSelect = document.getElementById('module');
+                const titleInput = document.getElementById('title');
+                let hasErrors = false;
+                
+                // Validate module selection
+                if (!moduleSelect.value || moduleSelect.value === '') {
+                    showFieldError('module', 'Please select a module for this lesson.');
+                    hasErrors = true;
+                }
+                
+                // Validate title
+                if (!titleInput.value.trim()) {
+                    showFieldError('title', 'Lesson title is required.');
+                    hasErrors = true;
+                }
+                
+                if (hasErrors) {
+                    e.preventDefault();
+                    const firstError = document.querySelector('.form-error');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    return false;
+                }
+                
+                // Show loading state
+                const submitBtn = document.getElementById('submitLessonBtn');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating...';
+                }
+                
+                return true;
+            });
+        }
+        
+        function showFieldError(fieldId, message) {
+            const field = document.getElementById(fieldId);
+            if (field) {
+                const errorDiv = document.createElement('div');
+                errorDiv.className = 'form-error text-sm text-red-600 dark:text-red-400 mt-1';
+                errorDiv.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i>${message}`;
+                field.parentElement.appendChild(errorDiv);
+                field.classList.add('border-red-500', 'dark:border-red-400');
+            }
+        }
+    });
+</script>
 {% endblock %}

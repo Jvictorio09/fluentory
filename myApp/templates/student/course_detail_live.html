@@ -89,11 +89,29 @@
                 <!-- Not Enrolled -->
                 <div class="text-center mb-6">
                     {% if course.is_free %}
-                    <div class="text-3xl font-light text-[#82C293] mb-2">Free</div>
+                    <div class="text-3xl font-light text-[#82C293] mb-3 leading-tight">Free</div>
                     {% else %}
-                    <div class="text-3xl font-light text-white mb-2" id="course-price">{{ course_currency|default:selected_currency|default:"USD" }} {{ course_price|default:course.price|floatformat:2 }}</div>
+                    {% with current_currency=course_currency|default:selected_currency|default:"USD" %}
+                    {% with current_price=course_price|default:course.price|floatformat:2 %}
+                    <div class="text-3xl font-light text-white mb-3 leading-[1.1] tracking-tight" id="course-price" data-currency-code="{{ current_currency }}" style="text-shadow: 0 0 24px rgba(255,255,255,0.12), 0 0 8px rgba(255,255,255,0.06);">
+                        <span id="currency-symbol" class="text-2xl font-extralight opacity-65 align-top inline-block" style="transform: translateY(0.18em); margin-right: 0.05em;">{% if current_currency == "USD" %}${% elif current_currency == "EUR" %}€{% elif current_currency == "SAR" %}﷼{% elif current_currency == "AED" %}د.إ{% elif current_currency == "JOD" %}د.ا{% elif current_currency == "GBP" %}£{% else %}{{ current_currency }}{% endif %}</span><span id="price-value" class="font-light"> {{ current_price }}</span>
+                    </div>
+                    {% endwith %}
+                    {% endwith %}
                     {% endif %}
-                    <p class="text-white/60 text-sm">Full lifetime access</p>
+                    <p class="text-white/60 text-sm mt-1">Full lifetime access</p>
+                    
+                    <!-- Currency Selector -->
+                    {% if not course.is_free %}
+                    <div class="mt-4 flex items-center justify-center gap-2">
+                        <span class="text-xs text-white/60">Currency:</span>
+                        <select id="currency-selector" class="px-3 py-1.5 rounded-lg border border-white/20 bg-[#254346]/70 text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40">
+                            {% for code, name in currency_choices %}
+                            <option value="{{ code }}" {% if code == course_currency|default:selected_currency|default:"USD" %}selected{% endif %}>{{ code }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {% endif %}
                 </div>
                 
                 <button onclick="enrollInCourse({{ course.id }})" class="w-full py-4 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl font-medium hover:opacity-90 transition shadow-lg">
@@ -286,6 +304,100 @@
 </div>
 
 <script>
+// Subtle micro-interaction styles for currency change
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes priceCurrencyPulse {
+        0% {
+            opacity: 1;
+            filter: blur(0px) brightness(1);
+        }
+        50% {
+            opacity: 0.75;
+            filter: blur(1px) brightness(0.9);
+        }
+        100% {
+            opacity: 1;
+            filter: blur(0px) brightness(1);
+        }
+    }
+    #course-price.price-currency-change {
+        animation: priceCurrencyPulse 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        will-change: opacity, filter;
+    }
+`;
+// Only add style once if it doesn't exist
+if (!document.getElementById('price-currency-pulse-style')) {
+    style.id = 'price-currency-pulse-style';
+    document.head.appendChild(style);
+}
+
+// Currency selector functionality - symbol only swap
+document.addEventListener('DOMContentLoaded', function() {
+    const currencySelector = document.getElementById('currency-selector');
+    const currencySymbol = document.getElementById('currency-symbol');
+    const priceValue = document.getElementById('price-value');
+    const priceDisplay = document.getElementById('course-price');
+    
+    // Currency symbol mapping
+    const currencySymbols = {
+        'USD': '$',
+        'EUR': '€',
+        'SAR': '﷼',
+        'AED': 'د.إ',
+        'JOD': 'د.ا',
+        'GBP': '£',
+    };
+    
+    if (currencySelector && currencySymbol && priceValue && priceDisplay) {
+        // Track previous currency to only animate on actual change
+        let previousCurrency = currencySelector.value;
+        
+        currencySelector.addEventListener('change', function() {
+            const selectedCurrency = this.value;
+            
+            // Only animate if currency actually changed
+            if (selectedCurrency !== previousCurrency) {
+                const newSymbol = currencySymbols[selectedCurrency] || selectedCurrency;
+                
+                // Update only the currency symbol - instant swap
+                currencySymbol.textContent = newSymbol;
+                
+                // Trigger subtle micro-interaction animation
+                priceDisplay.classList.remove('price-currency-change');
+                // Use requestAnimationFrame to ensure proper animation trigger
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        priceDisplay.classList.add('price-currency-change');
+                        
+                        // Remove animation class after completion
+                        setTimeout(() => {
+                            priceDisplay.classList.remove('price-currency-change');
+                        }, 200);
+                    });
+                });
+                
+                previousCurrency = selectedCurrency;
+                
+                // Update currency in session (silently, no UI feedback needed)
+                const formData = new FormData();
+                formData.append('currency', selectedCurrency);
+                formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+                
+                fetch('{% url "set_currency" %}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                }).catch(error => {
+                    console.error('Error updating currency session:', error);
+                });
+            }
+        });
+    }
+});
+
 // Enroll in course function
 async function enrollInCourse(courseId) {
     if (!confirm('Enroll in this course to access live sessions and quizzes?')) {

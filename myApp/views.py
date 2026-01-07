@@ -30,9 +30,49 @@ from .models import (
 # HELPER FUNCTIONS
 # ============================================
 
+# Message scoping constants
+MESSAGE_SCOPE_AUTH = 'auth'
+MESSAGE_SCOPE_APP = 'app'
+
 def get_site_settings():
     """Get site settings singleton"""
     return SiteSettings.get_settings()
+
+
+def message_auth(request, level, message):
+    """
+    Add an authentication-scoped message.
+    These messages appear on the login page.
+    """
+    extra_tags = MESSAGE_SCOPE_AUTH
+    if level == messages.SUCCESS:
+        messages.success(request, message, extra_tags=extra_tags)
+    elif level == messages.ERROR:
+        messages.error(request, message, extra_tags=extra_tags)
+    elif level == messages.INFO:
+        messages.info(request, message, extra_tags=extra_tags)
+    elif level == messages.WARNING:
+        messages.warning(request, message, extra_tags=extra_tags)
+    else:
+        messages.add_message(request, level, message, extra_tags=extra_tags)
+
+
+def message_app(request, level, message):
+    """
+    Add an application-scoped message.
+    These messages appear in authenticated pages only, not on login page.
+    """
+    extra_tags = MESSAGE_SCOPE_APP
+    if level == messages.SUCCESS:
+        messages.success(request, message, extra_tags=extra_tags)
+    elif level == messages.ERROR:
+        messages.error(request, message, extra_tags=extra_tags)
+    elif level == messages.INFO:
+        messages.info(request, message, extra_tags=extra_tags)
+    elif level == messages.WARNING:
+        messages.warning(request, message, extra_tags=extra_tags)
+    else:
+        messages.add_message(request, level, message, extra_tags=extra_tags)
 
 
 def get_or_create_profile(user):
@@ -70,6 +110,28 @@ def role_required(allowed_roles):
             return redirect('home')
         return wrapper
     return decorator
+
+
+def teacher_approved_required(view_func):
+    """Decorator to check if teacher is approved. Redirects pending teachers to pending page."""
+    def wrapper(request, *args, **kwargs):
+        user = request.user
+        profile = get_or_create_profile(user)
+        
+        # Allow superusers/admins to access automatically
+        is_superuser_or_admin = user.is_superuser or user.is_staff or profile.role == 'admin'
+        if is_superuser_or_admin:
+            return view_func(request, *args, **kwargs)
+        
+        # Check if user has teacher profile
+        if hasattr(user, 'teacher_profile'):
+            teacher = user.teacher_profile
+            if not teacher.is_approved:
+                message_app(request, messages.INFO, 'Your teacher account is under review. We\'ll notify you once approved.')
+                return render(request, 'auth/teacher_pending.html')
+        
+        return view_func(request, *args, **kwargs)
+    return wrapper
 
 
 # ============================================
@@ -171,8 +233,23 @@ def login_view(request):
         
         user = authenticate(request, username=username, password=password)
         if user is not None:
+            # Check if teacher is pending approval
+            if hasattr(user, 'teacher_profile') and not user.teacher_profile.is_approved:
+                # Don't log them in, show pending message
+                message_auth(request, messages.INFO, 'Your teacher account is under review. We\'ll notify you once approved.')
+                return render(request, 'auth/login.html')
+            
+            # Check if password reset is required
+            profile = get_or_create_profile(user)
+            if profile.force_password_reset:
+                # Store user ID in session for password reset flow
+                request.session['force_password_reset_user_id'] = user.id
+                login(request, user)
+                message_auth(request, messages.WARNING, 'You must change your password before continuing.')
+                return redirect('accounts:password_change')
+            
             login(request, user)
-            messages.success(request, f'Welcome back, {user.first_name or user.username}!')
+            message_auth(request, messages.SUCCESS, f'Welcome back, {user.first_name or user.username}!')
             
             # Redirect based on role
             next_url = request.GET.get('next')
@@ -180,8 +257,12 @@ def login_view(request):
                 return redirect(next_url)
             return redirect_by_role(user)
         else:
-            messages.error(request, 'Invalid username or password.')
-    
+            message_auth(request, messages.ERROR, 'Invalid username or password.')
+    # On GET request, the template will filter messages by scope
+    # Auth-scoped messages will be displayed
+    # App-scoped messages will be consumed when iterated but not displayed
+    # This ensures they don't appear on the login page
+    # Note: App-scoped messages should be set on authenticated pages, not before login
     return render(request, 'auth/login.html')
 
 
@@ -227,10 +308,83 @@ def signup_view(request):
     return render(request, 'auth/signup.html')
 
 
+def teacher_signup_view(request):
+    """Teacher registration with pending approval"""
+    if request.user.is_authenticated:
+        return redirect_by_role(request.user)
+    
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+        password_confirm = request.POST.get('password_confirm')
+        first_name = request.POST.get('first_name', '')
+        last_name = request.POST.get('last_name', '')
+        bio = request.POST.get('bio', '')
+        specialization = request.POST.get('specialization', '')
+        years_experience = request.POST.get('years_experience', '0')
+        
+        # Validation
+        if password != password_confirm:
+            messages.error(request, 'Passwords do not match.')
+            return render(request, 'auth/teacher_signup.html')
+        
+        if User.objects.filter(username=username).exists():
+            messages.error(request, 'Username already exists.')
+            return render(request, 'auth/teacher_signup.html')
+        
+        if User.objects.filter(email=email).exists():
+            messages.error(request, 'Email already registered.')
+            return render(request, 'auth/teacher_signup.html')
+        
+        # Create user (inactive until approved)
+        user = User.objects.create_user(
+            username=username,
+            email=email,
+            password=password,
+            first_name=first_name,
+            last_name=last_name,
+            is_active=True  # User can log in, but teacher portal access is restricted
+        )
+        
+        # Create user profile with instructor role
+        profile = get_or_create_profile(user)
+        profile.role = 'instructor'
+        profile.bio = bio
+        profile.save()
+        
+        # Create teacher profile (pending approval)
+        teacher = Teacher.objects.create(
+            user=user,
+            is_approved=False,  # Pending approval
+            bio=bio,
+            specialization=specialization,
+            years_experience=int(years_experience) if years_experience.isdigit() else 0
+        )
+        
+        # Redirect to pending confirmation page
+        return redirect('teacher_signup_pending')
+    
+    return render(request, 'auth/teacher_signup.html')
+
+
+def teacher_signup_pending(request):
+    """Teacher signup pending approval confirmation page"""
+    # Allow both authenticated and unauthenticated users to see this page
+    # If authenticated, check their status
+    if request.user.is_authenticated:
+        if hasattr(request.user, 'teacher_profile'):
+            teacher = request.user.teacher_profile
+            if teacher.is_approved:
+                # Already approved, redirect to dashboard
+                return redirect('teacher_dashboard')
+    return render(request, 'auth/teacher_pending.html')
+
+
 def logout_view(request):
     """User logout"""
     logout(request)
-    messages.info(request, 'You have been logged out.')
+    message_auth(request, messages.INFO, 'You have been logged out.')
     # Allow an optional `next` parameter so callers can control where to go after logout.
     next_url = request.GET.get('next') or request.POST.get('next')
     if next_url:
@@ -248,9 +402,12 @@ def redirect_by_role(user):
     profile = get_or_create_profile(user)
     role = profile.role
     
-    # Check if user is a teacher (approved)
-    if role == 'instructor' or (hasattr(user, 'teacher_profile') and user.teacher_profile.is_approved):
-        return redirect('teacher_dashboard')
+    # Check if user is a teacher (must be approved)
+    if role == 'instructor' or hasattr(user, 'teacher_profile'):
+        if hasattr(user, 'teacher_profile') and user.teacher_profile.is_approved:
+            return redirect('teacher_dashboard')
+        # Pending teacher - redirect to pending page
+        return redirect('teacher_signup_pending')
     elif role == 'admin':
         return redirect('dashboard:overview')
     elif role == 'partner':
@@ -382,7 +539,7 @@ def student_courses(request):
     category_slug = request.GET.get('category')
     search = request.GET.get('search')
     
-    # Base queryset
+    # Base queryset - Show ALL published courses regardless of who created them
     courses = Course.objects.filter(status='published').select_related('category', 'instructor')
     
     # Apply filters
@@ -396,6 +553,12 @@ def student_courses(request):
             Q(description__icontains=search) |
             Q(outcome__icontains=search)
         )
+    
+    # Log the queryset for debugging (temporary - can be removed after verification)
+    import logging
+    logger = logging.getLogger(__name__)
+    course_ids = list(courses.values_list('id', flat=True))
+    logger.info(f"Student Course Catalog Query - Found {len(course_ids)} published courses. Course IDs: {course_ids}")
     
     # Get categories for filter
     categories = Category.objects.annotate(
@@ -718,7 +881,7 @@ def student_course_player(request, enrollment_id=None, lesson_id=None):
     # Check if this is a live class course - these don't have lessons
     if course.course_type == 'live':
         # Redirect to live classes page for live courses
-        messages.info(request, 'This is a live class course. View available live sessions to book.')
+        message_app(request, messages.INFO, 'This is a live class course. View available live sessions to book.')
         return redirect('student_live_classes')
     
     # Get current lesson
@@ -827,6 +990,54 @@ def set_currency(request):
             return JsonResponse({'success': True, 'currency': currency})
         return redirect(request.META.get('HTTP_REFERER', '/'))
     return JsonResponse({'success': False, 'error': 'Invalid currency'})
+
+
+@require_GET
+def get_course_price(request, course_id):
+    """Get course price in specified currency (AJAX endpoint)"""
+    currency = request.GET.get('currency', 'USD')
+    
+    # Validate currency
+    valid_currencies = ['USD', 'EUR', 'SAR', 'AED', 'JOD', 'GBP']
+    if currency not in valid_currencies:
+        return JsonResponse({'success': False, 'error': 'Invalid currency'}, status=400)
+    
+    try:
+        course = Course.objects.get(id=course_id, status='published')
+    except Course.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Course not found'}, status=404)
+    
+    # Currency symbol mapping
+    currency_symbols = {
+        'USD': '$',
+        'EUR': '€',
+        'SAR': '﷼',
+        'AED': 'د.إ',
+        'JOD': 'د.ا',
+        'GBP': '£',
+    }
+    
+    # Get price in selected currency
+    try:
+        pricing = CoursePricing.objects.get(course=course, currency=currency)
+        price = float(pricing.price)
+        currency_code = currency
+    except CoursePricing.DoesNotExist:
+        # Fallback to course's default currency
+        if currency == course.currency:
+            price = float(course.price)
+            currency_code = course.currency
+        else:
+            price = float(course.price)
+            currency_code = course.currency
+    
+    return JsonResponse({
+        'success': True,
+        'currency': currency_code,
+        'symbol': currency_symbols.get(currency_code, currency_code),
+        'price': price,
+        'formatted_price': f"{currency_symbols.get(currency_code, currency_code)} {price:.2f}"
+    })
 
 
 @login_required
@@ -1080,12 +1291,24 @@ def take_quiz(request, quiz_id):
         total_points = 0
         
         for question in questions:
-            answer_id = request.POST.get(f'question_{question.id}')
-            if answer_id:
-                answers[str(question.id)] = answer_id
-                correct = question.answers.filter(is_correct=True).first()
-                if correct and str(correct.id) == answer_id:
-                    score += question.points
+            answer_value = request.POST.get(f'question_{question.id}')
+            if answer_value:
+                answers[str(question.id)] = answer_value
+                
+                # Handle different question types
+                if question.question_type == 'short_answer':
+                    # For short answer, compare text (case-insensitive, trimmed)
+                    correct_answers = question.answers.filter(is_correct=True)
+                    student_answer = answer_value.strip().lower()
+                    for correct in correct_answers:
+                        if correct.answer_text.strip().lower() == student_answer:
+                            score += question.points
+                            break
+                else:
+                    # For multiple choice and true/false, compare answer IDs
+                    correct = question.answers.filter(is_correct=True).first()
+                    if correct and str(correct.id) == answer_value:
+                        score += question.points
             total_points += question.points
         
         percentage = (score / total_points * 100) if total_points > 0 else 0
@@ -1126,10 +1349,61 @@ def take_quiz(request, quiz_id):
 def quiz_result(request, attempt_id):
     """Quiz result page"""
     attempt = get_object_or_404(QuizAttempt, id=attempt_id, user=request.user)
+    quiz = attempt.quiz
+    
+    # Get questions with answers
+    questions = quiz.questions.prefetch_related('answers').order_by('order')
+    
+    # Prepare question results
+    question_results = []
+    for question in questions:
+        question_id_str = str(question.id)
+        student_answer_id = attempt.answers.get(question_id_str)
+        
+        # Find correct answer
+        correct_answer = question.answers.filter(is_correct=True).first()
+        
+        # Check if student's answer is correct
+        is_correct = False
+        student_answer_obj = None
+        
+        if student_answer_id:
+            if question.question_type == 'short_answer':
+                # For short answer, compare text (case-insensitive)
+                student_answer_text = str(student_answer_id).strip().lower()
+                if correct_answer:
+                    correct_answer_text = correct_answer.answer_text.strip().lower()
+                    if correct_answer_text == student_answer_text:
+                        is_correct = True
+                student_answer_obj = {'text': str(student_answer_id), 'id': None}
+            else:
+                # For MCQ/True-False, compare IDs
+                try:
+                    answer_id_int = int(student_answer_id)
+                    student_answer_obj = question.answers.filter(id=answer_id_int).first()
+                    if correct_answer and str(correct_answer.id) == str(student_answer_id):
+                        is_correct = True
+                except (ValueError, TypeError):
+                    student_answer_obj = None
+        
+        question_results.append({
+            'question': question,
+            'student_answer': student_answer_obj,
+            'correct_answer': correct_answer,
+            'is_correct': is_correct,
+        })
+    
+    # Check attempts remaining
+    attempts_count = QuizAttempt.objects.filter(user=request.user, quiz=quiz).count()
+    attempts_remaining = None
+    if quiz.max_attempts:
+        attempts_remaining = max(0, quiz.max_attempts - attempts_count)
     
     context = {
         'attempt': attempt,
-        'quiz': attempt.quiz,
+        'quiz': quiz,
+        'question_results': question_results,
+        'attempts_remaining': attempts_remaining,
     }
     return render(request, 'student/quiz_result.html', context)
 
@@ -1556,6 +1830,10 @@ def teacher_dashboard(request):
         teacher = MockTeacher(user)
     elif hasattr(user, 'teacher_profile'):
         teacher = user.teacher_profile
+        # Check if teacher is approved
+        if not teacher.is_approved and not is_superuser_or_admin:
+            message_app(request, messages.INFO, 'Your teacher account is under review. We\'ll notify you once approved.')
+            return render(request, 'auth/teacher_pending.html')
     else:
         # Regular user - check if they're a teacher
         if profile.role != 'instructor':
@@ -1647,6 +1925,7 @@ def teacher_dashboard(request):
 
 
 @login_required
+@teacher_approved_required
 def teacher_courses(request):
     """My Courses - view all assigned courses"""
     user = request.user
@@ -1692,13 +1971,19 @@ def teacher_courses(request):
 
 
 @login_required
+@teacher_approved_required
 def teacher_course_create(request):
     """Create new course (only for teachers with 'full' permission)"""
     user = request.user
     teacher, _ = Teacher.objects.get_or_create(
         user=user,
-        defaults={'permission_level': 'standard'}
+        defaults={'permission_level': 'standard', 'is_approved': True}
     )
+    
+    # Double-check approval (shouldn't reach here if not approved due to decorator, but safety check)
+    if not teacher.is_approved and not (user.is_superuser or user.is_staff):
+        message_app(request, messages.INFO, 'Your teacher account is under review. We\'ll notify you once approved.')
+        return render(request, 'auth/teacher_pending.html')
     
     if request.method == 'POST':
         # Create course
@@ -1727,7 +2012,7 @@ def teacher_course_create(request):
             assigned_by=user
         )
         
-        messages.success(request, f'Course "{course.title}" created successfully!')
+        message_app(request, messages.SUCCESS, f'Course "{course.title}" created successfully!')
         return redirect('teacher_course_edit', course_id=course.id)
     
     categories = Category.objects.all()
@@ -1750,10 +2035,11 @@ def teacher_course_edit(request, course_id):
     # Check permissions
     assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
     if not assignment or assignment.permission_level == 'view_only':
-        messages.error(request, 'You do not have permission to edit this course.')
+        message_app(request, messages.ERROR, 'You do not have permission to edit this course.')
         return redirect('teacher_courses')
     
     if request.method == 'POST':
+        old_status = course.status
         course.title = request.POST.get('title', course.title)
         course.description = request.POST.get('description', course.description)
         course.short_description = request.POST.get('short_description', course.short_description)
@@ -1763,13 +2049,19 @@ def teacher_course_edit(request, course_id):
         course.course_type = request.POST.get('course_type', course.course_type)
         course.price = float(request.POST.get('price', course.price))
         course.is_free = request.POST.get('is_free') == 'on'
-        course.status = request.POST.get('status', course.status)
+        new_status = request.POST.get('status', course.status)
+        course.status = new_status
+        
+        # Set published_at when status changes to 'published'
+        if new_status == 'published' and old_status != 'published' and not course.published_at:
+            from django.utils import timezone
+            course.published_at = timezone.now()
         
         if request.FILES.get('thumbnail'):
             course.thumbnail = request.FILES.get('thumbnail')
         
         course.save()
-        messages.success(request, 'Course updated successfully!')
+        message_app(request, messages.SUCCESS, 'Course updated successfully!')
         return redirect('teacher_course_edit', course_id=course.id)
     
     categories = Category.objects.all()
@@ -1828,12 +2120,29 @@ def teacher_lesson_create(request, course_id):
         return redirect('teacher_courses')
     
     if request.method == 'POST':
-        module_id = request.POST.get('module')
-        module = get_object_or_404(Module, id=module_id, course=course)
+        module_id = request.POST.get('module', '').strip()
+        
+        # Validate module_id is provided
+        if not module_id:
+            message_app(request, messages.ERROR, 'Please select a module for this lesson.')
+            return redirect('teacher_lesson_create', course_id=course.id)
+        
+        # Validate module exists and belongs to course
+        try:
+            module = Module.objects.get(id=module_id, course=course)
+        except Module.DoesNotExist:
+            message_app(request, messages.ERROR, 'The selected module does not exist or does not belong to this course.')
+            return redirect('teacher_lesson_create', course_id=course.id)
+        
+        # Validate required fields
+        title = request.POST.get('title', '').strip()
+        if not title:
+            message_app(request, messages.ERROR, 'Lesson title is required.')
+            return redirect('teacher_lesson_create', course_id=course.id)
         
         lesson = Lesson.objects.create(
             module=module,
-            title=request.POST.get('title'),
+            title=title,
             description=request.POST.get('description', ''),
             content_type=request.POST.get('content_type', 'video'),
             video_url=request.POST.get('video_url', ''),
@@ -1842,10 +2151,10 @@ def teacher_lesson_create(request, course_id):
             estimated_minutes=int(request.POST.get('estimated_minutes', 10))
         )
         
-        messages.success(request, 'Lesson created successfully!')
+        message_app(request, messages.SUCCESS, 'Lesson created successfully!')
         return redirect('teacher_lessons', course_id=course.id)
     
-    modules = course.modules.all()
+    modules = course.modules.all().order_by('order')
     context = {
         'course': course,
         'modules': modules,
@@ -2064,30 +2373,82 @@ def teacher_quiz_questions(request, course_id, quiz_id):
     questions = quiz.questions.prefetch_related('answers').order_by('order')
     
     if request.method == 'POST':
+        question_type = request.POST.get('question_type', 'multiple_choice')
+        question_text = request.POST.get('question_text', '').strip()
+        
+        # Validation
+        if not question_text:
+            messages.error(request, 'Question text is required.')
+            return redirect('teacher_quiz_questions', course_id=course.id, quiz_id=quiz.id)
+        
         # Add new question
         question = Question.objects.create(
             quiz=quiz,
-            question_text=request.POST.get('question_text'),
-            question_type=request.POST.get('question_type', 'multiple_choice'),
+            question_text=question_text,
+            question_type=question_type,
             explanation=request.POST.get('explanation', ''),
             points=int(request.POST.get('points', 1)),
             order=int(request.POST.get('order', questions.count()))
         )
         
-        # Add answers
-        answers_data = request.POST.getlist('answers[]')
-        is_correct_data = request.POST.getlist('is_correct[]')
+        # Handle answers based on question type
+        if question_type == 'short_answer':
+            # Short Answer: Create a single answer with the correct answer text
+            correct_answer_text = request.POST.get('correct_answer_text', '').strip()
+            if not correct_answer_text:
+                question.delete()  # Rollback question creation
+                messages.error(request, 'Correct answer text is required for short answer questions.')
+                return redirect('teacher_quiz_questions', course_id=course.id, quiz_id=quiz.id)
+            
+            Answer.objects.create(
+                question=question,
+                answer_text=correct_answer_text,
+                is_correct=True,
+                order=0
+            )
+        else:
+            # Multiple Choice or True/False: Handle answer options
+            answers_data = request.POST.getlist('answers[]')
+            is_correct_data = request.POST.getlist('is_correct[]')
+            
+            if not answers_data or len([a for a in answers_data if a.strip()]) == 0:
+                question.delete()  # Rollback question creation
+                messages.error(request, 'At least one answer option is required.')
+                return redirect('teacher_quiz_questions', course_id=course.id, quiz_id=quiz.id)
+            
+            # Validate correct answer selection
+            if not is_correct_data:
+                question.delete()  # Rollback question creation
+                messages.error(request, 'Please select the correct answer.')
+                return redirect('teacher_quiz_questions', course_id=course.id, quiz_id=quiz.id)
+            
+            # Validate minimum answers for MCQ
+            if question_type == 'multiple_choice':
+                filled_answers = [a for a in answers_data if a.strip()]
+                if len(filled_answers) < 2:
+                    question.delete()  # Rollback question creation
+                    messages.error(request, 'Multiple choice questions require at least 2 answer options.')
+                    return redirect('teacher_quiz_questions', course_id=course.id, quiz_id=quiz.id)
+            
+            # Validate True/False has exactly 2 answers
+            if question_type == 'true_false':
+                filled_answers = [a for a in answers_data if a.strip()]
+                if len(filled_answers) != 2:
+                    question.delete()  # Rollback question creation
+                    messages.error(request, 'True/False questions must have exactly 2 answer options.')
+                    return redirect('teacher_quiz_questions', course_id=course.id, quiz_id=quiz.id)
+            
+            # Create answers
+            for i, answer_text in enumerate(answers_data):
+                if answer_text.strip():
+                    Answer.objects.create(
+                        question=question,
+                        answer_text=answer_text,
+                        is_correct=str(i) in is_correct_data,
+                        order=i
+                    )
         
-        for i, answer_text in enumerate(answers_data):
-            if answer_text.strip():
-                Answer.objects.create(
-                    question=question,
-                    answer_text=answer_text,
-                    is_correct=str(i) in is_correct_data,
-                    order=i
-                )
-        
-        messages.success(request, 'Question added successfully!')
+        message_app(request, messages.SUCCESS, 'Question added successfully!')
         return redirect('teacher_quiz_questions', course_id=course.id, quiz_id=quiz.id)
     
     context = {
@@ -2236,12 +2597,12 @@ def teacher_schedule(request):
         # Check if teacher has permission
         assignment = CourseTeacher.objects.filter(teacher=teacher_instance, course=course).first()
         if not assignment or not assignment.can_create_live_classes:
-            messages.error(request, 'You do not have permission to create live classes for this course.')
+            message_app(request, messages.ERROR, 'You do not have permission to create live classes for this course.')
             return redirect('teacher_schedule')
         
         # Warn if course is not published - students won't be able to enroll
         if course.status != 'published':
-            messages.warning(request, f'Warning: This course is in "{course.get_status_display()}" status. Students will not be able to see or enroll in live classes for unpublished courses. Consider publishing the course first.')
+            message_app(request, messages.WARNING, f'Warning: This course is in "{course.get_status_display()}" status. Students will not be able to see or enroll in live classes for unpublished courses. Consider publishing the course first.')
         
         # Validate required fields
         scheduled_start_str = request.POST.get('scheduled_start')
@@ -2365,7 +2726,7 @@ def teacher_schedule(request):
             capacity=total_seats,  # Phase 2: Set capacity
         )
         
-        messages.success(request, 'Live class scheduled successfully!')
+        message_app(request, messages.SUCCESS, 'Live class scheduled successfully!')
         return redirect('teacher_schedule')
     
     # Get courses teacher can create live classes for
@@ -3212,6 +3573,76 @@ def api_courses(request):
 
 @login_required
 @require_GET
+def api_courses_filter(request):
+    """API endpoint for filtering courses (AJAX)"""
+    search = request.GET.get('search', '').strip()
+    level = request.GET.get('level', '')
+    category_slug = request.GET.get('category', '')
+    
+    # Base queryset
+    courses = Course.objects.filter(status='published').select_related('category')
+    
+    # Apply filters
+    if level:
+        courses = courses.filter(level=level)
+    if category_slug:
+        courses = courses.filter(category__slug=category_slug)
+    if search:
+        courses = courses.filter(
+            Q(title__icontains=search) | 
+            Q(description__icontains=search) |
+            Q(outcome__icontains=search)
+        )
+    
+    # Get selected currency
+    selected_currency = request.session.get('selected_currency', 'USD')
+    
+    # Get user's enrolled courses
+    user = request.user
+    enrolled_course_ids = list(Enrollment.objects.filter(user=user).values_list('course_id', flat=True))
+    
+    # Prepare course data
+    course_list = []
+    for course in courses[:100]:  # Limit to 100 for performance
+        # Get pricing
+        try:
+            pricing = CoursePricing.objects.get(course=course, currency=selected_currency)
+            display_price = float(pricing.price)
+            display_currency = selected_currency
+        except CoursePricing.DoesNotExist:
+            display_price = float(course.price)
+            display_currency = course.currency
+        
+        course_list.append({
+            'id': course.id,
+            'title': course.title,
+            'slug': course.slug,
+            'outcome': course.outcome or '',
+            'level': course.level,
+            'category_slug': course.category.slug if course.category else '',
+            'category_name': course.category.name if course.category else '',
+            'course_type': course.course_type,
+            'estimated_hours': course.estimated_hours,
+            'lessons_count': course.lessons_count,
+            'has_certificate': course.has_certificate,
+            'average_rating': float(course.average_rating) if course.average_rating else 0,
+            'is_free': course.is_free,
+            'display_price': display_price,
+            'display_currency': display_currency,
+            'is_enrolled': course.id in enrolled_course_ids,
+            'thumbnail_url': course.thumbnail.url if course.thumbnail else '',
+            'has_preview_video': bool(course.preview_video),
+        })
+    
+    return JsonResponse({
+        'success': True,
+        'courses': course_list,
+        'count': len(course_list)
+    })
+
+
+@login_required
+@require_GET
 def api_notifications(request):
     """Get user notifications"""
     notifications = Notification.objects.filter(
@@ -3445,7 +3876,7 @@ def student_book_session(request, session_id):
     # Check if user is enrolled in the course
     enrollment = Enrollment.objects.filter(user=user, course=session.course, status='active').first()
     if not enrollment:
-        messages.error(request, 'You must be enrolled in this course to book a session.')
+        message_app(request, messages.ERROR, 'You must be enrolled in this course to book a session.')
         return redirect('student_course_detail', slug=session.course.slug)
     
     # Check if session can be booked
@@ -3495,7 +3926,7 @@ def student_book_session(request, session_id):
                     defaults={'status': 'waiting'}
                 )
                 if created:
-                    messages.info(request, f'Added to waitlist for "{session.title}". You will be notified if a spot becomes available.')
+                    message_app(request, messages.INFO, f'Added to waitlist for "{session.title}". You will be notified if a spot becomes available.')
                     Notification.objects.create(
                         user=user,
                         notification_type='booking_waitlisted',
@@ -3542,9 +3973,9 @@ def student_book_session(request, session_id):
             # Update session seats_taken
             session.seats_taken = (session.seats_taken or 0) + 1
             session.save(update_fields=['seats_taken'])
-            messages.success(request, f'Successfully booked "{session.title}"!')
+            message_app(request, messages.SUCCESS, f'Successfully booked "{session.title}"!')
         else:
-            messages.success(request, f'Booking request submitted for "{session.title}". The teacher will review your request.')
+            message_app(request, messages.SUCCESS, f'Booking request submitted for "{session.title}". The teacher will review your request.')
         
         # Create notification
         Notification.objects.create(
@@ -3579,6 +4010,14 @@ def student_live_class_detail_modal(request, session_id):
         status='active'
     ).first()
     
+    # Check if student has a confirmed booking for this session
+    # Meeting link should only be visible to students with confirmed/attended bookings
+    has_confirmed_booking = LiveClassBooking.objects.filter(
+        student_user=user,
+        session=session,
+        status__in=['confirmed', 'attended']  # Only show link for confirmed enrollments
+    ).exists()
+    
     # Check if can book
     can_book, booking_message = session.can_be_booked(user)
     
@@ -3602,6 +4041,7 @@ def student_live_class_detail_modal(request, session_id):
         'course_price': course_price,
         'course_currency': course_currency,
         'selected_currency': selected_currency,
+        'has_confirmed_booking': has_confirmed_booking,  # Permission-based visibility for meeting link
     }
     return render(request, 'student/live_class_detail_modal.html', context)
 
@@ -3781,11 +4221,11 @@ def student_booking_cancel(request, booking_id):
     if booking.start_at_utc:
         hours_until = (booking.start_at_utc - timezone.now()).total_seconds() / 3600
         if hours_until < 24:
-            messages.error(request, 'This booking cannot be cancelled (must be cancelled at least 24 hours before the session).')
+            message_app(request, messages.ERROR, 'This booking cannot be cancelled (must be cancelled at least 24 hours before the session).')
             return redirect('student_bookings')
     
     if booking.status not in ['pending', 'confirmed']:
-        messages.error(request, 'This booking cannot be cancelled.')
+        message_app(request, messages.ERROR, 'This booking cannot be cancelled.')
         return redirect('student_bookings')
     
     notes = request.POST.get('notes', '')
@@ -3818,11 +4258,11 @@ def student_booking_reschedule(request, booking_id):
     booking = get_object_or_404(LiveClassBooking, id=booking_id, student_user=request.user, booking_type='group_session')
     
     if not booking.session:
-        messages.error(request, 'This booking cannot be rescheduled.')
+        message_app(request, messages.ERROR, 'This booking cannot be rescheduled.')
         return redirect('student_bookings')
     
     if booking.status not in ['confirmed', 'pending']:
-        messages.error(request, 'This booking cannot be rescheduled.')
+        message_app(request, messages.ERROR, 'This booking cannot be rescheduled.')
         return redirect('student_bookings')
     
     # Get available sessions for the same course
@@ -3876,7 +4316,7 @@ def student_booking_reschedule(request, booking_id):
             new_session.seats_taken = (new_session.seats_taken or 0) + 1
             new_session.save(update_fields=['seats_taken'])
         
-        messages.success(request, f'Booking rescheduled to {new_session.scheduled_start.strftime("%B %d, %Y at %I:%M %p")}.')
+        message_app(request, messages.SUCCESS, f'Booking rescheduled to {new_session.scheduled_start.strftime("%B %d, %Y at %I:%M %p")}.')
         
         # Create notification
         Notification.objects.create(
@@ -3939,7 +4379,7 @@ def teacher_booking_cancel(request, booking_id):
         session.seats_taken -= 1
         session.save(update_fields=['seats_taken'])
     
-    messages.success(request, 'Booking cancelled successfully.')
+    message_app(request, messages.SUCCESS, 'Booking cancelled successfully.')
     
     # Create notification for student
     Notification.objects.create(
@@ -3966,14 +4406,14 @@ def teacher_mark_attendance(request, booking_id):
     
     # Check if user is teacher for this session
     if session.teacher.user != request.user:
-        messages.error(request, 'You do not have permission to mark attendance.')
+        message_app(request, messages.ERROR, 'You do not have permission to mark attendance.')
         return redirect('teacher_live_classes', course_id=session.course.id)
     
     attended = request.POST.get('attended') == 'true'
     booking.status = 'attended' if attended else 'no_show'
     booking.save(update_fields=['status'])
     
-    messages.success(request, f'Attendance marked as {"Attended" if attended else "No Show"}.')
+    message_app(request, messages.SUCCESS, f'Attendance marked as {"Attended" if attended else "No Show"}.')
     return redirect('teacher_session_bookings', session_id=session.id)
 
 
@@ -3995,7 +4435,7 @@ def student_book_one_on_one(request, course_id):
     # Check if user is enrolled
     enrollment = Enrollment.objects.filter(user=user, course=course, status='active').first()
     if not enrollment:
-        messages.error(request, 'You must be enrolled in this course to book a session.')
+        message_app(request, messages.ERROR, 'You must be enrolled in this course to book a session.')
         return redirect('student_course_detail', slug=course.slug)
     
     # Get available teachers for this course
@@ -4047,7 +4487,7 @@ def student_book_one_on_one_submit(request, availability_id):
     course = availability.course
     enrollment = Enrollment.objects.filter(user=user, course=course, status='active').first()
     if not enrollment:
-        messages.error(request, 'You must be enrolled in this course.')
+        message_app(request, messages.ERROR, 'You must be enrolled in this course.')
         return redirect('student_course_detail', slug=course.slug)
     
     # Check if approval is required (using TeacherBookingPolicy)
@@ -4100,9 +4540,9 @@ def student_book_one_on_one_submit(request, availability_id):
     if not requires_approval:
         # Auto-confirm if no approval needed
         booking.confirm()
-        messages.success(request, f'Successfully booked 1:1 session with {availability.teacher.user.get_full_name()}!')
+        message_app(request, messages.SUCCESS, f'Successfully booked 1:1 session with {availability.teacher.user.get_full_name()}!')
     else:
-        messages.success(request, f'Booking request submitted! {availability.teacher.user.get_full_name()} will review your request.')
+        message_app(request, messages.SUCCESS, f'Booking request submitted! {availability.teacher.user.get_full_name()} will review your request.')
     
     # Create notification
     Notification.objects.create(
@@ -4134,11 +4574,11 @@ def student_booking_one_on_one_cancel(request, booking_id):
     if booking.start_at_utc:
         hours_until = (booking.start_at_utc - timezone.now()).total_seconds() / 3600
         if hours_until < 24:
-            messages.error(request, 'This booking cannot be cancelled (must be cancelled at least 24 hours before the session).')
+            message_app(request, messages.ERROR, 'This booking cannot be cancelled (must be cancelled at least 24 hours before the session).')
             return redirect('student_bookings')
     
     if booking.status not in ['pending', 'confirmed']:
-        messages.error(request, 'This booking cannot be cancelled.')
+        message_app(request, messages.ERROR, 'This booking cannot be cancelled.')
         return redirect('student_bookings')
     
     notes = request.POST.get('notes', '') if request.method == 'POST' else ''

@@ -1,24 +1,36 @@
 {% extends 'teacher/base.html' %}
 
 {% block content %}
-<div class="space-y-6">
-    <div class="flex justify-between items-center">
-        <h1 class="text-3xl font-bold">{{ course.title }} - Lessons</h1>
-        <a href="{% url 'teacher_lesson_create' course.id %}" class="bg-deep-charcoal text-white px-4 py-2 rounded">Create Lesson</a>
+<div class="space-y-8 sm:space-y-10">
+    <div class="flex flex-col gap-4 mb-10">
+        <a href="{% url 'teacher_course_edit' course.id %}" class="inline-flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors w-fit">
+            <i class="fas fa-arrow-left"></i>
+            <span>Back to Course</span>
+        </a>
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+                <h1 class="text-4xl sm:text-5xl font-bold text-slate-900 dark:text-white mb-3 tracking-tight leading-tight">{{ course.title }} – Lessons</h1>
+            </div>
+            <a href="{% url 'teacher_lesson_create' course.id %}" class="inline-flex items-center gap-2 bg-gradient-to-r from-[#82C293] via-[#6fb380] to-[#82C293] text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-[#82C293]/30 hover:shadow-xl hover:shadow-[#82C293]/40 hover:scale-105 transition-all duration-300">
+                <i class="fas fa-plus"></i>
+                Create Lesson
+            </a>
+        </div>
     </div>
+    <div class="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent mb-8"></div>
     
     {% for module in modules %}
-    <div class="bg-white border rounded p-4 mb-4">
-        <h2 class="font-bold text-xl mb-4">{{ module.title }}</h2>
-        <div class="space-y-2">
+    <div class="bg-white/5 backdrop-blur-2xl border border-white/12 rounded-2xl p-6 mb-6 shadow-[0_8px_24px_rgba(0,0,0,0.3)]">
+        <h2 class="font-bold text-xl text-slate-900 dark:text-white mb-4 leading-tight">{{ module.title }}</h2>
+        <div class="space-y-3">
             {% for lesson in module.lessons.all %}
-            <div class="flex justify-between items-center border-b pb-2">
-                <span>{{ lesson.order }}. {{ lesson.title }}</span>
-                <div class="space-x-2">
-                    <a href="{% url 'teacher_lesson_edit' course.id lesson.id %}" class="text-blue-600 text-sm">Edit</a>
+            <div class="flex justify-between items-center border-b border-white/10 pb-3 last:border-b-0">
+                <span class="text-base font-medium text-slate-700 dark:text-slate-200">{{ lesson.order }}. {{ lesson.title }}</span>
+                <div class="flex items-center gap-3">
+                    <a href="{% url 'teacher_lesson_edit' course.id lesson.id %}" class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">Edit</a>
                     <form method="post" action="{% url 'teacher_lesson_delete' course.id lesson.id %}" class="inline">
                         {% csrf_token %}
-                        <button type="submit" class="text-red-600 text-sm" onclick="return confirm('Delete this lesson?')">Delete</button>
+                        <button type="submit" class="text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors" onclick="return confirm('Delete this lesson?')">Delete</button>
                     </form>
                 </div>
             </div>

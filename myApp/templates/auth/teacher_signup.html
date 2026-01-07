@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teacher Sign Up - Fluentory</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'warm-sand': '#E8E0D5',
+            'soft-ivory': '#F5F3EF',
+            'muted-taupe': '#B8A99A',
+            'deep-charcoal': '#1D1D1D',
+            'flu-mint': '#82C293',
+            'flu-teal': '#00655F',
+            'flu-ink': '#0B1F21',
+            'flu-slate': '#254346',
+            'flu-gold': '#f8da03'
+          },
+          boxShadow: {
+            'xl-soft': '0 30px 90px rgba(11,31,33,0.18)',
+            'glass': '0 26px 80px rgba(11,31,33,0.22)',
+            'premium': '0 32px 96px rgba(11,31,33,0.16), 0 8px 24px rgba(11,31,33,0.08)',
+            'premium-lg': '0 40px 120px rgba(11,31,33,0.20), 0 12px 32px rgba(11,31,33,0.12)',
+            'ringy': '0 0 0 6px rgba(130,194,147,0.14)'
+          },
+          borderRadius: {
+            '4xl': '2.25rem'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    .grain:before{
+      content:"";
+      position:absolute; inset:0;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='.10'/%3E%3C/svg%3E");
+      mix-blend-mode:overlay;
+      opacity:.25;
+      pointer-events:none;
+    }
+    .shine:after{
+      content:"";
+      position:absolute;
+      inset:-50% -70%;
+      transform: rotate(18deg);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      opacity:.12;
+      pointer-events:none;
+      transition: opacity 0.3s ease;
+    }
+    .shine:hover:after {
+      opacity: .18;
+    }
+    
+    input:focus {
+      transform: translateY(-1px);
+    }
+    
+    * {
+      transition-property: transform, opacity, box-shadow, border-color;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+      transition-duration: 200ms;
+    }
+    
+    button[type="submit"]:hover {
+      box-shadow: 0 20px 60px rgba(0,101,95,0.35), 0 8px 24px rgba(130,194,147,0.25);
+    }
+    
+    section:hover {
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+
+<body class="min-h-screen relative bg-soft-ivory text-deep-charcoal">
+  <!-- Background -->
+  <div class="absolute inset-0 -z-10">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(130,194,147,0.22),transparent_55%),radial-gradient(circle_at_80%_70%,rgba(0,101,95,0.16),transparent_60%),linear-gradient(to_bottom,rgba(245,243,239,1),rgba(245,243,239,0.96),rgba(245,243,239,1))]"></div>
+    <div class="absolute -top-24 -left-20 w-[520px] h-[520px] rounded-full blur-[95px] opacity-75 bg-flu-mint/35 animate-pulse" style="animation-duration: 8s;"></div>
+    <div class="absolute -bottom-28 -right-24 w-[640px] h-[640px] rounded-full blur-[110px] opacity-65 bg-flu-teal/25 animate-pulse" style="animation-duration: 10s; animation-delay: 1s;"></div>
+    <div class="absolute inset-0 opacity-[0.06]"
+      style="background-image: linear-gradient(rgba(11,31,33,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(11,31,33,0.12) 1px, transparent 1px); background-size: 42px 42px;">
+    </div>
+    <div class="absolute inset-0 grain"></div>
+  </div>
+
+  <main class="min-h-screen flex items-start lg:items-center justify-center px-4 py-12 lg:py-20">
+    <div class="w-full max-w-[1100px]">
+      <div class="grid grid-cols-1 lg:grid-cols-[46%_54%] gap-0 items-stretch">
+
+        <!-- LEFT: Brand / Story -->
+        <section class="relative overflow-hidden rounded-l-4xl lg:rounded-r-none rounded-4xl lg:rounded-r-0 p-8 sm:p-10 lg:p-12 bg-white/60 backdrop-blur-2xl border-r-0 border border-black/8 shadow-premium shine transition-all duration-300">
+          <div class="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_25%_20%,rgba(130,194,147,0.28),transparent_65%)]"></div>
+
+          <a href="{% url 'home' %}" class="relative z-10 inline-flex items-center gap-3 no-underline group">
+            <span class="w-11 h-11 rounded-2xl grid place-items-center bg-gradient-to-br from-flu-teal to-flu-mint shadow-lg group-hover:shadow-xl transition-shadow">
+              <i class="fa-solid fa-leaf text-white"></i>
+            </span>
+            <span class="text-2xl font-semibold tracking-tight text-flu-ink">Fluentory</span>
+          </a>
+
+          <div class="relative z-10 mt-10">
+            <div class="inline-flex items-center gap-2 rounded-full px-4 py-2 bg-flu-mint/18 border border-flu-mint/30 text-[11px] uppercase tracking-[0.22em] font-semibold text-flu-ink shadow-sm">
+              <i class="fa-solid fa-chalkboard-teacher text-flu-teal"></i>
+              Teach. Inspire. Transform.
+            </div>
+
+            <h1 class="mt-6 text-[2.2rem] sm:text-[2.7rem] font-semibold leading-[1.04] tracking-[-0.02em] text-flu-ink">
+              Become a teacher<br class="hidden sm:block" />
+              and shape the future of learning.
+            </h1>
+
+            <p class="mt-5 text-base leading-relaxed text-flu-ink/72 max-w-[34rem]">
+              Join our community of expert educators. Create courses, engage with students, and make a lasting impact.
+              <span class="font-semibold text-flu-ink">Your expertise. Their success.</span>
+            </p>
+
+            <!-- Proof pills -->
+            <div class="mt-9 flex flex-wrap gap-3">
+              <div class="inline-flex items-center gap-2 rounded-full px-4 py-2.5 bg-white/75 border border-black/8 text-sm text-flu-ink shadow-sm hover:shadow-md hover:border-flu-mint/20 transition-all">
+                <i class="fa-solid fa-graduation-cap text-flu-teal"></i>
+                Course creation tools
+              </div>
+              <div class="inline-flex items-center gap-2 rounded-full px-4 py-2.5 bg-white/75 border border-black/8 text-sm text-flu-ink shadow-sm hover:shadow-md hover:border-flu-mint/20 transition-all">
+                <i class="fa-solid fa-users text-flu-teal"></i>
+                Student engagement
+              </div>
+              <div class="inline-flex items-center gap-2 rounded-full px-4 py-2.5 bg-white/75 border border-black/8 text-sm text-flu-ink shadow-sm hover:shadow-md hover:border-flu-mint/20 transition-all">
+                <i class="fa-solid fa-chart-line text-flu-teal"></i>
+                Analytics & insights
+              </div>
+            </div>
+
+            <!-- Mini testimonial -->
+            <div class="mt-11 rounded-3xl bg-white/75 border border-black/8 p-7 shadow-sm hover:shadow-md transition-all">
+              <div class="flex items-start gap-4">
+                <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-flu-teal/25 to-flu-mint/25 border border-flu-mint/30 grid place-items-center shadow-sm">
+                  <i class="fa-solid fa-quote-left text-flu-teal"></i>
+                </div>
+                <div>
+                  <p class="text-sm leading-relaxed text-flu-ink/78">
+                    "The platform makes it easy to create engaging content and connect with students meaningfully."
+                  </p>
+                  <div class="mt-4 flex items-center justify-between">
+                    <span class="text-xs font-semibold tracking-wide text-flu-ink/72">Teacher review</span>
+                    <span class="text-xs font-semibold text-flu-gold">
+                      <i class="fa-solid fa-star"></i> 4.9 average
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer link -->
+            <div class="mt-10 text-sm text-flu-ink/62">
+              Already have an account?
+              <a href="{% url 'login' %}" class="font-semibold text-flu-ink hover:text-flu-teal transition-colors">
+                Sign in
+              </a>
+            </div>
+          </div>
+        </section>
+
+        <!-- RIGHT: Form Card -->
+        <section class="relative overflow-hidden rounded-r-4xl lg:rounded-l-none rounded-4xl lg:rounded-l-0 bg-white/68 backdrop-blur-2xl border-l-0 border border-black/8 shadow-premium-lg p-8 sm:p-10 lg:p-12 transition-all duration-300">
+          <div class="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_80%_15%,rgba(130,194,147,0.24),transparent_60%)]"></div>
+
+          <!-- Messages -->
+          {% if messages %}
+          <div class="relative z-10 mb-7 space-y-3">
+            {% for message in messages %}
+            <div class="p-4 rounded-2xl border text-sm
+              {% if message.tags == 'error' %}
+                bg-red-50 text-red-700 border-red-200
+              {% else %}
+                bg-emerald-50 text-emerald-700 border-emerald-200
+              {% endif %}
+            ">
+              <div class="flex items-start gap-3">
+                <span class="mt-0.5">
+                  {% if message.tags == 'error' %}
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                  {% else %}
+                    <i class="fa-solid fa-circle-check"></i>
+                  {% endif %}
+                </span>
+                <span>{{ message }}</span>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <div class="relative z-10">
+            <div class="mb-8">
+              <h2 class="text-2.5xl sm:text-3xl font-semibold tracking-tight text-flu-ink">Teacher sign up</h2>
+              <p class="mt-2.5 text-sm text-flu-ink/68">
+                Apply to become a teacher. Approval usually takes 24–48 hours.
+              </p>
+            </div>
+
+            <form method="POST" class="space-y-6" novalidate>
+              {% csrf_token %}
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                <div>
+                  <label for="first_name" class="block text-sm font-semibold text-flu-ink mb-2.5">First Name</label>
+                  <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-flu-ink/38">
+                      <i class="fa-regular fa-user"></i>
+                    </span>
+                    <input
+                      type="text"
+                      id="first_name"
+                      name="first_name"
+                      required
+                      class="w-full pl-11 pr-4 py-4 rounded-2xl border border-black/10 bg-white/75 text-flu-ink placeholder:text-flu-ink/38
+                             focus:outline-none focus:ring-2 focus:ring-flu-mint/35 focus:border-flu-teal/40 focus:bg-white/90 transition-all shadow-sm hover:shadow-md"
+                      placeholder="John"
+                      autocomplete="given-name"
+                    >
+                  </div>
+                </div>
+
+                <div>
+                  <label for="last_name" class="block text-sm font-semibold text-flu-ink mb-2.5">Last Name</label>
+                  <div class="relative">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 text-flu-ink/38">
+                      <i class="fa-regular fa-user"></i>
+                    </span>
+                    <input
+                      type="text"
+                      id="last_name"
+                      name="last_name"
+                      required
+                      class="w-full pl-11 pr-4 py-4 rounded-2xl border border-black/10 bg-white/75 text-flu-ink placeholder:text-flu-ink/38
+                             focus:outline-none focus:ring-2 focus:ring-flu-mint/35 focus:border-flu-teal/40 focus:bg-white/90 transition-all shadow-sm hover:shadow-md"
+                      placeholder="Doe"
+                      autocomplete="family-name"
+                    >
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label for="username" class="block text-sm font-semibold text-flu-ink mb-2.5">Username</label>
+                <div class="relative">
+                  <span class="absolute left-4 top-1/2 -translate-y-1/2 text-flu-ink/38">
+                    <i class="fa-regular fa-at"></i>
+                  </span>
+                  <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    required
+                    class="w-full pl-11 pr-4 py-4 rounded-2xl border border-black/10 bg-white/75 text-flu-ink placeholder:text-flu-ink/38
+                           focus:outline-none focus:ring-2 focus:ring-flu-mint/35 focus:border-flu-teal/40 focus:bg-white/90 transition-all shadow-sm hover:shadow-md"
+                    placeholder="Choose a username"
+                    autocomplete="username"
+                  >
+                </div>
+              </div>
+
+              <div>
+                <label for="email" class="block text-sm font-semibold text-flu-ink mb-2.5">Email</label>
+                <div class="relative">
+                  <span class="absolute left-4 top-1/2 -translate-y-1/2 text-flu-ink/38">
+                    <i class="fa-regular fa-envelope"></i>
+                  </span>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    required
+                    class="w-full pl-11 pr-4 py-4 rounded-2xl border border-black/10 bg-white/75 text-flu-ink placeholder:text-flu-ink/38
+                           focus:outline-none focus:ring-2 focus:ring-flu-mint/35 focus:border-flu-teal/40 focus:bg-white/90 transition-all shadow-sm hover:shadow-md"
+                    placeholder="you@example.com"
+                    autocomplete="email"
+                  >
+                </div>
+              </div>
+
+              <!-- Password -->
+              <div>
+                <label for="password" class="block text-sm font-semibold text-flu-ink mb-2.5">Password</label>
+                <div class="relative">
+                  <span class="absolute left-4 top-1/2 -translate-y-1/2 text-flu-ink/38">
+                    <i class="fa-solid fa-lock"></i>
+                  </span>
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    required
+                    class="w-full pl-11 pr-12 py-4 rounded-2xl border border-black/10 bg-white/75 text-flu-ink placeholder:text-flu-ink/38
+                           focus:outline-none focus:ring-2 focus:ring-flu-mint/35 focus:border-flu-teal/40 focus:bg-white/90 transition-all shadow-sm hover:shadow-md"
+                    placeholder="Create a strong password"
+                    autocomplete="new-password"
+                  >
+                  <button type="button" id="togglePassword"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl hover:bg-black/6 transition grid place-items-center text-flu-ink/62 hover:text-flu-ink"
+                    aria-label="Toggle password visibility">
+                    <i class="fa-regular fa-eye"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Confirm Password -->
+              <div>
+                <label for="password_confirm" class="block text-sm font-semibold text-flu-ink mb-2.5">Confirm Password</label>
+                <div class="relative">
+                  <span class="absolute left-4 top-1/2 -translate-y-1/2 text-flu-ink/38">
+                    <i class="fa-solid fa-lock"></i>
+                  </span>
+                  <input
+                    type="password"
+                    id="password_confirm"
+                    name="password_confirm"
+                    required
+                    class="w-full pl-11 pr-12 py-4 rounded-2xl border border-black/10 bg-white/75 text-flu-ink placeholder:text-flu-ink/38
+                           focus:outline-none focus:ring-2 focus:ring-flu-mint/35 focus:border-flu-teal/40 focus:bg-white/90 transition-all shadow-sm hover:shadow-md"
+                    placeholder="Confirm your password"
+                    autocomplete="new-password"
+                  >
+                  <button type="button" id="togglePassword2"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-xl hover:bg-black/6 transition grid place-items-center text-flu-ink/62 hover:text-flu-ink"
+                    aria-label="Toggle confirm password visibility">
+                    <i class="fa-regular fa-eye"></i>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Teacher-specific fields -->
+              <div>
+                <label for="specialization" class="block text-sm font-semibold text-flu-ink mb-2.5">Area of Expertise</label>
+                <div class="relative">
+                  <span class="absolute left-4 top-1/2 -translate-y-1/2 text-flu-ink/38">
+                    <i class="fa-solid fa-book"></i>
+                  </span>
+                  <input
+                    type="text"
+                    id="specialization"
+                    name="specialization"
+                    class="w-full pl-11 pr-4 py-4 rounded-2xl border border-black/10 bg-white/75 text-flu-ink placeholder:text-flu-ink/38
+                           focus:outline-none focus:ring-2 focus:ring-flu-mint/35 focus:border-flu-teal/40 focus:bg-white/90 transition-all shadow-sm hover:shadow-md"
+                    placeholder="e.g., Web Development, Data Science"
+                  >
+                </div>
+              </div>
+
+              <div>
+                <label for="years_experience" class="block text-sm font-semibold text-flu-ink mb-2.5">Years of Experience</label>
+                <div class="relative">
+                  <span class="absolute left-4 top-1/2 -translate-y-1/2 text-flu-ink/38">
+                    <i class="fa-solid fa-calendar"></i>
+                  </span>
+                  <input
+                    type="number"
+                    id="years_experience"
+                    name="years_experience"
+                    min="0"
+                    class="w-full pl-11 pr-4 py-4 rounded-2xl border border-black/10 bg-white/75 text-flu-ink placeholder:text-flu-ink/38
+                           focus:outline-none focus:ring-2 focus:ring-flu-mint/35 focus:border-flu-teal/40 focus:bg-white/90 transition-all shadow-sm hover:shadow-md"
+                    placeholder="0"
+                  >
+                </div>
+              </div>
+
+              <div>
+                <label for="bio" class="block text-sm font-semibold text-flu-ink mb-2.5">Bio (Optional)</label>
+                <textarea
+                  id="bio"
+                  name="bio"
+                  rows="3"
+                  class="w-full px-4 py-4 rounded-2xl border border-black/10 bg-white/75 text-flu-ink placeholder:text-flu-ink/38
+                         focus:outline-none focus:ring-2 focus:ring-flu-mint/35 focus:border-flu-teal/40 focus:bg-white/90 transition-all shadow-sm hover:shadow-md"
+                  placeholder="Tell us about your teaching background and expertise..."
+                ></textarea>
+              </div>
+
+              <!-- Terms -->
+              <div class="flex items-start gap-3.5 pt-1">
+                <input type="checkbox" required
+                  class="w-5 h-5 mt-0.5 rounded border-black/20 text-flu-teal focus:ring-flu-mint/35 focus:ring-2 transition-all">
+                <p class="text-sm text-flu-ink/72 leading-relaxed">
+                  I agree to the
+                  <a href="#" class="font-semibold text-flu-ink hover:text-flu-teal transition-colors">Terms</a>
+                  and
+                  <a href="#" class="font-semibold text-flu-ink hover:text-flu-teal transition-colors">Privacy Policy</a>.
+                </p>
+              </div>
+
+              <!-- Submit -->
+              <button type="submit"
+                class="w-full py-4.5 rounded-2xl font-semibold text-white transition-all transform hover:scale-[1.02] active:scale-[0.98]
+                       bg-gradient-to-r from-flu-teal to-flu-mint shadow-xl hover:shadow-2xl
+                       focus:outline-none focus:ring-4 focus:ring-flu-mint/30">
+                Submit Application
+                <i class="fa-solid fa-arrow-right ml-2.5 text-white/90"></i>
+              </button>
+
+              <div class="pt-5 flex items-center gap-3 text-xs text-flu-ink/58">
+                <i class="fa-solid fa-shield-halved text-flu-teal"></i>
+                Your information is secure and will only be used for account approval.
+              </div>
+            </form>
+
+            <!-- Back to home -->
+            <div class="mt-10 text-center">
+              <a href="{% url 'home' %}" class="inline-flex items-center gap-2 text-sm text-flu-ink/62 hover:text-flu-ink transition-colors">
+                <i class="fas fa-arrow-left"></i>
+                Back to home
+              </a>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Password visibility toggles
+    const pw = document.getElementById('password');
+    const pw2 = document.getElementById('password_confirm');
+    const toggle1 = document.getElementById('togglePassword');
+    const toggle2 = document.getElementById('togglePassword2');
+
+    function toggleVisibility(input, btn){
+      const icon = btn.querySelector('i');
+      const isHidden = input.type === 'password';
+      input.type = isHidden ? 'text' : 'password';
+      icon.className = isHidden ? 'fa-regular fa-eye-slash' : 'fa-regular fa-eye';
+    }
+    toggle1?.addEventListener('click', () => toggleVisibility(pw, toggle1));
+    toggle2?.addEventListener('click', () => toggleVisibility(pw2, toggle2));
+  </script>
+</body>
+</html>
+

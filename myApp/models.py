@@ -40,6 +40,9 @@ class UserProfile(models.Model):
     last_activity_date = models.DateField(null=True, blank=True)
     total_learning_minutes = models.PositiveIntegerField(default=0)
     
+    # Security
+    force_password_reset = models.BooleanField(default=False, help_text='Require user to change password on next login')
+    
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -62,6 +65,51 @@ class UserProfile(models.Model):
         self.longest_streak = max(self.longest_streak, self.current_streak)
         self.last_activity_date = today
         self.save()
+
+
+# ============================================
+# SECURITY & AUDIT LOGGING
+# ============================================
+
+class SecurityActionLog(models.Model):
+    """Audit log for security-related admin actions"""
+    ACTION_CHOICES = [
+        ('password_reset', 'Password Reset'),
+        ('force_password_reset', 'Force Password Reset'),
+        ('account_suspended', 'Account Suspended'),
+        ('account_activated', 'Account Activated'),
+        ('role_changed', 'Role Changed'),
+        ('permission_changed', 'Permission Changed'),
+    ]
+    
+    # Who performed the action
+    admin_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='security_actions_performed')
+    
+    # Target user
+    target_user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='security_actions_received')
+    
+    # Action details
+    action_type = models.CharField(max_length=50, choices=ACTION_CHOICES)
+    description = models.TextField(help_text='Human-readable description of the action')
+    
+    # Additional metadata (JSON field would be better, but TextField works)
+    metadata = models.TextField(blank=True, help_text='Additional action metadata (JSON)')
+    
+    # Timestamp
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['-created_at']),
+            models.Index(fields=['target_user', '-created_at']),
+            models.Index(fields=['admin_user', '-created_at']),
+        ]
+        verbose_name = 'Security Action Log'
+        verbose_name_plural = 'Security Action Logs'
+    
+    def __str__(self):
+        return f"{self.admin_user.username if self.admin_user else 'System'} - {self.get_action_type_display()} - {self.target_user.username} - {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
 
 
 # ============================================

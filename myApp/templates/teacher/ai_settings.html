@@ -4,7 +4,11 @@
 <div class="w-full max-w-5xl mx-auto">
     <!-- Header -->
     <div class="mb-8">
-        <div class="flex items-center justify-between mb-4">
+        <div class="flex flex-col gap-4 mb-4">
+            <a href="{% url 'teacher_course_edit' course.id %}" class="inline-flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors w-fit">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Course</span>
+            </a>
             <div>
                 <h1 class="text-3xl sm:text-4xl font-extralight text-slate-900 dark:text-white mb-2 tracking-[-0.02em]">
                     AI Tutor Settings
@@ -13,9 +17,6 @@
                     Configure AI tutor behavior for <span class="font-medium text-slate-900 dark:text-white">{{ course.title }}</span>
                 </p>
             </div>
-            <a href="{% url 'teacher_course_edit' course.id %}" class="text-slate-600 dark:text-slate-300/80 hover:text-slate-900 dark:hover:text-white transition-colors">
-                <i class="fas fa-arrow-left mr-2"></i>Back to Course
-            </a>
         </div>
     </div>
 

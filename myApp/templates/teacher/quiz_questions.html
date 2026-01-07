@@ -1,38 +1,521 @@
 {% extends 'teacher/base.html' %}
 
 {% block content %}
-<div class="space-y-6">
-    <h1 class="text-3xl font-bold">{{ quiz.title }} - Questions</h1>
+<div class="max-w-4xl mx-auto space-y-8 sm:space-y-10">
+    <!-- Page Header with Back Button -->
+    <div class="flex flex-col gap-4 mb-10">
+        <a href="{% url 'teacher_quiz_edit' course.id quiz.id %}" class="inline-flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors w-fit">
+            <i class="fas fa-arrow-left"></i>
+            <span>Back to Quiz</span>
+        </a>
+        <div>
+            <h1 class="text-4xl sm:text-5xl font-bold mb-3 tracking-tight leading-tight" style="color: #0f172a !important;" onmouseover="this.style.color='#0f172a'" onmouseout="this.style.color='#0f172a'">{{ quiz.title }} – Questions</h1>
+            <p class="text-base sm:text-lg font-normal tracking-wide leading-relaxed" style="color: #475569 !important;">Add and manage quiz questions</p>
+        </div>
+        <style>
+            [data-theme="light"] h1.text-4xl,
+            [data-theme="light"] h1.text-5xl {
+                color: #0f172a !important; /* slate-900 - very dark */
+            }
+            [data-theme="light"] p.text-base,
+            [data-theme="light"] p.text-lg {
+                color: #475569 !important; /* slate-600 - dark grey */
+            }
+            [data-theme="dark"] h1.text-4xl,
+            [data-theme="dark"] h1.text-5xl,
+            .dark h1.text-4xl,
+            .dark h1.text-5xl {
+                color: #f8fafc !important; /* slate-50 - very light, almost white */
+            }
+            [data-theme="dark"] p.text-base,
+            [data-theme="dark"] p.text-lg,
+            .dark p.text-base,
+            .dark p.text-lg {
+                color: #e2e8f0 !important; /* slate-200 - light grey, very readable */
+            }
+        </style>
+    </div>
     
-    <div class="bg-white p-6 rounded shadow">
-        <h2 class="text-xl font-bold mb-4">Add Question</h2>
-        <form method="post" class="space-y-4">
+    <div class="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent mb-8"></div>
+    
+    <!-- Add Question Section -->
+    <div class="bg-white dark:bg-white/5 backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-white/10 p-8 sm:p-10 shadow-sm dark:shadow-2xl">
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-2 leading-tight">Add Question</h2>
+            <p class="text-sm text-slate-600 dark:text-slate-400" id="questionDescription">Create a new multiple choice question with clear answer options</p>
+        </div>
+        
+        <form method="post" id="questionForm" action="{% url 'teacher_quiz_questions' course.id quiz.id %}" class="space-y-6">
             {% csrf_token %}
-            <div>
-                <label class="block mb-2">Question Text</label>
-                <textarea name="question_text" required class="w-full border rounded p-2" rows="3"></textarea>
+            
+            <!-- Question Type Selector -->
+            <div class="space-y-2">
+                <label for="question_type" class="form-label">Question Type</label>
+                <select name="question_type" id="question_type" required class="form-select">
+                    <option value="multiple_choice" selected>Multiple Choice (MCQ)</option>
+                    <option value="true_false">True/False</option>
+                    <option value="short_answer">Short Answer</option>
+                </select>
+                <p class="form-helper">Select the type of question you want to create</p>
             </div>
-            <div>
-                <label class="block mb-2">Answers (one per line, mark correct with * at start)</label>
-                <textarea name="answers[]" class="w-full border rounded p-2" rows="4" placeholder="*Correct answer&#10;Wrong answer 1&#10;Wrong answer 2"></textarea>
+            
+            <!-- Divider -->
+            <div class="h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-white/10 to-transparent my-6"></div>
+            
+            <!-- Question Field -->
+            <div class="space-y-2">
+                <label for="question_text" class="form-label">Question Text</label>
+                <textarea 
+                    name="question_text" 
+                    id="question_text" 
+                    required 
+                    class="form-textarea" 
+                    rows="3"
+                    placeholder="Enter your question here..."></textarea>
+                <p class="form-helper">Write a clear, specific question that tests understanding of the topic</p>
             </div>
-            <button type="submit" class="bg-deep-charcoal text-white px-4 py-2 rounded">Add Question</button>
+            
+            <!-- Divider -->
+            <div class="h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-white/10 to-transparent my-6"></div>
+            
+            <!-- MCQ Answers Section -->
+            <div id="mcqSection" class="space-y-4">
+                <div class="flex items-center justify-between mb-4">
+            <div>
+                        <label class="form-label mb-0">Answer Options</label>
+                        <p class="form-helper mt-1">Select the correct answer by clicking the radio button</p>
+                    </div>
+                    <button type="button" id="addAnswerBtn" class="text-sm font-medium text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors">
+                        <i class="fas fa-plus mr-1"></i>Add Answer
+                    </button>
+                </div>
+                
+                <div id="answersContainer" class="space-y-3">
+                    <!-- Answer fields will be dynamically added here -->
+                </div>
+            </div>
+            
+            <!-- True/False Section -->
+            <div id="trueFalseSection" class="space-y-4" style="display: none;">
+                <div class="mb-4">
+                    <label class="form-label mb-0">Answer Options</label>
+                    <p class="form-helper mt-1">Select the correct answer (True or False)</p>
+                </div>
+                <div id="trueFalseContainer" class="space-y-3">
+                    <!-- True/False options will be auto-generated here -->
+                </div>
+            </div>
+            
+            <!-- Short Answer Section -->
+            <div id="shortAnswerSection" class="space-y-4" style="display: none;">
+                <div class="mb-4">
+                    <label class="form-label mb-0">Correct Answer</label>
+                    <p class="form-helper mt-1">Enter the expected correct answer text (case-insensitive matching)</p>
+                </div>
+                <div class="space-y-3">
+                    <input 
+                        type="text" 
+                        name="correct_answer_text" 
+                        id="correct_answer_text"
+                        class="form-input w-full" 
+                        placeholder="Enter the correct answer text..."
+                        required>
+                    <p class="form-helper text-sm">Students' answers will be compared to this text (case-insensitive)</p>
+                </div>
+            </div>
+            
+            <!-- Submit Button -->
+            <div class="pt-6 border-t border-slate-200 dark:border-white/10">
+                <button type="submit" class="btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Add Question
+                </button>
+            </div>
         </form>
     </div>
     
-    <div class="bg-white p-6 rounded shadow">
-        <h2 class="text-xl font-bold mb-4">Existing Questions</h2>
-        {% for question in questions %}
-        <div class="border-b pb-4 mb-4">
-            <p class="font-bold mb-2">{{ question.question_text }}</p>
-            <ul class="list-disc ml-6">
-                {% for answer in question.answers.all %}
-                <li class="{% if answer.is_correct %}text-green-600 font-bold{% endif %}">{{ answer.answer_text }}</li>
-                {% endfor %}
-            </ul>
+    <script>
+        // Answer field management
+        let answerCount = 0;
+        const answerLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+        let currentQuestionType = 'multiple_choice';
+        
+        function createAnswerField(index, value = '', isLocked = false) {
+            const label = answerLabels[index] || String(index + 1);
+            const answerId = `answer_${index}`;
+            const radioId = `correct_${index}`;
+            const totalFields = document.querySelectorAll('.answer-field').length;
+            const canRemove = totalFields > 2 && !isLocked;
+            
+            return `
+                <div class="answer-field flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/30 hover:border-emerald-400/30 transition-all group" data-index="${index}">
+                    <div class="flex-shrink-0 pt-2">
+                        <div class="flex flex-col gap-2">
+                            <span class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-sm font-semibold text-slate-700 dark:text-slate-300">${label}</span>
+                            <label for="${radioId}" class="flex items-center gap-2 cursor-pointer group/radio">
+                                <input type="radio" name="is_correct[]" value="${index}" id="${radioId}" class="w-5 h-5 text-emerald-600 dark:text-emerald-400 border-slate-300 dark:border-slate-600 focus:ring-emerald-500 dark:focus:ring-emerald-400 cursor-pointer">
+                                <span class="text-xs font-medium text-slate-600 dark:text-slate-400 group-hover/radio:text-emerald-600 dark:group-hover/radio:text-emerald-400 transition-colors">Correct</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <input 
+                            type="text" 
+                            name="answers[]" 
+                            id="${answerId}"
+                            value="${value}"
+                            class="form-input w-full ${isLocked ? 'bg-slate-100 dark:bg-slate-700 cursor-not-allowed' : ''}" 
+                            placeholder="Enter answer option ${label}..."
+                            ${isLocked ? 'readonly' : 'required'}>
+                    </div>
+                    ${canRemove ? `
+                    <button type="button" onclick="removeAnswer(${index})" class="flex-shrink-0 mt-2 p-2 text-slate-400 dark:text-slate-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-all" title="Delete answer">
+                        <i class="fas fa-trash text-sm"></i>
+                    </button>
+                    ` : ''}
+                </div>
+            `;
+        }
+        
+        function addAnswerField(value = '', isLocked = false) {
+            const container = document.getElementById('answersContainer');
+            const totalFields = document.querySelectorAll('.answer-field').length;
+            container.insertAdjacentHTML('beforeend', createAnswerField(answerCount, value, isLocked));
+            answerCount++;
+            updateRemoveButtons();
+        }
+        
+        function removeAnswer(index) {
+            const field = document.querySelector(`.answer-field[data-index="${index}"]`);
+            if (field) {
+                // Check if this answer was marked as correct
+                const radio = field.querySelector('input[type="radio"]:checked');
+                const wasCorrect = radio && radio.checked;
+                
+                field.remove();
+                
+                // If the deleted answer was correct, clear all correct selections
+                if (wasCorrect) {
+                    const allRadios = document.querySelectorAll('input[name="is_correct[]"]');
+                    allRadios.forEach(r => r.checked = false);
+                }
+                
+                // Re-index remaining fields
+                const fields = document.querySelectorAll('.answer-field');
+                fields.forEach((field, newIndex) => {
+                    field.setAttribute('data-index', newIndex);
+                    const label = answerLabels[newIndex] || String(newIndex + 1);
+                    const labelSpan = field.querySelector('span');
+                    if (labelSpan) labelSpan.textContent = label;
+                    const input = field.querySelector('input[type="text"]');
+                    if (input) {
+                        input.id = `answer_${newIndex}`;
+                        input.placeholder = `Enter answer option ${label}...`;
+                    }
+                    const radio = field.querySelector('input[type="radio"]');
+                    if (radio) {
+                        radio.value = newIndex;
+                        radio.id = `correct_${newIndex}`;
+                        const labelEl = field.querySelector('label[for]');
+                        if (labelEl) labelEl.setAttribute('for', `correct_${newIndex}`);
+                    }
+                });
+                answerCount = fields.length;
+                updateRemoveButtons();
+            }
+        }
+        
+        function updateRemoveButtons() {
+            const fields = document.querySelectorAll('.answer-field');
+            fields.forEach((field) => {
+                const removeBtn = field.querySelector('button[onclick*="removeAnswer"]');
+                if (removeBtn) {
+                    if (fields.length <= 2) {
+                        removeBtn.style.display = 'none';
+                    } else {
+                        removeBtn.style.display = 'block';
+                    }
+                }
+            });
+        }
+        
+        function handleQuestionTypeChange() {
+            const questionType = document.getElementById('question_type').value;
+            currentQuestionType = questionType;
+            
+            // Update description
+            const descriptionEl = document.getElementById('questionDescription');
+            if (questionType === 'multiple_choice') {
+                descriptionEl.textContent = 'Create a new multiple choice question with clear answer options';
+            } else if (questionType === 'true_false') {
+                descriptionEl.textContent = 'Create a True/False question with two fixed answer options';
+            } else if (questionType === 'short_answer') {
+                descriptionEl.textContent = 'Create a short answer question where students type their response';
+            }
+            
+            // Remove required from all hidden fields to prevent validation blocking
+            const mcqInputs = document.querySelectorAll('#mcqSection input[required]');
+            const tfInputs = document.querySelectorAll('#trueFalseSection input[required]');
+            const saInputs = document.querySelectorAll('#shortAnswerSection input[required]');
+            
+            // Hide all sections and remove required from hidden ones
+            document.getElementById('mcqSection').style.display = 'none';
+            mcqInputs.forEach(input => {
+                input.removeAttribute('required');
+                input.setAttribute('data-was-required', 'true');
+            });
+            
+            document.getElementById('trueFalseSection').style.display = 'none';
+            tfInputs.forEach(input => {
+                input.removeAttribute('required');
+                input.setAttribute('data-was-required', 'true');
+            });
+            
+            document.getElementById('shortAnswerSection').style.display = 'none';
+            saInputs.forEach(input => {
+                input.removeAttribute('required');
+                input.setAttribute('data-was-required', 'true');
+            });
+            
+            if (questionType === 'multiple_choice') {
+                document.getElementById('mcqSection').style.display = 'block';
+                // Restore required attributes for visible MCQ fields
+                mcqInputs.forEach(input => {
+                    if (input.getAttribute('data-was-required') === 'true') {
+                        input.setAttribute('required', 'required');
+                    }
+                });
+            } else if (questionType === 'true_false') {
+                document.getElementById('trueFalseSection').style.display = 'block';
+                // Auto-generate True/False options
+                const container = document.getElementById('trueFalseContainer');
+                container.innerHTML = `
+                    <div class="answer-field flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/30 hover:border-emerald-400/30 transition-all group" data-index="0">
+                        <div class="flex-shrink-0 pt-2">
+                            <div class="flex flex-col gap-2">
+                                <span class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-sm font-semibold text-slate-700 dark:text-slate-300">T</span>
+                                <label for="correct_tf_0" class="flex items-center gap-2 cursor-pointer group/radio">
+                                    <input type="radio" name="is_correct[]" value="0" id="correct_tf_0" class="w-5 h-5 text-emerald-600 dark:text-emerald-400 border-slate-300 dark:border-slate-600 focus:ring-emerald-500 dark:focus:ring-emerald-400 cursor-pointer">
+                                    <span class="text-xs font-medium text-slate-600 dark:text-slate-400 group-hover/radio:text-emerald-600 dark:group-hover/radio:text-emerald-400 transition-colors">Correct</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <input type="text" name="answers[]" value="True" class="form-input w-full bg-slate-100 dark:bg-slate-700 cursor-not-allowed" readonly required>
+                        </div>
+                    </div>
+                    <div class="answer-field flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/30 hover:border-emerald-400/30 transition-all group" data-index="1">
+                        <div class="flex-shrink-0 pt-2">
+                            <div class="flex flex-col gap-2">
+                                <span class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-sm font-semibold text-slate-700 dark:text-slate-300">F</span>
+                                <label for="correct_tf_1" class="flex items-center gap-2 cursor-pointer group/radio">
+                                    <input type="radio" name="is_correct[]" value="1" id="correct_tf_1" class="w-5 h-5 text-emerald-600 dark:text-emerald-400 border-slate-300 dark:border-slate-600 focus:ring-emerald-500 dark:focus:ring-emerald-400 cursor-pointer">
+                                    <span class="text-xs font-medium text-slate-600 dark:text-slate-400 group-hover/radio:text-emerald-600 dark:group-hover/radio:text-emerald-400 transition-colors">Correct</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="flex-1">
+                            <input type="text" name="answers[]" value="False" class="form-input w-full bg-slate-100 dark:bg-slate-700 cursor-not-allowed" readonly required>
+                        </div>
+                    </div>
+                `;
+            } else if (questionType === 'short_answer') {
+                document.getElementById('shortAnswerSection').style.display = 'block';
+                // Restore required for short answer field
+                const saField = document.getElementById('correct_answer_text');
+                if (saField) {
+                    saField.setAttribute('required', 'required');
+                }
+            }
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize MCQ with 4 default answer fields
+            for (let i = 0; i < 4; i++) {
+                addAnswerField();
+            }
+            
+            // Question type change handler
+            document.getElementById('question_type').addEventListener('change', handleQuestionTypeChange);
+            
+            // Add answer button (MCQ only)
+            document.getElementById('addAnswerBtn').addEventListener('click', function() {
+                if (currentQuestionType === 'multiple_choice') {
+                    addAnswerField();
+                }
+            });
+            
+            // Form validation with inline error display
+            document.getElementById('questionForm').addEventListener('submit', function(e) {
+                // Clear any existing error messages and error styles
+                clearAllErrors();
+                
+                // Remove required from all hidden fields to prevent HTML5 validation blocking
+                const allSections = ['mcqSection', 'trueFalseSection', 'shortAnswerSection'];
+                const questionType = document.getElementById('question_type').value;
+                allSections.forEach(sectionId => {
+                    const section = document.getElementById(sectionId);
+                    if (section && section.style.display === 'none') {
+                        const inputs = section.querySelectorAll('input[required], textarea[required]');
+                        inputs.forEach(input => {
+                            input.removeAttribute('required');
+                            input.setAttribute('data-was-required', 'true');
+                        });
+                    }
+                });
+                
+                const questionText = document.getElementById('question_text').value.trim();
+                let hasErrors = false;
+                
+                // Validate question text
+                if (!questionText) {
+                    showFieldError('question_text', 'Question text is required.');
+                    hasErrors = true;
+                }
+                
+                if (questionType === 'multiple_choice' || questionType === 'true_false') {
+                    // Check for correct answer selection
+                    const correctAnswers = document.querySelectorAll('input[name="is_correct[]"]:checked');
+                    if (correctAnswers.length === 0) {
+                        showSectionError(questionType === 'multiple_choice' ? 'mcqSection' : 'trueFalseSection', 'Please select the correct answer for this question.');
+                        hasErrors = true;
+                    }
+                    
+                    // Validate minimum answers for MCQ
+                    if (questionType === 'multiple_choice') {
+                        const answerFields = document.querySelectorAll('#answersContainer .answer-field input[type="text"]');
+                        const filledAnswers = Array.from(answerFields).filter(input => input.value.trim());
+                        if (filledAnswers.length < 2) {
+                            showSectionError('mcqSection', 'Multiple choice questions require at least 2 answer options.');
+                            hasErrors = true;
+                        }
+                    }
+                } else if (questionType === 'short_answer') {
+                    const correctAnswer = document.getElementById('correct_answer_text');
+                    if (!correctAnswer || !correctAnswer.value.trim()) {
+                        showFieldError('correct_answer_text', 'Please enter the correct answer text for this short answer question.');
+                        hasErrors = true;
+                    }
+                }
+                
+                if (hasErrors) {
+                    e.preventDefault();
+                    // Scroll to first error
+                    const firstError = document.querySelector('.form-error');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    return false;
+                }
+                
+                // If validation passes, allow form submission
+                // Show loading state on button
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving...';
+                }
+                return true;
+            });
+            
+            function clearAllErrors() {
+                // Remove error messages
+                document.querySelectorAll('.form-error').forEach(el => el.remove());
+                // Remove error border styles
+                document.querySelectorAll('.border-red-500, .dark\\:border-red-400').forEach(el => {
+                    el.classList.remove('border-red-500', 'dark:border-red-400');
+                });
+            }
+            
+            function showFieldError(fieldId, message) {
+                const field = document.getElementById(fieldId);
+                if (field) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'form-error text-sm text-red-600 dark:text-red-400 mt-1';
+                    errorDiv.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i>${message}`;
+                    field.parentElement.appendChild(errorDiv);
+                    field.classList.add('border-red-500', 'dark:border-red-400');
+                }
+            }
+            
+            function showSectionError(sectionId, message) {
+                const section = document.getElementById(sectionId);
+                if (section) {
+                    const errorDiv = document.createElement('div');
+                    errorDiv.className = 'form-error text-sm text-red-600 dark:text-red-400 mb-3 p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-lg';
+                    errorDiv.innerHTML = `<i class="fas fa-exclamation-circle mr-1"></i>${message}`;
+                    section.insertBefore(errorDiv, section.firstChild);
+                }
+            }
+        });
+    </script>
+    
+    <!-- Existing Questions Section -->
+    {% if questions %}
+    <div class="bg-white dark:bg-white/5 backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-white/10 p-8 sm:p-10 shadow-sm dark:shadow-2xl">
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-2 leading-tight">Existing Questions</h2>
+            <p class="text-sm text-slate-600 dark:text-slate-400">{{ questions.count }} question{{ questions.count|pluralize }} in this quiz</p>
         </div>
-        {% endfor %}
+        
+        <div class="space-y-6">
+        {% for question in questions %}
+            <div class="border-b border-slate-200 dark:border-white/10 pb-6 last:border-b-0 last:pb-0">
+                <div class="mb-4">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-xs font-semibold uppercase tracking-wide px-2.5 py-1 rounded-md 
+                            {% if question.question_type == 'multiple_choice' %}bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300
+                            {% elif question.question_type == 'true_false' %}bg-purple-100 dark:bg-purple-500/20 text-purple-700 dark:text-purple-300
+                            {% else %}bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300{% endif %}">
+                            {% if question.question_type == 'multiple_choice' %}MCQ
+                            {% elif question.question_type == 'true_false' %}True/False
+                            {% else %}Short Answer{% endif %}
+                        </span>
+                        <span class="text-sm text-slate-600 dark:text-slate-400">{{ question.points }} point{{ question.points|pluralize }}</span>
+                    </div>
+                    <p class="text-lg font-semibold text-slate-900 dark:text-white mb-3 leading-relaxed">{{ question.question_text }}</p>
+                </div>
+                <div class="space-y-2">
+                    {% if question.question_type == 'short_answer' %}
+                        {% for answer in question.answers.all %}
+                        <div class="flex items-start gap-3 p-3 rounded-lg bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/30">
+                            <div class="flex-shrink-0 mt-0.5">
+                                <i class="fas fa-check-circle text-green-600 dark:text-green-400"></i>
+                            </div>
+                            <div class="flex-1">
+                                <span class="text-sm font-medium text-green-700 dark:text-green-300">Correct Answer: {{ answer.answer_text }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                {% for answer in question.answers.all %}
+                        <div class="flex items-start gap-3 p-3 rounded-lg {% if answer.is_correct %}bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/30{% else %}bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50{% endif %}">
+                            <div class="flex-shrink-0 mt-0.5">
+                                {% if answer.is_correct %}
+                                <i class="fas fa-check-circle text-green-600 dark:text-green-400"></i>
+                                {% else %}
+                                <i class="fas fa-circle text-slate-400 dark:text-slate-500 text-xs"></i>
+                                {% endif %}
+                            </div>
+                            <span class="text-sm font-medium {% if answer.is_correct %}text-green-700 dark:text-green-300{% else %}text-slate-700 dark:text-slate-300{% endif %}">
+                                {{ answer.answer_text }}
+                            </span>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+            </div>
+                {% endfor %}
+        </div>
     </div>
+    {% else %}
+    <div class="bg-white dark:bg-white/5 backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-white/10 p-12 text-center shadow-sm dark:shadow-2xl">
+        <i class="fas fa-question-circle text-5xl text-slate-400 dark:text-slate-400 mb-4"></i>
+        <h3 class="text-xl font-semibold text-slate-900 dark:text-white mb-2 leading-tight">No questions yet</h3>
+        <p class="text-slate-600 dark:text-slate-300 leading-relaxed">Add your first question above to get started</p>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
 

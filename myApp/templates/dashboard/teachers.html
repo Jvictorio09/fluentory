@@ -1,0 +1,797 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="w-full max-w-[1600px] mx-auto">
+    <!-- Header -->
+    <div class="mb-8 sm:mb-10 animate-fade-in-up stagger-1">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-white mb-3 tracking-[-0.02em]">
+                    Teacher Management
+                </h1>
+                <p class="text-base sm:text-lg text-white/70 font-light">Review and approve teacher applications</p>
+            </div>
+        </div>
+        
+        <!-- Filters -->
+        <div class="flex flex-wrap gap-4 mb-6 animate-fade-in-up stagger-2">
+            <form method="get" class="flex flex-wrap gap-4 items-end">
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-white/60 mb-2 font-medium">Status</label>
+                    <select name="status" class="px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                        <option value="">All Teachers</option>
+                        <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>Pending Approval</option>
+                        <option value="approved" {% if selected_status == 'approved' %}selected{% endif %}>Approved</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-white/60 mb-2 font-medium">Search</label>
+                    <input type="text" name="search" value="{{ search_query }}" placeholder="Search teachers..." class="px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                </div>
+                <button type="submit" class="px-6 py-2.5 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] transition-all duration-300 font-medium hover:scale-105 group">
+                    <i class="fas fa-search mr-2 transition-transform duration-300 group-hover:scale-110"></i>Filter
+                </button>
+                <a href="{% url 'dashboard:teachers' %}" class="px-6 py-2.5 bg-[#254346]/70 border border-white/10 text-white rounded-xl hover:bg-[#254346]/90 hover:border-[#82C293]/40 transition-all duration-300 font-medium hover:scale-105">
+                    <i class="fas fa-times mr-2"></i>Clear
+                </a>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+        <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 p-6 shadow-[0_15px_40px_rgba(0,0,0,0.3)] hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-white/60 mb-1">Total Teachers</p>
+                    <p class="text-3xl font-bold text-white">{{ total_teachers|default:0 }}</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-[#82C293]/20 border border-[#82C293]/30 flex items-center justify-center">
+                    <i class="fas fa-chalkboard-teacher text-[#82C293] text-xl"></i>
+                </div>
+            </div>
+        </div>
+        <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 p-6 shadow-[0_15px_40px_rgba(0,0,0,0.3)] hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-white/60 mb-1">Pending Approval</p>
+                    <p class="text-3xl font-bold text-amber-400">{{ pending_count|default:0 }}</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
+                    <i class="fas fa-clock text-amber-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+        <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 p-6 shadow-[0_15px_40px_rgba(0,0,0,0.3)] hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] transition-all duration-300">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm text-white/60 mb-1">Approved</p>
+                    <p class="text-3xl font-bold text-[#82C293]">{{ approved_count|default:0 }}</p>
+                </div>
+                <div class="w-12 h-12 rounded-xl bg-[#82C293]/20 border border-[#82C293]/30 flex items-center justify-center">
+                    <i class="fas fa-check-circle text-[#82C293] text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Teachers Table -->
+    <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] overflow-hidden animate-fade-in-up stagger-3 hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] transition-all duration-300">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-[#254346]/50 border-b border-white/10">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Teacher</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Contact</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Expertise</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Experience</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Applied</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Status</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/10">
+                    {% for teacher in teachers %}
+                    <tr class="hover:bg-[#82C293]/5 transition-all duration-300 animate-fade-in stagger-{{ forloop.counter|add:3 }} hover:scale-[1.01] group">
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-full bg-[#82C293]/20 border border-[#82C293]/30 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:bg-[#82C293]/30">
+                                    <i class="fas fa-chalkboard-teacher text-[#82C293]"></i>
+                                </div>
+                                <div>
+                                    <div class="font-medium text-white">{{ teacher.user.get_full_name|default:teacher.user.username }}</div>
+                                    <div class="text-sm text-white/60">@{{ teacher.user.username }}</div>
+                                    {% if teacher.bio %}
+                                    <div class="text-xs text-white/50 mt-1 line-clamp-1">{{ teacher.bio|truncatewords:15 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-white/70">{{ teacher.user.email }}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if teacher.specialization %}
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-[#82C293]/20 text-[#82C293] border border-[#82C293]/30">
+                                {{ teacher.specialization }}
+                            </span>
+                            {% else %}
+                            <span class="text-sm text-white/50">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="text-sm text-white/70">
+                                {% if teacher.years_experience %}
+                                    {{ teacher.years_experience }} year{{ teacher.years_experience|pluralize }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-white/70">{{ teacher.created_at|date:"M d, Y" }}</div>
+                            <div class="text-xs text-white/50">{{ teacher.created_at|date:"g:i A" }}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if teacher.is_approved %}
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-[#259d78]/20 text-[#259d78] border border-[#259d78]/30 flex items-center gap-1 w-fit">
+                                <i class="fas fa-check-circle"></i>
+                                Approved
+                            </span>
+                            {% if teacher.approved_at %}
+                            <div class="text-xs text-white/50 mt-1">Approved {{ teacher.approved_at|timesince }} ago</div>
+                            {% endif %}
+                            {% else %}
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1 w-fit">
+                                <i class="fas fa-clock"></i>
+                                Pending
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <button 
+                                    type="button"
+                                    onclick="openTeacherDetails({{ teacher.id }})"
+                                    class="px-3 py-2 bg-[#254346]/70 border border-white/10 text-white rounded-lg hover:bg-[#254346]/90 hover:border-[#82C293]/40 transition-all duration-300 text-sm hover:scale-105"
+                                    title="View full details">
+                                    <i class="fas fa-eye mr-1"></i>View Details
+                                </button>
+                                {% if not teacher.is_approved %}
+                                <form method="post" action="{% url 'dashboard:teacher_approve' teacher.id %}" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" 
+                                        class="px-4 py-2 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-lg hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] transition-all duration-300 font-medium hover:scale-105 text-sm"
+                                        onclick="return confirm('Approve {{ teacher.user.get_full_name|default:teacher.user.username }} as a teacher?')">
+                                        <i class="fas fa-check mr-1"></i>Approve
+                                    </button>
+                                </form>
+                                <form method="post" action="{% url 'dashboard:teacher_reject' teacher.id %}" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" 
+                                        class="px-4 py-2 bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg hover:bg-red-500/30 transition-all duration-300 font-medium hover:scale-105 text-sm"
+                                        onclick="return confirm('Reject {{ teacher.user.get_full_name|default:teacher.user.username }}\'s application?')">
+                                        <i class="fas fa-times mr-1"></i>Reject
+                                    </button>
+                                </form>
+                                {% else %}
+                                <span class="text-sm text-white/50">Approved</span>
+                                {% if teacher.approved_by %}
+                                <span class="text-xs text-white/40">by {{ teacher.approved_by.username }}</span>
+                                {% endif %}
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center">
+                            <div class="flex flex-col items-center gap-4">
+                                <div class="w-16 h-16 rounded-full bg-[#254346]/50 border border-white/10 flex items-center justify-center">
+                                    <i class="fas fa-chalkboard-teacher text-3xl text-white/40"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-white mb-1">No teachers found</h3>
+                                    <p class="text-sm text-white/60">
+                                        {% if selected_status == 'pending' %}
+                                            No pending teacher applications at this time.
+                                        {% elif selected_status == 'approved' %}
+                                            No approved teachers found.
+                                        {% else %}
+                                            No teachers registered yet.
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if teachers.has_other_pages %}
+        <div class="px-6 py-4 border-t border-white/10 flex items-center justify-between">
+            <div class="text-sm text-white/60">
+                Showing {{ teachers.start_index }} to {{ teachers.end_index }} of {{ teachers.paginator.count }} teachers
+            </div>
+            <div class="flex items-center gap-2">
+                {% if teachers.has_previous %}
+                <a href="?page={{ teachers.previous_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                   class="px-4 py-2 bg-[#254346]/70 border border-white/10 text-white rounded-lg hover:bg-[#254346]/90 hover:border-[#82C293]/40 transition-all duration-300">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+                {% endif %}
+                <span class="px-4 py-2 text-white/70">
+                    Page {{ teachers.number }} of {{ teachers.paginator.num_pages }}
+                </span>
+                {% if teachers.has_next %}
+                <a href="?page={{ teachers.next_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" 
+                   class="px-4 py-2 bg-[#254346]/70 border border-white/10 text-white rounded-lg hover:bg-[#254346]/90 hover:border-[#82C293]/40 transition-all duration-300">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Teacher Details Modal -->
+<div id="teacherDetailsModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity" onclick="closeTeacherDetails()"></div>
+    
+    <!-- Modal Container -->
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div class="relative w-full max-w-4xl transform overflow-hidden rounded-2xl bg-[#04363a]/95 backdrop-blur-xl border border-white/10 shadow-[0_25px_60px_rgba(0,0,0,0.5)] transition-all">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between px-6 py-5 border-b border-white/10 bg-[#254346]/30">
+                <div class="flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-full bg-[#82C293]/20 border border-[#82C293]/30 flex items-center justify-center">
+                        <i class="fas fa-chalkboard-teacher text-[#82C293] text-xl"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-white" id="modalTeacherName">Teacher Details</h3>
+                        <p class="text-sm text-white/60" id="modalTeacherUsername">Loading...</p>
+                    </div>
+                </div>
+                <button onclick="closeTeacherDetails()" class="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Content -->
+            <div class="px-6 py-6 max-h-[70vh] overflow-y-auto scrollbar-hide">
+                <div id="modalLoading" class="flex items-center justify-center py-12">
+                    <div class="text-center">
+                        <div class="w-16 h-16 border-4 border-[#82C293]/30 border-t-[#82C293] rounded-full animate-spin mx-auto mb-4"></div>
+                        <p class="text-white/70">Loading teacher details...</p>
+                    </div>
+                </div>
+                
+                <div id="modalContent" class="hidden space-y-6">
+                    <!-- Basic Info Section -->
+                    <div class="bg-[#254346]/30 rounded-xl p-5 border border-white/10">
+                        <h4 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-user text-[#82C293]"></i>
+                            Basic Information
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs uppercase tracking-wider text-white/60 mb-1 block">Full Name</label>
+                                <p class="text-white font-medium" id="detailFullName">—</p>
+                            </div>
+                            <div>
+                                <label class="text-xs uppercase tracking-wider text-white/60 mb-1 block">Username</label>
+                                <p class="text-white font-medium" id="detailUsername">—</p>
+                            </div>
+                            <div>
+                                <label class="text-xs uppercase tracking-wider text-white/60 mb-1 block">Email</label>
+                                <p class="text-white font-medium" id="detailEmail">—</p>
+                            </div>
+                            <div>
+                                <label class="text-xs uppercase tracking-wider text-white/60 mb-1 block">Account Role</label>
+                                <p class="text-white font-medium" id="detailRole">—</p>
+                            </div>
+                            <div>
+                                <label class="text-xs uppercase tracking-wider text-white/60 mb-1 block">Date Applied</label>
+                                <p class="text-white font-medium" id="detailDateApplied">—</p>
+                            </div>
+                            <div>
+                                <label class="text-xs uppercase tracking-wider text-white/60 mb-1 block">Current Status</label>
+                                <p class="text-white font-medium" id="detailStatus">—</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Professional Credentials Section -->
+                    <div class="bg-[#254346]/30 rounded-xl p-5 border border-white/10">
+                        <h4 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-graduation-cap text-[#82C293]"></i>
+                            Professional Credentials
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs uppercase tracking-wider text-white/60 mb-1 block">Expertise</label>
+                                <p class="text-white font-medium" id="detailSpecialization">—</p>
+                            </div>
+                            <div>
+                                <label class="text-xs uppercase tracking-wider text-white/60 mb-1 block">Years of Experience</label>
+                                <p class="text-white font-medium" id="detailExperience">—</p>
+                            </div>
+                            <div>
+                                <label class="text-xs uppercase tracking-wider text-white/60 mb-1 block">Courses Created</label>
+                                <p class="text-white font-medium" id="detailCoursesCount">—</p>
+                            </div>
+                            <div>
+                                <label class="text-xs uppercase tracking-wider text-white/60 mb-1 block">Live Classes Hosted</label>
+                                <p class="text-white font-medium" id="detailLiveClassesCount">—</p>
+                            </div>
+                            <div>
+                                <label class="text-xs uppercase tracking-wider text-white/60 mb-1 block">Permission Level</label>
+                                <p class="text-white font-medium" id="detailPermissionLevel">—</p>
+                            </div>
+                        </div>
+                        <div class="mt-4">
+                            <label class="text-xs uppercase tracking-wider text-white/60 mb-2 block">Bio / Introduction</label>
+                            <p class="text-white/80 leading-relaxed" id="detailBio">—</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Verification / Admin Notes Section -->
+                    <div class="bg-[#254346]/30 rounded-xl p-5 border border-white/10">
+                        <h4 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-shield-alt text-[#82C293]"></i>
+                            Verification & Admin Notes
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs uppercase tracking-wider text-white/60 mb-1 block">Approval Status</label>
+                                <p class="text-white font-medium" id="detailApprovalStatus">—</p>
+                            </div>
+                            <div id="detailApprovalInfo" class="hidden">
+                                <label class="text-xs uppercase tracking-wider text-white/60 mb-1 block">Approved By</label>
+                                <p class="text-white font-medium" id="detailApprovedBy">—</p>
+                            </div>
+                            <div id="detailApprovalDate" class="hidden">
+                                <label class="text-xs uppercase tracking-wider text-white/60 mb-1 block">Approved Date</label>
+                                <p class="text-white font-medium" id="detailApprovedAt">—</p>
+                            </div>
+                            <div>
+                                <label class="text-xs uppercase tracking-wider text-white/60 mb-1 block">Account Status</label>
+                                <p class="text-white font-medium" id="detailAccountStatus">—</p>
+                            </div>
+                            <div>
+                                <label class="text-xs uppercase tracking-wider text-white/60 mb-1 block">Date Joined</label>
+                                <p class="text-white font-medium" id="detailDateJoined">—</p>
+                            </div>
+                            <div>
+                                <label class="text-xs uppercase tracking-wider text-white/60 mb-1 block">Last Login</label>
+                                <p class="text-white font-medium" id="detailLastLogin">—</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Security Section -->
+                    <div class="bg-amber-500/10 border-2 border-amber-500/30 rounded-xl p-5">
+                        <h4 class="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                            <i class="fas fa-lock text-amber-400"></i>
+                            Security Actions
+                        </h4>
+                        <div class="mb-4 p-3 bg-[#254346]/50 rounded-lg border border-white/10">
+                            <div class="flex items-start gap-2">
+                                <i class="fas fa-info-circle text-amber-400 mt-0.5"></i>
+                                <p class="text-sm text-white/80">
+                                    <strong class="text-white">For security reasons, passwords cannot be viewed.</strong> All security actions require admin password verification and are logged for audit purposes.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="space-y-3">
+                            <button 
+                                type="button"
+                                onclick="openAdminVerification('reset_password')"
+                                class="w-full px-4 py-3 bg-amber-500/20 border border-amber-500/40 text-amber-300 rounded-lg hover:bg-amber-500/30 hover:border-amber-500/60 transition-all duration-300 font-medium text-left flex items-center justify-between group">
+                                <div class="flex items-center gap-3">
+                                    <i class="fas fa-key text-amber-400"></i>
+                                    <span>Reset Teacher Password</span>
+                                </div>
+                                <i class="fas fa-chevron-right text-amber-400/60 group-hover:text-amber-400 group-hover:translate-x-1 transition-all"></i>
+                            </button>
+                            <button 
+                                type="button"
+                                onclick="openAdminVerification('force_reset')"
+                                class="w-full px-4 py-3 bg-amber-500/20 border border-amber-500/40 text-amber-300 rounded-lg hover:bg-amber-500/30 hover:border-amber-500/60 transition-all duration-300 font-medium text-left flex items-center justify-between group">
+                                <div class="flex items-center gap-3">
+                                    <i class="fas fa-shield-alt text-amber-400"></i>
+                                    <span>Force Password Reset on Next Login</span>
+                                </div>
+                                <i class="fas fa-chevron-right text-amber-400/60 group-hover:text-amber-400 group-hover:translate-x-1 transition-all"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="modalError" class="hidden text-center py-12">
+                    <div class="w-16 h-16 rounded-full bg-red-500/20 border border-red-500/30 flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-exclamation-triangle text-red-400 text-2xl"></i>
+                    </div>
+                    <p class="text-red-400 font-medium mb-2">Failed to load teacher details</p>
+                    <p class="text-white/60 text-sm">Please try again later.</p>
+                </div>
+            </div>
+            
+            <!-- Modal Footer -->
+            <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-white/10 bg-[#254346]/30">
+                <button onclick="closeTeacherDetails()" class="px-6 py-2.5 bg-[#254346]/70 border border-white/10 text-white rounded-xl hover:bg-[#254346]/90 hover:border-[#82C293]/40 transition-all duration-300 font-medium">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Admin Verification Modal -->
+<div id="adminVerificationModal" class="fixed inset-0 z-[60] hidden overflow-y-auto" aria-labelledby="verification-modal-title" role="dialog" aria-modal="true">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity" onclick="closeAdminVerification()"></div>
+    
+    <!-- Modal Container -->
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div class="relative w-full max-w-md transform overflow-hidden rounded-2xl bg-[#04363a]/95 backdrop-blur-xl border-2 border-amber-500/30 shadow-[0_25px_60px_rgba(0,0,0,0.5)] transition-all">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between px-6 py-5 border-b border-amber-500/20 bg-amber-500/10">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-full bg-amber-500/20 border border-amber-500/40 flex items-center justify-center">
+                        <i class="fas fa-shield-alt text-amber-400"></i>
+                    </div>
+                    <h3 class="text-lg font-semibold text-white" id="verificationModalTitle">Admin Verification Required</h3>
+                </div>
+                <button onclick="closeAdminVerification()" class="p-2 text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-all duration-300">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Content -->
+            <div class="px-6 py-6">
+                <p class="text-white/80 mb-6" id="verificationModalDescription">
+                    For security reasons, please verify your admin password to proceed with this action.
+                </p>
+                
+                <form id="adminVerificationForm" onsubmit="handleAdminVerification(event)">
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-white/70 mb-2">Admin Password</label>
+                        <input 
+                            type="password" 
+                            id="adminPasswordInput"
+                            required
+                            autocomplete="current-password"
+                            class="w-full px-4 py-3 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/50 transition-all duration-300"
+                            placeholder="Enter your admin password"
+                        >
+                    </div>
+                    
+                    <div id="verificationError" class="hidden mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+                        <p class="text-red-400 text-sm" id="verificationErrorText"></p>
+                    </div>
+                    
+                    <div class="flex items-center gap-3">
+                        <button 
+                            type="button"
+                            onclick="closeAdminVerification()"
+                            class="flex-1 px-4 py-3 bg-[#254346]/70 border border-white/10 text-white rounded-xl hover:bg-[#254346]/90 transition-all duration-300 font-medium">
+                            Cancel
+                        </button>
+                        <button 
+                            type="submit"
+                            id="verifySubmitBtn"
+                            class="flex-1 px-4 py-3 bg-gradient-to-r from-amber-500 to-amber-600 text-white rounded-xl hover:shadow-[0_8px_25px_rgba(245,158,11,0.4)] transition-all duration-300 font-medium">
+                            <i class="fas fa-check mr-2"></i>Verify & Proceed
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentTeacherId = null;
+let currentSecurityAction = null;
+
+function openTeacherDetails(teacherId) {
+    currentTeacherId = teacherId;
+    const modal = document.getElementById('teacherDetailsModal');
+    const loading = document.getElementById('modalLoading');
+    const content = document.getElementById('modalContent');
+    const error = document.getElementById('modalError');
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    
+    // Reset state
+    loading.classList.remove('hidden');
+    content.classList.add('hidden');
+    error.classList.add('hidden');
+    
+    // Fetch teacher details
+    fetch(`/dashboard/teachers/${teacherId}/details/`, {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Populate modal with data
+        document.getElementById('modalTeacherName').textContent = data.basic_info.full_name;
+        document.getElementById('modalTeacherUsername').textContent = '@' + data.basic_info.username;
+        
+        // Basic Info
+        document.getElementById('detailFullName').textContent = data.basic_info.full_name;
+        document.getElementById('detailUsername').textContent = data.basic_info.username;
+        document.getElementById('detailEmail').textContent = data.basic_info.email;
+        document.getElementById('detailRole').textContent = data.basic_info.role.charAt(0).toUpperCase() + data.basic_info.role.slice(1);
+        document.getElementById('detailDateApplied').textContent = data.basic_info.date_applied;
+        
+        // Status badge
+        const statusEl = document.getElementById('detailStatus');
+        if (data.basic_info.status === 'Approved') {
+            statusEl.innerHTML = '<span class="px-3 py-1 rounded-full text-xs font-medium bg-[#259d78]/20 text-[#259d78] border border-[#259d78]/30">Approved</span>';
+        } else {
+            statusEl.innerHTML = '<span class="px-3 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-400 border border-amber-500/30">Pending</span>';
+        }
+        
+        // Professional Credentials
+        document.getElementById('detailSpecialization').textContent = data.professional.specialization;
+        document.getElementById('detailExperience').textContent = data.professional.years_experience + ' year' + (data.professional.years_experience !== 1 ? 's' : '');
+        document.getElementById('detailCoursesCount').textContent = data.professional.courses_created;
+        document.getElementById('detailLiveClassesCount').textContent = data.professional.live_classes_hosted;
+        document.getElementById('detailPermissionLevel').textContent = data.professional.permission_level;
+        document.getElementById('detailBio').textContent = data.professional.bio;
+        
+        // Verification
+        const approvalStatusEl = document.getElementById('detailApprovalStatus');
+        if (data.verification.is_approved) {
+            approvalStatusEl.innerHTML = '<span class="px-3 py-1 rounded-full text-xs font-medium bg-[#259d78]/20 text-[#259d78] border border-[#259d78]/30">Approved</span>';
+        } else {
+            approvalStatusEl.innerHTML = '<span class="px-3 py-1 rounded-full text-xs font-medium bg-amber-500/20 text-amber-400 border border-amber-500/30">Pending Approval</span>';
+        }
+        
+        if (data.verification.approved_by) {
+            document.getElementById('detailApprovedBy').textContent = data.verification.approved_by + ' (@' + data.verification.approved_by_username + ')';
+            document.getElementById('detailApprovalInfo').classList.remove('hidden');
+        } else {
+            document.getElementById('detailApprovalInfo').classList.add('hidden');
+        }
+        
+        if (data.verification.approved_at) {
+            document.getElementById('detailApprovedAt').textContent = data.verification.approved_at;
+            document.getElementById('detailApprovalDate').classList.remove('hidden');
+        } else {
+            document.getElementById('detailApprovalDate').classList.add('hidden');
+        }
+        
+        // Account Status
+        const accountStatusEl = document.getElementById('detailAccountStatus');
+        if (data.basic_info.is_active) {
+            accountStatusEl.innerHTML = '<span class="px-3 py-1 rounded-full text-xs font-medium bg-[#259d78]/20 text-[#259d78] border border-[#259d78]/30">Active</span>';
+        } else {
+            accountStatusEl.innerHTML = '<span class="px-3 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400 border border-red-500/30">Inactive</span>';
+        }
+        
+        document.getElementById('detailDateJoined').textContent = data.account.date_joined;
+        document.getElementById('detailLastLogin').textContent = data.account.last_login;
+        
+        // Show content
+        loading.classList.add('hidden');
+        content.classList.remove('hidden');
+    })
+    .catch(error => {
+        console.error('Error fetching teacher details:', error);
+        loading.classList.add('hidden');
+        error.classList.remove('hidden');
+    });
+}
+
+function closeTeacherDetails() {
+    const modal = document.getElementById('teacherDetailsModal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+    currentTeacherId = null;
+}
+
+// Close modal on ESC key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        if (!document.getElementById('adminVerificationModal').classList.contains('hidden')) {
+            closeAdminVerification();
+        } else {
+            closeTeacherDetails();
+        }
+    }
+});
+
+// Admin Verification Functions
+function openAdminVerification(actionType) {
+    if (!currentTeacherId) {
+        alert('Error: Teacher ID not found. Please refresh and try again.');
+        return;
+    }
+    
+    currentSecurityAction = actionType;
+    const modal = document.getElementById('adminVerificationModal');
+    const title = document.getElementById('verificationModalTitle');
+    const description = document.getElementById('verificationModalDescription');
+    const form = document.getElementById('adminVerificationForm');
+    const errorDiv = document.getElementById('verificationError');
+    const passwordInput = document.getElementById('adminPasswordInput');
+    
+    // Reset form
+    form.reset();
+    errorDiv.classList.add('hidden');
+    passwordInput.focus();
+    
+    // Update modal content based on action
+    if (actionType === 'reset_password') {
+        title.textContent = 'Reset Teacher Password';
+        description.textContent = 'For security reasons, please verify your admin password to reset the teacher\'s password. The teacher will receive an email with instructions to set a new password.';
+    } else if (actionType === 'force_reset') {
+        title.textContent = 'Force Password Reset';
+        description.textContent = 'For security reasons, please verify your admin password to require the teacher to change their password on next login.';
+    }
+    
+    modal.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeAdminVerification() {
+    const modal = document.getElementById('adminVerificationModal');
+    modal.classList.add('hidden');
+    document.body.style.overflow = '';
+    currentSecurityAction = null;
+    document.getElementById('adminVerificationForm').reset();
+    document.getElementById('verificationError').classList.add('hidden');
+}
+
+function handleAdminVerification(event) {
+    event.preventDefault();
+    
+    if (!currentTeacherId || !currentSecurityAction) {
+        alert('Error: Missing required information. Please refresh and try again.');
+        return;
+    }
+    
+    const passwordInput = document.getElementById('adminPasswordInput');
+    const submitBtn = document.getElementById('verifySubmitBtn');
+    const errorDiv = document.getElementById('verificationError');
+    const errorText = document.getElementById('verificationErrorText');
+    
+    const adminPassword = passwordInput.value;
+    
+    if (!adminPassword) {
+        errorText.textContent = 'Please enter your admin password.';
+        errorDiv.classList.remove('hidden');
+        return;
+    }
+    
+    // Disable submit button
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Verifying...';
+    
+    // Determine endpoint
+    let endpoint;
+    let payload = {
+        admin_password: adminPassword
+    };
+    
+    if (currentSecurityAction === 'reset_password') {
+        endpoint = `/dashboard/teachers/${currentTeacherId}/reset-password/`;
+    } else if (currentSecurityAction === 'force_reset') {
+        endpoint = `/dashboard/teachers/${currentTeacherId}/force-password-reset/`;
+        payload.force_reset = 'true';
+    } else {
+        alert('Error: Unknown action type.');
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Verify & Proceed';
+        return;
+    }
+    
+    // Make request
+    fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken'),
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify(payload),
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success message
+            alert(data.message || 'Action completed successfully.');
+            closeAdminVerification();
+            // Optionally refresh teacher details
+            if (currentTeacherId) {
+                // Reload teacher details
+                const content = document.getElementById('modalContent');
+                const loading = document.getElementById('modalLoading');
+                content.classList.add('hidden');
+                loading.classList.remove('hidden');
+                // Re-fetch details
+                fetch(`/dashboard/teachers/${currentTeacherId}/details/`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Re-populate modal (reuse existing populate logic)
+                    // For now, just close and reopen
+                    closeTeacherDetails();
+                    setTimeout(() => openTeacherDetails(currentTeacherId), 300);
+                })
+                .catch(error => {
+                    console.error('Error refreshing details:', error);
+                });
+            }
+        } else {
+            errorText.textContent = data.error || 'Verification failed. Please check your password and try again.';
+            errorDiv.classList.remove('hidden');
+            passwordInput.value = '';
+            passwordInput.focus();
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        errorText.textContent = 'An error occurred. Please try again.';
+        errorDiv.classList.remove('hidden');
+    })
+    .finally(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-check mr-2"></i>Verify & Proceed';
+    });
+}
+
+// Helper function to get CSRF token
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+</script>
+
+<style>
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+</style>
+
+{% endblock %}
+

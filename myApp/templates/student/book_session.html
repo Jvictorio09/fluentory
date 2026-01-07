@@ -30,12 +30,7 @@
                     <i class="fas fa-users text-[#82C293]"></i>
                     <span>{{ session.remaining_seats }} / {{ session.total_seats }} seats available</span>
                 </div>
-                {% if session.meeting_link %}
-                <div class="flex items-center gap-3 text-white/80">
-                    <i class="fas fa-video text-[#82C293]"></i>
-                    <a href="{{ session.meeting_link }}" target="_blank" class="text-[#82C293] hover:underline">{{ session.meeting_link|truncatechars:50 }}</a>
-                </div>
-                {% endif %}
+                <!-- Meeting Link hidden before enrollment - only visible after confirmed booking -->
             </div>
 
             {% if session.description %}

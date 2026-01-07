@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Application Received - Fluentory</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'warm-sand': '#E8E0D5',
+            'soft-ivory': '#F5F3EF',
+            'muted-taupe': '#B8A99A',
+            'deep-charcoal': '#1D1D1D',
+            'flu-mint': '#82C293',
+            'flu-teal': '#00655F',
+            'flu-ink': '#0B1F21',
+            'flu-slate': '#254346',
+            'flu-gold': '#f8da03'
+          },
+          boxShadow: {
+            'xl-soft': '0 30px 90px rgba(11,31,33,0.18)',
+            'glass': '0 26px 80px rgba(11,31,33,0.22)',
+            'premium': '0 32px 96px rgba(11,31,33,0.16), 0 8px 24px rgba(11,31,33,0.08)',
+            'premium-lg': '0 40px 120px rgba(11,31,33,0.20), 0 12px 32px rgba(11,31,33,0.12)',
+            'ringy': '0 0 0 6px rgba(130,194,147,0.14)'
+          },
+          borderRadius: {
+            '4xl': '2.25rem'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    .grain:before{
+      content:"";
+      position:absolute; inset:0;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' opacity='.10'/%3E%3C/svg%3E");
+      mix-blend-mode:overlay;
+      opacity:.25;
+      pointer-events:none;
+    }
+    .shine:after{
+      content:"";
+      position:absolute;
+      inset:-50% -70%;
+      transform: rotate(18deg);
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+      opacity:.12;
+      pointer-events:none;
+      transition: opacity 0.3s ease;
+    }
+    .shine:hover:after {
+      opacity: .18;
+    }
+    
+    * {
+      transition-property: transform, opacity, box-shadow, border-color;
+      transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+      transition-duration: 200ms;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen relative bg-soft-ivory text-deep-charcoal">
+  <!-- Background -->
+  <div class="absolute inset-0 -z-10">
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_18%_20%,rgba(130,194,147,0.22),transparent_55%),radial-gradient(circle_at_80%_70%,rgba(0,101,95,0.16),transparent_60%),linear-gradient(to_bottom,rgba(245,243,239,1),rgba(245,243,239,0.96),rgba(245,243,239,1))]"></div>
+    <div class="absolute -top-24 -left-20 w-[520px] h-[520px] rounded-full blur-[95px] opacity-75 bg-flu-mint/35 animate-pulse" style="animation-duration: 8s;"></div>
+    <div class="absolute -bottom-28 -right-24 w-[640px] h-[640px] rounded-full blur-[110px] opacity-65 bg-flu-teal/25 animate-pulse" style="animation-duration: 10s; animation-delay: 1s;"></div>
+    <div class="absolute inset-0 opacity-[0.06]"
+      style="background-image: linear-gradient(rgba(11,31,33,0.12) 1px, transparent 1px), linear-gradient(90deg, rgba(11,31,33,0.12) 1px, transparent 1px); background-size: 42px 42px;">
+    </div>
+    <div class="absolute inset-0 grain"></div>
+  </div>
+
+  <main class="min-h-screen flex items-center justify-center px-4 py-12 lg:py-20">
+    <div class="w-full max-w-[600px]">
+      <!-- Confirmation Card -->
+      <section class="relative overflow-hidden rounded-4xl bg-white/68 backdrop-blur-2xl border border-black/8 shadow-premium-lg p-8 sm:p-10 lg:p-12 transition-all duration-300 shine">
+        <div class="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_50%_30%,rgba(130,194,147,0.24),transparent_60%)]"></div>
+
+        <div class="relative z-10 text-center">
+          <!-- Success Icon -->
+          <div class="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-flu-teal/20 to-flu-mint/20 border-2 border-flu-mint/30 flex items-center justify-center mb-6 shadow-lg">
+            <i class="fa-solid fa-check-circle text-5xl text-flu-teal"></i>
+          </div>
+
+          <!-- Title -->
+          <h1 class="text-3xl sm:text-4xl font-semibold tracking-tight text-flu-ink mb-3">
+            Application Received
+          </h1>
+
+          <!-- Subtitle -->
+          <p class="text-lg text-flu-ink/72 mb-8 leading-relaxed">
+            Your teacher account is pending approval.
+          </p>
+
+          <!-- Info Card -->
+          <div class="bg-white/75 border border-black/8 rounded-2xl p-6 mb-8 text-left">
+            <div class="flex items-start gap-4">
+              <div class="w-12 h-12 rounded-xl bg-flu-mint/18 border border-flu-mint/30 flex items-center justify-center flex-shrink-0">
+                <i class="fa-solid fa-clock text-flu-teal text-xl"></i>
+              </div>
+              <div class="flex-1">
+                <h3 class="font-semibold text-flu-ink mb-2">What happens next?</h3>
+                <p class="text-sm text-flu-ink/72 leading-relaxed mb-4">
+                  Approval usually takes 24–48 hours. We'll review your application and get back to you soon.
+                </p>
+                <p class="text-sm text-flu-ink/72 leading-relaxed">
+                  <i class="fa-solid fa-envelope text-flu-teal mr-2"></i>
+                  You'll receive an email once your account is approved.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Button -->
+          <a href="{% url 'login' %}" 
+             class="inline-flex items-center justify-center gap-2 w-full sm:w-auto px-8 py-4 rounded-2xl font-semibold text-white transition-all transform hover:scale-[1.02] active:scale-[0.98]
+                    bg-gradient-to-r from-flu-teal to-flu-mint shadow-xl hover:shadow-2xl
+                    focus:outline-none focus:ring-4 focus:ring-flu-mint/30">
+            <i class="fa-solid fa-arrow-right"></i>
+            Back to Sign In
+          </a>
+
+          <!-- Additional Info -->
+          <div class="mt-8 pt-6 border-t border-black/8">
+            <p class="text-xs text-flu-ink/58">
+              <i class="fa-solid fa-info-circle text-flu-teal mr-1"></i>
+              You can sign in with your credentials, but teacher portal access will be available after approval.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Back to Home -->
+      <div class="mt-6 text-center">
+        <a href="{% url 'home' %}" class="inline-flex items-center gap-2 text-sm text-flu-ink/62 hover:text-flu-ink transition-colors">
+          <i class="fas fa-arrow-left"></i>
+          Back to home
+        </a>
+      </div>
+    </div>
+  </main>
+</body>
+</html>
+

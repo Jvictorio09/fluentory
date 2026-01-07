@@ -50,17 +50,19 @@
     </form>
     
     <!-- Results Count -->
-    {% if courses %}
-    <p class="text-sm text-white/60 mb-4">
-        Showing {{ courses.paginator.count }} course{{ courses.paginator.count|pluralize }}
+    <p class="text-sm text-white/60 mb-4" id="results-count" {% if not courses %}style="display: none;"{% endif %}>
+        Showing <span id="results-count-number">{% if courses %}{{ courses.paginator.count }}{% else %}0{% endif %}</span> course<span id="results-plural">{% if courses %}{{ courses.paginator.count|pluralize }}{% endif %}</span>
     </p>
-    {% endif %}
     
     <!-- Course Grid -->
     {% if courses %}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" id="courses-grid">
         {% for course in courses %}
-        <div class="bg-[#04363a]/90 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.3)] overflow-hidden hover:shadow-[0_16px_40px_rgba(0,0,0,0.4)] hover:-translate-y-1 transition-all duration-300 group">
+        <div class="course-card bg-[#04363a]/90 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.3)] overflow-hidden hover:shadow-[0_16px_40px_rgba(0,0,0,0.4)] hover:-translate-y-1 transition-all duration-300 group" 
+             data-course-title="{{ course.title|lower }}" 
+             data-course-outcome="{{ course.outcome|lower|default:'' }}"
+             data-course-level="{{ course.level }}"
+             data-course-category="{{ course.category.slug|default:'' }}">
             <div class="h-48 bg-gradient-to-br from-[#254346] to-[#04363a] relative overflow-hidden">
                 {% if course.thumbnail %}
                 <img src="{{ course.thumbnail.url }}" alt="{{ course.title }}" class="w-full h-full object-cover">
@@ -154,7 +156,7 @@
     
     {% else %}
     <!-- Empty State -->
-    <div class="empty-state page-enter-content">
+    <div class="empty-state page-enter-content" id="no-results-state" style="display: none;">
         <div class="empty-state-icon">
             <i class="fas fa-book"></i>
         </div>
@@ -167,4 +169,132 @@
     </div>
     {% endif %}
 </div>
+
+<script>
+// Real-time course filtering with debounce
+(function() {
+    const searchInput = document.querySelector('input[name="search"]');
+    const levelSelect = document.querySelector('select[name="level"]');
+    const categorySelect = document.querySelector('select[name="category"]');
+    const coursesGrid = document.getElementById('courses-grid');
+    const resultsCount = document.getElementById('results-count');
+    const resultsCountNumber = document.getElementById('results-count-number');
+    const noResultsState = document.getElementById('no-results-state');
+    const clearFiltersBtn = document.querySelector('a[href*="student_courses"]');
+    
+    let debounceTimer = null;
+    const DEBOUNCE_DELAY = 200; // 200ms debounce
+    
+    // Get all course cards
+    const getAllCourseCards = () => {
+        return coursesGrid ? Array.from(coursesGrid.querySelectorAll('.course-card')) : [];
+    };
+    
+    // Filter courses based on search and filters
+    const filterCourses = () => {
+        const searchTerm = (searchInput?.value || '').trim().toLowerCase();
+        const selectedLevel = levelSelect?.value || '';
+        const selectedCategory = categorySelect?.value || '';
+        
+        const courseCards = getAllCourseCards();
+        let visibleCount = 0;
+        
+        courseCards.forEach(card => {
+            const title = (card.dataset.courseTitle || '').toLowerCase();
+            const outcome = (card.dataset.courseOutcome || '').toLowerCase();
+            const level = card.dataset.courseLevel || '';
+            const category = card.dataset.courseCategory || '';
+            
+            // Check search match
+            const matchesSearch = !searchTerm || 
+                title.includes(searchTerm) || 
+                outcome.includes(searchTerm);
+            
+            // Check level match
+            const matchesLevel = !selectedLevel || level === selectedLevel;
+            
+            // Check category match
+            const matchesCategory = !selectedCategory || category === selectedCategory;
+            
+            // Show/hide card
+            if (matchesSearch && matchesLevel && matchesCategory) {
+                card.style.display = '';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Update results count
+        if (resultsCountNumber) {
+            resultsCountNumber.textContent = visibleCount;
+        }
+        const resultsPlural = document.getElementById('results-plural');
+        if (resultsPlural) {
+            resultsPlural.textContent = visibleCount === 1 ? '' : 's';
+        }
+        if (resultsCount) {
+            if (visibleCount === 0 && !searchTerm && !selectedLevel && !selectedCategory) {
+                resultsCount.style.display = 'none';
+            } else {
+                resultsCount.style.display = '';
+            }
+        }
+        
+        // Show/hide empty state
+        if (noResultsState) {
+            if (visibleCount === 0 && (searchTerm || selectedLevel || selectedCategory)) {
+                noResultsState.style.display = '';
+                if (coursesGrid) coursesGrid.style.display = 'none';
+            } else {
+                noResultsState.style.display = 'none';
+                if (coursesGrid) coursesGrid.style.display = 'grid';
+            }
+        } else if (coursesGrid) {
+            coursesGrid.style.display = visibleCount === 0 ? 'none' : 'grid';
+        }
+    };
+    
+    // Debounced filter function
+    const debouncedFilter = () => {
+        if (debounceTimer) {
+            clearTimeout(debounceTimer);
+        }
+        debounceTimer = setTimeout(filterCourses, DEBOUNCE_DELAY);
+    };
+    
+    // Initialize: Add event listeners
+    if (searchInput) {
+        searchInput.addEventListener('input', debouncedFilter);
+        // Also trigger on paste
+        searchInput.addEventListener('paste', () => {
+            setTimeout(debouncedFilter, 50);
+        });
+    }
+    
+    if (levelSelect) {
+        levelSelect.addEventListener('change', filterCourses);
+    }
+    
+    if (categorySelect) {
+        categorySelect.addEventListener('change', filterCourses);
+    }
+    
+    // Prevent form submission if filtering is active (make Search button optional)
+    const form = document.querySelector('form[method="GET"]');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            // Allow form submission - it's fine as a fallback
+            // But if we want to prevent it when JavaScript is working:
+            // e.preventDefault();
+            // filterCourses();
+        });
+    }
+    
+    // Initial filter check (in case page loads with filters already applied)
+    if (searchInput?.value || levelSelect?.value || categorySelect?.value) {
+        filterCourses();
+    }
+})();
+</script>
 {% endblock %}

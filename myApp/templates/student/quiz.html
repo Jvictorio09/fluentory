@@ -1,0 +1,329 @@
+{% extends 'student/base.html' %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto space-y-8 sm:space-y-10 py-8">
+    <!-- Quiz Header -->
+    <div class="bg-white dark:bg-white/5 backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-white/10 p-6 sm:p-8 shadow-sm dark:shadow-2xl">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+                <h1 class="text-3xl sm:text-4xl font-bold text-slate-900 dark:text-white mb-2 tracking-tight leading-tight">{{ quiz.title }}</h1>
+                {% if quiz.description %}
+                <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{{ quiz.description }}</p>
+                {% endif %}
+            </div>
+            <div class="flex items-center gap-4 text-sm">
+                {% if attempts_remaining is not None %}
+                <span class="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800/50 text-slate-700 dark:text-slate-300 font-medium">
+                    {{ attempts_remaining }} attempt{{ attempts_remaining|pluralize }} remaining
+                </span>
+                {% endif %}
+                {% if quiz.time_limit_minutes %}
+                <span class="px-3 py-1.5 rounded-lg bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 font-medium">
+                    <i class="fas fa-clock mr-1"></i>{{ quiz.time_limit_minutes }} min
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div class="mb-4">
+            <div class="flex items-center justify-between text-sm text-slate-600 dark:text-slate-400 mb-2">
+                <span>Progress</span>
+                <span id="progressText">0 / {{ questions.count }}</span>
+            </div>
+            <div class="w-full h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+                <div id="progressBar" class="h-full bg-gradient-to-r from-emerald-500 to-emerald-600 transition-all duration-300" style="width: 0%"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quiz Form -->
+    <form method="post" id="quizForm" class="space-y-6">
+        {% csrf_token %}
+        
+        {% for question in questions %}
+        <div class="question-card bg-white dark:bg-white/5 backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-white/10 p-8 sm:p-10 shadow-sm dark:shadow-2xl" data-question-index="{{ forloop.counter0 }}" {% if not forloop.first %}style="display: none;"{% endif %}>
+            <!-- Question Header -->
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <span class="text-sm font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wide">
+                        Question {{ forloop.counter }} of {{ questions.count }}
+                    </span>
+                    <span class="text-sm text-slate-600 dark:text-slate-400">
+                        {{ question.points }} point{{ question.points|pluralize }}
+                    </span>
+                </div>
+                <h2 class="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white mb-3 leading-relaxed">
+                    {{ question.question_text }}
+                </h2>
+                {% if question.explanation %}
+                <p class="text-sm text-slate-600 dark:text-slate-400 italic">
+                    <i class="fas fa-info-circle mr-1"></i>{{ question.explanation }}
+                </p>
+                {% endif %}
+            </div>
+            
+            <!-- Divider -->
+            <div class="h-px bg-gradient-to-r from-transparent via-slate-200 dark:via-white/10 to-transparent my-6"></div>
+            
+            <!-- Answer Options Based on Question Type -->
+            <div class="space-y-3">
+                {% if question.question_type == 'multiple_choice' %}
+                    <!-- Multiple Choice Options -->
+                    {% for answer in question.answers.all %}
+                    <label class="answer-option flex items-start gap-4 p-4 rounded-xl border-2 border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/30 hover:border-emerald-400/50 hover:bg-emerald-50/50 dark:hover:bg-emerald-500/10 transition-all cursor-pointer group" data-answer-id="{{ answer.id }}">
+                        <div class="flex-shrink-0 pt-1">
+                            <input 
+                                type="radio" 
+                                name="question_{{ question.id }}" 
+                                value="{{ answer.id }}" 
+                                id="answer_{{ answer.id }}"
+                                class="w-5 h-5 text-emerald-600 dark:text-emerald-400 border-slate-300 dark:border-slate-600 focus:ring-emerald-500 dark:focus:ring-emerald-400 cursor-pointer"
+                                required>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-xs font-semibold text-slate-700 dark:text-slate-300 answer-label">
+                                    {% if forloop.counter0 == 0 %}A{% elif forloop.counter0 == 1 %}B{% elif forloop.counter0 == 2 %}C{% elif forloop.counter0 == 3 %}D{% elif forloop.counter0 == 4 %}E{% elif forloop.counter0 == 5 %}F{% else %}{{ forloop.counter }}{% endif %}
+                                </span>
+                                <span class="text-base font-medium text-slate-900 dark:text-white">{{ answer.answer_text }}</span>
+                            </div>
+                        </div>
+                        <div class="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <i class="fas fa-check-circle text-emerald-600 dark:text-emerald-400"></i>
+                        </div>
+                    </label>
+                    {% endfor %}
+                    
+                {% elif question.question_type == 'true_false' %}
+                    <!-- True/False Options -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {% for answer in question.answers.all %}
+                        <label class="answer-option flex items-center justify-center gap-4 p-6 rounded-xl border-2 border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/30 hover:border-emerald-400/50 hover:bg-emerald-50/50 dark:hover:bg-emerald-500/10 transition-all cursor-pointer group" data-answer-id="{{ answer.id }}">
+                            <input 
+                                type="radio" 
+                                name="question_{{ question.id }}" 
+                                value="{{ answer.id }}" 
+                                id="answer_{{ answer.id }}"
+                                class="w-5 h-5 text-emerald-600 dark:text-emerald-400 border-slate-300 dark:border-slate-600 focus:ring-emerald-500 dark:focus:ring-emerald-400 cursor-pointer"
+                                required>
+                            <span class="text-lg font-semibold text-slate-900 dark:text-white">{{ answer.answer_text }}</span>
+                            {% if answer.answer_text|lower == 'true' %}
+                            <i class="fas fa-check-circle text-emerald-600 dark:text-emerald-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                            {% else %}
+                            <i class="fas fa-times-circle text-red-600 dark:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                            {% endif %}
+                        </label>
+                        {% endfor %}
+                    </div>
+                    
+                {% elif question.question_type == 'short_answer' %}
+                    <!-- Short Answer Input -->
+                    <div class="space-y-2">
+                        <textarea 
+                            name="question_{{ question.id }}" 
+                            id="answer_text_{{ question.id }}"
+                            class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800/50 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all" 
+                            rows="4"
+                            placeholder="Type your answer here..."
+                            required></textarea>
+                        <p class="text-sm text-slate-600 dark:text-slate-400">
+                            <i class="fas fa-info-circle mr-1"></i>Provide a brief answer to the question
+                        </p>
+                    </div>
+                    
+                {% else %}
+                    <!-- Fallback for other question types -->
+                    {% for answer in question.answers.all %}
+                    <label class="answer-option flex items-start gap-4 p-4 rounded-xl border-2 border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/30 hover:border-emerald-400/50 hover:bg-emerald-50/50 dark:hover:bg-emerald-500/10 transition-all cursor-pointer group">
+                        <div class="flex-shrink-0 pt-1">
+                            <input 
+                                type="radio" 
+                                name="question_{{ question.id }}" 
+                                value="{{ answer.id }}" 
+                                id="answer_{{ answer.id }}"
+                                class="w-5 h-5 text-emerald-600 dark:text-emerald-400 border-slate-300 dark:border-slate-600 focus:ring-emerald-500 dark:focus:ring-emerald-400 cursor-pointer"
+                                required>
+                        </div>
+                        <div class="flex-1">
+                            <span class="text-base font-medium text-slate-900 dark:text-white">{{ answer.answer_text }}</span>
+                        </div>
+                    </label>
+                    {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+        
+        <!-- Navigation Buttons -->
+        <div class="flex items-center justify-between gap-4 pt-6 border-t border-slate-200 dark:border-white/10">
+            <button type="button" id="prevBtn" class="inline-flex items-center gap-2 px-6 py-3 bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-slate-300 rounded-xl font-semibold hover:bg-slate-200 dark:hover:bg-white/20 transition-all duration-300" style="display: none;">
+                <i class="fas fa-arrow-left"></i>
+                Previous
+            </button>
+            <div class="flex-1"></div>
+            <button type="button" id="nextBtn" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-[#82C293] via-[#6fb380] to-[#82C293] text-white rounded-xl font-semibold shadow-lg shadow-[#82C293]/30 hover:shadow-xl hover:shadow-[#82C293]/40 hover:scale-105 transition-all duration-300">
+                Next
+                <i class="fas fa-arrow-right"></i>
+            </button>
+            <button type="submit" id="submitBtn" class="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-500 text-white rounded-xl font-semibold shadow-lg shadow-emerald-500/30 hover:shadow-xl hover:shadow-emerald-500/40 hover:scale-105 transition-all duration-300" style="display: none;">
+                <i class="fas fa-check"></i>
+                Submit Quiz
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+    /* Selected answer state */
+    .answer-option input[type="radio"]:checked + *,
+    .answer-option:has(input[type="radio"]:checked) {
+        border-color: #10b981 !important; /* emerald-500 */
+        background-color: rgba(16, 185, 129, 0.1) !important;
+    }
+    
+    [data-theme="dark"] .answer-option:has(input[type="radio"]:checked) {
+        border-color: #10b981 !important;
+        background-color: rgba(16, 185, 129, 0.2) !important;
+    }
+    
+    /* Smooth transitions */
+    .question-card {
+        animation: fadeIn 0.3s ease-in;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<script>
+    let currentQuestion = 0;
+    const totalQuestions = {{ questions.count }};
+    const questionCards = document.querySelectorAll('.question-card');
+    
+    function isQuestionAnswered(card) {
+        const radio = card.querySelector('input[type="radio"]:checked');
+        const textarea = card.querySelector('textarea[required]');
+        if (radio) return true;
+        if (textarea && textarea.value.trim()) return true;
+        return false;
+    }
+    
+    function updateProgress() {
+        let answered = 0;
+        questionCards.forEach(card => {
+            if (isQuestionAnswered(card)) {
+                answered++;
+            }
+        });
+        const progress = (answered / totalQuestions) * 100;
+        document.getElementById('progressBar').style.width = progress + '%';
+        document.getElementById('progressText').textContent = answered + ' / ' + totalQuestions;
+    }
+    
+    function showQuestion(index) {
+        questionCards.forEach((card, i) => {
+            card.style.display = i === index ? 'block' : 'none';
+        });
+        
+        // Update navigation buttons
+        document.getElementById('prevBtn').style.display = index > 0 ? 'inline-flex' : 'none';
+        document.getElementById('nextBtn').style.display = index < totalQuestions - 1 ? 'inline-flex' : 'none';
+        document.getElementById('submitBtn').style.display = index === totalQuestions - 1 ? 'inline-flex' : 'none';
+        
+        // Check if current question is answered
+        const currentCard = questionCards[index];
+        const hasAnswer = isQuestionAnswered(currentCard);
+        if (index < totalQuestions - 1) {
+            document.getElementById('nextBtn').disabled = !hasAnswer;
+        }
+    }
+    
+    function nextQuestion() {
+        if (currentQuestion < totalQuestions - 1) {
+            const currentCard = questionCards[currentQuestion];
+            const hasAnswer = isQuestionAnswered(currentCard);
+            
+            if (!hasAnswer) {
+                alert('Please select or enter an answer before proceeding.');
+                return;
+            }
+            
+            currentQuestion++;
+            showQuestion(currentQuestion);
+            updateProgress();
+        }
+    }
+    
+    function prevQuestion() {
+        if (currentQuestion > 0) {
+            currentQuestion--;
+            showQuestion(currentQuestion);
+            updateProgress();
+        }
+    }
+    
+    // Event listeners
+    document.getElementById('nextBtn').addEventListener('click', nextQuestion);
+    document.getElementById('prevBtn').addEventListener('click', prevQuestion);
+    
+    // Update next button state when answer is selected
+    document.querySelectorAll('input[type="radio"]').forEach(input => {
+        input.addEventListener('change', function() {
+            updateProgress();
+            const currentCard = questionCards[currentQuestion];
+            const hasAnswer = isQuestionAnswered(currentCard);
+            if (currentQuestion < totalQuestions - 1) {
+                document.getElementById('nextBtn').disabled = !hasAnswer;
+            }
+        });
+    });
+    
+    // Handle textarea input for short answer questions
+    document.querySelectorAll('textarea[required]').forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            updateProgress();
+            const currentCard = questionCards[currentQuestion];
+            const hasAnswer = isQuestionAnswered(currentCard);
+            if (currentQuestion < totalQuestions - 1) {
+                document.getElementById('nextBtn').disabled = !hasAnswer;
+            }
+        });
+    });
+    
+    // Form submission validation
+    document.getElementById('quizForm').addEventListener('submit', function(e) {
+        const unanswered = [];
+        questionCards.forEach((card, index) => {
+            if (!isQuestionAnswered(card)) {
+                unanswered.push(index + 1);
+            }
+        });
+        
+        if (unanswered.length > 0) {
+            e.preventDefault();
+            const message = unanswered.length === 1 
+                ? `Question ${unanswered[0]} is unanswered. Please answer all questions before submitting.`
+                : `Questions ${unanswered.join(', ')} are unanswered. Please answer all questions before submitting.`;
+            alert(message);
+            // Show first unanswered question
+            currentQuestion = unanswered[0] - 1;
+            showQuestion(currentQuestion);
+            return false;
+        }
+    });
+    
+    // Initialize
+    showQuestion(0);
+    updateProgress();
+</script>
+{% endblock %}
+

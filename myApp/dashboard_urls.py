@@ -38,6 +38,9 @@ urlpatterns = [
     
     # Teacher Management
     path('teachers/', dashboard_views.dashboard_teachers, name='teachers'),
+    path('teachers/<int:teacher_id>/details/', dashboard_views.dashboard_teacher_details, name='teacher_details'),
+    path('teachers/<int:teacher_id>/reset-password/', dashboard_views.dashboard_teacher_reset_password, name='teacher_reset_password'),
+    path('teachers/<int:teacher_id>/force-password-reset/', dashboard_views.dashboard_teacher_force_password_reset, name='teacher_force_password_reset'),
     path('teachers/<int:teacher_id>/approve/', dashboard_views.dashboard_teacher_approve, name='teacher_approve'),
     path('teachers/<int:teacher_id>/reject/', dashboard_views.dashboard_teacher_reject, name='teacher_reject'),
     path('teachers/<int:teacher_id>/assign-course/', dashboard_views.dashboard_teacher_assign_course, name='teacher_assign_course'),
