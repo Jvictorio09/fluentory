@@ -1,0 +1,306 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="w-full max-w-[1600px] mx-auto">
+    <!-- Header -->
+    <div class="mb-8 sm:mb-10 animate-fade-in-up stagger-1">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-white mb-3 tracking-[-0.02em]">
+                    Live Class Details
+                </h1>
+                <p class="text-base sm:text-lg text-white/70 font-light">{{ live_class.title }}</p>
+            </div>
+            <div class="flex gap-3">
+                <a href="{% url 'dashboard:live_class_edit' live_class.id %}" 
+                   class="inline-flex items-center gap-2 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white px-6 py-3 rounded-xl no-underline font-medium hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] hover:scale-105 transition-all duration-300"
+                   aria-label="Edit live class">
+                    <i class="fas fa-edit"></i>
+                    <span>Edit Live Class</span>
+                </a>
+                <a href="{% url 'dashboard:live_classes' %}" 
+                   class="inline-flex items-center gap-2 bg-[#254346]/70 border border-white/10 text-white px-6 py-3 rounded-xl no-underline font-medium hover:bg-[#254346]/90 hover:border-[#82C293]/40 transition-all duration-300 hover:scale-105"
+                   aria-label="Back to live classes list">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to Live Classes</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Content (2/3) -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Session Information -->
+            <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] p-8 animate-fade-in-up stagger-2">
+                <h2 class="text-xl font-semibold text-white mb-6">Session Information</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-white/60 mb-1">Title</label>
+                        <p class="text-lg font-medium text-white">{{ live_class.title }}</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-white/60 mb-1">Course</label>
+                        <p class="text-white">{{ live_class.course.title }}</p>
+                        <p class="text-sm text-white/60 mt-1">{{ live_class.course.get_course_type_display }}</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-white/60 mb-1">Description</label>
+                        <p class="text-white/80">{{ live_class.description|default:"No description provided" }}</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-white/60 mb-1">Date & Time</label>
+                            <p class="text-white">{{ live_class.scheduled_start|date:"M d, Y H:i" }}</p>
+                            {% if live_class.scheduled_end %}
+                            <p class="text-sm text-white/60 mt-1">Ends: {{ live_class.scheduled_end|date:"H:i" }}</p>
+                            {% endif %}
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-white/60 mb-1">Duration</label>
+                            <p class="text-white">{{ live_class.duration_minutes }} minutes</p>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-white/60 mb-1">Status</label>
+                            <span class="inline-block px-3 py-1 rounded-full text-xs font-medium 
+                                {% if live_class.status == 'scheduled' %}bg-[#259d78]/20 text-[#259d78] border border-[#259d78]/30
+                                {% elif live_class.status == 'live' %}bg-[#82C293]/20 text-[#82C293] border border-[#82C293]/30
+                                {% elif live_class.status == 'completed' %}bg-[#254346]/70 text-white/70 border border-white/20
+                                {% elif live_class.status == 'cancelled' %}bg-red-500/20 text-red-400 border border-red-500/30
+                                {% else %}bg-[#f8da03]/20 text-[#f8da03] border border-[#f8da03]/40{% endif %}">
+                                {{ live_class.get_status_display }}
+                            </span>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-white/60 mb-1">Capacity</label>
+                            <p class="text-white">{{ live_class.seats_taken|default:0 }} / {{ live_class.total_seats }} seats</p>
+                            <p class="text-sm text-white/60 mt-1">{{ live_class.get_remaining_seats }} remaining</p>
+                        </div>
+                    </div>
+                    
+                    {% if live_class.teacher %}
+                    <div class="mt-4 pt-4 border-t border-white/10">
+                        <label class="block text-sm font-medium text-white/60 mb-1">Assigned Teacher</label>
+                        <p class="text-white">{{ live_class.teacher.user.get_full_name|default:live_class.teacher.user.username }}</p>
+                        <p class="text-sm text-white/60 mt-1">{{ live_class.teacher.user.email }}</p>
+                    </div>
+                    {% else %}
+                    <div class="mt-4 pt-4 border-t border-white/10">
+                        <label class="block text-sm font-medium text-white/60 mb-1">Assigned Teacher</label>
+                        <p class="text-white/60 italic">No teacher assigned</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Meeting Details -->
+            <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] p-8 animate-fade-in-up stagger-3">
+                <h2 class="text-xl font-semibold text-white mb-6">Meeting Details</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-white/60 mb-1">Provider</label>
+                        <p class="text-white">{{ live_class.get_meeting_provider_display|default:"Not specified" }}</p>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-white/60 mb-1">Meeting Link</label>
+                        {% if live_class.meeting_link %}
+                        <a href="{{ live_class.meeting_link }}" target="_blank" class="text-[#82C293] hover:text-[#8abc59] hover:underline">
+                            {{ live_class.meeting_link|truncatechars:50 }}
+                            <i class="fas fa-external-link-alt ml-1 text-xs"></i>
+                        </a>
+                        {% else %}
+                        <p class="text-white/60">No meeting link provided</p>
+                        {% endif %}
+                    </div>
+                    
+                    {% if live_class.meeting_id %}
+                    <div>
+                        <label class="block text-sm font-medium text-white/60 mb-1">Meeting ID</label>
+                        <p class="text-white">{{ live_class.meeting_id }}</p>
+                    </div>
+                    {% endif %}
+                    
+                    {% if live_class.meeting_passcode %}
+                    <div>
+                        <label class="block text-sm font-medium text-white/60 mb-1">Passcode</label>
+                        <p class="text-white font-mono">{{ live_class.meeting_passcode }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Assignment Activity / Audit History -->
+            <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] p-8 animate-fade-in-up stagger-4">
+                <h2 class="text-xl font-semibold text-white mb-6">Assignment Activity & History</h2>
+                
+                <!-- Session Metadata -->
+                <div class="mb-6 p-4 rounded-xl bg-[#254346]/50 border border-white/10">
+                    <div class="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                            <label class="block text-xs font-medium text-white/60 mb-1">Created</label>
+                            <p class="text-white">{{ live_class.created_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-white/60 mb-1">Last Updated</label>
+                            <p class="text-white">{{ live_class.updated_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Teacher Assignment History -->
+                {% if assignment_history %}
+                <div class="space-y-4">
+                    <h3 class="text-sm font-semibold text-white/80 uppercase tracking-wider mb-3">Teacher Assignment Changes</h3>
+                    {% for assignment in assignment_history %}
+                    <div class="p-4 rounded-xl bg-[#254346]/50 border border-white/10">
+                        <div class="flex items-start justify-between mb-2">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-1">
+                                    {% if assignment.old_teacher and assignment.new_teacher %}
+                                    <span class="text-sm font-medium text-white">
+                                        Reassigned: {{ assignment.old_teacher.user.get_full_name|default:assignment.old_teacher.user.username }} → {{ assignment.new_teacher.user.get_full_name|default:assignment.new_teacher.user.username }}
+                                    </span>
+                                    {% elif assignment.new_teacher %}
+                                    <span class="text-sm font-medium text-white">
+                                        Assigned: {{ assignment.new_teacher.user.get_full_name|default:assignment.new_teacher.user.username }}
+                                    </span>
+                                    {% else %}
+                                    <span class="text-sm font-medium text-white">Unassigned</span>
+                                    {% endif %}
+                                </div>
+                                <div class="text-xs text-white/60">
+                                    by {{ assignment.assigned_by.get_full_name|default:assignment.assigned_by.username }} on {{ assignment.created_at|date:"M d, Y H:i" }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        {% if assignment.reason %}
+                        <div class="mt-2 text-sm text-white/80">
+                            <span class="font-medium">Reason:</span> {{ assignment.reason }}
+                        </div>
+                        {% endif %}
+                        
+                        {% if assignment.notes %}
+                        <div class="mt-2 text-sm text-white/70">
+                            <span class="font-medium">Notes:</span> {{ assignment.notes }}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-white/60 text-center py-4">No assignment history available</p>
+                {% endif %}
+                
+                <!-- Activity Logs -->
+                {% if activity_logs %}
+                <div class="mt-8 pt-8 border-t border-white/10">
+                    <h3 class="text-sm font-semibold text-white/80 uppercase tracking-wider mb-3">Activity Log</h3>
+                    <div class="space-y-3">
+                        {% for log in activity_logs %}
+                        <div class="p-3 rounded-lg bg-[#254346]/30 border border-white/5">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-xs font-medium text-[#82C293]">{{ log.get_event_type_display }}</span>
+                                        <span class="text-xs text-white/40">{{ log.created_at|date:"M d, Y H:i" }}</span>
+                                    </div>
+                                    <p class="text-sm text-white/70">{{ log.summary }}</p>
+                                    <div class="text-xs text-white/50 mt-1">
+                                        by {% if log.actor %}
+                                            {% if log.actor.get_full_name %}
+                                                {{ log.actor.get_full_name }}
+                                            {% elif log.actor.username %}
+                                                {{ log.actor.username }}
+                                            {% else %}
+                                                {{ log.actor.email|default:"Unknown User" }}
+                                            {% endif %}
+                                        {% else %}
+                                            System
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Sidebar (1/3) -->
+        <div class="lg:col-span-1 space-y-6">
+            <!-- Teacher Assignment -->
+            <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] p-8 animate-fade-in-up stagger-3 sticky top-24">
+                <h2 class="text-xl font-semibold text-white mb-6">Assigned Teacher</h2>
+                
+                {% if live_class.teacher %}
+                <div class="space-y-4">
+                    <div class="p-4 rounded-xl bg-[#254346]/50 border border-[#82C293]/30">
+                        <div class="font-medium text-white mb-1">{{ live_class.teacher.user.get_full_name|default:live_class.teacher.user.username }}</div>
+                        <div class="text-sm text-white/60">{{ live_class.teacher.user.email }}</div>
+                    </div>
+                    
+                    <a href="{% url 'dashboard:live_class_edit' live_class.id %}" class="block w-full px-4 py-2.5 bg-[#254346]/70 border border-white/10 text-white rounded-xl hover:bg-[#254346]/90 hover:border-[#82C293]/40 transition-all duration-300 font-medium text-center hover:scale-105">
+                        <i class="fas fa-user-edit mr-2"></i>Reassign Teacher
+                    </a>
+                </div>
+                {% else %}
+                <div class="text-center py-8">
+                    <p class="text-white/60 mb-4">No teacher assigned</p>
+                    <a href="{% url 'dashboard:live_class_edit' live_class.id %}" class="inline-block px-4 py-2.5 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] transition-all duration-300 font-medium hover:scale-105">
+                        <i class="fas fa-user-plus mr-2"></i>Assign Teacher
+                    </a>
+                </div>
+                {% endif %}
+                
+                <!-- Course Type -->
+                <div class="mt-4 pt-4 border-t border-white/10">
+                    <label class="block text-xs font-medium text-white/60 mb-1">Course Type</label>
+                    <p class="text-sm text-white">{{ live_class.course.get_course_type_display }}</p>
+                </div>
+            </div>
+            
+            <!-- Quick Stats -->
+            <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] p-8 animate-fade-in-up stagger-4">
+                <h2 class="text-xl font-semibold text-white mb-6">Quick Stats</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-white/60 mb-1">Seats Booked</label>
+                        <p class="text-2xl font-semibold text-white">{{ live_class.seats_taken|default:0 }} / {{ live_class.total_seats }}</p>
+                        <div class="mt-2 w-full bg-[#254346]/70 rounded-full h-2">
+                            <div class="bg-[#82C293] h-2 rounded-full" style="width: {% widthratio live_class.seats_taken live_class.total_seats 100 %}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-white/60 mb-1">Remaining Seats</label>
+                        <p class="text-2xl font-semibold text-white">{{ live_class.get_remaining_seats }}</p>
+                    </div>
+                    
+                    {% if live_class.enable_waitlist %}
+                    <div>
+                        <span class="px-3 py-1 rounded-full text-xs font-medium bg-[#82C293]/20 text-[#82C293] border border-[#82C293]/30">
+                            Waitlist Enabled
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

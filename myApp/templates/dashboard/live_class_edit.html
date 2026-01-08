@@ -1,0 +1,408 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="w-full max-w-[1600px] mx-auto">
+    <!-- Header -->
+    <div class="mb-8 sm:mb-10 animate-fade-in-up stagger-1">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-white mb-3 tracking-[-0.02em]">
+                    Edit Live Class
+                </h1>
+                <p class="text-base sm:text-lg text-white/70 font-light">{{ live_class.title }}</p>
+            </div>
+            <div class="flex gap-3">
+                <a href="{% url 'dashboard:live_class_detail' live_class.id %}" class="inline-flex items-center gap-2 bg-[#254346]/70 border border-white/10 text-white px-6 py-3 rounded-xl no-underline font-medium hover:bg-[#254346]/90 hover:border-[#82C293]/40 transition-all duration-300 hover:scale-105">
+                    <i class="fas fa-eye"></i>
+                    <span>View</span>
+                </a>
+                <a href="{% url 'dashboard:live_classes' %}" class="inline-flex items-center gap-2 bg-[#254346]/70 border border-white/10 text-white px-6 py-3 rounded-xl no-underline font-medium hover:bg-[#254346]/90 hover:border-[#82C293]/40 transition-all duration-300 hover:scale-105">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <form method="post" class="space-y-6">
+        {% csrf_token %}
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Main Form (2/3) -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Basic Information -->
+                <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] p-8 animate-fade-in-up stagger-2">
+                    <h2 class="text-xl font-semibold text-white mb-6">Session Information</h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-white/80 mb-2">Course <span class="text-red-400">*</span></label>
+                            <select name="course" id="course-select" required class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                                <option value="">Select Course</option>
+                                {% for course in courses %}
+                                <option value="{{ course.id }}" {% if live_class.course_id == course.id %}selected{% endif %}>{{ course.title }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-white/80 mb-2">Title <span class="text-red-400">*</span></label>
+                            <input type="text" name="title" value="{{ live_class.title }}" required class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-white/80 mb-2">Description</label>
+                            <textarea name="description" rows="4" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">{{ live_class.description }}</textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Scheduling -->
+                <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] p-8 animate-fade-in-up stagger-3">
+                    <h2 class="text-xl font-semibold text-white mb-6">Scheduling</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-white/80 mb-2">Date <span class="text-red-400">*</span></label>
+                            <input type="date" name="scheduled_date" id="scheduled-date" value="{{ live_class.scheduled_start|date:'Y-m-d' }}" required class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-white/80 mb-2">Time <span class="text-red-400">*</span></label>
+                            <input type="time" name="scheduled_time" id="scheduled-time" value="{{ live_class.scheduled_start|date:'H:i' }}" required class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-white/80 mb-2">Duration (minutes) <span class="text-red-400">*</span></label>
+                            <input type="number" name="duration_minutes" id="duration-minutes" value="{{ live_class.duration_minutes }}" min="15" step="15" required class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-white/80 mb-2">Timezone</label>
+                            <select name="timezone" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                                <option value="UTC" {% if live_class.timezone_snapshot == 'UTC' %}selected{% endif %}>UTC</option>
+                                <option value="America/New_York" {% if live_class.timezone_snapshot == 'America/New_York' %}selected{% endif %}>America/New_York</option>
+                                <option value="America/Los_Angeles" {% if live_class.timezone_snapshot == 'America/Los_Angeles' %}selected{% endif %}>America/Los_Angeles</option>
+                                <option value="Europe/London" {% if live_class.timezone_snapshot == 'Europe/London' %}selected{% endif %}>Europe/London</option>
+                                <option value="Asia/Dubai" {% if live_class.timezone_snapshot == 'Asia/Dubai' %}selected{% endif %}>Asia/Dubai</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Meeting Details -->
+                <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] p-8 animate-fade-in-up stagger-4">
+                    <h2 class="text-xl font-semibold text-white mb-6">Meeting Details</h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-white/80 mb-2">Meeting Provider</label>
+                            <select name="meeting_provider" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                                <option value="zoom" {% if live_class.meeting_provider == 'zoom' %}selected{% endif %}>Zoom</option>
+                                <option value="google_meet" {% if live_class.meeting_provider == 'google_meet' %}selected{% endif %}>Google Meet</option>
+                                <option value="microsoft_teams" {% if live_class.meeting_provider == 'microsoft_teams' %}selected{% endif %}>Microsoft Teams</option>
+                                <option value="custom" {% if live_class.meeting_provider == 'custom' %}selected{% endif %}>Custom</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-white/80 mb-2">Meeting Link <span class="text-red-400">*</span></label>
+                            <input type="url" name="meeting_link" value="{{ live_class.meeting_link }}" required class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-white/80 mb-2">Meeting ID</label>
+                                <input type="text" name="meeting_id" value="{{ live_class.meeting_id }}" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-white/80 mb-2">Passcode</label>
+                                <input type="text" name="meeting_passcode" value="{{ live_class.meeting_passcode }}" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Capacity -->
+                <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] p-8 animate-fade-in-up stagger-5">
+                    <h2 class="text-xl font-semibold text-white mb-6">Capacity & Settings</h2>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-white/80 mb-2">Total Seats <span class="text-red-400">*</span></label>
+                            <input type="number" name="total_seats" value="{{ live_class.total_seats }}" min="1" required class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                        </div>
+                        
+                        <div>
+                            <label class="flex items-center gap-2">
+                                <input type="checkbox" name="enable_waitlist" {% if live_class.enable_waitlist %}checked{% endif %} class="w-5 h-5 rounded border-white/20 bg-[#254346]/70 text-[#82C293] focus:ring-[#82C293]/40">
+                                <span class="text-sm font-medium text-white/80">Enable Waitlist</span>
+                            </label>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-white/80 mb-2">Status</label>
+                            <select name="status" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                                <option value="draft" {% if live_class.status == 'draft' %}selected{% endif %}>Draft</option>
+                                <option value="scheduled" {% if live_class.status == 'scheduled' %}selected{% endif %}>Scheduled</option>
+                                <option value="live" {% if live_class.status == 'live' %}selected{% endif %}>Live</option>
+                                <option value="completed" {% if live_class.status == 'completed' %}selected{% endif %}>Completed</option>
+                                <option value="cancelled" {% if live_class.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Teacher Assignment Sidebar (1/3) -->
+            <div class="lg:col-span-1">
+                <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] p-8 animate-fade-in-up stagger-3 sticky top-24">
+                    <h2 class="text-xl font-semibold text-white mb-6">Teacher Assignment</h2>
+                    
+                    {% if live_class.teacher %}
+                    <div class="mb-6 p-4 rounded-xl bg-[#254346]/50 border border-[#82C293]/30">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-white">Current Teacher:</span>
+                        </div>
+                        <div class="text-sm text-white/80">
+                            <div class="font-medium">{{ live_class.teacher.user.get_full_name|default:live_class.teacher.user.username }}</div>
+                            <div class="text-xs text-white/60">{{ live_class.teacher.user.email }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Teacher Filters -->
+                    <div class="space-y-4 mb-6">
+                        <div>
+                            <label class="block text-xs uppercase tracking-wider text-white/60 mb-2 font-medium">Filter Teachers</label>
+                            <input type="text" id="teacher-search" placeholder="Search teachers..." class="w-full px-4 py-2 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                        </div>
+                    </div>
+                    
+                    <!-- Selected Teacher Display -->
+                    <div id="selected-teacher-display" class="hidden mb-6 p-4 rounded-xl bg-[#254346]/50 border border-[#82C293]/30">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-sm font-medium text-white">New Teacher:</span>
+                            <button type="button" id="clear-teacher" class="text-white/60 hover:text-white">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div id="selected-teacher-info" class="text-sm text-white/80"></div>
+                        <div id="teacher-availability-status" class="mt-2 text-xs"></div>
+                    </div>
+                    
+                    <!-- Conflict Warning -->
+                    <div id="conflict-warning" class="hidden mb-4 p-4 rounded-xl bg-[#f8da03]/20 border border-[#f8da03]/40">
+                        <div class="flex items-start gap-2">
+                            <i class="fas fa-exclamation-triangle text-[#f8da03] mt-0.5"></i>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium text-[#f8da03] mb-1">Scheduling Conflict Detected</p>
+                                <p class="text-xs text-[#f8da03]/80" id="conflict-details"></p>
+                                <label class="flex items-center gap-2 mt-2">
+                                    <input type="checkbox" name="override_conflict" id="override-conflict" class="w-4 h-4 rounded border-white/20 bg-[#254346]/70 text-[#82C293] focus:ring-[#82C293]/40">
+                                    <span class="text-xs text-[#f8da03]">Override and reassign anyway</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Teacher List -->
+                    <div class="max-h-96 overflow-y-auto space-y-2" id="teacher-list">
+                        {% for teacher in teachers %}
+                        <div class="teacher-item p-3 rounded-xl border border-white/10 bg-[#254346]/50 hover:bg-[#254346]/70 hover:border-[#82C293]/30 transition-all duration-300 cursor-pointer {% if live_class.teacher_id == teacher.id %}border-[#82C293]/50 bg-[#82C293]/10{% endif %}" 
+                             data-teacher-id="{{ teacher.id }}"
+                             data-teacher-name="{{ teacher.user.get_full_name|default:teacher.user.username }}"
+                             data-teacher-email="{{ teacher.user.email }}">
+                            <div class="flex items-center justify-between">
+                                <div class="flex-1">
+                                    <div class="font-medium text-white text-sm">{{ teacher.user.get_full_name|default:teacher.user.username }}</div>
+                                    <div class="text-xs text-white/60">{{ teacher.user.email }}</div>
+                                </div>
+                                <button type="button" class="select-teacher-btn text-[#82C293] hover:text-[#8abc59] transition-all duration-300">
+                                    <i class="fas fa-check-circle"></i>
+                                </button>
+                            </div>
+                            <div class="mt-2 text-xs text-white/50">
+                                <span class="upcoming-count" data-teacher-id="{{ teacher.id }}">Loading...</span> upcoming sessions
+                            </div>
+                        </div>
+                        {% empty %}
+                        <p class="text-sm text-white/60 text-center py-4">No approved teachers available</p>
+                        {% endfor %}
+                    </div>
+                    
+                    <!-- Hidden input for selected teacher -->
+                    <input type="hidden" name="teacher" id="selected-teacher-id" value="{% if live_class.teacher %}{{ live_class.teacher.id }}{% endif %}">
+                    
+                    <!-- Assignment Notes -->
+                    <div class="mt-6 space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-white/80 mb-2">Reassignment Reason (Optional)</label>
+                            <textarea name="assignment_reason" rows="2" class="w-full px-4 py-2 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300" placeholder="Reason for reassignment"></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-white/80 mb-2">Notes (Optional)</label>
+                            <textarea name="assignment_notes" rows="2" class="w-full px-4 py-2 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300" placeholder="Additional notes"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Actions -->
+        <div class="flex items-center justify-end gap-4">
+            <a href="{% url 'dashboard:live_class_detail' live_class.id %}" 
+               class="px-6 py-2.5 bg-[#254346]/70 border border-white/10 text-white rounded-xl hover:bg-[#254346]/90 hover:border-[#82C293]/40 transition-all duration-300 font-medium hover:scale-105"
+               aria-label="Cancel and return to live class details">
+                Cancel
+            </a>
+            <button type="submit" 
+                    class="px-6 py-2.5 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] transition-all duration-300 font-medium hover:scale-105"
+                    aria-label="Save changes to live class">
+                <i class="fas fa-save mr-2"></i>Save Changes
+            </button>
+        </div>
+        
+        <!-- Note: This page is the only place where edits can be made -->
+    </form>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const teacherItems = document.querySelectorAll('.teacher-item');
+    const selectedTeacherId = document.getElementById('selected-teacher-id');
+    const selectedTeacherDisplay = document.getElementById('selected-teacher-display');
+    const selectedTeacherInfo = document.getElementById('selected-teacher-info');
+    const teacherAvailabilityStatus = document.getElementById('teacher-availability-status');
+    const conflictWarning = document.getElementById('conflict-warning');
+    const conflictDetails = document.getElementById('conflict-details');
+    const clearTeacherBtn = document.getElementById('clear-teacher');
+    const teacherSearch = document.getElementById('teacher-search');
+    const scheduledDate = document.getElementById('scheduled-date');
+    const scheduledTime = document.getElementById('scheduled-time');
+    const durationMinutes = document.getElementById('duration-minutes');
+    const overrideConflict = document.getElementById('override-conflict');
+    
+    // Initialize with current teacher if exists
+    if (selectedTeacherId.value) {
+        const currentTeacherItem = document.querySelector(`.teacher-item[data-teacher-id="${selectedTeacherId.value}"]`);
+        if (currentTeacherItem) {
+            const teacherName = currentTeacherItem.dataset.teacherName;
+            const teacherEmail = currentTeacherItem.dataset.teacherEmail;
+            selectedTeacherInfo.innerHTML = `<div class="font-medium">${teacherName}</div><div class="text-xs text-white/60">${teacherEmail}</div>`;
+            selectedTeacherDisplay.classList.remove('hidden');
+        }
+    }
+    
+    // Load upcoming session counts
+    teacherItems.forEach(item => {
+        const teacherId = item.dataset.teacherId;
+        fetch(`/dashboard/api/check-teacher-availability/?teacher_id=${teacherId}&exclude_session_id={{ live_class.id }}`)
+            .then(r => r.json())
+            .then(data => {
+                const countEl = item.querySelector(`.upcoming-count[data-teacher-id="${teacherId}"]`);
+                if (countEl && data.upcoming_sessions_count !== undefined) {
+                    countEl.textContent = data.upcoming_sessions_count;
+                }
+            })
+            .catch(() => {});
+    });
+    
+    // Teacher selection
+    teacherItems.forEach(item => {
+        item.addEventListener('click', function() {
+            const teacherId = this.dataset.teacherId;
+            const teacherName = this.dataset.teacherName;
+            const teacherEmail = this.dataset.teacherEmail;
+            
+            selectedTeacherId.value = teacherId;
+            selectedTeacherInfo.innerHTML = `<div class="font-medium">${teacherName}</div><div class="text-xs text-white/60">${teacherEmail}</div>`;
+            selectedTeacherDisplay.classList.remove('hidden');
+            
+            // Update visual selection
+            teacherItems.forEach(i => i.classList.remove('border-[#82C293]/50', 'bg-[#82C293]/10'));
+            this.classList.add('border-[#82C293]/50', 'bg-[#82C293]/10');
+            
+            // Check availability if date/time are set
+            checkTeacherAvailability(teacherId);
+        });
+    });
+    
+    // Clear teacher selection
+    clearTeacherBtn?.addEventListener('click', function() {
+        selectedTeacherId.value = '';
+        selectedTeacherDisplay.classList.add('hidden');
+        conflictWarning.classList.add('hidden');
+        teacherItems.forEach(i => i.classList.remove('border-[#82C293]/50', 'bg-[#82C293]/10'));
+    });
+    
+    // Check availability when date/time changes
+    [scheduledDate, scheduledTime, durationMinutes].forEach(el => {
+        el?.addEventListener('change', function() {
+            if (selectedTeacherId.value) {
+                checkTeacherAvailability(selectedTeacherId.value);
+            }
+        });
+    });
+    
+    // Teacher search filter
+    teacherSearch?.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        teacherItems.forEach(item => {
+            const name = item.dataset.teacherName.toLowerCase();
+            const email = item.dataset.teacherEmail.toLowerCase();
+            if (name.includes(searchTerm) || email.includes(searchTerm)) {
+                item.style.display = '';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+    
+    // Check teacher availability and conflicts
+    function checkTeacherAvailability(teacherId) {
+        if (!scheduledDate?.value || !scheduledTime?.value || !durationMinutes?.value) {
+            return;
+        }
+        
+        const dateTime = `${scheduledDate.value}T${scheduledTime.value}`;
+        const startTime = new Date(dateTime);
+        const endTime = new Date(startTime.getTime() + parseInt(durationMinutes.value) * 60000);
+        
+        fetch(`/dashboard/api/check-teacher-availability/?teacher_id=${teacherId}&start_time=${startTime.toISOString()}&end_time=${endTime.toISOString()}&exclude_session_id={{ live_class.id }}`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.has_conflict) {
+                    conflictWarning.classList.remove('hidden');
+                    const conflictsList = data.conflicts.map(c => `${c.title} (${new Date(c.start).toLocaleString()})`).join(', ');
+                    conflictDetails.textContent = `Teacher has conflicting sessions: ${conflictsList}`;
+                    teacherAvailabilityStatus.innerHTML = '<span class="text-red-400">⚠ Conflict detected</span>';
+                } else if (data.has_availability) {
+                    conflictWarning.classList.add('hidden');
+                    teacherAvailabilityStatus.innerHTML = '<span class="text-[#259d78]">✓ Available</span>';
+                } else {
+                    conflictWarning.classList.remove('hidden');
+                    conflictDetails.textContent = 'Teacher may not have availability set for this time slot.';
+                    teacherAvailabilityStatus.innerHTML = '<span class="text-[#f8da03]">⚠ Availability unclear</span>';
+                }
+            })
+            .catch(err => {
+                console.error('Error checking availability:', err);
+            });
+    }
+    
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        if (conflictWarning && !conflictWarning.classList.contains('hidden') && !overrideConflict.checked) {
+            if (!confirm('Scheduling conflict detected. Continue anyway?')) {
+                e.preventDefault();
+                return false;
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
+

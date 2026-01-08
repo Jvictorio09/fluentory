@@ -1,0 +1,108 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="w-full max-w-[1600px] mx-auto">
+    <!-- Header -->
+    <div class="mb-8 sm:mb-10 animate-fade-in-up stagger-1">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-white mb-3 tracking-[-0.02em]">
+                    Create Lead
+                </h1>
+                <p class="text-base sm:text-lg text-white/70 font-light">Add a new prospect to CRM</p>
+            </div>
+            <a href="{% url 'dashboard:leads' %}" class="inline-flex items-center gap-2 bg-[#254346]/70 border border-white/10 text-white px-6 py-3 rounded-xl no-underline font-medium hover:bg-[#254346]/90 hover:border-[#82C293]/40 transition-all duration-300 hover:scale-105">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Leads</span>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Lead Form -->
+    <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] p-8 animate-fade-in-up stagger-2">
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Basic Information -->
+            <div class="space-y-4">
+                <h2 class="text-xl font-semibold text-white mb-4">Basic Information</h2>
+                
+                <div>
+                    <label class="block text-sm font-medium text-white/80 mb-2">Name <span class="text-red-400">*</span></label>
+                    <input type="text" name="name" required class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300" placeholder="Lead name">
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-white/80 mb-2">Email</label>
+                        <input type="email" name="email" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300" placeholder="email@example.com">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-white/80 mb-2">Phone</label>
+                        <input type="text" name="phone" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300" placeholder="+1234567890">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- CRM Fields -->
+            <div class="space-y-4 border-t border-white/10 pt-6">
+                <h2 class="text-xl font-semibold text-white mb-4">CRM Information</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-white/80 mb-2">Source <span class="text-red-400">*</span></label>
+                        <select name="source" required class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                            <option value="other">Other</option>
+                            <option value="facebook">Facebook</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="referral">Referral</option>
+                            <option value="event">Event</option>
+                            <option value="website">Website</option>
+                            <option value="gift">Gift</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-white/80 mb-2">Status <span class="text-red-400">*</span></label>
+                        <select name="status" required class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                            <option value="new">New</option>
+                            <option value="contacted">Contacted</option>
+                            <option value="follow_up">Follow-up</option>
+                            <option value="negotiating">Negotiating</option>
+                            <option value="enrolled">Enrolled</option>
+                            <option value="lost">Lost</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-white/80 mb-2">Owner</label>
+                        <select name="owner" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                            <option value="">Unassigned</option>
+                            {% for owner in owners %}
+                            <option value="{{ owner.id }}">{{ owner.get_full_name|default:owner.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-white/80 mb-2">Notes</label>
+                    <textarea name="notes" rows="4" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300" placeholder="Initial notes about this lead..."></textarea>
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="flex items-center justify-end gap-4 border-t border-white/10 pt-6">
+                <a href="{% url 'dashboard:leads' %}" class="px-6 py-2.5 bg-[#254346]/70 border border-white/10 text-white rounded-xl hover:bg-[#254346]/90 hover:border-[#82C293]/40 transition-all duration-300 font-medium hover:scale-105">
+                    Cancel
+                </a>
+                <button type="submit" class="px-6 py-2.5 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] transition-all duration-300 font-medium hover:scale-105">
+                    <i class="fas fa-save mr-2"></i>Create Lead
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

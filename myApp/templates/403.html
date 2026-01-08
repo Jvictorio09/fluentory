@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#04363a] to-[#254346] px-4">
+    <div class="max-w-md w-full bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] p-8 text-center">
+        <div class="mb-6">
+            <i class="fas fa-lock text-6xl text-red-400 mb-4"></i>
+            <h1 class="text-3xl font-light text-white mb-2">403 - Access Denied</h1>
+            <p class="text-white/70 text-lg">You don't have permission to access this page.</p>
+        </div>
+        
+        <div class="bg-[#254346]/50 border border-white/10 rounded-xl p-6 mb-6">
+            <p class="text-white/80 mb-4">
+                This page is restricted to specific user roles. If you believe this is an error, please contact your administrator.
+            </p>
+            
+            {% if user.is_authenticated %}
+            <div class="text-sm text-white/60">
+                <p>Logged in as: <strong class="text-white/80">{{ user.get_full_name|default:user.username }}</strong></p>
+                <p>Role: <strong class="text-white/80">{{ user.profile.get_role_display|default:"Student" }}</strong></p>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <a href="{% url 'home' %}" class="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white px-6 py-3 rounded-xl no-underline font-medium hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] hover:scale-105 transition-all duration-300">
+                <i class="fas fa-home"></i>
+                <span>Go to Home</span>
+            </a>
+            {% if user.is_authenticated %}
+            <a href="{% url 'student_home' %}" class="inline-flex items-center justify-center gap-2 bg-[#254346]/70 border border-white/10 text-white px-6 py-3 rounded-xl no-underline font-medium hover:bg-[#254346]/90 hover:border-[#82C293]/40 transition-all duration-300 hover:scale-105">
+                <i class="fas fa-user"></i>
+                <span>My Dashboard</span>
+            </a>
+            {% else %}
+            <a href="{% url 'login' %}" class="inline-flex items-center justify-center gap-2 bg-[#254346]/70 border border-white/10 text-white px-6 py-3 rounded-xl no-underline font-medium hover:bg-[#254346]/90 hover:border-[#82C293]/40 transition-all duration-300 hover:scale-105">
+                <i class="fas fa-sign-in-alt"></i>
+                <span>Login</span>
+            </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

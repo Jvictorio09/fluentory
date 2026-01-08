@@ -1,4 +1,4 @@
-<footer class="relative py-24 pb-12 overflow-hidden" style="background-color: var(--bg-primary); border-top: 1px solid var(--border-primary);">
+<footer class="public-footer relative py-24 pb-12 overflow-hidden border-t border-slate-200 dark:border-white/10 transition-colors duration-300">
     <!-- Background Image -->
     <div class="absolute inset-0">
         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-20">
@@ -18,20 +18,19 @@
     
     <div class="max-w-[1600px] mx-auto px-8 lg:px-20 relative z-10">
         <!-- Enhanced Email Subscription Section -->
-        <div class="text-center mb-20 pb-20 border-b-2 border-[#254346]/50">
+            <div class="text-center mb-20 pb-20 border-b-2 border-slate-200 dark:border-[#254346]/50">
             <div class="inline-flex items-center gap-2 bg-[#b8c943]/20 border border-[#b8c943]/30 px-5 py-2.5 rounded-full text-xs uppercase tracking-wider text-[#b8c943] mb-6 font-medium">
                 <i class="fas fa-envelope text-[#b8c943]"></i>
                 <span>Stay Updated</span>
             </div>
             
-            <h3 class="text-3xl sm:text-4xl font-extralight mb-6 tracking-[-1px]" style="color: var(--text-primary);">Get learning updates</h3>
-            <p class="text-base mb-8 max-w-[500px] mx-auto" style="color: var(--accent-primary);">Join thousands of learners getting insights, tips, and course updates.</p>
+            <h3 class="text-3xl sm:text-4xl font-extralight mb-6 tracking-[-1px] text-slate-900 dark:text-white">Get learning updates</h3>
+            <p class="text-base mb-8 max-w-[500px] mx-auto text-[#82C293] dark:text-[#82C293]">Join thousands of learners getting insights, tips, and course updates.</p>
             
             <form class="flex flex-col sm:flex-row gap-4 max-w-[540px] mx-auto">
-                <input 
+                    <input 
                     type="email" 
-                    class="flex-1 px-6 py-4.5 border-2 backdrop-blur-md rounded-2xl text-[0.95rem] focus:outline-none focus:ring-2 transition-all shadow-[0_4px_15px_rgba(0,0,0,0.3)]"
-                    style="background-color: var(--bg-secondary); border-color: var(--border-primary); color: var(--text-primary);" 
+                    class="flex-1 px-6 py-4.5 border-2 backdrop-blur-md rounded-2xl text-[0.95rem] focus:outline-none focus:ring-2 transition-all shadow-sm dark:shadow-[0_4px_15px_rgba(0,0,0,0.3)] bg-slate-50 dark:bg-[#04363a]/50 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/40"
                     placeholder="Enter your email"
                 >
                 <button 
@@ -52,18 +51,18 @@
                     <div class="w-10 h-10 rounded-xl bg-[#82C293]/20 border border-[#82C293]/30 grid place-items-center">
                         <i class="fas fa-graduation-cap text-[#82C293]"></i>
                     </div>
-                    <h4 class="text-xl font-semibold" style="color: var(--text-primary);">Fluentory</h4>
+                    <h4 class="text-xl font-semibold text-slate-900 dark:text-white">Fluentory</h4>
                 </div>
                 <ul class="list-none space-y-3">
-                    <li><a href="{% url 'about' %}" class="text-[#82C293] no-underline hover:text-[#8abc59] transition-colors font-light inline-flex items-center gap-2 group">
+                    <li><a href="{% url 'about' %}" class="text-[#00655F] dark:text-[#82C293] no-underline hover:text-[#004d47] dark:hover:text-[#8abc59] hover:underline transition-colors font-light inline-flex items-center gap-2 group">
                         <span>About</span>
                         <i class="fas fa-arrow-right text-xs opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
                     </a></li>
-                    <li><a href="{% url 'careers' %}" class="text-[#82C293] no-underline hover:text-[#8abc59] transition-colors font-light inline-flex items-center gap-2 group">
+                    <li><a href="{% url 'careers' %}" class="text-[#00655F] dark:text-[#82C293] no-underline hover:text-[#004d47] dark:hover:text-[#8abc59] hover:underline transition-colors font-light inline-flex items-center gap-2 group">
                         <span>Careers</span>
                         <i class="fas fa-arrow-right text-xs opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
                     </a></li>
-                    <li><a href="{% url 'blog' %}" class="text-[#82C293] no-underline hover:text-[#8abc59] transition-colors font-light inline-flex items-center gap-2 group">
+                    <li><a href="{% url 'blog' %}" class="text-[#00655F] dark:text-[#82C293] no-underline hover:text-[#004d47] dark:hover:text-[#8abc59] hover:underline transition-colors font-light inline-flex items-center gap-2 group">
                         <span>Blog</span>
                         <i class="fas fa-arrow-right text-xs opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
                     </a></li>
@@ -75,18 +74,18 @@
                     <div class="w-10 h-10 rounded-xl bg-[#82C293]/20 border border-[#82C293]/30 grid place-items-center">
                         <i class="fas fa-book text-[#82C293]"></i>
                     </div>
-                    <h4 class="text-xl font-semibold text-white">Courses</h4>
+                    <h4 class="text-xl font-semibold text-slate-900 dark:text-white">Courses</h4>
                 </div>
                 <ul class="list-none space-y-3">
-                    <li><a href="{% url 'home' %}#courses" class="text-[#82C293] no-underline hover:text-[#8abc59] transition-colors font-light inline-flex items-center gap-2 group smooth-scroll">
+                    <li><a href="{% url 'home' %}#courses" class="text-[#00655F] dark:text-[#82C293] no-underline hover:text-[#004d47] dark:hover:text-[#8abc59] hover:underline transition-colors font-light inline-flex items-center gap-2 group smooth-scroll">
                         <span>All Courses</span>
                         <i class="fas fa-arrow-right text-xs opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
                     </a></li>
-                    <li><a href="{% url 'login' %}?next={% url 'student_placement' %}" class="text-[#82C293] no-underline hover:text-[#8abc59] transition-colors font-light inline-flex items-center gap-2 group">
+                    <li><a href="{% url 'login' %}?next={% url 'student_placement' %}" class="text-[#00655F] dark:text-[#82C293] no-underline hover:text-[#004d47] dark:hover:text-[#8abc59] hover:underline transition-colors font-light inline-flex items-center gap-2 group">
                         <span>Placement Test</span>
                         <i class="fas fa-arrow-right text-xs opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
                     </a></li>
-                    <li><a href="{% url 'home' %}#certificates" class="text-[#82C293] no-underline hover:text-[#8abc59] transition-colors font-light inline-flex items-center gap-2 group smooth-scroll">
+                    <li><a href="{% url 'home' %}#certificates" class="text-[#00655F] dark:text-[#82C293] no-underline hover:text-[#004d47] dark:hover:text-[#8abc59] hover:underline transition-colors font-light inline-flex items-center gap-2 group smooth-scroll">
                         <span>Certificates</span>
                         <i class="fas fa-arrow-right text-xs opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
                     </a></li>
@@ -98,18 +97,18 @@
                     <div class="w-10 h-10 rounded-xl bg-[#82C293]/20 border border-[#82C293]/30 grid place-items-center">
                         <i class="fas fa-headset text-[#82C293]"></i>
                     </div>
-                    <h4 class="text-xl font-semibold text-white">Support</h4>
+                    <h4 class="text-xl font-semibold text-slate-900 dark:text-white">Support</h4>
                 </div>
                 <ul class="list-none space-y-3">
-                    <li><a href="{% url 'help_center' %}" class="text-[#82C293] no-underline hover:text-[#8abc59] transition-colors font-light inline-flex items-center gap-2 group">
+                    <li><a href="{% url 'help_center' %}" class="text-[#00655F] dark:text-[#82C293] no-underline hover:text-[#004d47] dark:hover:text-[#8abc59] hover:underline transition-colors font-light inline-flex items-center gap-2 group">
                         <span>Help Center</span>
                         <i class="fas fa-arrow-right text-xs opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
                     </a></li>
-                    <li><a href="{% url 'contact' %}" class="text-[#82C293] no-underline hover:text-[#8abc59] transition-colors font-light inline-flex items-center gap-2 group">
+                    <li><a href="{% url 'contact' %}" class="text-[#00655F] dark:text-[#82C293] no-underline hover:text-[#004d47] dark:hover:text-[#8abc59] hover:underline transition-colors font-light inline-flex items-center gap-2 group">
                         <span>Contact</span>
                         <i class="fas fa-arrow-right text-xs opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
                     </a></li>
-                    <li><a href="{% url 'home' %}#faq" class="text-[#82C293] no-underline hover:text-[#8abc59] transition-colors font-light inline-flex items-center gap-2 group smooth-scroll">
+                    <li><a href="{% url 'home' %}#faq" class="text-[#00655F] dark:text-[#82C293] no-underline hover:text-[#004d47] dark:hover:text-[#8abc59] hover:underline transition-colors font-light inline-flex items-center gap-2 group smooth-scroll">
                         <span>FAQ</span>
                         <i class="fas fa-arrow-right text-xs opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
                     </a></li>
@@ -121,18 +120,18 @@
                     <div class="w-10 h-10 rounded-xl bg-[#82C293]/20 border border-[#82C293]/30 grid place-items-center">
                         <i class="fas fa-gavel text-[#82C293]"></i>
                     </div>
-                    <h4 class="text-xl font-semibold text-white">Legal</h4>
+                    <h4 class="text-xl font-semibold text-slate-900 dark:text-white">Legal</h4>
                 </div>
                 <ul class="list-none space-y-3">
-                    <li><a href="{% url 'privacy' %}" class="text-[#82C293] no-underline hover:text-[#8abc59] transition-colors font-light inline-flex items-center gap-2 group">
+                    <li><a href="{% url 'privacy' %}" class="text-[#00655F] dark:text-[#82C293] no-underline hover:text-[#004d47] dark:hover:text-[#8abc59] hover:underline transition-colors font-light inline-flex items-center gap-2 group">
                         <span>Privacy</span>
                         <i class="fas fa-arrow-right text-xs opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
                     </a></li>
-                    <li><a href="{% url 'terms' %}" class="text-[#82C293] no-underline hover:text-[#8abc59] transition-colors font-light inline-flex items-center gap-2 group">
+                    <li><a href="{% url 'terms' %}" class="text-[#00655F] dark:text-[#82C293] no-underline hover:text-[#004d47] dark:hover:text-[#8abc59] hover:underline transition-colors font-light inline-flex items-center gap-2 group">
                         <span>Terms</span>
                         <i class="fas fa-arrow-right text-xs opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
                     </a></li>
-                    <li><a href="{% url 'cookies' %}" class="text-[#82C293] no-underline hover:text-[#8abc59] transition-colors font-light inline-flex items-center gap-2 group">
+                    <li><a href="{% url 'cookies' %}" class="text-[#00655F] dark:text-[#82C293] no-underline hover:text-[#004d47] dark:hover:text-[#8abc59] hover:underline transition-colors font-light inline-flex items-center gap-2 group">
                         <span>Cookies</span>
                         <i class="fas fa-arrow-right text-xs opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all"></i>
                     </a></li>
@@ -142,24 +141,24 @@
         
         <!-- Enhanced Social Media Icons -->
         <div class="flex gap-4 justify-center mb-12">
-            <a href="#" class="w-12 h-12 rounded-xl bg-[#04363a]/60 border-2 border-[#254346]/70 backdrop-blur-md text-[#82C293] hover:text-[#8abc59] hover:border-[#82C293]/40 hover:bg-[#04363a]/80 grid place-items-center text-lg transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.3)] hover:shadow-[0_6px_18px_rgba(130,194,147,0.2)] hover:scale-110" aria-label="LinkedIn">
+            <a href="#" class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-[#04363a]/60 border-2 border-slate-200 dark:border-[#254346]/70 backdrop-blur-md text-[#00655F] dark:text-[#82C293] hover:text-[#004d47] dark:hover:text-[#8abc59] hover:border-[#82C293]/40 hover:bg-slate-200 dark:hover:bg-[#04363a]/80 grid place-items-center text-lg transition-all duration-300 shadow-sm dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_6px_18px_rgba(130,194,147,0.2)] hover:scale-110" aria-label="LinkedIn">
                 <i class="fab fa-linkedin"></i>
             </a>
-            <a href="#" class="w-12 h-12 rounded-xl bg-[#04363a]/60 border-2 border-[#254346]/70 backdrop-blur-md text-[#82C293] hover:text-[#8abc59] hover:border-[#82C293]/40 hover:bg-[#04363a]/80 grid place-items-center text-lg transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.3)] hover:shadow-[0_6px_18px_rgba(130,194,147,0.2)] hover:scale-110" aria-label="Instagram">
+            <a href="#" class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-[#04363a]/60 border-2 border-slate-200 dark:border-[#254346]/70 backdrop-blur-md text-[#00655F] dark:text-[#82C293] hover:text-[#004d47] dark:hover:text-[#8abc59] hover:border-[#82C293]/40 hover:bg-slate-200 dark:hover:bg-[#04363a]/80 grid place-items-center text-lg transition-all duration-300 shadow-sm dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_6px_18px_rgba(130,194,147,0.2)] hover:scale-110" aria-label="Instagram">
                 <i class="fab fa-instagram"></i>
             </a>
-            <a href="#" class="w-12 h-12 rounded-xl bg-[#04363a]/60 border-2 border-[#254346]/70 backdrop-blur-md text-[#82C293] hover:text-[#8abc59] hover:border-[#82C293]/40 hover:bg-[#04363a]/80 grid place-items-center text-lg transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.3)] hover:shadow-[0_6px_18px_rgba(130,194,147,0.2)] hover:scale-110" aria-label="Facebook">
+            <a href="#" class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-[#04363a]/60 border-2 border-slate-200 dark:border-[#254346]/70 backdrop-blur-md text-[#00655F] dark:text-[#82C293] hover:text-[#004d47] dark:hover:text-[#8abc59] hover:border-[#82C293]/40 hover:bg-slate-200 dark:hover:bg-[#04363a]/80 grid place-items-center text-lg transition-all duration-300 shadow-sm dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_6px_18px_rgba(130,194,147,0.2)] hover:scale-110" aria-label="Facebook">
                 <i class="fab fa-facebook"></i>
             </a>
-            <a href="#" class="w-12 h-12 rounded-xl bg-[#04363a]/60 border-2 border-[#254346]/70 backdrop-blur-md text-[#82C293] hover:text-[#8abc59] hover:border-[#82C293]/40 hover:bg-[#04363a]/80 grid place-items-center text-lg transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.3)] hover:shadow-[0_6px_18px_rgba(130,194,147,0.2)] hover:scale-110" aria-label="WhatsApp">
+            <a href="#" class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-[#04363a]/60 border-2 border-slate-200 dark:border-[#254346]/70 backdrop-blur-md text-[#00655F] dark:text-[#82C293] hover:text-[#004d47] dark:hover:text-[#8abc59] hover:border-[#82C293]/40 hover:bg-slate-200 dark:hover:bg-[#04363a]/80 grid place-items-center text-lg transition-all duration-300 shadow-sm dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_6px_18px_rgba(130,194,147,0.2)] hover:scale-110" aria-label="WhatsApp">
                 <i class="fab fa-whatsapp"></i>
             </a>
         </div>
         
         <!-- Enhanced Copyright -->
-        <div class="text-center pt-8 border-t-2 border-[#254346]/50">
-            <p class="text-[#82C293] text-sm font-light">
-                &copy; <span class="font-semibold text-white">Fluentory</span>. All rights reserved.
+        <div class="text-center pt-8 border-t-2 border-slate-200 dark:border-[#254346]/50">
+            <p class="text-[#00655F] dark:text-[#82C293] text-sm font-light">
+                &copy; <span class="font-semibold text-slate-900 dark:text-white">Fluentory</span>. All rights reserved.
             </p>
         </div>
     </div>

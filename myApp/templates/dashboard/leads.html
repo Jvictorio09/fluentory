@@ -1,0 +1,222 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="w-full max-w-[1600px] mx-auto">
+    <!-- Header -->
+    <div class="mb-8 sm:mb-10 animate-fade-in-up stagger-1">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-white mb-3 tracking-[-0.02em]">
+                    CRM / Leads
+                </h1>
+                <p class="text-base sm:text-lg text-white/70 font-light">Track prospects from first contact through enrollment</p>
+            </div>
+            <div class="flex gap-3">
+                <a href="{% url 'dashboard:crm_analytics' %}" class="inline-flex items-center gap-2 bg-[#254346]/70 border border-white/10 text-white px-6 py-3 rounded-xl no-underline font-medium hover:bg-[#254346]/90 hover:border-[#82C293]/40 transition-all duration-300 hover:scale-105">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Analytics</span>
+                </a>
+                <a href="{% url 'dashboard:lead_create' %}" class="inline-flex items-center gap-2 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white px-6 py-3 rounded-xl no-underline font-medium hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] hover:scale-105 transition-all duration-300 group animate-scale-in">
+                    <i class="fas fa-plus transition-transform duration-300 group-hover:rotate-90"></i>
+                    <span>Create Lead</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Filters -->
+        <div class="flex flex-wrap gap-4 mb-6 animate-fade-in-up stagger-2">
+            <form method="get" class="flex flex-wrap gap-4 items-end">
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-white/60 mb-2 font-medium">Status</label>
+                    <select name="status" class="px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                        <option value="">All Status</option>
+                        <option value="new" {% if status_filter == 'new' %}selected{% endif %}>New</option>
+                        <option value="contacted" {% if status_filter == 'contacted' %}selected{% endif %}>Contacted</option>
+                        <option value="follow_up" {% if status_filter == 'follow_up' %}selected{% endif %}>Follow-up</option>
+                        <option value="negotiating" {% if status_filter == 'negotiating' %}selected{% endif %}>Negotiating</option>
+                        <option value="enrolled" {% if status_filter == 'enrolled' %}selected{% endif %}>Enrolled</option>
+                        <option value="lost" {% if status_filter == 'lost' %}selected{% endif %}>Lost</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-white/60 mb-2 font-medium">Source</label>
+                    <select name="source" class="px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                        <option value="">All Sources</option>
+                        <option value="facebook" {% if source_filter == 'facebook' %}selected{% endif %}>Facebook</option>
+                        <option value="instagram" {% if source_filter == 'instagram' %}selected{% endif %}>Instagram</option>
+                        <option value="referral" {% if source_filter == 'referral' %}selected{% endif %}>Referral</option>
+                        <option value="event" {% if source_filter == 'event' %}selected{% endif %}>Event</option>
+                        <option value="website" {% if source_filter == 'website' %}selected{% endif %}>Website</option>
+                        <option value="gift" {% if source_filter == 'gift' %}selected{% endif %}>Gift</option>
+                        <option value="other" {% if source_filter == 'other' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-white/60 mb-2 font-medium">Owner</label>
+                    <select name="owner" class="px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                        <option value="">All Owners</option>
+                        {% for owner in owners %}
+                        <option value="{{ owner.id }}" {% if owner_filter == owner.id|stringformat:"s" %}selected{% endif %}>
+                            {% if owner.get_full_name %}
+                                {{ owner.get_full_name }}
+                            {% elif owner.username %}
+                                {{ owner.username }}
+                            {% else %}
+                                {{ owner.email|default:"Unknown" }}
+                            {% endif %}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-white/60 mb-2 font-medium">Sort</label>
+                    <select name="sort" class="px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                        <option value="updated" {% if sort == 'updated' %}selected{% endif %}>Last Updated</option>
+                        <option value="contact" {% if sort == 'contact' %}selected{% endif %}>Last Contact</option>
+                        <option value="created" {% if sort == 'created' %}selected{% endif %}>Created Date</option>
+                        <option value="name" {% if sort == 'name' %}selected{% endif %}>Name</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-white/60 mb-2 font-medium">Search</label>
+                    <input type="text" name="search" value="{{ search_query }}" placeholder="Name, email, phone..." class="px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                </div>
+                <button type="submit" class="px-6 py-2.5 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] transition-all duration-300 font-medium hover:scale-105 group">
+                    <i class="fas fa-search mr-2 transition-transform duration-300 group-hover:scale-110"></i>Filter
+                </button>
+                <a href="{% url 'dashboard:leads' %}" class="px-6 py-2.5 bg-[#254346]/70 border border-white/10 text-white rounded-xl hover:bg-[#254346]/90 hover:border-[#82C293]/40 transition-all duration-300 font-medium hover:scale-105">
+                    <i class="fas fa-times mr-2"></i>Clear
+                </a>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Leads Table -->
+    <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] overflow-hidden animate-fade-in-up stagger-3 hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] transition-all duration-300">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-[#254346]/50 border-b border-white/10">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Lead</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Contact</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Source</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Status</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Owner</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Last Contact</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/10">
+                    {% for lead in leads %}
+                    <tr class="hover:bg-[#82C293]/5 transition-all duration-300 animate-fade-in stagger-{{ forloop.counter|add:3 }} hover:scale-[1.01] group">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="font-medium text-white">{{ lead.name }}</div>
+                            {% if lead.linked_user %}
+                            <div class="text-xs text-[#82C293] mt-1">
+                                <i class="fas fa-link mr-1"></i>Linked to user
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm text-white/70">
+                                {% if lead.email %}
+                                <div>{{ lead.email }}</div>
+                                {% endif %}
+                                {% if lead.phone %}
+                                <div class="text-xs text-white/60">{{ lead.phone }}</div>
+                                {% endif %}
+                            </div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-[#82C293]/20 text-[#82C293] border border-[#82C293]/30">
+                                {{ lead.get_source_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if lead.status == 'enrolled' %}
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-[#259d78]/20 text-[#259d78] border border-[#259d78]/30">Enrolled</span>
+                            {% elif lead.status == 'new' %}
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-[#f8da03]/20 text-[#f8da03] border border-[#f8da03]/40">New</span>
+                            {% elif lead.status == 'contacted' %}
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-[#82C293]/20 text-[#82C293] border border-[#82C293]/30">Contacted</span>
+                            {% elif lead.status == 'follow_up' %}
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-[#82C293]/20 text-[#82C293] border border-[#82C293]/30">Follow-up</span>
+                            {% elif lead.status == 'negotiating' %}
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-[#f8da03]/20 text-[#f8da03] border border-[#f8da03]/40">Negotiating</span>
+                            {% else %}
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400 border border-red-500/30">{{ lead.get_status_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white/70">
+                            {% if lead.owner %}
+                                {% if lead.owner.get_full_name %}
+                                    {{ lead.owner.get_full_name }}
+                                {% elif lead.owner.username %}
+                                    {{ lead.owner.username }}
+                                {% else %}
+                                    {{ lead.owner.email|default:"—" }}
+                                {% endif %}
+                            {% else %}
+                                Unassigned
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white/70">
+                            {% if lead.last_contact_date %}
+                            {{ lead.last_contact_date|date:"M d, Y" }}
+                            {% else %}
+                            <span class="text-white/40">Never</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <div class="flex items-center gap-3">
+                                <a href="{% url 'dashboard:lead_detail' lead.id %}" 
+                                   class="text-[#82C293] hover:text-[#8abc59] transition-all duration-300 hover:scale-110 inline-block p-2 rounded-lg hover:bg-[#82C293]/10" 
+                                   title="View details" 
+                                   aria-label="View lead details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{% url 'dashboard:lead_edit' lead.id %}" 
+                                   class="text-[#82C293] hover:text-[#8abc59] transition-all duration-300 hover:scale-110 inline-block p-2 rounded-lg hover:bg-[#82C293]/10" 
+                                   title="Edit lead" 
+                                   aria-label="Edit lead">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-white/60">
+                            <i class="fas fa-user-tag text-4xl mb-4 text-white/40"></i>
+                            <p>No leads found</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if leads.has_other_pages %}
+        <div class="px-6 py-4 border-t border-white/10 flex items-center justify-between">
+            <div class="text-sm text-white/60">
+                Showing {{ leads.start_index }} to {{ leads.end_index }} of {{ leads.paginator.count }} leads
+            </div>
+            <div class="flex gap-2">
+                {% if leads.has_previous %}
+                <a href="?page={{ leads.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if source_filter %}&source={{ source_filter }}{% endif %}{% if owner_filter %}&owner={{ owner_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}" class="px-4 py-2 rounded-xl border border-white/10 bg-[#254346]/70 text-white hover:bg-[#82C293]/20 hover:border-[#82C293]/40 transition-all duration-300 hover:scale-110 group">
+                    <i class="fas fa-chevron-left transition-transform duration-300 group-hover:-translate-x-1"></i>
+                </a>
+                {% endif %}
+                {% if leads.has_next %}
+                <a href="?page={{ leads.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if source_filter %}&source={{ source_filter }}{% endif %}{% if owner_filter %}&owner={{ owner_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}" class="px-4 py-2 rounded-xl border border-white/10 bg-[#254346]/70 text-white hover:bg-[#82C293]/20 hover:border-[#82C293]/40 transition-all duration-300 hover:scale-110 group">
+                    <i class="fas fa-chevron-right transition-transform duration-300 group-hover:translate-x-1"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

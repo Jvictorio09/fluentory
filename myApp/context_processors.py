@@ -17,3 +17,33 @@ def currency_context(request):
         'currency_choices': CoursePricing.CURRENCY_CHOICES,
     }
 
+def hide_switch_view_context(request):
+    """
+    Determine whether to hide the "Switch View" button on specific public pages.
+    Returns True to hide the button on:
+    - Landing/Home page (/)
+    - Footer pages (About, Careers, Blog, Help Center, Contact, Privacy, Terms, Cookies)
+    Returns False to show on marketing pages (Courses, Outcomes, Proof, Pricing).
+    """
+    path = request.path
+    
+    # Hide on home page (exact match)
+    if path == '/':
+        return {'hide_switch_view': True}
+    
+    # Exact matches for footer pages
+    exact_paths = ['/about/', '/careers/', '/contact/', '/privacy/', '/terms/', '/cookies/']
+    if path in exact_paths:
+        return {'hide_switch_view': True}
+    
+    # Prefix matches for blog routes
+    if path.startswith('/blog/'):
+        return {'hide_switch_view': True}
+    
+    # Prefix matches for help center routes
+    if path.startswith('/help-center/') or path.startswith('/help/'):
+        return {'hide_switch_view': True}
+    
+    # Default: show Switch View button (for marketing pages: Courses, Outcomes, Proof, Pricing)
+    return {'hide_switch_view': False}
+

@@ -35,6 +35,7 @@ urlpatterns = [
     path('courses/', dashboard_views.dashboard_courses, name='courses'),
     path('courses/create/', dashboard_views.dashboard_course_create, name='course_create'),
     path('courses/<int:course_id>/edit/', dashboard_views.dashboard_course_edit, name='course_edit'),
+    path('courses/<int:course_id>/toggle-publish/', dashboard_views.dashboard_course_toggle_publish, name='course_toggle_publish'),
     
     # Teacher Management
     path('teachers/', dashboard_views.dashboard_teachers, name='teachers'),
@@ -52,7 +53,30 @@ urlpatterns = [
     # Payment Management (User-friendly interface)
     path('payments/', dashboard_views.dashboard_payments, name='payments'),
     
+    # Gifted Courses Management
+    path('gifted-courses/', dashboard_views.dashboard_gifted_courses, name='gifted_courses'),
+    path('gifted-courses/<int:gift_id>/resend-email/', dashboard_views.dashboard_resend_gift_email, name='resend_gift_email'),
+    path('gifted-courses/<int:gift_id>/manual-claim/', dashboard_views.dashboard_manual_claim_gift, name='manual_claim_gift'),
+    
+    # Live Classes Management
+    path('live-classes/', dashboard_views.dashboard_live_classes, name='live_classes'),
+    path('live-classes/create/', dashboard_views.dashboard_live_class_create, name='live_class_create'),
+    path('live-classes/<int:session_id>/', dashboard_views.dashboard_live_class_detail, name='live_class_detail'),
+    path('live-classes/<int:session_id>/edit/', dashboard_views.dashboard_live_class_edit, name='live_class_edit'),
+    path('api/check-teacher-availability/', dashboard_views.dashboard_check_teacher_availability, name='check_teacher_availability'),
+    
     # Analytics Dashboard
     path('analytics/', dashboard_views.dashboard_analytics, name='analytics'),
+    
+    # CRM - Lead Tracker
+    path('leads/', dashboard_views.dashboard_leads, name='leads'),
+    path('leads/create/', dashboard_views.dashboard_lead_create, name='lead_create'),
+    path('leads/<int:lead_id>/', dashboard_views.dashboard_lead_detail, name='lead_detail'),
+    path('leads/<int:lead_id>/edit/', dashboard_views.dashboard_lead_edit, name='lead_edit'),
+    path('leads/<int:lead_id>/add-note/', dashboard_views.dashboard_lead_add_note, name='lead_add_note'),
+    path('leads/<int:lead_id>/link-user/', dashboard_views.dashboard_lead_link_user, name='lead_link_user'),
+    path('leads/<int:lead_id>/link-gift/', dashboard_views.dashboard_lead_link_gift, name='lead_link_gift'),
+    path('leads/<int:lead_id>/link-enrollment/', dashboard_views.dashboard_lead_link_enrollment, name='lead_link_enrollment'),
+    path('crm-analytics/', dashboard_views.dashboard_crm_analytics, name='crm_analytics'),
 ]
 

@@ -114,9 +114,15 @@
                     {% endif %}
                 </div>
                 
-                <button onclick="enrollInCourse({{ course.id }})" class="w-full py-4 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl font-medium hover:opacity-90 transition shadow-lg">
+                <button onclick="enrollInCourse({{ course.id }})" class="w-full py-4 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl font-medium hover:opacity-90 transition shadow-lg mb-3">
                     Enroll Now
                 </button>
+                
+                {% if not course.is_free %}
+                <button onclick="openGiftModal({{ course.id }})" class="w-full py-3 bg-[#254346]/70 border border-white/20 text-white rounded-xl font-medium hover:bg-[#254346]/90 transition mb-4">
+                    <i class="fas fa-gift mr-2"></i>Gift this Course
+                </button>
+                {% endif %}
                 {% endif %}
             </div>
         </div>
@@ -513,6 +519,107 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Gift Modal Functionality (same as course_detail.html)
+function openGiftModal(courseId) {
+    const modalHTML = `
+        <div id="gift-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+            <div class="bg-[#04363a] rounded-2xl border border-white/10 shadow-xl max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto">
+                <div class="p-6 border-b border-white/10">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xl font-semibold text-white">
+                            <i class="fas fa-gift text-[#82C293] mr-2"></i>Gift this Course
+                        </h3>
+                        <button onclick="closeGiftModal()" class="text-white/60 hover:text-white transition">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <form id="gift-form" class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-white/80 mb-2">Recipient Email <span class="text-red-400">*</span></label>
+                        <input type="email" name="recipient_email" required 
+                               class="w-full px-4 py-2 rounded-lg border border-white/20 bg-[#254346]/70 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/40"
+                               placeholder="recipient@example.com">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-white/80 mb-2">Recipient Name (Optional)</label>
+                        <input type="text" name="recipient_name" 
+                               class="w-full px-4 py-2 rounded-lg border border-white/20 bg-[#254346]/70 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/40"
+                               placeholder="John Doe">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-white/80 mb-2">Your Name (Optional)</label>
+                        <input type="text" name="sender_name" 
+                               class="w-full px-4 py-2 rounded-lg border border-white/20 bg-[#254346]/70 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/40"
+                               placeholder="{{ user.get_full_name|default:user.username }}">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-white/80 mb-2">Gift Message (Optional)</label>
+                        <textarea name="gift_message" rows="3" 
+                                  class="w-full px-4 py-2 rounded-lg border border-white/20 bg-[#254346]/70 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/40"
+                                  placeholder="Write a personal message..."></textarea>
+                    </div>
+                    <div class="flex gap-3 pt-2">
+                        <button type="button" onclick="closeGiftModal()" 
+                                class="flex-1 px-4 py-2 rounded-lg border border-white/20 text-white hover:bg-[#254346]/70 transition">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                                class="flex-1 px-4 py-2 rounded-lg bg-gradient-to-r from-[#00655F] to-[#82C293] text-white font-medium hover:opacity-90 transition">
+                            Purchase Gift
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    document.getElementById('gift-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        await purchaseGift(courseId);
+    });
+}
+
+function closeGiftModal() {
+    const modal = document.getElementById('gift-modal');
+    if (modal) modal.remove();
+}
+
+async function purchaseGift(courseId) {
+    const form = document.getElementById('gift-form');
+    const formData = new FormData(form);
+    const data = {
+        course_id: courseId,
+        recipient_email: formData.get('recipient_email'),
+        recipient_name: formData.get('recipient_name'),
+        sender_name: formData.get('sender_name'),
+        gift_message: formData.get('gift_message')
+    };
+    
+    try {
+        const response = await fetch('/api/purchase-gift/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            window.location.href = result.redirect_url;
+        } else {
+            alert(result.error || 'Failed to purchase gift');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Something went wrong. Please try again.');
+    }
+}
 </script>
 
 <!-- Preview Video Modal -->

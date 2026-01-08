@@ -116,7 +116,8 @@
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl 
                 {% if item.color == 'red' %}bg-[#f8da03]/10 border-2 border-[#f8da03]/30 hover:border-[#f8da03]/50
                 {% elif item.color == 'yellow' %}bg-[#b8c943]/10 border-2 border-[#b8c943]/30 hover:border-[#b8c943]/50
-                {% else %}bg-[#82C293]/10 border-2 border-[#82C293]/30 hover:border-[#82C293]/50{% endif %} transition-all duration-300 animate-slide-in-right stagger-3 hover:scale-[1.01] hover:-translate-y-0.5 group">
+                {% else %}bg-[#82C293]/10 border-2 border-[#82C293]/30 hover:border-[#82C293]/50{% endif %} transition-all duration-300 animate-slide-in-right stagger-3 hover:scale-[1.01] hover:-translate-y-0.5 group relative"
+                style="pointer-events: auto;">
                 <div class="flex items-center gap-4 flex-1 min-w-0">
                     <div class="w-12 h-12 rounded-xl 
                         {% if item.color == 'red' %}bg-[#f8da03]/20 border-2 border-[#f8da03]/40
@@ -132,10 +133,13 @@
                         <div class="text-sm text-white/70">{{ item.description }}</div>
                     </div>
                 </div>
-                <button class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl text-sm font-medium hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] transition-all duration-300 hover:scale-105 group/btn">
+                <a href="{{ item.url|default:'/dashboard/' }}" 
+                   class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl text-sm font-medium hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] transition-all duration-300 hover:scale-105 group/btn inline-flex items-center justify-center no-underline focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:ring-offset-2 focus:ring-offset-[#04363a] relative z-10"
+                   aria-label="Review {{ item.title }}"
+                   tabindex="0">
                     Review
                     <i class="fas fa-arrow-right ml-2 transition-transform duration-300 group-hover/btn:translate-x-1"></i>
-                </button>
+                </a>
             </div>
             {% endfor %}
         </div>

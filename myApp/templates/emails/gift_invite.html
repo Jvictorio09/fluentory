@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>You've Been Gifted a Course!</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .email-container {
+            background-color: #ffffff;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #00655F 0%, #82C293 100%);
+            color: #ffffff;
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 300;
+            letter-spacing: -0.5px;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .course-card {
+            background-color: #f8f9fa;
+            border-left: 4px solid #82C293;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .course-title {
+            font-size: 22px;
+            font-weight: 600;
+            color: #00655F;
+            margin: 0 0 10px 0;
+        }
+        .course-description {
+            color: #666;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        .gift-message {
+            background-color: #fff9e6;
+            border-left: 4px solid #f8da03;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-style: italic;
+            color: #555;
+        }
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #00655F 0%, #82C293 100%);
+            color: #ffffff !important;
+            text-decoration: none;
+            padding: 16px 32px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            margin: 30px 0;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0, 101, 95, 0.3);
+        }
+        .cta-button:hover {
+            box-shadow: 0 6px 16px rgba(0, 101, 95, 0.4);
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #00655F;
+            text-decoration: none;
+        }
+        .info-box {
+            background-color: #e8f5e9;
+            border-left: 4px solid #82C293;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+        .sender-info {
+            color: #666;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <div class="header">
+            <h1>🎁 You've Been Gifted a Course!</h1>
+        </div>
+        <div class="content">
+            <p>Hello{% if recipient_name %} {{ recipient_name }}{% endif %},</p>
+            
+            <p>Great news! <strong>{% if sender_name %}{{ sender_name }}{% else %}Someone{% endif %}</strong> has gifted you access to a course on Fluentory.</p>
+            
+            <div class="course-card">
+                <div class="course-title">{{ course_title }}</div>
+                {% if course_description %}
+                <div class="course-description">{{ course_description|truncatewords:30 }}</div>
+                {% endif %}
+            </div>
+            
+            {% if gift_message %}
+            <div class="gift-message">
+                <strong>Personal Message:</strong><br>
+                "{{ gift_message }}"
+            </div>
+            {% endif %}
+            
+            <div class="info-box">
+                <strong>📧 This gift is exclusively for:</strong> {{ recipient_email }}<br>
+                <strong>🔒 Secure Claim:</strong> Use the button below to claim your gift and start learning!
+            </div>
+            
+            <div style="text-align: center;">
+                <a href="{{ claim_url }}" class="cta-button">Claim Your Gift Now</a>
+            </div>
+            
+            <p style="font-size: 14px; color: #666;">
+                <strong>What happens next?</strong><br>
+                Click the button above to claim your gift. If you don't have a Fluentory account yet, we'll help you create one. Once claimed, you'll have full access to the course and can start learning immediately!
+            </p>
+        </div>
+        <div class="footer">
+            <p><strong>Need Help?</strong></p>
+            <p>
+                <a href="{{ support_url }}">Visit our Support Center</a> or reply to this email.<br>
+                We're here to help you succeed!
+            </p>
+            <p style="margin-top: 20px; font-size: 12px; color: #999;">
+                This gift was sent to {{ recipient_email }}. If you weren't expecting this, please ignore this email.
+            </p>
+            <p style="margin-top: 10px; font-size: 12px; color: #999;">
+                © {{ current_year }} Fluentory. All rights reserved.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+

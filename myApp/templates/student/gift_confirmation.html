@@ -1,0 +1,57 @@
+{% extends 'student/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="p-4 sm:p-6 lg:p-8 xl:p-10 w-full max-w-3xl mx-auto">
+    <div class="bg-[#04363a]/90 backdrop-blur-xl rounded-3xl p-8 border border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.3)]">
+        <!-- Success Header -->
+        <div class="text-center mb-8">
+            <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-[#82C293]/20 border border-[#82C293]/30 grid place-items-center">
+                <i class="fas fa-check text-[#82C293] text-3xl"></i>
+            </div>
+            <h1 class="text-3xl font-light text-white mb-2">Your Gift Has Been Sent!</h1>
+            <p class="text-white/70">We've sent an email to <strong>{{ gift.recipient_email }}</strong></p>
+        </div>
+        
+        <!-- Gift Details -->
+        <div class="bg-[#254346]/50 rounded-2xl p-6 mb-6 border border-white/10">
+            <h2 class="text-xl font-medium text-white mb-4">{{ gift.course.title }}</h2>
+            <div class="space-y-2 text-sm text-white/70">
+                <div class="flex justify-between">
+                    <span>Recipient:</span>
+                    <span class="text-white">{{ gift.recipient_email }}</span>
+                </div>
+                {% if gift.recipient_name %}
+                <div class="flex justify-between">
+                    <span>Recipient Name:</span>
+                    <span class="text-white">{{ gift.recipient_name }}</span>
+                </div>
+                {% endif %}
+                <div class="flex justify-between">
+                    <span>Sent:</span>
+                    <span class="text-white">{{ gift.created_at|date:"F d, Y g:i A" }}</span>
+                </div>
+                <div class="flex justify-between">
+                    <span>Status:</span>
+                    <span class="px-3 py-1 rounded-full text-xs font-medium {% if gift.status == 'claimed' %}bg-green-500/20 text-green-400 border border-green-500/30{% else %}bg-yellow-500/20 text-yellow-400 border border-yellow-500/30{% endif %}">
+                        {{ gift.get_status_display }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Actions -->
+        <div class="flex gap-3">
+            <a href="{% url 'student_courses' %}" 
+               class="flex-1 text-center py-3 border border-white/20 text-white rounded-xl font-medium hover:bg-[#254346]/50 transition">
+                Browse More Courses
+            </a>
+            <a href="{% url 'student_home' %}" 
+               class="flex-1 text-center py-3 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl font-medium hover:opacity-90 transition">
+                Go to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

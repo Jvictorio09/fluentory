@@ -1,0 +1,223 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="w-full max-w-[1600px] mx-auto">
+    <!-- Header -->
+    <div class="mb-8 sm:mb-10 animate-fade-in-up stagger-1">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-white mb-3 tracking-[-0.02em]">
+                    Edit Course
+                </h1>
+                <p class="text-base sm:text-lg text-white/70 font-light">{{ course.title }}</p>
+            </div>
+            <div class="flex gap-3">
+                <a href="{% url 'dashboard:courses' %}" class="inline-flex items-center gap-2 bg-[#254346]/70 border border-white/10 text-white px-6 py-3 rounded-xl no-underline font-medium hover:bg-[#254346]/90 hover:border-[#82C293]/40 transition-all duration-300 hover:scale-105">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back</span>
+                </a>
+                {% if course.status == 'published' %}
+                <form method="post" action="{% url 'dashboard:course_toggle_publish' course.id %}" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="inline-flex items-center gap-2 bg-[#f8da03]/20 border border-[#f8da03]/40 text-[#f8da03] px-6 py-3 rounded-xl font-medium hover:bg-[#f8da03]/30 transition-all duration-300 hover:scale-105">
+                        <i class="fas fa-eye-slash"></i>
+                        <span>Unpublish</span>
+                    </button>
+                </form>
+                {% else %}
+                <form method="post" action="{% url 'dashboard:course_toggle_publish' course.id %}" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="inline-flex items-center gap-2 bg-[#259d78]/20 border border-[#259d78]/30 text-[#259d78] px-6 py-3 rounded-xl font-medium hover:bg-[#259d78]/30 transition-all duration-300 hover:scale-105">
+                        <i class="fas fa-eye"></i>
+                        <span>Publish</span>
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Course Form -->
+    <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] p-8 animate-fade-in-up stagger-2">
+        <form method="post" enctype="multipart/form-data" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Basic Information -->
+            <div class="space-y-4">
+                <h2 class="text-xl font-semibold text-white mb-4">Basic Information</h2>
+                
+                <div>
+                    <label class="block text-sm font-medium text-white/80 mb-2">Title <span class="text-red-400">*</span></label>
+                    <input type="text" name="title" value="{{ course.title }}" required class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-white/80 mb-2">Slug</label>
+                    <input type="text" name="slug" value="{{ course.slug }}" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-white/80 mb-2">Short Description</label>
+                    <input type="text" name="short_description" value="{{ course.short_description }}" maxlength="300" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-white/80 mb-2">Description <span class="text-red-400">*</span></label>
+                    <textarea name="description" rows="5" required class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">{{ course.description }}</textarea>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-white/80 mb-2">Outcome</label>
+                    <input type="text" name="outcome" value="{{ course.outcome }}" maxlength="300" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-white/80 mb-2">Thumbnail</label>
+                    <input type="file" name="thumbnail" accept="image/*" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                    {% if course.thumbnail %}
+                    <p class="text-xs text-white/50 mt-1">Current: <a href="{{ course.thumbnail.url }}" target="_blank" class="text-[#82C293] hover:underline">{{ course.thumbnail.name }}</a></p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Classification -->
+            <div class="space-y-4 border-t border-white/10 pt-6">
+                <h2 class="text-xl font-semibold text-white mb-4">Classification</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-white/80 mb-2">Category</label>
+                        <select name="category" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                            <option value="">Select Category</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}" {% if course.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-white/80 mb-2">Level</label>
+                        <select name="level" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                            <option value="beginner" {% if course.level == 'beginner' %}selected{% endif %}>Beginner</option>
+                            <option value="intermediate" {% if course.level == 'intermediate' %}selected{% endif %}>Intermediate</option>
+                            <option value="advanced" {% if course.level == 'advanced' %}selected{% endif %}>Advanced</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-white/80 mb-2">Course Type</label>
+                        <select name="course_type" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                            <option value="recorded" {% if course.course_type == 'recorded' %}selected{% endif %}>Recorded</option>
+                            <option value="live" {% if course.course_type == 'live' %}selected{% endif %}>Live</option>
+                            <option value="hybrid" {% if course.course_type == 'hybrid' %}selected{% endif %}>Hybrid</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-white/80 mb-2">Language</label>
+                        <select name="language" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                            <option value="en" {% if course.language == 'en' %}selected{% endif %}>English</option>
+                            <option value="es" {% if course.language == 'es' %}selected{% endif %}>Spanish</option>
+                            <option value="fr" {% if course.language == 'fr' %}selected{% endif %}>French</option>
+                            <option value="ar" {% if course.language == 'ar' %}selected{% endif %}>Arabic</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Pricing -->
+            <div class="space-y-4 border-t border-white/10 pt-6">
+                <h2 class="text-xl font-semibold text-white mb-4">Pricing</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="flex items-center gap-2 mb-4">
+                            <input type="checkbox" name="is_free" {% if course.is_free %}checked{% endif %} class="w-5 h-5 rounded border-white/20 bg-[#254346]/70 text-[#82C293] focus:ring-[#82C293]/40">
+                            <span class="text-sm font-medium text-white/80">Free Course</span>
+                        </label>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-white/80 mb-2">Price</label>
+                        <input type="number" name="price" step="0.01" min="0" value="{{ course.price }}" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-white/80 mb-2">Currency</label>
+                        <select name="currency" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                            <option value="USD" {% if course.currency == 'USD' %}selected{% endif %}>USD</option>
+                            <option value="EUR" {% if course.currency == 'EUR' %}selected{% endif %}>EUR</option>
+                            <option value="SAR" {% if course.currency == 'SAR' %}selected{% endif %}>SAR</option>
+                            <option value="AED" {% if course.currency == 'AED' %}selected{% endif %}>AED</option>
+                            <option value="JOD" {% if course.currency == 'JOD' %}selected{% endif %}>JOD</option>
+                            <option value="GBP" {% if course.currency == 'GBP' %}selected{% endif %}>GBP</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings -->
+            <div class="space-y-4 border-t border-white/10 pt-6">
+                <h2 class="text-xl font-semibold text-white mb-4">Settings</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-white/80 mb-2">Estimated Hours</label>
+                        <input type="number" name="estimated_hours" min="1" value="{{ course.estimated_hours }}" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-white/80 mb-2">Instructor</label>
+                        <select name="instructor" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                            <option value="">Select Instructor</option>
+                            {% for instructor in instructors %}
+                            <option value="{{ instructor.id }}" {% if course.instructor_id == instructor.id %}selected{% endif %}>{{ instructor.get_full_name|default:instructor.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="space-y-2">
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" name="has_certificate" {% if course.has_certificate %}checked{% endif %} class="w-5 h-5 rounded border-white/20 bg-[#254346]/70 text-[#82C293] focus:ring-[#82C293]/40">
+                        <span class="text-sm font-medium text-white/80">Certificate of Completion</span>
+                    </label>
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" name="has_ai_tutor" {% if course.has_ai_tutor %}checked{% endif %} class="w-5 h-5 rounded border-white/20 bg-[#254346]/70 text-[#82C293] focus:ring-[#82C293]/40">
+                        <span class="text-sm font-medium text-white/80">AI Tutor Support</span>
+                    </label>
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" name="has_quizzes" {% if course.has_quizzes %}checked{% endif %} class="w-5 h-5 rounded border-white/20 bg-[#254346]/70 text-[#82C293] focus:ring-[#82C293]/40">
+                        <span class="text-sm font-medium text-white/80">Quizzes & Assessments</span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Status -->
+            <div class="space-y-4 border-t border-white/10 pt-6">
+                <h2 class="text-xl font-semibold text-white mb-4">Status</h2>
+                
+                <div>
+                    <label class="block text-sm font-medium text-white/80 mb-2">Status</label>
+                    <select name="status" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                        <option value="draft" {% if course.status == 'draft' %}selected{% endif %}>Draft</option>
+                        <option value="published" {% if course.status == 'published' %}selected{% endif %}>Published</option>
+                        <option value="archived" {% if course.status == 'archived' %}selected{% endif %}>Archived</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="flex items-center justify-end gap-4 border-t border-white/10 pt-6">
+                <a href="{% url 'dashboard:courses' %}" class="px-6 py-2.5 bg-[#254346]/70 border border-white/10 text-white rounded-xl hover:bg-[#254346]/90 hover:border-[#82C293]/40 transition-all duration-300 font-medium hover:scale-105">
+                    Cancel
+                </a>
+                <button type="submit" class="px-6 py-2.5 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] transition-all duration-300 font-medium hover:scale-105">
+                    <i class="fas fa-save mr-2"></i>Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

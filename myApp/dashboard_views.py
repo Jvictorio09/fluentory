@@ -16,16 +16,18 @@ from django.db.models.functions import TruncDate, TruncWeek, TruncMonth, Coalesc
 from django.utils import timezone
 from datetime import timedelta
 from collections import Counter, defaultdict
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 from django.core.paginator import Paginator
 from django.db import connection
 from django.db.utils import OperationalError, DatabaseError
+from django.urls import reverse
 
 from .models import (
     User, UserProfile, Course, Enrollment, LessonProgress, QuizAttempt,
     Payment, Media, SiteSettings, PlacementTest, Teacher, CourseTeacher,
     Category, Review, TutorMessage, TutorConversation, CoursePricing, Partner,
-    LiveClassSession, SecurityActionLog
+    LiveClassSession, SecurityActionLog, LiveClassTeacherAssignment, TeacherAvailability,
+    Lead, LeadTimelineEvent, GiftEnrollmentLeadLink, EnrollmentLeadLink, GiftEnrollment
 )
 from .views import role_required, get_or_create_profile
 from django.http import JsonResponse
@@ -91,23 +93,31 @@ def dashboard_overview(request):
         action_items = []
         
         if stuck_students > 0:
+            try:
+                users_url = reverse('dashboard:users') + '?status=stuck'
+            except Exception:
+                users_url = '/dashboard/users/?status=stuck'
             action_items.append({
                 'type': 'warning',
                 'title': f'{stuck_students} students stuck at early milestones',
                 'description': 'Students with <25% progress after 2 weeks',
                 'icon': 'fa-exclamation-triangle',
                 'color': 'red',
-                'url': '/dashboard/users/?status=stuck'
+                'url': users_url
             })
         
         if failed_payments > 0:
+            try:
+                payments_url = reverse('dashboard:payments') + '?status=failed'
+            except Exception:
+                payments_url = '/dashboard/payments/?status=failed'
             action_items.append({
                 'type': 'warning',
                 'title': f'{failed_payments} payment failures in queue',
                 'description': 'Requires manual review',
                 'icon': 'fa-credit-card',
                 'color': 'orange',
-                'url': '/dashboard/payments/?status=failed'
+                'url': payments_url
             })
         
         context = {
@@ -437,29 +447,1074 @@ def dashboard_users(request):
 def dashboard_courses(request):
     """
     Course management - User-friendly interface
-    (Django Admin can manage Course model directly)
     """
     courses = Course.objects.select_related('category', 'instructor').order_by('-created_at')
     
     status = request.GET.get('status')
+    course_type = request.GET.get('type')
     search = request.GET.get('search')
     
     if status:
         courses = courses.filter(status=status)
+    if course_type:
+        courses = courses.filter(course_type=course_type)
     if search:
         courses = courses.filter(
             Q(title__icontains=search) |
-            Q(description__icontains=search)
+            Q(description__icontains=search) |
+            Q(slug__icontains=search)
         )
     
     paginator = Paginator(courses, 20)
     page = request.GET.get('page', 1)
-    courses = paginator.get_page(page)
+    try:
+        courses_page = paginator.get_page(page)
+    except:
+        courses_page = paginator.get_page(1)
+    
+    context = {
+        'courses': courses_page,
+        'status_filter': status,
+        'type_filter': course_type,
+        'search_query': search,
+    }
+    return render(request, 'dashboard/courses.html', context)
+
+
+@login_required
+@role_required(['admin'])
+def dashboard_course_create(request):
+    """Create new course"""
+    from myApp.models import Category
+    
+    if request.method == 'POST':
+        try:
+            from django.utils.text import slugify
+            from django.utils import timezone
+            
+            title = request.POST.get('title')
+            slug = request.POST.get('slug') or slugify(title)
+            
+            # Ensure unique slug
+            base_slug = slug
+            counter = 1
+            while Course.objects.filter(slug=slug).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            
+            course = Course.objects.create(
+                title=title,
+                slug=slug,
+                description=request.POST.get('description', ''),
+                short_description=request.POST.get('short_description', '')[:300],
+                outcome=request.POST.get('outcome', ''),
+                category_id=request.POST.get('category') or None,
+                level=request.POST.get('level', 'beginner'),
+                course_type=request.POST.get('course_type', 'recorded'),
+                language=request.POST.get('language', 'en'),
+                price=request.POST.get('price', 0) or 0,
+                currency=request.POST.get('currency', 'USD'),
+                is_free=request.POST.get('is_free') == 'on',
+                estimated_hours=request.POST.get('estimated_hours', 10) or 10,
+                has_certificate=request.POST.get('has_certificate') == 'on',
+                has_ai_tutor=request.POST.get('has_ai_tutor') == 'on',
+                has_quizzes=request.POST.get('has_quizzes') == 'on',
+                status=request.POST.get('status', 'draft'),
+                instructor_id=request.POST.get('instructor') or None,
+            )
+            
+            if course.status == 'published' and not course.published_at:
+                course.published_at = timezone.now()
+                course.save()
+            
+            messages.success(request, f'Course "{course.title}" created successfully!')
+            return redirect('dashboard:course_edit', course_id=course.id)
+        except Exception as e:
+            messages.error(request, f'Error creating course: {str(e)}')
+    
+    categories = Category.objects.all()
+    instructors = User.objects.filter(profile__role='instructor').select_related('profile')
+    
+    context = {
+        'categories': categories,
+        'instructors': instructors,
+    }
+    return render(request, 'dashboard/course_create.html', context)
+
+
+@login_required
+@role_required(['admin'])
+def dashboard_course_edit(request, course_id):
+    """Edit course"""
+    course = get_object_or_404(Course, id=course_id)
+    from myApp.models import Category
+    
+    if request.method == 'POST':
+        try:
+            from django.utils.text import slugify
+            from django.utils import timezone
+            
+            course.title = request.POST.get('title')
+            slug = request.POST.get('slug') or slugify(course.title)
+            
+            # Ensure unique slug (except for current course)
+            if slug != course.slug:
+                base_slug = slug
+                counter = 1
+                while Course.objects.filter(slug=slug).exclude(id=course.id).exists():
+                    slug = f"{base_slug}-{counter}"
+                    counter += 1
+                course.slug = slug
+            
+            course.description = request.POST.get('description', '')
+            course.short_description = request.POST.get('short_description', '')[:300]
+            course.outcome = request.POST.get('outcome', '')
+            course.category_id = request.POST.get('category') or None
+            course.level = request.POST.get('level', 'beginner')
+            course.course_type = request.POST.get('course_type', 'recorded')
+            course.language = request.POST.get('language', 'en')
+            course.price = request.POST.get('price', 0) or 0
+            course.currency = request.POST.get('currency', 'USD')
+            course.is_free = request.POST.get('is_free') == 'on'
+            course.estimated_hours = request.POST.get('estimated_hours', 10) or 10
+            course.has_certificate = request.POST.get('has_certificate') == 'on'
+            course.has_ai_tutor = request.POST.get('has_ai_tutor') == 'on'
+            course.has_quizzes = request.POST.get('has_quizzes') == 'on'
+            
+            old_status = course.status
+            course.status = request.POST.get('status', 'draft')
+            
+            # Set published_at if publishing for first time
+            if course.status == 'published' and old_status != 'published' and not course.published_at:
+                course.published_at = timezone.now()
+            
+            course.instructor_id = request.POST.get('instructor') or None
+            
+            # Handle thumbnail upload
+            if 'thumbnail' in request.FILES:
+                course.thumbnail = request.FILES['thumbnail']
+            
+            course.save()
+            
+            messages.success(request, f'Course "{course.title}" updated successfully!')
+            return redirect('dashboard:course_edit', course_id=course.id)
+        except Exception as e:
+            messages.error(request, f'Error updating course: {str(e)}')
+    
+    categories = Category.objects.all()
+    instructors = User.objects.filter(profile__role='instructor').select_related('profile')
+    
+    context = {
+        'course': course,
+        'categories': categories,
+        'instructors': instructors,
+    }
+    return render(request, 'dashboard/course_edit.html', context)
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_course_toggle_publish(request, course_id):
+    """Toggle course publish/unpublish status"""
+    from django.utils import timezone
+    course = get_object_or_404(Course, id=course_id)
+    
+    if course.status == 'published':
+        course.status = 'draft'
+        messages.success(request, f'Course "{course.title}" unpublished')
+    else:
+        course.status = 'published'
+        if not course.published_at:
+            course.published_at = timezone.now()
+        messages.success(request, f'Course "{course.title}" published')
+    
+    course.save()
+    return redirect('dashboard:courses')
+
+
+# ============================================
+# LIVE CLASSES MANAGEMENT
+# ============================================
+
+@login_required
+@role_required(['admin'])
+def dashboard_live_classes(request):
+    """Admin dashboard for managing live class sessions"""
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    live_classes = LiveClassSession.objects.select_related('course', 'teacher__user').order_by('-scheduled_start')
+    
+    # Filters
+    status = request.GET.get('status')
+    course_id = request.GET.get('course')
+    teacher_id = request.GET.get('teacher')
+    date_filter = request.GET.get('date_filter')
+    search = request.GET.get('search')
+    
+    if status:
+        live_classes = live_classes.filter(status=status)
+    if course_id:
+        live_classes = live_classes.filter(course_id=course_id)
+    if teacher_id:
+        live_classes = live_classes.filter(teacher_id=teacher_id)
+    if date_filter == 'today':
+        today = timezone.now().date()
+        live_classes = live_classes.filter(scheduled_start__date=today)
+    elif date_filter == 'upcoming':
+        live_classes = live_classes.filter(scheduled_start__gt=timezone.now())
+    elif date_filter == 'past':
+        live_classes = live_classes.filter(scheduled_start__lt=timezone.now())
+    if search:
+        live_classes = live_classes.filter(
+            Q(title__icontains=search) |
+            Q(course__title__icontains=search) |
+            Q(teacher__user__username__icontains=search)
+        )
+    
+    paginator = Paginator(live_classes, 20)
+    page = request.GET.get('page', 1)
+    try:
+        live_classes_page = paginator.get_page(page)
+    except:
+        live_classes_page = paginator.get_page(1)
+    
+    # Get filter options
+    courses = Course.objects.filter(course_type__in=['live', 'hybrid']).order_by('title')
+    teachers = Teacher.objects.filter(is_approved=True).select_related('user').order_by('user__username')
+    
+    context = {
+        'live_classes': live_classes_page,
+        'status_filter': status,
+        'course_filter': course_id,
+        'teacher_filter': teacher_id,
+        'date_filter': date_filter,
+        'search_query': search,
+        'courses': courses,
+        'teachers': teachers,
+    }
+    return render(request, 'dashboard/live_classes.html', context)
+
+
+@login_required
+@role_required(['admin'])
+def dashboard_live_class_create(request):
+    """Create new live class session"""
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    if request.method == 'POST':
+        try:
+            course_id = request.POST.get('course')
+            teacher_id = request.POST.get('teacher')
+            title = request.POST.get('title')
+            scheduled_start_str = request.POST.get('scheduled_start')
+            duration_minutes = int(request.POST.get('duration_minutes', 60))
+            meeting_link = request.POST.get('meeting_link', '').strip()
+            total_seats = int(request.POST.get('total_seats', 10))
+            
+            course = get_object_or_404(Course, id=course_id)
+            teacher = get_object_or_404(Teacher, id=teacher_id) if teacher_id else None
+            
+            # Parse datetime
+            from django.utils.dateparse import parse_datetime
+            scheduled_start = parse_datetime(scheduled_start_str)
+            if not scheduled_start:
+                # Try parsing as date + time separately
+                date_str = request.POST.get('scheduled_date')
+                time_str = request.POST.get('scheduled_time')
+                if date_str and time_str:
+                    from datetime import datetime
+                    scheduled_start = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
+                    scheduled_start = timezone.make_aware(scheduled_start)
+            
+            if not scheduled_start:
+                raise ValueError("Invalid scheduled start time")
+            
+            scheduled_end = scheduled_start + timedelta(minutes=duration_minutes)
+            
+            # Check for conflicts if teacher is assigned
+            if teacher:
+                start_utc = scheduled_start
+                end_utc = scheduled_end
+                if hasattr(scheduled_start, 'tzinfo') and scheduled_start.tzinfo is None:
+                    start_utc = timezone.make_aware(scheduled_start)
+                if hasattr(scheduled_end, 'tzinfo') and scheduled_end.tzinfo is None:
+                    end_utc = timezone.make_aware(scheduled_end)
+                
+                conflict = LiveClassSession.objects.filter(
+                    teacher=teacher,
+                    status__in=['draft', 'scheduled', 'live'],
+                ).filter(
+                    Q(start_at_utc__lt=end_utc, end_at_utc__gt=start_utc) |
+                    Q(scheduled_start__lt=end_utc, scheduled_end__gt=start_utc)
+                ).exists()
+                
+                if conflict and request.POST.get('override_conflict') != 'on':
+                    messages.error(request, f'Teacher {teacher.user.username} has a conflicting session at this time. Check "Override conflict" to proceed.')
+                    return redirect('dashboard:live_class_create')
+            
+            # Create session
+            live_class = LiveClassSession.objects.create(
+                course=course,
+                teacher=teacher,
+                title=title,
+                description=request.POST.get('description', ''),
+                scheduled_start=scheduled_start,
+                scheduled_end=scheduled_end,
+                start_at_utc=timezone.make_aware(scheduled_start) if hasattr(scheduled_start, 'tzinfo') and scheduled_start.tzinfo is None else scheduled_start,
+                end_at_utc=timezone.make_aware(scheduled_end) if hasattr(scheduled_end, 'tzinfo') and scheduled_end.tzinfo is None else scheduled_end,
+                duration_minutes=duration_minutes,
+                timezone_snapshot=request.POST.get('timezone', 'UTC'),
+                meeting_link=meeting_link or '',
+                meeting_provider=request.POST.get('meeting_provider', 'zoom'),
+                meeting_id=request.POST.get('meeting_id', ''),
+                meeting_passcode=request.POST.get('meeting_passcode', ''),
+                total_seats=total_seats,
+                seats_taken=0,
+                enable_waitlist=request.POST.get('enable_waitlist') == 'on',
+                status=request.POST.get('status', 'draft'),
+                reminder_sent=False,
+            )
+            
+            # Create audit log entry if teacher assigned
+            if teacher:
+                assignment = LiveClassTeacherAssignment.objects.create(
+                    session=live_class,
+                    assigned_by=request.user,
+                    new_teacher=teacher,
+                    reason=request.POST.get('assignment_reason', ''),
+                    notes=request.POST.get('assignment_notes', ''),
+                )
+                # Create activity log entry
+                try:
+                    from myApp.activity_log import log_teacher_assigned
+                    log_teacher_assigned(live_class, teacher, request.user, reason=request.POST.get('assignment_reason'))
+                except Exception:
+                    pass
+            
+            messages.success(request, f'Live class "{live_class.title}" created successfully!')
+            return redirect('dashboard:live_class_detail', session_id=live_class.id)
+        except Exception as e:
+            messages.error(request, f'Error creating live class: {str(e)}')
+    
+    courses = Course.objects.filter(course_type__in=['live', 'hybrid']).order_by('title')
+    teachers = Teacher.objects.filter(is_approved=True).select_related('user').order_by('user__username')
     
     context = {
         'courses': courses,
+        'teachers': teachers,
     }
-    return render(request, 'dashboard/courses.html', context)
+    return render(request, 'dashboard/live_class_create.html', context)
+
+
+@login_required
+@role_required(['admin'])
+def dashboard_live_class_edit(request, session_id):
+    """Edit live class session"""
+    live_class = get_object_or_404(LiveClassSession, id=session_id)
+    from django.utils import timezone
+    from datetime import timedelta
+    
+    if request.method == 'POST':
+        try:
+            course_id = request.POST.get('course')
+            teacher_id = request.POST.get('teacher')
+            title = request.POST.get('title')
+            scheduled_start_str = request.POST.get('scheduled_start')
+            duration_minutes = int(request.POST.get('duration_minutes', 60))
+            meeting_link = request.POST.get('meeting_link', '').strip()
+            total_seats = int(request.POST.get('total_seats', 10))
+            
+            course = get_object_or_404(Course, id=course_id)
+            new_teacher = get_object_or_404(Teacher, id=teacher_id) if teacher_id else None
+            
+            # Parse datetime
+            from django.utils.dateparse import parse_datetime
+            scheduled_start = parse_datetime(scheduled_start_str)
+            if not scheduled_start:
+                date_str = request.POST.get('scheduled_date')
+                time_str = request.POST.get('scheduled_time')
+                if date_str and time_str:
+                    from datetime import datetime
+                    scheduled_start = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
+                    scheduled_start = timezone.make_aware(scheduled_start)
+            
+            if not scheduled_start:
+                raise ValueError("Invalid scheduled start time")
+            
+            scheduled_end = scheduled_start + timedelta(minutes=duration_minutes)
+            
+            # Check for conflicts if teacher is being changed
+            old_teacher = live_class.teacher
+            if new_teacher and new_teacher != old_teacher:
+                start_utc = scheduled_start
+                end_utc = scheduled_end
+                if hasattr(scheduled_start, 'tzinfo') and scheduled_start.tzinfo is None:
+                    start_utc = timezone.make_aware(scheduled_start)
+                if hasattr(scheduled_end, 'tzinfo') and scheduled_end.tzinfo is None:
+                    end_utc = timezone.make_aware(scheduled_end)
+                
+                conflict = LiveClassSession.objects.filter(
+                    teacher=new_teacher,
+                    status__in=['draft', 'scheduled', 'live'],
+                ).exclude(id=live_class.id).filter(
+                    Q(start_at_utc__lt=end_utc, end_at_utc__gt=start_utc) |
+                    Q(scheduled_start__lt=end_utc, scheduled_end__gt=start_utc)
+                ).exists()
+                
+                if conflict and request.POST.get('override_conflict') != 'on':
+                    messages.error(request, f'Teacher {new_teacher.user.username} has a conflicting session at this time. Check "Override conflict" to proceed.')
+                    return redirect('dashboard:live_class_edit', session_id=live_class.id)
+            
+            # Update session
+            live_class.course = course
+            live_class.title = title
+            live_class.description = request.POST.get('description', '')
+            live_class.scheduled_start = scheduled_start
+            live_class.scheduled_end = scheduled_end
+            live_class.start_at_utc = timezone.make_aware(scheduled_start) if hasattr(scheduled_start, 'tzinfo') and scheduled_start.tzinfo is None else scheduled_start
+            live_class.end_at_utc = timezone.make_aware(scheduled_end) if hasattr(scheduled_end, 'tzinfo') and scheduled_end.tzinfo is None else scheduled_end
+            live_class.duration_minutes = duration_minutes
+            live_class.timezone_snapshot = request.POST.get('timezone', 'UTC')
+            live_class.meeting_link = meeting_link or ''
+            live_class.meeting_provider = request.POST.get('meeting_provider', 'zoom')
+            live_class.meeting_id = request.POST.get('meeting_id', '')
+            live_class.meeting_passcode = request.POST.get('meeting_passcode', '')
+            live_class.total_seats = total_seats
+            live_class.enable_waitlist = request.POST.get('enable_waitlist') == 'on'
+            live_class.status = request.POST.get('status', 'draft')
+            
+            # Handle teacher assignment/reassignment
+            if new_teacher != old_teacher:
+                live_class.teacher = new_teacher
+                # Create audit log entry
+                assignment = LiveClassTeacherAssignment.objects.create(
+                    session=live_class,
+                    assigned_by=request.user,
+                    old_teacher=old_teacher,
+                    new_teacher=new_teacher,
+                    reason=request.POST.get('assignment_reason', ''),
+                    notes=request.POST.get('assignment_notes', ''),
+                )
+                # Create activity log entry
+                try:
+                    from myApp.activity_log import log_teacher_reassigned, log_teacher_assigned, log_teacher_unassigned
+                    if old_teacher and new_teacher:
+                        log_teacher_reassigned(live_class, old_teacher, new_teacher, request.user, reason=request.POST.get('assignment_reason'))
+                    elif new_teacher:
+                        log_teacher_assigned(live_class, new_teacher, request.user, reason=request.POST.get('assignment_reason'))
+                    elif old_teacher:
+                        log_teacher_unassigned(live_class, old_teacher, request.user, reason=request.POST.get('assignment_reason'))
+                except Exception:
+                    pass
+            
+            live_class.save()
+            
+            messages.success(request, f'Live class "{live_class.title}" updated successfully!')
+            return redirect('dashboard:live_class_detail', session_id=live_class.id)
+        except Exception as e:
+            messages.error(request, f'Error updating live class: {str(e)}')
+    
+    courses = Course.objects.filter(course_type__in=['live', 'hybrid']).order_by('title')
+    teachers = Teacher.objects.filter(is_approved=True).select_related('user').order_by('user__username')
+    
+    # Get assignment history
+    assignment_history = LiveClassTeacherAssignment.objects.filter(session=live_class).select_related('assigned_by', 'old_teacher__user', 'new_teacher__user').order_by('-created_at')
+    
+    context = {
+        'live_class': live_class,
+        'courses': courses,
+        'teachers': teachers,
+        'assignment_history': assignment_history,
+    }
+    return render(request, 'dashboard/live_class_edit.html', context)
+
+
+@login_required
+@role_required(['admin'])
+def dashboard_live_class_detail(request, session_id):
+    """View live class session details"""
+    live_class = get_object_or_404(LiveClassSession.objects.select_related('course', 'teacher__user'), id=session_id)
+    
+    # Get assignment history
+    assignment_history = LiveClassTeacherAssignment.objects.filter(session=live_class).select_related('assigned_by', 'old_teacher__user', 'new_teacher__user').order_by('-created_at')
+    
+    # Get activity logs
+    from myApp.models import ActivityLog
+    activity_logs = ActivityLog.objects.filter(
+        entity_type='live_class',
+        entity_id=live_class.id
+    ).select_related('actor').order_by('-created_at')
+    
+    # Get bookings
+    from myApp.models import LiveClassBooking
+    bookings = LiveClassBooking.objects.filter(
+        course=live_class.course,
+        start_at_utc=live_class.start_at_utc
+    ).select_related('student_user').order_by('-created_at')[:10]
+    
+    context = {
+        'live_class': live_class,
+        'assignment_history': assignment_history,
+        'activity_logs': activity_logs,
+        'bookings': bookings,
+    }
+    return render(request, 'dashboard/live_class_detail.html', context)
+
+
+@login_required
+@role_required(['admin'])
+@require_GET
+def dashboard_check_teacher_availability(request):
+    """API endpoint to check teacher availability and conflicts"""
+    from django.http import JsonResponse
+    from django.utils import timezone
+    from datetime import timedelta
+    import json
+    
+    teacher_id = request.GET.get('teacher_id')
+    start_time_str = request.GET.get('start_time')
+    end_time_str = request.GET.get('end_time')
+    exclude_session_id = request.GET.get('exclude_session_id')
+    
+    if not teacher_id or not start_time_str or not end_time_str:
+        return JsonResponse({'error': 'Missing required parameters'}, status=400)
+    
+    try:
+        teacher = Teacher.objects.get(id=teacher_id)
+        
+        # Parse datetime strings
+        from django.utils.dateparse import parse_datetime
+        start_time = parse_datetime(start_time_str)
+        end_time = parse_datetime(end_time_str)
+        
+        if not start_time or not end_time:
+            return JsonResponse({'error': 'Invalid datetime format'}, status=400)
+        
+        # Make timezone-aware if needed
+        if hasattr(start_time, 'tzinfo') and start_time.tzinfo is None:
+            start_time = timezone.make_aware(start_time)
+        if hasattr(end_time, 'tzinfo') and end_time.tzinfo is None:
+            end_time = timezone.make_aware(end_time)
+        
+        # Check for conflicts
+        conflicting_sessions = LiveClassSession.objects.filter(
+            teacher=teacher,
+            status__in=['draft', 'scheduled', 'live'],
+        )
+        if exclude_session_id:
+            conflicting_sessions = conflicting_sessions.exclude(id=exclude_session_id)
+        
+        conflicts = conflicting_sessions.filter(
+            Q(start_at_utc__lt=end_time, end_at_utc__gt=start_time) |
+            Q(scheduled_start__lt=end_time, scheduled_end__gt=start_time)
+        )
+        
+        # Check availability slots
+        session_day = start_time.weekday()
+        session_time = start_time.time()
+        
+        # Check if teacher has availability for this time
+        availability_slots = TeacherAvailability.objects.filter(
+            teacher=teacher,
+            is_active=True,
+            is_blocked=False,
+        )
+        
+        # Check recurring slots
+        recurring_match = availability_slots.filter(
+            slot_type='recurring',
+            day_of_week=session_day,
+            start_time__lte=session_time,
+            end_time__gte=session_time,
+        )
+        
+        # Check one-time slots
+        one_time_match = availability_slots.filter(
+            slot_type='one_time',
+            start_datetime__lte=start_time,
+            end_datetime__gte=end_time,
+        )
+        
+        has_availability = recurring_match.exists() or one_time_match.exists()
+        
+        return JsonResponse({
+            'has_conflict': conflicts.exists(),
+            'has_availability': has_availability,
+            'conflicts': [
+                {
+                    'id': c.id,
+                    'title': c.title,
+                    'start': c.scheduled_start.isoformat() if c.scheduled_start else None,
+                    'end': c.scheduled_end.isoformat() if c.scheduled_end else None,
+                }
+                for c in conflicts[:5]
+            ],
+            'upcoming_sessions_count': LiveClassSession.objects.filter(
+                teacher=teacher,
+                status__in=['draft', 'scheduled', 'live'],
+                scheduled_start__gt=timezone.now()
+            ).count(),
+        })
+    except Teacher.DoesNotExist:
+        return JsonResponse({'error': 'Teacher not found'}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+# ============================================
+# CRM - LEAD TRACKER
+# ============================================
+
+@login_required
+@role_required(['admin'])
+def dashboard_leads(request):
+    """CRM Lead list page"""
+    leads = Lead.objects.select_related('owner', 'linked_user').prefetch_related(
+        'gift_enrollments__gift_enrollment__course',
+        'enrollments__enrollment__course'
+    ).order_by('-updated_at')
+    
+    # Filters
+    status = request.GET.get('status')
+    source = request.GET.get('source')
+    owner_id = request.GET.get('owner')
+    search = request.GET.get('search')
+    sort = request.GET.get('sort', 'updated')
+    
+    if status:
+        leads = leads.filter(status=status)
+    if source:
+        leads = leads.filter(source=source)
+    if owner_id:
+        leads = leads.filter(owner_id=owner_id)
+    if search:
+        leads = leads.filter(
+            Q(name__icontains=search) |
+            Q(email__icontains=search) |
+            Q(phone__icontains=search)
+        )
+    
+    # Sorting
+    if sort == 'updated':
+        leads = leads.order_by('-updated_at')
+    elif sort == 'contact':
+        leads = leads.order_by('-last_contact_date', '-updated_at')
+    elif sort == 'created':
+        leads = leads.order_by('-created_at')
+    elif sort == 'name':
+        leads = leads.order_by('name')
+    
+    paginator = Paginator(leads, 20)
+    page = request.GET.get('page', 1)
+    try:
+        leads_page = paginator.get_page(page)
+    except:
+        leads_page = paginator.get_page(1)
+    
+    # Get filter options
+    owners = User.objects.filter(profile__role__in=['admin', 'staff']).select_related('profile').order_by('username')
+    
+    context = {
+        'leads': leads_page,
+        'status_filter': status,
+        'source_filter': source,
+        'owner_filter': owner_id,
+        'search_query': search,
+        'sort': sort,
+        'owners': owners,
+    }
+    return render(request, 'dashboard/leads.html', context)
+
+
+@login_required
+@role_required(['admin'])
+def dashboard_lead_detail(request, lead_id):
+    """CRM Lead detail page (read-only)"""
+    lead = get_object_or_404(Lead.objects.select_related('owner', 'linked_user'), id=lead_id)
+    
+    # Get timeline events
+    timeline_events = LeadTimelineEvent.objects.filter(lead=lead).select_related('actor').order_by('-created_at')
+    
+    # Get activity logs
+    from myApp.models import ActivityLog
+    activity_logs = ActivityLog.objects.filter(
+        entity_type='lead',
+        entity_id=lead.id
+    ).select_related('actor').order_by('-created_at')
+    
+    # Get linked records
+    gift_enrollments = GiftEnrollmentLeadLink.objects.filter(lead=lead).select_related('gift_enrollment__course', 'gift_enrollment__buyer').order_by('-created_at')
+    enrollments = EnrollmentLeadLink.objects.filter(lead=lead).select_related('enrollment__course', 'enrollment__user').order_by('-created_at')
+    
+    # Get all users for linking
+    users = User.objects.all().order_by('username')
+    
+    context = {
+        'lead': lead,
+        'timeline_events': timeline_events,
+        'activity_logs': activity_logs,
+        'gift_enrollments': gift_enrollments,
+        'enrollments': enrollments,
+        'users': users,
+    }
+    return render(request, 'dashboard/lead_detail.html', context)
+
+
+@login_required
+@role_required(['admin'])
+def dashboard_lead_create(request):
+    """Create new lead"""
+    if request.method == 'POST':
+        try:
+            lead = Lead.objects.create(
+                name=request.POST.get('name'),
+                email=request.POST.get('email') or None,
+                phone=request.POST.get('phone', ''),
+                source=request.POST.get('source', 'other'),
+                status=request.POST.get('status', 'new'),
+                notes=request.POST.get('notes', ''),
+                owner_id=request.POST.get('owner') or None,
+            )
+            
+            # Create timeline event
+            LeadTimelineEvent.objects.create(
+                lead=lead,
+                event_type='LEAD_CREATED',
+                actor=request.user,
+                summary=f"Lead created by {request.user.get_full_name() or request.user.username}",
+                metadata={'source': lead.source}
+            )
+            
+            messages.success(request, f'Lead "{lead.name}" created successfully!')
+            return redirect('dashboard:lead_detail', lead_id=lead.id)
+        except Exception as e:
+            messages.error(request, f'Error creating lead: {str(e)}')
+    
+    owners = User.objects.filter(profile__role__in=['admin', 'staff']).select_related('profile').order_by('username')
+    
+    context = {
+        'owners': owners,
+    }
+    return render(request, 'dashboard/lead_create.html', context)
+
+
+@login_required
+@role_required(['admin'])
+def dashboard_lead_edit(request, lead_id):
+    """Edit lead"""
+    lead = get_object_or_404(Lead, id=lead_id)
+    
+    if request.method == 'POST':
+        try:
+            old_status = lead.status
+            old_owner = lead.owner
+            
+            lead.name = request.POST.get('name')
+            lead.email = request.POST.get('email') or None
+            lead.phone = request.POST.get('phone', '')
+            lead.source = request.POST.get('source', 'other')
+            lead.status = request.POST.get('status', 'new')
+            lead.notes = request.POST.get('notes', '')
+            lead.owner_id = request.POST.get('owner') or None
+            
+            # Update last contact date if status changed to contacted/follow_up
+            if lead.status in ['contacted', 'follow_up'] and not lead.last_contact_date:
+                lead.last_contact_date = timezone.now()
+            
+            lead.save()
+            
+            # Create timeline events for changes
+            if old_status != lead.status:
+                LeadTimelineEvent.objects.create(
+                    lead=lead,
+                    event_type='LEAD_STATUS_CHANGED',
+                    actor=request.user,
+                    summary=f"Status changed from {dict(Lead.STATUS_CHOICES).get(old_status, old_status)} to {lead.get_status_display()}",
+                    metadata={'old_status': old_status, 'new_status': lead.status}
+                )
+                # Create activity log entry
+                try:
+                    from myApp.activity_log import log_lead_status_updated
+                    log_lead_status_updated(lead, old_status, lead.status, actor=request.user)
+                except Exception:
+                    pass
+            
+            if old_owner != lead.owner:
+                LeadTimelineEvent.objects.create(
+                    lead=lead,
+                    event_type='LEAD_OWNER_CHANGED',
+                    actor=request.user,
+                    summary=f"Owner changed to {lead.owner.get_full_name() if lead.owner else 'Unassigned'}",
+                    metadata={'old_owner_id': old_owner.id if old_owner else None, 'new_owner_id': lead.owner.id if lead.owner else None}
+                )
+            
+            # General update event
+            LeadTimelineEvent.objects.create(
+                lead=lead,
+                event_type='LEAD_UPDATED',
+                actor=request.user,
+                summary=f"Lead updated by {request.user.get_full_name() or request.user.username}",
+                metadata={}
+            )
+            
+            messages.success(request, f'Lead "{lead.name}" updated successfully!')
+            return redirect('dashboard:lead_detail', lead_id=lead.id)
+        except Exception as e:
+            messages.error(request, f'Error updating lead: {str(e)}')
+    
+    owners = User.objects.filter(profile__role__in=['admin', 'staff']).select_related('profile').order_by('username')
+    users = User.objects.all().order_by('username')
+    
+    context = {
+        'lead': lead,
+        'owners': owners,
+        'users': users,
+    }
+    return render(request, 'dashboard/lead_edit.html', context)
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_lead_add_note(request, lead_id):
+    """Add note to lead"""
+    lead = get_object_or_404(Lead, id=lead_id)
+    
+    note_text = request.POST.get('note', '').strip()
+    if not note_text:
+        messages.error(request, 'Note cannot be empty')
+        return redirect('dashboard:lead_detail', lead_id=lead.id)
+    
+    # Append note
+    if lead.notes:
+        lead.notes += f"\n\n[{timezone.now().strftime('%Y-%m-%d %H:%M')}] {note_text}"
+    else:
+        lead.notes = f"[{timezone.now().strftime('%Y-%m-%d %H:%M')}] {note_text}"
+    
+    lead.save(update_fields=['notes', 'updated_at'])
+    
+    # Create timeline event
+    LeadTimelineEvent.objects.create(
+        lead=lead,
+        event_type='LEAD_NOTE_ADDED',
+        actor=request.user,
+        summary=f"Note added: {note_text[:100]}",
+        metadata={'note_length': len(note_text)}
+    )
+    
+    messages.success(request, 'Note added successfully!')
+    return redirect('dashboard:lead_detail', lead_id=lead.id)
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_lead_link_user(request, lead_id):
+    """Manually link/unlink user to lead"""
+    lead = get_object_or_404(Lead, id=lead_id)
+    user_id = request.POST.get('user_id')
+    action = request.POST.get('action', 'link')
+    
+    if action == 'link' and user_id:
+        user = get_object_or_404(User, id=user_id)
+        lead.linked_user = user
+        lead.save(update_fields=['linked_user', 'updated_at'])
+        
+        LeadTimelineEvent.objects.create(
+            lead=lead,
+            event_type='USER_LINKED_TO_LEAD',
+            actor=request.user,
+            summary=f"User {user.get_full_name() or user.username} manually linked to lead",
+            metadata={'user_id': user.id, 'manual': True}
+        )
+        messages.success(request, f'User linked to lead successfully!')
+    elif action == 'unlink':
+        old_user = lead.linked_user
+        lead.linked_user = None
+        lead.save(update_fields=['linked_user', 'updated_at'])
+        
+        LeadTimelineEvent.objects.create(
+            lead=lead,
+            event_type='USER_UNLINKED_FROM_LEAD',
+            actor=request.user,
+            summary=f"User {old_user.get_full_name() if old_user else 'Unknown'} unlinked from lead",
+            metadata={'user_id': old_user.id if old_user else None, 'manual': True}
+        )
+        messages.success(request, 'User unlinked from lead successfully!')
+    
+    return redirect('dashboard:lead_detail', lead_id=lead.id)
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_lead_link_gift(request, lead_id):
+    """Manually link/unlink gift enrollment to lead"""
+    lead = get_object_or_404(Lead, id=lead_id)
+    gift_id = request.POST.get('gift_id')
+    action = request.POST.get('action', 'link')
+    
+    if action == 'link' and gift_id:
+        gift = get_object_or_404(GiftEnrollment, id=gift_id)
+        link, created = GiftEnrollmentLeadLink.objects.get_or_create(
+            gift_enrollment=gift,
+            lead=lead,
+            defaults={'created_by': request.user}
+        )
+        
+        if created:
+            LeadTimelineEvent.objects.create(
+                lead=lead,
+                event_type='GIFT_LINKED_TO_LEAD',
+                actor=request.user,
+                summary=f"Gift enrollment for {gift.course.title} manually linked to lead",
+                metadata={'gift_id': gift.id, 'manual': True}
+            )
+            messages.success(request, 'Gift enrollment linked to lead successfully!')
+        else:
+            messages.info(request, 'Gift enrollment already linked to this lead')
+    elif action == 'unlink' and gift_id:
+        gift = get_object_or_404(GiftEnrollment, id=gift_id)
+        GiftEnrollmentLeadLink.objects.filter(gift_enrollment=gift, lead=lead).delete()
+        
+        LeadTimelineEvent.objects.create(
+            lead=lead,
+            event_type='GIFT_UNLINKED_FROM_LEAD',
+            actor=request.user,
+            summary=f"Gift enrollment for {gift.course.title} unlinked from lead",
+            metadata={'gift_id': gift.id, 'manual': True}
+        )
+        messages.success(request, 'Gift enrollment unlinked from lead successfully!')
+    
+    return redirect('dashboard:lead_detail', lead_id=lead.id)
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_lead_link_enrollment(request, lead_id):
+    """Manually link/unlink enrollment to lead"""
+    lead = get_object_or_404(Lead, id=lead_id)
+    enrollment_id = request.POST.get('enrollment_id')
+    action = request.POST.get('action', 'link')
+    
+    if action == 'link' and enrollment_id:
+        enrollment = get_object_or_404(Enrollment, id=enrollment_id)
+        link, created = EnrollmentLeadLink.objects.get_or_create(
+            enrollment=enrollment,
+            lead=lead,
+            defaults={'created_by': request.user}
+        )
+        
+        if created:
+            LeadTimelineEvent.objects.create(
+                lead=lead,
+                event_type='ENROLLMENT_LINKED_TO_LEAD',
+                actor=request.user,
+                summary=f"Enrollment in {enrollment.course.title} manually linked to lead",
+                metadata={'enrollment_id': enrollment.id, 'manual': True}
+            )
+            messages.success(request, 'Enrollment linked to lead successfully!')
+        else:
+            messages.info(request, 'Enrollment already linked to this lead')
+    elif action == 'unlink' and enrollment_id:
+        enrollment = get_object_or_404(Enrollment, id=enrollment_id)
+        EnrollmentLeadLink.objects.filter(enrollment=enrollment, lead=lead).delete()
+        
+        LeadTimelineEvent.objects.create(
+            lead=lead,
+            event_type='ENROLLMENT_UNLINKED_FROM_LEAD',
+            actor=request.user,
+            summary=f"Enrollment in {enrollment.course.title} unlinked from lead",
+            metadata={'enrollment_id': enrollment.id, 'manual': True}
+        )
+        messages.success(request, 'Enrollment unlinked from lead successfully!')
+    
+    return redirect('dashboard:lead_detail', lead_id=lead.id)
+
+
+@login_required
+@role_required(['admin'])
+def dashboard_crm_analytics(request):
+    """CRM Analytics dashboard"""
+    from datetime import timedelta
+    
+    # Date filters
+    date_from = request.GET.get('date_from')
+    date_to = request.GET.get('date_to')
+    owner_filter = request.GET.get('owner')
+    source_filter = request.GET.get('source')
+    
+    # Base queryset
+    leads = Lead.objects.all()
+    
+    if date_from:
+        try:
+            from datetime import datetime
+            date_from_obj = datetime.strptime(date_from, '%Y-%m-%d')
+            leads = leads.filter(created_at__gte=date_from_obj)
+        except:
+            pass
+    
+    if date_to:
+        try:
+            from datetime import datetime
+            date_to_obj = datetime.strptime(date_to, '%Y-%m-%d')
+            leads = leads.filter(created_at__lte=date_to_obj)
+        except:
+            pass
+    
+    if owner_filter:
+        leads = leads.filter(owner_id=owner_filter)
+    
+    if source_filter:
+        leads = leads.filter(source=source_filter)
+    
+    # Metrics
+    total_leads = leads.count()
+    leads_by_status = leads.values('status').annotate(count=Count('id')).order_by('status')
+    
+    enrolled_leads = leads.filter(status='enrolled').count()
+    conversion_rate = (enrolled_leads / total_leads * 100) if total_leads > 0 else 0
+    
+    # Source performance
+    source_performance = []
+    for source_code, source_name in Lead.SOURCE_CHOICES:
+        source_leads = leads.filter(source=source_code)
+        source_count = source_leads.count()
+        source_enrolled = source_leads.filter(status='enrolled').count()
+        source_conversion = (source_enrolled / source_count * 100) if source_count > 0 else 0
+        
+        source_performance.append({
+            'source': source_name,
+            'code': source_code,
+            'lead_count': source_count,
+            'enrolled_count': source_enrolled,
+            'conversion_rate': source_conversion,
+        })
+    
+    # Sort by lead count
+    source_performance.sort(key=lambda x: x['lead_count'], reverse=True)
+    
+    # Get filter options
+    owners = User.objects.filter(profile__role__in=['admin', 'staff']).select_related('profile').order_by('username')
+    
+    context = {
+        'total_leads': total_leads,
+        'leads_by_status': leads_by_status,
+        'enrolled_leads': enrolled_leads,
+        'conversion_rate': conversion_rate,
+        'source_performance': source_performance,
+        'date_from': date_from,
+        'date_to': date_to,
+        'owner_filter': owner_filter,
+        'source_filter': source_filter,
+        'owners': owners,
+    }
+    return render(request, 'dashboard/crm_analytics.html', context)
 
 
 # ============================================
@@ -495,6 +1550,117 @@ def dashboard_payments(request):
         'payments': payments,
     }
     return render(request, 'dashboard/payments.html', context)
+
+
+# ============================================
+# GIFTED COURSES MANAGEMENT
+# ============================================
+
+@login_required
+@role_required(['admin'])
+def dashboard_gifted_courses(request):
+    """Admin dashboard for managing gifted courses"""
+    import logging
+    logger = logging.getLogger(__name__)
+    from myApp.models import GiftEnrollment
+    
+    # Log query attempt
+    logger.info(f"Admin dashboard: Querying GiftEnrollment records. User: {request.user.username}")
+    
+    # Get total count before filters
+    total_count = GiftEnrollment.objects.count()
+    logger.info(f"Total GiftEnrollment records in database: {total_count}")
+    
+    gifts = GiftEnrollment.objects.select_related('buyer', 'course', 'payment', 'enrollment').order_by('-created_at')
+    
+    # Filters
+    status = request.GET.get('status')
+    search = request.GET.get('search')
+    
+    if status:
+        gifts = gifts.filter(status=status)
+        logger.info(f"Filtered by status: {status}")
+    if search:
+        gifts = gifts.filter(
+            Q(buyer__username__icontains=search) |
+            Q(buyer__email__icontains=search) |
+            Q(recipient_email__icontains=search) |
+            Q(course__title__icontains=search)
+        )
+        logger.info(f"Filtered by search: {search}")
+    
+    # Log filtered count
+    filtered_count = gifts.count()
+    logger.info(f"GiftEnrollment records after filters: {filtered_count}")
+    
+    paginator = Paginator(gifts, 20)
+    page = request.GET.get('page', 1)
+    try:
+        gifts_page = paginator.get_page(page)
+    except:
+        gifts_page = paginator.get_page(1)
+    
+    logger.info(f"Rendering page {page} with {gifts_page.object_list.count()} gifts")
+    
+    context = {
+        'gifts': gifts_page,
+        'status_filter': status,
+        'search_query': search,
+        'total_count': total_count,
+    }
+    return render(request, 'dashboard/gifted_courses.html', context)
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_resend_gift_email(request, gift_id):
+    """Resend gift email to recipient"""
+    from myApp.models import GiftEnrollment
+    from myApp.views import send_gift_email
+    
+    gift = get_object_or_404(GiftEnrollment, id=gift_id)
+    
+    if gift.status != 'pending_claim':
+        messages.error(request, 'Can only resend email for pending gifts')
+        return redirect('dashboard:gifted_courses')
+    
+    try:
+        send_gift_email(gift, request)
+        messages.success(request, f'Gift email resent to {gift.recipient_email}')
+    except Exception as e:
+        messages.error(request, f'Failed to resend email: {str(e)}')
+    
+    return redirect('dashboard:gifted_courses')
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_manual_claim_gift(request, gift_id):
+    """Manually mark gift as claimed (support use)"""
+    from myApp.models import GiftEnrollment, User
+    
+    gift = get_object_or_404(GiftEnrollment, id=gift_id)
+    
+    if gift.status != 'pending_claim':
+        messages.error(request, 'Gift has already been claimed')
+        return redirect('dashboard:gifted_courses')
+    
+    # Try to find user by email
+    try:
+        user = User.objects.get(email__iexact=gift.recipient_email)
+        
+        # Claim the gift
+        try:
+            enrollment = gift.claim(user)
+            messages.success(request, f'Gift claimed successfully for {user.username}')
+        except ValueError as e:
+            messages.error(request, f'Failed to claim gift: {str(e)}')
+    except User.DoesNotExist:
+        messages.error(request, f'No user found with email {gift.recipient_email}. User must create an account first.')
+    
+    return redirect('dashboard:gifted_courses')
 
 
 # ============================================

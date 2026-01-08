@@ -1,2 +1,1 @@
-# Template tags for Fluentory
-
+# Template tags package

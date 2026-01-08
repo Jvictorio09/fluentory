@@ -1,0 +1,30 @@
+{% extends 'student/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="p-4 sm:p-6 lg:p-8 xl:p-10 w-full max-w-3xl mx-auto">
+    <div class="bg-[#04363a]/90 backdrop-blur-xl rounded-3xl p-8 border border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.3)]">
+        <!-- Error Header -->
+        <div class="text-center mb-8">
+            <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-red-500/20 border border-red-500/30 grid place-items-center">
+                <i class="fas fa-exclamation-triangle text-red-400 text-3xl"></i>
+            </div>
+            <h1 class="text-3xl font-light text-white mb-2">{{ error|default:"Error" }}</h1>
+            <p class="text-white/70">{{ message|default:"Something went wrong." }}</p>
+        </div>
+        
+        <!-- Actions -->
+        <div class="flex gap-3">
+            <a href="{% url 'student_courses' %}" 
+               class="flex-1 text-center py-3 border border-white/20 text-white rounded-xl font-medium hover:bg-[#254346]/50 transition">
+                Browse Courses
+            </a>
+            <a href="{% url 'student_home' %}" 
+               class="flex-1 text-center py-3 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl font-medium hover:opacity-90 transition">
+                Go to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

@@ -6,7 +6,9 @@ from .models import (
     Certificate, PlacementTest, TutorConversation, TutorMessage,
     Partner, Cohort, CohortMembership, Payment, Review, FAQ,
     Notification, SiteSettings, Media,
-    TeacherAvailability, Booking, OneOnOneBooking, BookingReminder
+    TeacherAvailability, Booking, OneOnOneBooking, BookingReminder,
+    GiftEnrollment, LiveClassSession, LiveClassTeacherAssignment,
+    Lead, LeadTimelineEvent, GiftEnrollmentLeadLink, EnrollmentLeadLink
 )
 
 
@@ -477,3 +479,102 @@ class BookingReminderAdmin(admin.ModelAdmin):
             return f"1:1: {obj.one_on_one_booking.user.get_full_name()} - {obj.one_on_one_booking.availability_slot}"
         return "N/A"
     get_booking.short_description = 'Booking'
+
+
+# ============================================
+# GIFT ENROLLMENTS ADMIN
+# ============================================
+
+@admin.register(GiftEnrollment)
+class GiftEnrollmentAdmin(admin.ModelAdmin):
+    list_display = ['id', 'course', 'buyer', 'recipient_email', 'status', 'created_at', 'claimed_at']
+    list_filter = ['status', 'created_at', 'claimed_at']
+    search_fields = ['buyer__username', 'buyer__email', 'recipient_email', 'course__title', 'gift_token']
+    readonly_fields = ['gift_token', 'created_at', 'claimed_at']
+    date_hierarchy = 'created_at'
+    raw_id_fields = ['buyer', 'course', 'payment', 'enrollment']
+    
+    fieldsets = (
+        ('Gift Information', {
+            'fields': ('gift_token', 'buyer', 'course', 'status')
+        }),
+        ('Recipient Information', {
+            'fields': ('recipient_email', 'recipient_name', 'sender_name', 'gift_message')
+        }),
+        ('Payment & Enrollment', {
+            'fields': ('payment', 'enrollment')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'claimed_at', 'expires_at')
+        }),
+    )
+
+
+# ============================================
+# LIVE CLASS SESSIONS ADMIN
+# ============================================
+
+@admin.register(LiveClassSession)
+class LiveClassSessionAdmin(admin.ModelAdmin):
+    list_display = ['title', 'course', 'teacher', 'scheduled_start', 'status', 'seats_taken', 'total_seats']
+    list_filter = ['status', 'course', 'teacher', 'scheduled_start']
+    search_fields = ['title', 'course__title', 'teacher__user__username']
+    readonly_fields = ['created_at', 'updated_at', 'started_at', 'ended_at']
+    date_hierarchy = 'scheduled_start'
+    raw_id_fields = ['course', 'teacher']
+
+
+# ============================================
+# LIVE CLASS TEACHER ASSIGNMENT ADMIN
+# ============================================
+
+@admin.register(LiveClassTeacherAssignment)
+class LiveClassTeacherAssignmentAdmin(admin.ModelAdmin):
+    list_display = ['session', 'old_teacher', 'new_teacher', 'assigned_by', 'created_at']
+    list_filter = ['created_at', 'session__course']
+    search_fields = ['session__title', 'old_teacher__user__username', 'new_teacher__user__username', 'assigned_by__username']
+    readonly_fields = ['created_at']
+    date_hierarchy = 'created_at'
+    raw_id_fields = ['session', 'old_teacher', 'new_teacher', 'assigned_by']
+
+
+# ============================================
+# CRM - LEAD TRACKER ADMIN
+# ============================================
+
+@admin.register(Lead)
+class LeadAdmin(admin.ModelAdmin):
+    list_display = ['name', 'email', 'phone', 'source', 'status', 'owner', 'last_contact_date', 'created_at']
+    list_filter = ['status', 'source', 'owner', 'created_at']
+    search_fields = ['name', 'email', 'phone']
+    readonly_fields = ['created_at', 'updated_at']
+    date_hierarchy = 'created_at'
+    raw_id_fields = ['owner', 'linked_user']
+
+
+@admin.register(LeadTimelineEvent)
+class LeadTimelineEventAdmin(admin.ModelAdmin):
+    list_display = ['lead', 'event_type', 'actor', 'created_at']
+    list_filter = ['event_type', 'created_at']
+    search_fields = ['lead__name', 'lead__email', 'summary']
+    readonly_fields = ['created_at']
+    date_hierarchy = 'created_at'
+    raw_id_fields = ['lead', 'actor']
+
+
+@admin.register(GiftEnrollmentLeadLink)
+class GiftEnrollmentLeadLinkAdmin(admin.ModelAdmin):
+    list_display = ['gift_enrollment', 'lead', 'created_at', 'created_by']
+    list_filter = ['created_at']
+    search_fields = ['gift_enrollment__recipient_email', 'lead__name', 'lead__email']
+    readonly_fields = ['created_at']
+    raw_id_fields = ['gift_enrollment', 'lead', 'created_by']
+
+
+@admin.register(EnrollmentLeadLink)
+class EnrollmentLeadLinkAdmin(admin.ModelAdmin):
+    list_display = ['enrollment', 'lead', 'created_at', 'created_by']
+    list_filter = ['created_at']
+    search_fields = ['enrollment__user__username', 'lead__name', 'lead__email']
+    readonly_fields = ['created_at']
+    raw_id_fields = ['enrollment', 'lead', 'created_by']

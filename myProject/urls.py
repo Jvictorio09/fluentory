@@ -66,6 +66,12 @@ urlpatterns = [
     path('api/enroll/', views.enroll_course, name='enroll_course'),
     path('api/tutor/chat/', views.ai_tutor_chat, name='ai_tutor_chat'),
     
+    # Gift a Course
+    path('api/purchase-gift/', views.purchase_gift, name='purchase_gift'),
+    path('gift/claim/<uuid:gift_token>/', views.claim_gift, name='claim_gift'),
+    path('api/claim-gift/', views.claim_gift_authenticated, name='claim_gift_authenticated'),
+    path('student/gift-confirmation/<int:gift_id>/', views.gift_confirmation, name='gift_confirmation'),
+    
     # Certificate verification (public)
     path('verify/<uuid:certificate_id>/', views.verify_certificate, name='verify_certificate'),
     

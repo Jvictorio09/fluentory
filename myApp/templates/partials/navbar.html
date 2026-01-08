@@ -1,4 +1,4 @@
-<nav class="navbar sticky top-0 bg-transparent backdrop-blur-md z-[1000] transition-all duration-300 border-b border-transparent" style="height: 72px; min-height: 72px; max-height: 72px;">
+<nav class="navbar sticky top-0 bg-transparent backdrop-blur-md z-[1000] transition-all duration-300 border-b border-transparent" style="height: 72px; min-height: 72px; max-height: 72px; pointer-events: auto;">
     <style>
         /* Logo visibility in light mode */
         html[data-theme="light"] .navbar-logo,
@@ -16,7 +16,7 @@
     <div class="max-w-[1600px] mx-auto px-8 lg:px-20 h-full flex items-center relative">
         <!-- Logo Container - Left side -->
         <div class="flex items-center" style="min-width: 0;">
-            <a href="/" class="inline-flex items-center hover:opacity-90 transition-opacity" style="line-height: 0;">
+            <a href="{% url 'home' %}" class="inline-flex items-center hover:opacity-90 transition-opacity" style="line-height: 0;">
                 <img 
                     src="https://res.cloudinary.com/dkjtfjnlf/image/upload/v1766498125/Fluentory-Trsp-LS_xlra0r.png" 
                     alt="Fluentory - Global Learning Platform" 
@@ -28,27 +28,27 @@
         </div>
         
         <!-- Navigation Links - Centered -->
-        <div class="hidden lg:flex gap-10 items-center h-full absolute left-1/2 transform -translate-x-1/2">
-            <a href="#courses" class="no-underline text-sm font-semibold relative group transition-colors flex items-center h-full smooth-scroll" style="color: var(--text-secondary);">
+        <div class="hidden lg:flex gap-10 items-center h-full absolute left-1/2 transform -translate-x-1/2" style="pointer-events: auto; z-index: 10;">
+            <a href="{% url 'home' %}#courses" class="no-underline text-sm font-semibold relative group transition-colors flex items-center h-full smooth-scroll" style="color: var(--text-secondary); pointer-events: auto;">
                 <span>Courses</span>
                 <span class="absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full" style="background-color: var(--accent-primary);"></span>
             </a>
-            <a href="#outcomes" class="no-underline text-sm font-semibold relative group transition-colors flex items-center h-full smooth-scroll" style="color: var(--text-secondary);">
+            <a href="{% url 'home' %}#outcomes" class="no-underline text-sm font-semibold relative group transition-colors flex items-center h-full smooth-scroll" style="color: var(--text-secondary); pointer-events: auto;">
                 <span>Outcomes</span>
                 <span class="absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full" style="background-color: var(--accent-primary);"></span>
             </a>
-            <a href="#proof" class="no-underline text-sm font-semibold relative group transition-colors flex items-center h-full smooth-scroll" style="color: var(--text-secondary);">
+            <a href="{% url 'home' %}#proof" class="no-underline text-sm font-semibold relative group transition-colors flex items-center h-full smooth-scroll" style="color: var(--text-secondary); pointer-events: auto;">
                 <span>Proof</span>
                 <span class="absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full" style="background-color: var(--accent-primary);"></span>
             </a>
-            <a href="#pricing" class="no-underline text-sm font-semibold relative group transition-colors flex items-center h-full smooth-scroll" style="color: var(--text-secondary);">
+            <a href="{% url 'home' %}#pricing" class="no-underline text-sm font-semibold relative group transition-colors flex items-center h-full smooth-scroll" style="color: var(--text-secondary); pointer-events: auto;">
                 <span>Pricing</span>
                 <span class="absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full" style="background-color: var(--accent-primary);"></span>
             </a>
         </div>
         
         <!-- Right Side Actions -->
-        <div class="flex items-center gap-4 h-full ml-auto">
+        <div class="flex items-center gap-4 h-full ml-auto" style="pointer-events: auto; z-index: 10;">
             {% include 'partials/theme_toggle.html' %}
             <div class="relative group" id="language-selector">
                 <div class="text-base cursor-pointer flex items-center gap-2 transition-colors font-medium" style="color: var(--text-secondary);">
@@ -62,8 +62,9 @@
                     <a href="#" class="language-option block px-4 py-2.5 text-sm transition-colors rounded-b-xl" style="color: var(--text-tertiary);" data-lang="fr" data-code="FR">Français</a>
                 </div>
             </div>
-            <!-- Global Switch View (visible in header) -->
-            {% if request.path != '/' %}
+            <!-- Global Switch View (visible on marketing pages, hidden on home and footer pages via context processor) -->
+            {% comment %}hide_switch_view is provided by myApp.context_processors.hide_switch_view_context{% endcomment %}
+            {% if not hide_switch_view %}
             <div class="relative" id="global-switch-view">
                 <button id="switch-view-btn" aria-haspopup="true" aria-expanded="false" aria-controls="switch-view-menu" class="px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-all" style="background-color: var(--bg-elevated); border: 1px solid var(--border-primary); color: var(--text-primary);">
                     <i class="fas fa-exchange-alt"></i>
@@ -90,6 +91,7 @@
 document.addEventListener('DOMContentLoaded', function () {
     var btn = document.getElementById('switch-view-btn');
     var menu = document.getElementById('switch-view-menu');
+    // Exit if Switch View button doesn't exist (hidden on certain pages)
     if (!btn || !menu) return;
 
     function openMenu(){

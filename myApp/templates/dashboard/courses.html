@@ -11,9 +11,9 @@
                 </h1>
                 <p class="text-base sm:text-lg text-white/70 font-light">Manage all courses and content</p>
             </div>
-            <a href="/django-admin/myApp/course/add/" class="inline-flex items-center gap-2 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white px-6 py-3 rounded-xl no-underline font-medium hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] hover:scale-105 transition-all duration-300 group animate-scale-in">
+            <a href="{% url 'dashboard:course_create' %}" class="inline-flex items-center gap-2 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white px-6 py-3 rounded-xl no-underline font-medium hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] hover:scale-105 transition-all duration-300 group animate-scale-in">
                 <i class="fas fa-plus transition-transform duration-300 group-hover:rotate-90"></i>
-                <span>Add Course</span>
+                <span>Create Course</span>
             </a>
         </div>
         
@@ -22,15 +22,25 @@
             <form method="get" class="flex flex-wrap gap-4 items-end">
                 <div>
                     <label class="block text-xs uppercase tracking-wider text-white/60 mb-2 font-medium">Status</label>
-                    <select name="status" class="px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50">
+                    <select name="status" class="px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
                         <option value="">All Status</option>
-                        <option value="published" {% if request.GET.status == 'published' %}selected{% endif %}>Published</option>
-                        <option value="draft" {% if request.GET.status == 'draft' %}selected{% endif %}>Draft</option>
+                        <option value="published" {% if status_filter == 'published' %}selected{% endif %}>Published</option>
+                        <option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>Draft</option>
+                        <option value="archived" {% if status_filter == 'archived' %}selected{% endif %}>Archived</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs uppercase tracking-wider text-white/60 mb-2 font-medium">Type</label>
+                    <select name="type" class="px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                        <option value="">All Types</option>
+                        <option value="recorded" {% if type_filter == 'recorded' %}selected{% endif %}>Recorded</option>
+                        <option value="live" {% if type_filter == 'live' %}selected{% endif %}>Live</option>
+                        <option value="hybrid" {% if type_filter == 'hybrid' %}selected{% endif %}>Hybrid</option>
                     </select>
                 </div>
                 <div>
                     <label class="block text-xs uppercase tracking-wider text-white/60 mb-2 font-medium">Search</label>
-                    <input type="text" name="search" value="{{ request.GET.search }}" placeholder="Search courses..." class="px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50">
+                    <input type="text" name="search" value="{{ search_query }}" placeholder="Search courses..." class="px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
                 </div>
                 <button type="submit" class="px-6 py-2.5 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] hover:scale-105 transition-all duration-300 font-medium group">
                     <i class="fas fa-search mr-2 transition-transform duration-300 group-hover:scale-110"></i>Filter
@@ -42,67 +52,108 @@
         </div>
     </div>
     
-    <!-- Courses Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {% for course in courses %}
-        <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] hover:border-[#82C293]/30 transition-all duration-300 overflow-hidden animate-fade-in-up stagger-{{ forloop.counter|add:2 }} hover:scale-[1.02] hover:-translate-y-1 group">
-            <div class="p-6">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="flex-1">
-                        <h3 class="text-xl font-semibold text-white mb-2 group-hover:text-[#82C293] transition-colors duration-300">{{ course.title }}</h3>
-                        <p class="text-sm text-white/70 mb-4 line-clamp-2">{{ course.outcome_summary|default:course.description|truncatewords:15 }}</p>
-                    </div>
-                </div>
-                
-                <div class="flex items-center gap-4 mb-4 text-sm text-white/60">
-                    <span class="flex items-center gap-1">
-                        <i class="fas fa-users text-[#82C293]"></i>
-                        {{ course.enrolled_count|default:0 }} enrolled
-                    </span>
-                    <span class="flex items-center gap-1">
-                        <i class="fas fa-clock text-[#82C293]"></i>
-                        {{ course.duration_hours }}h
-                    </span>
-                </div>
-                
-                <div class="flex items-center justify-between">
-                    <span class="px-3 py-1 rounded-full text-xs font-medium {% if course.status == 'published' %}bg-[#259d78]/20 text-[#259d78] border border-[#259d78]/30{% else %}bg-[#254346]/70 text-white/70 border border-white/20{% endif %}">
-                        {{ course.status|title }}
-                    </span>
-                    <a href="/django-admin/myApp/course/{{ course.id }}/change/" class="text-[#82C293] hover:text-[#8abc59] transition-all duration-300 hover:scale-110 inline-block group/edit" title="Edit in Django Admin">
-                        <i class="fas fa-edit transition-transform duration-300 group-hover/edit:rotate-12"></i>
-                    </a>
-                </div>
+    <!-- Courses Table -->
+    <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] overflow-hidden animate-fade-in-up stagger-3 hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] transition-all duration-300">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-[#254346]/50 border-b border-white/10">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Course</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Type</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Category</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Students</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Status</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Created</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/10">
+                    {% for course in courses %}
+                    <tr class="hover:bg-[#82C293]/5 transition-all duration-300 animate-fade-in stagger-{{ forloop.counter|add:3 }} hover:scale-[1.01] group">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="font-medium text-white">{{ course.title }}</div>
+                            <div class="text-sm text-white/60">{{ course.short_description|truncatewords:10|default:course.description|truncatewords:10 }}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-[#82C293]/20 text-[#82C293] border border-[#82C293]/30">
+                                {{ course.get_course_type_display }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white/70">
+                            {{ course.category.name|default:"—" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white/70">
+                            {{ course.enrolled_count|default:0 }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if course.status == 'published' %}
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-[#259d78]/20 text-[#259d78] border border-[#259d78]/30">Published</span>
+                            {% elif course.status == 'draft' %}
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-[#f8da03]/20 text-[#f8da03] border border-[#f8da03]/40">Draft</span>
+                            {% else %}
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-[#254346]/70 text-white/70 border border-white/20">{{ course.status|title }}</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white/70">
+                            {{ course.created_at|date:"M d, Y" }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                            <div class="flex items-center gap-3">
+                                <a href="{% url 'dashboard:course_edit' course.id %}" class="text-[#82C293] hover:text-[#8abc59] transition-all duration-300 hover:scale-110 inline-block" title="Edit">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                {% if course.status == 'published' %}
+                                <form method="post" action="{% url 'dashboard:course_toggle_publish' course.id %}" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="text-[#f8da03] hover:text-[#f8da03]/80 transition-all duration-300 hover:scale-110 inline-block" title="Unpublish">
+                                        <i class="fas fa-eye-slash"></i>
+                                    </button>
+                                </form>
+                                {% else %}
+                                <form method="post" action="{% url 'dashboard:course_toggle_publish' course.id %}" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="text-[#259d78] hover:text-[#259d78]/80 transition-all duration-300 hover:scale-110 inline-block" title="Publish">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-white/60">
+                            <i class="fas fa-book text-4xl mb-4 text-white/40"></i>
+                            <p>No courses found</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if courses.has_other_pages %}
+        <div class="px-6 py-4 border-t border-white/10 flex items-center justify-between">
+            <div class="text-sm text-white/60">
+                Showing {{ courses.start_index }} to {{ courses.end_index }} of {{ courses.paginator.count }} courses
+            </div>
+            <div class="flex gap-2">
+                {% if courses.has_previous %}
+                <a href="?page={{ courses.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" class="px-4 py-2 rounded-xl border border-white/10 bg-[#254346]/70 text-white hover:bg-[#82C293]/20 hover:border-[#82C293]/40 transition-all duration-300 hover:scale-110 group">
+                    <i class="fas fa-chevron-left transition-transform duration-300 group-hover:-translate-x-1"></i>
+                </a>
+                {% endif %}
+                {% if courses.has_next %}
+                <a href="?page={{ courses.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" class="px-4 py-2 rounded-xl border border-white/10 bg-[#254346]/70 text-white hover:bg-[#82C293]/20 hover:border-[#82C293]/40 transition-all duration-300 hover:scale-110 group">
+                    <i class="fas fa-chevron-right transition-transform duration-300 group-hover:translate-x-1"></i>
+                </a>
+                {% endif %}
             </div>
         </div>
-        {% empty %}
-        <div class="col-span-full bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] p-12 text-center animate-fade-in">
-            <i class="fas fa-book text-4xl mb-4 text-white/40"></i>
-            <p class="text-white/60">No courses found</p>
-        </div>
-        {% endfor %}
+        {% endif %}
     </div>
     
-    <!-- Pagination -->
-    {% if courses.has_other_pages %}
-    <div class="mt-8 flex items-center justify-between animate-fade-in-up stagger-4">
-        <div class="text-sm text-white/60">
-            Showing {{ courses.start_index }} to {{ courses.end_index }} of {{ courses.paginator.count }} courses
-        </div>
-        <div class="flex gap-2">
-            {% if courses.has_previous %}
-            <a href="?page={{ courses.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="px-4 py-2 rounded-xl border border-white/10 bg-[#254346]/70 text-white hover:bg-[#82C293]/20 hover:border-[#82C293]/40 transition-all duration-300 hover:scale-110 group">
-                <i class="fas fa-chevron-left transition-transform duration-300 group-hover:-translate-x-1"></i>
-            </a>
-            {% endif %}
-            {% if courses.has_next %}
-            <a href="?page={{ courses.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}" class="px-4 py-2 rounded-xl border border-white/10 bg-[#254346]/70 text-white hover:bg-[#82C293]/20 hover:border-[#82C293]/40 transition-all duration-300 hover:scale-110 group">
-                <i class="fas fa-chevron-right transition-transform duration-300 group-hover:translate-x-1"></i>
-            </a>
-            {% endif %}
-        </div>
-    </div>
-    {% endif %}
 </div>
 {% endblock %}
 

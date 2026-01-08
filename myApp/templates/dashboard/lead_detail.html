@@ -1,0 +1,369 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="w-full max-w-[1600px] mx-auto">
+    <!-- Header -->
+    <div class="mb-8 sm:mb-10 animate-fade-in-up stagger-1">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-white mb-3 tracking-[-0.02em]">
+                    Lead Details
+                </h1>
+                <p class="text-base sm:text-lg text-white/70 font-light">{{ lead.name }}</p>
+            </div>
+            <div class="flex gap-3">
+                <a href="{% url 'dashboard:lead_edit' lead.id %}" 
+                   class="inline-flex items-center gap-2 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white px-6 py-3 rounded-xl no-underline font-medium hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] hover:scale-105 transition-all duration-300"
+                   aria-label="Edit lead">
+                    <i class="fas fa-edit"></i>
+                    <span>Edit Lead</span>
+                </a>
+                <a href="{% url 'dashboard:leads' %}" 
+                   class="inline-flex items-center gap-2 bg-[#254346]/70 border border-white/10 text-white px-6 py-3 rounded-xl no-underline font-medium hover:bg-[#254346]/90 hover:border-[#82C293]/40 transition-all duration-300 hover:scale-105"
+                   aria-label="Back to leads list">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to Leads</span>
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Content (2/3) -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Lead Overview -->
+            <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] p-8 animate-fade-in-up stagger-2">
+                <h2 class="text-xl font-semibold text-white mb-6">Lead Information</h2>
+                
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-white/60 mb-1">Name</label>
+                            <p class="text-lg font-medium text-white">{{ lead.name }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-white/60 mb-1">Status</label>
+                            {% if lead.status == 'enrolled' %}
+                            <span class="inline-block px-3 py-1 rounded-full text-xs font-medium bg-[#259d78]/20 text-[#259d78] border border-[#259d78]/30">Enrolled</span>
+                            {% elif lead.status == 'new' %}
+                            <span class="inline-block px-3 py-1 rounded-full text-xs font-medium bg-[#f8da03]/20 text-[#f8da03] border border-[#f8da03]/40">New</span>
+                            {% elif lead.status == 'contacted' %}
+                            <span class="inline-block px-3 py-1 rounded-full text-xs font-medium bg-[#82C293]/20 text-[#82C293] border border-[#82C293]/30">Contacted</span>
+                            {% elif lead.status == 'follow_up' %}
+                            <span class="inline-block px-3 py-1 rounded-full text-xs font-medium bg-[#82C293]/20 text-[#82C293] border border-[#82C293]/30">Follow-up</span>
+                            {% elif lead.status == 'negotiating' %}
+                            <span class="inline-block px-3 py-1 rounded-full text-xs font-medium bg-[#f8da03]/20 text-[#f8da03] border border-[#f8da03]/40">Negotiating</span>
+                            {% else %}
+                            <span class="inline-block px-3 py-1 rounded-full text-xs font-medium bg-red-500/20 text-red-400 border border-red-500/30">{{ lead.get_status_display }}</span>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-white/60 mb-1">Email</label>
+                            <p class="text-white">{{ lead.email|default:"—" }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-white/60 mb-1">Phone</label>
+                            <p class="text-white">{{ lead.phone|default:"—" }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-white/60 mb-1">Source</label>
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-[#82C293]/20 text-[#82C293] border border-[#82C293]/30">
+                                {{ lead.get_source_display }}
+                            </span>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-white/60 mb-1">Owner</label>
+                            <p class="text-white">
+                                {% if lead.owner %}
+                                    {% if lead.owner.get_full_name %}
+                                        {{ lead.owner.get_full_name }}
+                                    {% elif lead.owner.username %}
+                                        {{ lead.owner.username }}
+                                    {% else %}
+                                        {{ lead.owner.email|default:"Unassigned" }}
+                                    {% endif %}
+                                {% else %}
+                                    Unassigned
+                                {% endif %}
+                            </p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-white/60 mb-1">Last Contact</label>
+                            <p class="text-white">{{ lead.last_contact_date|date:"M d, Y H:i"|default:"Never" }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-white/60 mb-1">Created</label>
+                            <p class="text-white">{{ lead.created_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-white/60 mb-1">Last Updated</label>
+                            <p class="text-white">{{ lead.updated_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                    </div>
+                    
+                    {% if lead.notes %}
+                    <div class="mt-4 pt-4 border-t border-white/10">
+                        <label class="block text-sm font-medium text-white/60 mb-2">Notes</label>
+                        <div class="text-white/80 whitespace-pre-wrap">{{ lead.notes }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Linked Records -->
+            <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] p-8 animate-fade-in-up stagger-3">
+                <h2 class="text-xl font-semibold text-white mb-6">Linked Records</h2>
+                
+                <div class="space-y-6">
+                    <!-- Linked User -->
+                    <div>
+                        <h3 class="text-sm font-semibold text-white/80 uppercase tracking-wider mb-3">Linked User Account</h3>
+                        {% if lead.linked_user %}
+                        <div class="p-4 rounded-xl bg-[#254346]/50 border border-[#82C293]/30">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="font-medium text-white">
+                                        {% if lead.linked_user.get_full_name %}
+                                            {{ lead.linked_user.get_full_name }}
+                                        {% elif lead.linked_user.username %}
+                                            {{ lead.linked_user.username }}
+                                        {% else %}
+                                            {{ lead.linked_user.email|default:"Unknown" }}
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-sm text-white/60">{{ lead.linked_user.email|default:"—" }}</div>
+                                </div>
+                                <form method="post" action="{% url 'dashboard:lead_link_user' lead.id %}" class="inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="action" value="unlink">
+                                    <button type="submit" class="px-4 py-2 bg-red-500/20 border border-red-500/30 text-red-400 rounded-xl hover:bg-red-500/30 transition-all duration-300 text-sm font-medium">
+                                        <i class="fas fa-unlink mr-2"></i>Unlink
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="p-4 rounded-xl bg-[#254346]/50 border border-white/10">
+                            <p class="text-white/60 mb-3">No user account linked</p>
+                            <form method="post" action="{% url 'dashboard:lead_link_user' lead.id %}" class="flex gap-3">
+                                {% csrf_token %}
+                                <select name="user_id" required class="flex-1 px-4 py-2 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50">
+                                    <option value="">Select User</option>
+                                    {% for user in users %}
+                                    <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }} ({{ user.email }})</option>
+                                    {% endfor %}
+                                </select>
+                                <input type="hidden" name="action" value="link">
+                                <button type="submit" class="px-4 py-2 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] transition-all duration-300 text-sm font-medium">
+                                    <i class="fas fa-link mr-2"></i>Link User
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Gift Enrollments -->
+                    <div>
+                        <h3 class="text-sm font-semibold text-white/80 uppercase tracking-wider mb-3">Gifted Courses ({{ gift_enrollments.count }})</h3>
+                        {% if gift_enrollments %}
+                        <div class="space-y-2">
+                            {% for link in gift_enrollments %}
+                            <div class="p-4 rounded-xl bg-[#254346]/50 border border-white/10 flex items-center justify-between">
+                                <div>
+                                    <div class="font-medium text-white">
+                                        {% if link.gift_enrollment.course %}
+                                            {{ link.gift_enrollment.course.title }}
+                                        {% else %}
+                                            Unknown Course
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-sm text-white/60">
+                                        Recipient: {{ link.gift_enrollment.recipient_email|default:"—" }}
+                                        {% if link.gift_enrollment.status == 'claimed' %}
+                                        <span class="ml-2 px-2 py-0.5 rounded text-xs bg-[#259d78]/20 text-[#259d78]">Claimed</span>
+                                        {% else %}
+                                        <span class="ml-2 px-2 py-0.5 rounded text-xs bg-[#f8da03]/20 text-[#f8da03]">Pending</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <form method="post" action="{% url 'dashboard:lead_link_gift' lead.id %}" class="inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="gift_id" value="{{ link.gift_enrollment.id }}">
+                                    <input type="hidden" name="action" value="unlink">
+                                    <button type="submit" class="px-3 py-1.5 bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg hover:bg-red-500/30 transition-all duration-300 text-xs font-medium">
+                                        <i class="fas fa-unlink"></i>
+                                    </button>
+                                </form>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-white/60 text-center py-4">No gift enrollments linked</p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Enrollments -->
+                    <div>
+                        <h3 class="text-sm font-semibold text-white/80 uppercase tracking-wider mb-3">Enrollments ({{ enrollments.count }})</h3>
+                        {% if enrollments %}
+                        <div class="space-y-2">
+                            {% for link in enrollments %}
+                            <div class="p-4 rounded-xl bg-[#254346]/50 border border-white/10 flex items-center justify-between">
+                                <div>
+                                    <div class="font-medium text-white">
+                                        {% if link.enrollment.course %}
+                                            {{ link.enrollment.course.title }}
+                                        {% else %}
+                                            Unknown Course
+                                        {% endif %}
+                                    </div>
+                                    <div class="text-sm text-white/60">
+                                        Student: {% if link.enrollment.user %}
+                                            {% if link.enrollment.user.get_full_name %}
+                                                {{ link.enrollment.user.get_full_name }}
+                                            {% elif link.enrollment.user.username %}
+                                                {{ link.enrollment.user.username }}
+                                            {% else %}
+                                                {{ link.enrollment.user.email|default:"Unknown" }}
+                                            {% endif %}
+                                        {% else %}
+                                            Unknown
+                                        {% endif %}
+                                        <span class="ml-2 px-2 py-0.5 rounded text-xs bg-[#82C293]/20 text-[#82C293]">{{ link.enrollment.progress_percentage|default:0 }}% complete</span>
+                                    </div>
+                                </div>
+                                <form method="post" action="{% url 'dashboard:lead_link_enrollment' lead.id %}" class="inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="enrollment_id" value="{{ link.enrollment.id }}">
+                                    <input type="hidden" name="action" value="unlink">
+                                    <button type="submit" class="px-3 py-1.5 bg-red-500/20 border border-red-500/30 text-red-400 rounded-lg hover:bg-red-500/30 transition-all duration-300 text-xs font-medium">
+                                        <i class="fas fa-unlink"></i>
+                                    </button>
+                                </form>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% else %}
+                        <p class="text-white/60 text-center py-4">No enrollments linked</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Timeline / Activity -->
+            <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] p-8 animate-fade-in-up stagger-4">
+                <h2 class="text-xl font-semibold text-white mb-6">Timeline / Activity</h2>
+                
+                {% if timeline_events %}
+                <div class="space-y-4 mb-8">
+                    {% for event in timeline_events %}
+                    <div class="p-4 rounded-xl bg-[#254346]/50 border border-white/10">
+                        <div class="flex items-start gap-3">
+                            <div class="flex-shrink-0 w-8 h-8 rounded-full bg-[#82C293]/20 flex items-center justify-center">
+                                {% if 'CREATED' in event.event_type %}
+                                <i class="fas fa-plus text-[#82C293] text-xs"></i>
+                                {% elif 'STATUS' in event.event_type %}
+                                <i class="fas fa-exchange-alt text-[#82C293] text-xs"></i>
+                                {% elif 'LINKED' in event.event_type %}
+                                <i class="fas fa-link text-[#82C293] text-xs"></i>
+                                {% elif 'NOTE' in event.event_type %}
+                                <i class="fas fa-sticky-note text-[#82C293] text-xs"></i>
+                                {% else %}
+                                <i class="fas fa-circle text-[#82C293] text-xs"></i>
+                                {% endif %}
+                            </div>
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="text-sm font-medium text-white">{{ event.get_event_type_display }}</span>
+                                    <span class="text-xs text-white/60">{{ event.created_at|date:"M d, Y H:i" }}</span>
+                                </div>
+                                <p class="text-sm text-white/80">{{ event.summary }}</p>
+                                <div class="text-xs text-white/50 mt-1">
+                                    by {% if event.actor %}
+                                        {% if event.actor.get_full_name %}
+                                            {{ event.actor.get_full_name }}
+                                        {% elif event.actor.username %}
+                                            {{ event.actor.username }}
+                                        {% else %}
+                                            {{ event.actor.email|default:"Unknown User" }}
+                                        {% endif %}
+                                    {% else %}
+                                        System
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-white/60 text-center py-4">No timeline events yet</p>
+                {% endif %}
+                
+                <!-- Activity Logs -->
+                {% if activity_logs %}
+                <div class="mt-8 pt-8 border-t border-white/10">
+                    <h3 class="text-lg font-semibold text-white mb-4">Activity Log</h3>
+                    <div class="space-y-3">
+                        {% for log in activity_logs %}
+                        <div class="p-3 rounded-lg bg-[#254346]/30 border border-white/5">
+                            <div class="flex items-start justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-xs font-medium text-[#82C293]">{{ log.get_event_type_display }}</span>
+                                        <span class="text-xs text-white/40">{{ log.created_at|date:"M d, Y H:i" }}</span>
+                                    </div>
+                                    <p class="text-sm text-white/70">{{ log.summary }}</p>
+                                    <div class="text-xs text-white/50 mt-1">
+                                        by {% if log.actor %}
+                                            {% if log.actor.get_full_name %}
+                                                {{ log.actor.get_full_name }}
+                                            {% elif log.actor.username %}
+                                                {{ log.actor.username }}
+                                            {% else %}
+                                                {{ log.actor.email|default:"Unknown User" }}
+                                            {% endif %}
+                                        {% else %}
+                                            System
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Sidebar (1/3) -->
+        <div class="lg:col-span-1 space-y-6">
+            <!-- Quick Actions -->
+            <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] p-8 animate-fade-in-up stagger-3 sticky top-24">
+                <h2 class="text-xl font-semibold text-white mb-6">Quick Actions</h2>
+                
+                <div class="space-y-3">
+                    <a href="{% url 'dashboard:lead_edit' lead.id %}" class="block w-full px-4 py-2.5 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] transition-all duration-300 font-medium text-center hover:scale-105">
+                        <i class="fas fa-edit mr-2"></i>Edit Lead
+                    </a>
+                    
+                    <!-- Add Note -->
+                    <form method="post" action="{% url 'dashboard:lead_add_note' lead.id %}" class="space-y-2">
+                        {% csrf_token %}
+                        <textarea name="note" rows="3" placeholder="Add a note..." required class="w-full px-4 py-2 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300"></textarea>
+                        <button type="submit" class="w-full px-4 py-2 bg-[#254346]/70 border border-white/10 text-white rounded-xl hover:bg-[#254346]/90 hover:border-[#82C293]/40 transition-all duration-300 font-medium text-sm">
+                            <i class="fas fa-sticky-note mr-2"></i>Add Note
+                        </button>
+                    </form>
+                    
+                    <a href="{% url 'dashboard:leads' %}" class="block w-full px-4 py-2.5 bg-[#254346]/70 border border-white/10 text-white rounded-xl hover:bg-[#254346]/90 hover:border-[#82C293]/40 transition-all duration-300 font-medium text-center hover:scale-105">
+                        <i class="fas fa-arrow-left mr-2"></i>Back to Leads
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

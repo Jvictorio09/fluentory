@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.http import JsonResponse
+from django.urls import reverse
 from django.db.models import Count, Avg, Sum, Q
 from django.db import connection, transaction
 from django.utils import timezone
@@ -106,8 +107,9 @@ def role_required(allowed_roles):
             
             if profile.role in allowed_roles:
                 return view_func(request, *args, **kwargs)
-            messages.error(request, 'You do not have permission to access this page.')
-            return redirect('home')
+            # Show 403 page instead of redirecting
+            from django.shortcuts import render
+            return render(request, '403.html', status=403)
         return wrapper
     return decorator
 
@@ -1129,6 +1131,432 @@ def enroll_course(request):
 
 
 # ============================================
+# GIFT A COURSE
+# ============================================
+
+@login_required
+@require_POST
+def purchase_gift(request):
+    """Purchase a course as a gift"""
+    try:
+        # Parse request data
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+        else:
+            data = request.POST
+        
+        course_id = data.get('course_id')
+        recipient_email = data.get('recipient_email', '').strip().lower()
+        sender_name = data.get('sender_name', '').strip()
+        gift_message = data.get('gift_message', '').strip()
+        
+        # Validation
+        if not course_id:
+            return JsonResponse({'success': False, 'error': 'Course ID is required'}, status=400)
+        
+        if not recipient_email:
+            return JsonResponse({'success': False, 'error': 'Recipient email is required'}, status=400)
+        
+        # Validate email format
+        from django.core.validators import validate_email
+        from django.core.exceptions import ValidationError
+        try:
+            validate_email(recipient_email)
+        except ValidationError:
+            return JsonResponse({'success': False, 'error': 'Invalid email address'}, status=400)
+        
+        try:
+            course_id = int(course_id)
+        except (ValueError, TypeError):
+            return JsonResponse({'success': False, 'error': 'Invalid course ID'}, status=400)
+        
+        # Get course
+        try:
+            course = Course.objects.get(id=course_id)
+        except Course.DoesNotExist:
+            return JsonResponse({
+                'success': False, 
+                'error': 'Course not found'
+            }, status=404)
+        
+        # Check if course is published and eligible for gifting
+        if course.status != 'published':
+            return JsonResponse({
+                'success': False, 
+                'error': 'Course is not available for gifting'
+            }, status=403)
+        
+        # Check if course is free (gifts are for paid courses)
+        if course.is_free:
+            return JsonResponse({
+                'success': False, 
+                'error': 'Free courses cannot be gifted'
+            }, status=400)
+        
+        # Check if buyer is trying to gift to themselves
+        if request.user.email.lower() == recipient_email.lower():
+            return JsonResponse({
+                'success': False, 
+                'error': 'You cannot gift a course to yourself'
+            }, status=400)
+        
+        # Get selected currency from session
+        selected_currency = request.session.get('selected_currency', course.currency)
+        
+        # Get price in selected currency
+        try:
+            from myApp.models import CoursePricing
+            pricing = CoursePricing.objects.get(course=course, currency=selected_currency)
+            course_price = pricing.price
+            course_currency = selected_currency
+        except:
+            if selected_currency == course.currency:
+                course_price = course.price
+                course_currency = course.currency
+            else:
+                course_price = course.price
+                course_currency = course.currency
+        
+        # Create payment record (in real implementation, this would integrate with payment gateway)
+        from myApp.models import Payment
+        payment = Payment.objects.create(
+            user=request.user,
+            course=course,
+            amount=course_price,
+            currency=course_currency,
+            status='completed',  # In production, this would be 'pending' until payment confirms
+            payment_method='card',
+            completed_at=timezone.now()
+        )
+        
+        # Create gift enrollment
+        from myApp.models import GiftEnrollment
+        import logging
+        logger = logging.getLogger(__name__)
+        
+        logger.info(f"Creating gift enrollment: buyer={request.user.email}, recipient={recipient_email}, course={course.title}")
+        
+        gift_enrollment = GiftEnrollment.objects.create(
+            buyer=request.user,
+            course=course,
+            recipient_email=recipient_email,
+            recipient_name=data.get('recipient_name', '').strip(),
+            sender_name=sender_name or request.user.get_full_name() or request.user.username,
+            gift_message=gift_message,
+            payment=payment,
+            status='pending_claim'
+        )
+        
+        logger.info(f"Gift enrollment created successfully: ID={gift_enrollment.id}, token={gift_enrollment.gift_token}, recipient_email={gift_enrollment.recipient_email}")
+        
+        # Create GIFT_CREATED timeline event if linked to lead
+        try:
+            from myApp.models import GiftEnrollmentLeadLink, LeadTimelineEvent
+            gift_link = GiftEnrollmentLeadLink.objects.filter(gift_enrollment=gift_enrollment).first()
+            if gift_link:
+                LeadTimelineEvent.objects.create(
+                    lead=gift_link.lead,
+                    event_type='GIFT_CREATED',
+                    actor=None,  # System
+                    summary=f"Gift enrollment for {course.title} purchased by {request.user.get_full_name() or request.user.username}",
+                    metadata={'gift_id': gift_enrollment.id, 'buyer_id': request.user.id}
+                )
+        except Exception:
+            pass  # Fail silently if models not yet loaded
+        
+        # Send gift emails (invite to recipient + confirmation to buyer)
+        logger.info(f"Attempting to send gift emails")
+        try:
+            from myApp.email_utils import send_gift_invite_email, send_gift_confirmation_email
+            # Send invite to recipient
+            send_gift_invite_email(gift_enrollment, request)
+            logger.info(f"Gift invite email sent to {recipient_email}")
+            # Send confirmation to buyer
+            send_gift_confirmation_email(gift_enrollment, request)
+            logger.info(f"Gift confirmation email sent to buyer")
+        except Exception as e:
+            # Log error but don't fail the purchase
+            logger.error(f"Failed to send gift emails: {str(e)}", exc_info=True)
+        
+        return JsonResponse({
+            'success': True,
+            'gift_id': gift_enrollment.id,
+            'message': 'Your gift has been sent!',
+            'redirect_url': f'/student/gift-confirmation/{gift_enrollment.id}/'
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'Invalid JSON data'}, status=400)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Gift purchase error: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+def send_gift_email(gift_enrollment, request=None):
+    """Send gift notification email to recipient"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    from django.core.mail import send_mail
+    from django.conf import settings
+    from django.urls import reverse
+    
+    # Validate recipient email
+    if not gift_enrollment.recipient_email:
+        logger.error(f"Gift {gift_enrollment.id}: recipient_email is empty!")
+        raise ValueError("Recipient email is required")
+    
+    logger.info(f"Preparing gift email: gift_id={gift_enrollment.id}, recipient={gift_enrollment.recipient_email}")
+    
+    # Build claim URL
+    if request:
+        claim_url = request.build_absolute_uri(
+            reverse('claim_gift', kwargs={'gift_token': str(gift_enrollment.gift_token)})
+        )
+    else:
+        # Fallback if request not available (e.g., from admin)
+        try:
+            from django.contrib.sites.models import Site
+            site = Site.objects.get_current()
+            domain = site.domain
+        except:
+            domain = getattr(settings, 'ALLOWED_HOSTS', ['localhost'])[0] if hasattr(settings, 'ALLOWED_HOSTS') and settings.ALLOWED_HOSTS else 'localhost:8000'
+        protocol = 'https' if not settings.DEBUG else 'http'
+        claim_url = f"{protocol}://{domain}{reverse('claim_gift', kwargs={'gift_token': str(gift_enrollment.gift_token)})}"
+    
+    logger.info(f"Claim URL generated: {claim_url}")
+    
+    # Email subject
+    subject = f"You've been gifted a course: {gift_enrollment.course.title}"
+    
+    # Email body (HTML)
+    html_message = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background: linear-gradient(135deg, #00655F 0%, #82C293 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
+            .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
+            .button {{ display: inline-block; background: #00655F; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; margin: 20px 0; }}
+            .footer {{ text-align: center; margin-top: 20px; color: #666; font-size: 12px; }}
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🎁 You've Been Gifted a Course!</h1>
+            </div>
+            <div class="content">
+                <p>Hello {gift_enrollment.recipient_name or 'there'},</p>
+                
+                <p><strong>{gift_enrollment.sender_name}</strong> has gifted you access to:</p>
+                
+                <h2>{gift_enrollment.course.title}</h2>
+                
+                {f'<p><em>"{gift_enrollment.gift_message}"</em></p>' if gift_enrollment.gift_message else ''}
+                
+                <p>To claim your gift and start learning, click the button below:</p>
+                
+                <div style="text-align: center;">
+                    <a href="{claim_url}" class="button">Claim Your Gift</a>
+                </div>
+                
+                <p>Or copy and paste this link into your browser:</p>
+                <p style="word-break: break-all; color: #00655F;">{claim_url}</p>
+                
+                <p>This gift is exclusively for <strong>{gift_enrollment.recipient_email}</strong>.</p>
+            </div>
+            <div class="footer">
+                <p>Happy Learning!<br>The Fluentory Team</p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    # Plain text version
+    message = f"""
+    You've been gifted a course!
+    
+    {gift_enrollment.sender_name} has gifted you access to: {gift_enrollment.course.title}
+    
+    {f'Message: "{gift_enrollment.gift_message}"' if gift_enrollment.gift_message else ''}
+    
+    Claim your gift: {claim_url}
+    
+    This gift is exclusively for {gift_enrollment.recipient_email}.
+    """
+    
+    from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', None) or getattr(settings, 'SERVER_EMAIL', 'noreply@fluentory.com')
+    
+    # Log email configuration
+    logger.info(f"Email config: from_email={from_email}, recipient={gift_enrollment.recipient_email}")
+    logger.info(f"Email backend: {getattr(settings, 'EMAIL_BACKEND', 'default')}")
+    
+    # Check if email backend is configured
+    email_backend = getattr(settings, 'EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+    if email_backend == 'django.core.mail.backends.console.EmailBackend':
+        logger.warning("Using console email backend - emails will only appear in console/logs")
+    
+    try:
+        result = send_mail(
+            subject=subject,
+            message=message,
+            from_email=from_email,
+            recipient_list=[gift_enrollment.recipient_email],
+            html_message=html_message,
+            fail_silently=False,
+        )
+        logger.info(f"Email send result: {result} (1 = success, 0 = failure)")
+        if result == 0:
+            logger.error(f"Email send returned 0 - email was not sent!")
+    except Exception as e:
+        logger.error(f"Exception during email send: {str(e)}", exc_info=True)
+        raise
+
+
+def claim_gift(request, gift_token):
+    """Claim a gift enrollment"""
+    from myApp.models import GiftEnrollment
+    from django.contrib.auth import login
+    from django.shortcuts import redirect, render
+    
+    try:
+        gift = GiftEnrollment.objects.get(gift_token=gift_token)
+    except GiftEnrollment.DoesNotExist:
+        return render(request, 'student/gift_error.html', {
+            'error': 'Gift not found',
+            'message': 'The gift link is invalid or has expired.'
+        }, status=404)
+    
+    # Check if gift can be claimed
+    can_claim, error = gift.can_be_claimed()
+    if not can_claim:
+        return render(request, 'student/gift_error.html', {
+            'error': 'Gift cannot be claimed',
+            'message': error
+        })
+    
+    # If user is logged in
+    if request.user.is_authenticated:
+        # Check if email matches
+        if request.user.email.lower() != gift.recipient_email.lower():
+            return render(request, 'student/gift_error.html', {
+                'error': 'Email mismatch',
+                'message': f'This gift is for {gift.recipient_email}. Please log in with that email address to claim it.'
+            })
+        
+        # User is logged in with matching email - claim the gift
+        try:
+            enrollment = gift.claim(request.user)
+            # Send claim success email
+            try:
+                from myApp.email_utils import send_claim_success_email
+                send_claim_success_email(gift, enrollment, request, notify_buyer=True)
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Failed to send claim success email: {str(e)}", exc_info=True)
+            return redirect('student_course_player_enrollment', enrollment_id=enrollment.id)
+        except ValueError as e:
+            return render(request, 'student/gift_error.html', {
+                'error': 'Claim failed',
+                'message': str(e)
+            })
+    
+    # User is not logged in - show claim page with signup/login options
+    return render(request, 'student/claim_gift.html', {
+        'gift': gift,
+        'recipient_email': gift.recipient_email
+    })
+
+
+@login_required
+@require_POST
+def claim_gift_authenticated(request):
+    """Claim gift after user is authenticated (AJAX)"""
+    try:
+        gift_token = request.POST.get('gift_token') or json.loads(request.body).get('gift_token')
+        
+        if not gift_token:
+            return JsonResponse({'success': False, 'error': 'Gift token is required'}, status=400)
+        
+        from myApp.models import GiftEnrollment
+        try:
+            gift = GiftEnrollment.objects.get(gift_token=gift_token)
+        except GiftEnrollment.DoesNotExist:
+            return JsonResponse({'success': False, 'error': 'Gift not found'}, status=404)
+        
+        # Check if gift can be claimed
+        can_claim, error = gift.can_be_claimed()
+        if not can_claim:
+            return JsonResponse({'success': False, 'error': error}, status=400)
+        
+        # Verify email matches
+        if request.user.email.lower() != gift.recipient_email.lower():
+            return JsonResponse({
+                'success': False, 
+                'error': f'This gift is for {gift.recipient_email}. Please log in with that email address.'
+            }, status=403)
+        
+        # Claim the gift
+        try:
+            enrollment = gift.claim(request.user)
+            
+            # Send claim success email
+            try:
+                from myApp.email_utils import send_claim_success_email
+                send_claim_success_email(gift, enrollment, request, notify_buyer=True)
+            except Exception as e:
+                logger.error(f"Failed to send claim success email: {str(e)}", exc_info=True)
+            
+            # Determine redirect URL
+            if gift.course.course_type == 'live':
+                redirect_url = '/student/live-classes/'
+            else:
+                redirect_url = f'/student/player/{enrollment.id}/'
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Gift claimed successfully!',
+                'redirect_url': redirect_url
+            })
+        except ValueError as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+            
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Gift claim error: {e}")
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+def gift_confirmation(request, gift_id):
+    """Show gift purchase confirmation page"""
+    from myApp.models import GiftEnrollment
+    from django.core.exceptions import PermissionDenied
+    
+    try:
+        gift = GiftEnrollment.objects.get(id=gift_id)
+    except GiftEnrollment.DoesNotExist:
+        return render(request, 'student/gift_error.html', {
+            'error': 'Gift not found'
+        }, status=404)
+    
+    # Only buyer can view confirmation
+    if gift.buyer != request.user:
+        raise PermissionDenied
+    
+    return render(request, 'student/gift_confirmation.html', {
+        'gift': gift
+    })
+
+
+# ============================================
 # AI TUTOR
 # ============================================
 
@@ -1490,7 +1918,8 @@ def admin_overview(request):
             'title': f'{stuck_students} students stuck at early milestones',
             'description': 'Students with <25% progress after 2 weeks',
             'icon': 'fa-exclamation-triangle',
-            'color': 'red'
+            'color': 'red',
+            'url': reverse('dashboard:users') + '?status=stuck'
         })
     
     if failed_payments > 0:
@@ -1499,7 +1928,8 @@ def admin_overview(request):
             'title': f'{failed_payments} payment failures in queue',
             'description': 'Requires manual review',
             'icon': 'fa-credit-card',
-            'color': 'orange'
+            'color': 'orange',
+            'url': reverse('dashboard:payments') + '?status=failed'
         })
     
     context = {

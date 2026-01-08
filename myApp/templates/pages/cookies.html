@@ -2,67 +2,70 @@
 
 {% block title %}Cookie Policy - Fluentory{% endblock %}
 
+{% block body_class %}public-footer-page{% endblock %}
+
 {% block content %}
-<section class="relative py-24 bg-[#000000] overflow-hidden">
+<div class="public-content-wrapper min-h-screen transition-colors duration-300">
+<section class="relative py-24 overflow-hidden">
     <!-- Background gradient splashes in corners -->
-    <div class="absolute inset-0">
+    <div class="absolute inset-0 pointer-events-none">
       <div class="absolute top-0 left-0 w-[600px] h-[600px] bg-[radial-gradient(circle_at_0%_0%,rgba(0,101,95,0.12),transparent_70%)]"></div>
       <div class="absolute bottom-0 right-0 w-[600px] h-[600px] bg-[radial-gradient(circle_at_100%_100%,rgba(130,194,147,0.10),transparent_70%)]"></div>
     </div>
     
     <div class="max-w-4xl mx-auto px-8 relative z-10">
         <div class="text-center mb-16 animate-fade-in-up">
-            <h1 class="text-5xl md:text-6xl font-extralight mb-6 text-white tracking-[-2px]">Cookie Policy</h1>
-            <p class="text-xl text-[#82C293] max-w-2xl mx-auto">Last updated: January 2024</p>
+            <h1 class="text-5xl md:text-6xl font-extralight mb-6 text-slate-900 dark:text-white tracking-[-2px]">Cookie Policy</h1>
+            <p class="text-xl text-slate-600 dark:text-[#82C293] max-w-2xl mx-auto">Last updated: January 2024</p>
         </div>
         
         <!-- Main Content Card -->
-        <div class="relative bg-[#04363a]/70 backdrop-blur-xl rounded-3xl p-12 shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-white/10 animate-fade-in-up stagger-1">
+        <div class="relative bg-white dark:bg-[#04363a]/70 backdrop-blur-xl rounded-3xl p-12 shadow-sm dark:shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-white/10 animate-fade-in-up stagger-1">
             <div class="absolute inset-0 rounded-3xl bg-gradient-to-br from-[#82C293]/10 to-transparent pointer-events-none"></div>
-            <div class="prose prose-lg max-w-none text-white/80 animate-fade-in stagger-2 relative z-10">
-                <h2 class="text-2xl font-light mb-4 text-white">What Are Cookies?</h2>
+            <div class="prose prose-lg max-w-none text-slate-700 dark:text-slate-200 animate-fade-in stagger-2 relative z-10">
+                <h2 class="text-2xl font-light mb-4 text-slate-900 dark:text-white">What Are Cookies?</h2>
                 <p class="mb-6 leading-relaxed">
                     Cookies are small text files that are placed on your device when you visit our website. 
                     They help us provide you with a better experience by remembering your preferences and 
                     understanding how you use our platform.
                 </p>
                 
-                <h2 class="text-2xl font-light mb-4 text-white mt-8">How We Use Cookies</h2>
+                <h2 class="text-2xl font-light mb-4 text-slate-900 dark:text-white mt-8">How We Use Cookies</h2>
                 <p class="mb-4 leading-relaxed">We use cookies for the following purposes:</p>
-                <ul class="list-disc pl-6 mb-6 space-y-2 text-white/80">
+                <ul class="list-disc pl-6 mb-6 space-y-2 text-slate-700 dark:text-slate-200">
                     <li><strong>Essential Cookies:</strong> Required for the website to function properly</li>
                     <li><strong>Performance Cookies:</strong> Help us understand how visitors interact with our site</li>
                     <li><strong>Functionality Cookies:</strong> Remember your preferences and settings</li>
                     <li><strong>Targeting Cookies:</strong> Used to deliver relevant advertisements</li>
                 </ul>
                 
-                <h2 class="text-2xl font-light mb-4 text-white mt-8">Types of Cookies We Use</h2>
+                <h2 class="text-2xl font-light mb-4 text-slate-900 dark:text-white mt-8">Types of Cookies We Use</h2>
                 <div class="space-y-4 mb-6">
-                    <div class="bg-[#254346]/50 border border-[#254346]/60 p-4 rounded-xl">
-                        <h3 class="font-semibold mb-2 text-white">Session Cookies</h3>
-                        <p class="text-sm text-white/70">Temporary cookies that are deleted when you close your browser.</p>
+                    <div class="bg-slate-50 dark:bg-[#254346]/50 border border-slate-200 dark:border-[#254346]/60 p-4 rounded-xl">
+                        <h3 class="font-semibold mb-2 text-slate-900 dark:text-white">Session Cookies</h3>
+                        <p class="text-sm text-slate-600 dark:text-slate-400">Temporary cookies that are deleted when you close your browser.</p>
                     </div>
-                    <div class="bg-[#254346]/50 border border-[#254346]/60 p-4 rounded-xl">
-                        <h3 class="font-semibold mb-2 text-white">Persistent Cookies</h3>
-                        <p class="text-sm text-white/70">Cookies that remain on your device for a set period or until you delete them.</p>
+                    <div class="bg-slate-50 dark:bg-[#254346]/50 border border-slate-200 dark:border-[#254346]/60 p-4 rounded-xl">
+                        <h3 class="font-semibold mb-2 text-slate-900 dark:text-white">Persistent Cookies</h3>
+                        <p class="text-sm text-slate-600 dark:text-slate-400">Cookies that remain on your device for a set period or until you delete them.</p>
                     </div>
                 </div>
                 
-                <h2 class="text-2xl font-light mb-4 text-white mt-8">Managing Cookies</h2>
+                <h2 class="text-2xl font-light mb-4 text-slate-900 dark:text-white mt-8">Managing Cookies</h2>
                 <p class="mb-6 leading-relaxed">
                     You can control and manage cookies in various ways. Most browsers allow you to refuse or 
                     accept cookies, and you can also delete cookies that have already been set. However, 
                     please note that disabling cookies may affect the functionality of our website.
                 </p>
                 
-                <h2 class="text-2xl font-light mb-4 text-white mt-8">Third-Party Cookies</h2>
+                <h2 class="text-2xl font-light mb-4 text-slate-900 dark:text-white mt-8">Third-Party Cookies</h2>
                 <p class="mb-6 leading-relaxed">
                     Some cookies are placed by third-party services that appear on our pages. We use services 
                     like Google Analytics to help us understand how visitors use our site. These third parties 
                     may use cookies to collect information about your online activities.
                 </p>
                 
-                <h2 class="text-2xl font-light mb-4 text-white mt-8">Contact Us</h2>
+                <h2 class="text-2xl font-light mb-4 text-slate-900 dark:text-white mt-8">Contact Us</h2>
                 <p class="mb-6 leading-relaxed">
                     If you have any questions about our use of cookies, please contact us at privacy@fluentory.com.
                 </p>
@@ -70,5 +73,6 @@
         </div>
     </div>
 </section>
+</div>
 {% endblock %}
 

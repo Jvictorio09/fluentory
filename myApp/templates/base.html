@@ -10,6 +10,7 @@
     {% include 'partials/theme_script.html' %}
     <script>
         tailwind.config = {
+            darkMode: ['selector', '[data-theme="dark"]'],
             theme: {
                 extend: {
                     fontFamily: {
@@ -19,8 +20,117 @@
             }
         }
     </script>
+    <style>
+        /* Default body background (for landing page and other pages) */
+        body:not(.public-footer-page) {
+            background-color: var(--bg-primary);
+        }
+        
+        /* Override body background for public footer pages */
+        /* CRITICAL: data-theme attribute is on <html>, not <body> */
+        /* Default: white background for footer pages */
+        body.public-footer-page {
+            background-color: #ffffff !important;
+            background: #ffffff !important;
+        }
+        
+        /* Dark mode override - data-theme is on <html> */
+        html[data-theme="dark"] body.public-footer-page {
+            background-color: #000000 !important;
+            background: #000000 !important;
+        }
+        
+        /* Light mode override - explicit white background */
+        html[data-theme="light"] body.public-footer-page {
+            background-color: #ffffff !important;
+            background: #ffffff !important;
+        }
+        
+        /* Override CSS variables that may force dark background */
+        html[data-theme="light"] body.public-footer-page {
+            --bg-primary: #ffffff !important;
+        }
+        
+        html[data-theme="dark"] body.public-footer-page {
+            --bg-primary: #000000 !important;
+        }
+        
+        /* Ensure main doesn't interfere */
+        body.public-footer-page main {
+            background-color: transparent !important;
+            background: transparent !important;
+        }
+        
+        /* Public content wrapper ensures full page coverage */
+        body.public-footer-page .public-content-wrapper {
+            min-height: 100vh;
+        }
+        
+        /* Ensure wrapper background matches page background - explicit CSS override */
+        html[data-theme="light"] body.public-footer-page .public-content-wrapper {
+            background-color: #ffffff !important;
+            background: #ffffff !important;
+        }
+        
+        html[data-theme="dark"] body.public-footer-page .public-content-wrapper {
+            background-color: #000000 !important;
+            background: #000000 !important;
+        }
+        
+        /* Override any Tailwind classes on the wrapper */
+        html[data-theme="light"] body.public-footer-page .public-content-wrapper.bg-white,
+        html[data-theme="light"] body.public-footer-page .public-content-wrapper.dark\:bg-black {
+            background-color: #ffffff !important;
+            background: #ffffff !important;
+        }
+        
+        html[data-theme="dark"] body.public-footer-page .public-content-wrapper.bg-white,
+        html[data-theme="dark"] body.public-footer-page .public-content-wrapper.dark\:bg-black {
+            background-color: #000000 !important;
+            background: #000000 !important;
+        }
+        
+        /* Footer background - ensure it matches page background */
+        /* Footer is a direct child of body in base.html */
+        /* CRITICAL: Explicit background colors, not relying on Tailwind classes */
+        footer.public-footer {
+            background-color: #ffffff !important;
+            background: #ffffff !important;
+        }
+        
+        html[data-theme="dark"] footer.public-footer {
+            background-color: #000000 !important;
+            background: #000000 !important;
+        }
+        
+        html[data-theme="light"] footer.public-footer {
+            background-color: #ffffff !important;
+            background: #ffffff !important;
+        }
+        
+        /* Override any Tailwind classes that might interfere */
+        html[data-theme="light"] footer.public-footer[class*="bg-"],
+        html[data-theme="light"] footer.public-footer.bg-white,
+        html[data-theme="light"] footer.public-footer.dark\:bg-black {
+            background-color: #ffffff !important;
+            background: #ffffff !important;
+        }
+        
+        html[data-theme="dark"] footer.public-footer[class*="bg-"],
+        html[data-theme="dark"] footer.public-footer.bg-white,
+        html[data-theme="dark"] footer.public-footer.dark\:bg-black {
+            background-color: #000000 !important;
+            background: #000000 !important;
+        }
+        
+        /* For landing page (non-footer pages), footer uses theme variables */
+        body:not(.public-footer-page) footer.public-footer {
+            background-color: var(--bg-primary) !important;
+            background: var(--bg-primary) !important;
+        }
+    </style>
 </head>
-<body class="font-sans" style="background-color: var(--bg-primary); color: var(--text-primary);">
+<body class="font-sans {% block body_class %}{% endblock %}" style="color: var(--text-primary);">
     {% include 'partials/announcement_bar.html' %}
     {% include 'partials/navbar.html' %}
     
@@ -201,18 +311,34 @@
             }
         });
 
-        // Smooth scroll for anchor links
-        document.querySelectorAll('a.smooth-scroll, a[href^="#"]').forEach(anchor => {
+        // Smooth scroll for anchor links - handles both same-page anchors and homepage anchors
+        document.querySelectorAll('a.smooth-scroll, a[href*="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 const href = this.getAttribute('href');
-                // Only handle hash links that start with # (not Django template URLs)
-                if (href && href.startsWith('#') && !href.includes('{%')) {
-                    const targetId = href.substring(1);
-                    // Skip empty hash
-                    if (!targetId) return;
-                    
+                if (!href) return;
+                
+                // Extract hash from URL (handles both #anchor and /#anchor and /home/#anchor)
+                const hashMatch = href.match(/#([^#]+)$/);
+                if (!hashMatch) return; // No hash found
+                
+                const targetId = hashMatch[1];
+                if (!targetId) return; // Empty hash
+                
+                // Check if we're on the landing page (home)
+                const isOnHomepage = window.location.pathname === '/' || window.location.pathname === '';
+                
+                // Check if link points to homepage (starts with / and has #, or just /#anchor)
+                const isHomepageLink = (href.startsWith('/') && href.includes('#')) || href === '#' + targetId;
+                
+                // If link points to homepage anchor but we're not on homepage, allow normal navigation
+                if (isHomepageLink && !isOnHomepage) {
+                    // Normal navigation will happen, JavaScript will handle scroll after page load
+                    return; // Don't prevent default, let browser navigate
+                }
+                
+                // If we're on the same page (homepage), handle smooth scroll
+                if (isOnHomepage) {
                     const targetElement = document.getElementById(targetId);
-                    
                     if (targetElement) {
                         e.preventDefault();
                         const navbarHeight = document.querySelector('.navbar')?.offsetHeight || 72;
@@ -227,6 +353,28 @@
                     }
                 }
             });
+        });
+        
+        // Handle smooth scroll for anchor links after navigation to homepage
+        window.addEventListener('load', function() {
+            const hash = window.location.hash;
+            if (hash) {
+                const targetId = hash.substring(1);
+                const targetElement = document.getElementById(targetId);
+                if (targetElement) {
+                    // Small delay to ensure page is fully rendered
+                    setTimeout(() => {
+                        const navbarHeight = document.querySelector('.navbar')?.offsetHeight || 72;
+                        const offset = navbarHeight + 20;
+                        const targetPosition = targetElement.getBoundingClientRect().top + window.pageYOffset - offset;
+                        
+                        window.scrollTo({
+                            top: Math.max(0, targetPosition),
+                            behavior: 'smooth'
+                        });
+                    }, 100);
+                }
+            }
         });
 
         // Language selector functionality

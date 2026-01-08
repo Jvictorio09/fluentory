@@ -112,6 +112,57 @@ class SecurityActionLog(models.Model):
         return f"{self.admin_user.username if self.admin_user else 'System'} - {self.get_action_type_display()} - {self.target_user.username} - {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
 
 
+class ActivityLog(models.Model):
+    """Immutable activity log for key platform events"""
+    ENTITY_TYPE_CHOICES = [
+        ('gift', 'Gift Enrollment'),
+        ('live_class', 'Live Class'),
+        ('lead', 'Lead'),
+        ('enrollment', 'Enrollment'),
+        ('teacher', 'Teacher'),
+    ]
+    
+    EVENT_TYPE_CHOICES = [
+        ('gift_claimed', 'Gift Claimed'),
+        ('teacher_assigned', 'Teacher Assigned'),
+        ('teacher_unassigned', 'Teacher Unassigned'),
+        ('teacher_reassigned', 'Teacher Reassigned'),
+        ('lead_status_updated', 'Lead Status Updated'),
+    ]
+    
+    # Entity reference (polymorphic)
+    entity_type = models.CharField(max_length=20, choices=ENTITY_TYPE_CHOICES)
+    entity_id = models.PositiveIntegerField(help_text='ID of the related entity')
+    
+    # Event details
+    event_type = models.CharField(max_length=50, choices=EVENT_TYPE_CHOICES)
+    summary = models.TextField(help_text='Human-readable summary of the event')
+    
+    # Actor (who performed the action)
+    actor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='activity_logs', help_text='User who performed the action (null for system actions)')
+    
+    # Additional metadata (JSON)
+    metadata = models.JSONField(default=dict, blank=True, help_text='Additional structured data about the event')
+    
+    # Timestamp (immutable)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['-created_at']),
+            models.Index(fields=['entity_type', 'entity_id', '-created_at']),
+            models.Index(fields=['event_type', '-created_at']),
+            models.Index(fields=['actor', '-created_at']),
+        ]
+        verbose_name = 'Activity Log'
+        verbose_name_plural = 'Activity Logs'
+    
+    def __str__(self):
+        actor_name = self.actor.username if self.actor else 'System'
+        return f"{actor_name} - {self.get_event_type_display()} - {self.get_entity_type_display()} #{self.entity_id} - {self.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
+
+
 # ============================================
 # TEACHERS
 # ============================================
@@ -953,6 +1004,137 @@ class Payment(models.Model):
 
 
 # ============================================
+# GIFT ENROLLMENTS
+# ============================================
+
+class GiftEnrollment(models.Model):
+    """Gift enrollment records - separate from regular enrollments until claimed"""
+    STATUS_CHOICES = [
+        ('pending_claim', 'Pending Claim'),
+        ('claimed', 'Claimed'),
+    ]
+    
+    # Unique identifier for claim link
+    gift_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    
+    # Buyer (who purchased the gift)
+    buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='gifts_purchased')
+    
+    # Course being gifted
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='gift_enrollments')
+    
+    # Recipient information (locked to email)
+    recipient_email = models.EmailField(help_text='Email address of the gift recipient')
+    recipient_name = models.CharField(max_length=255, blank=True, help_text='Optional recipient name')
+    
+    # Sender information (optional)
+    sender_name = models.CharField(max_length=255, blank=True, help_text='Optional sender name')
+    gift_message = models.TextField(blank=True, help_text='Optional gift message')
+    
+    # Status
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending_claim')
+    
+    # Payment reference
+    payment = models.ForeignKey(Payment, on_delete=models.SET_NULL, null=True, blank=True, related_name='gift_enrollments')
+    
+    # Enrollment created after claim (null until claimed)
+    enrollment = models.OneToOneField(Enrollment, on_delete=models.SET_NULL, null=True, blank=True, related_name='gift_enrollment')
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    claimed_at = models.DateTimeField(null=True, blank=True)
+    
+    # Expiration (optional, for future admin control)
+    expires_at = models.DateTimeField(null=True, blank=True, help_text='Optional expiration date for gift claim')
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['gift_token']),
+            models.Index(fields=['recipient_email', 'status']),
+            models.Index(fields=['status', 'created_at']),
+        ]
+    
+    def __str__(self):
+        return f"Gift: {self.course.title} → {self.recipient_email} ({self.get_status_display()})"
+    
+    def can_be_claimed(self):
+        """Check if gift can be claimed"""
+        if self.status != 'pending_claim':
+            return False, 'Gift has already been claimed'
+        if self.expires_at and timezone.now() > self.expires_at:
+            return False, 'Gift has expired'
+        return True, None
+    
+    def claim(self, user):
+        """
+        Claim the gift and create enrollment for the user
+        Validates that user email matches recipient_email
+        """
+        can_claim, error = self.can_be_claimed()
+        if not can_claim:
+            raise ValueError(error)
+        
+        # Verify email matches
+        if user.email.lower() != self.recipient_email.lower():
+            raise ValueError('Email address does not match gift recipient')
+        
+        # Check if user already enrolled
+        existing_enrollment = Enrollment.objects.filter(user=user, course=self.course).first()
+        if existing_enrollment:
+            # Update existing enrollment to mark as gifted
+            existing_enrollment.is_gifted = True
+            existing_enrollment.gifted_by = self.buyer
+            existing_enrollment.save()
+            self.enrollment = existing_enrollment
+        else:
+            # Create new enrollment
+            enrollment = Enrollment.objects.create(
+                user=user,
+                course=self.course,
+                status='active',
+                is_gifted=True,
+                gifted_by=self.buyer,
+                teacher_notes=''
+            )
+            
+            # Update course stats
+            self.course.enrolled_count += 1
+            self.course.save()
+            
+            self.enrollment = enrollment
+        
+        # Mark gift as claimed
+        self.status = 'claimed'
+        self.claimed_at = timezone.now()
+        self.save()
+        
+        # Create timeline event for gift claim
+        # Check if gift is linked to a lead
+        try:
+            gift_link = GiftEnrollmentLeadLink.objects.filter(gift_enrollment=self).first()
+            if gift_link:
+                LeadTimelineEvent.objects.create(
+                    lead=gift_link.lead,
+                    event_type='GIFT_CLAIMED',
+                    actor=None,  # System
+                    summary=f"Gift enrollment for {self.course.title} claimed by {user.get_full_name() or user.username}",
+                    metadata={'gift_id': self.id, 'enrollment_id': self.enrollment.id if self.enrollment else None}
+                )
+        except Exception:
+            pass  # Fail silently if models not yet loaded
+        
+        # Create activity log entry
+        try:
+            from myApp.activity_log import log_gift_claimed
+            log_gift_claimed(self, self.enrollment, actor=user)
+        except Exception:
+            pass  # Fail silently if activity log not available
+        
+        return self.enrollment
+
+
+# ============================================
 # REVIEWS & RATINGS
 # ============================================
 
@@ -1049,6 +1231,7 @@ class Notification(models.Model):
 class LiveClassSession(models.Model):
     """Group Session (Seat-Based) - Scheduled live class sessions with seat capacity"""
     STATUS_CHOICES = [
+        ('draft', 'Draft'),
         ('scheduled', 'Scheduled'),
         ('live', 'Live'),
         ('completed', 'Completed'),
@@ -1057,7 +1240,7 @@ class LiveClassSession(models.Model):
     ]
     
     course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name='live_classes')
-    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name='live_classes')
+    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name='live_classes', null=True, blank=True)
     
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
@@ -1112,6 +1295,24 @@ class LiveClassSession(models.Model):
     
     def __str__(self):
         return f"{self.title} - {self.course.title} - {self.scheduled_start}"
+    
+    def get_remaining_seats(self):
+        """Get remaining seats available"""
+        return max(0, self.total_seats - self.seats_taken)
+    
+    def has_teacher_conflict(self, teacher, start_time, end_time, exclude_session_id=None):
+        """Check if teacher has conflicting live class sessions"""
+        from django.db.models import Q
+        if not teacher:
+            return False
+        conflicting = LiveClassSession.objects.filter(
+            teacher=teacher,
+            status__in=['draft', 'scheduled', 'live'],
+        ).exclude(id=exclude_session_id).filter(
+            Q(start_at_utc__lt=end_time, end_at_utc__gt=start_time) |
+            Q(scheduled_start__lt=end_time, scheduled_end__gt=start_time)
+        )
+        return conflicting.exists()
     
     def save(self, *args, **kwargs):
         from datetime import timedelta
@@ -2359,3 +2560,369 @@ def create_user_profile(sender, instance, created, **kwargs):
 def save_user_profile(sender, instance, **kwargs):
     if hasattr(instance, 'profile'):
         instance.profile.save()
+
+
+# ============================================
+# CRM AUTO-LINKING SIGNALS
+# ============================================
+
+@receiver(post_save, sender=GiftEnrollment)
+def auto_link_gift_to_lead(sender, instance, created, **kwargs):
+    """Auto-link GiftEnrollment to Lead when gift is created"""
+    if not created or not instance.recipient_email:
+        return
+    
+    from django.db.models import Q
+    
+    # Try to find existing lead by email (case-insensitive)
+    lead = Lead.objects.filter(email__iexact=instance.recipient_email).first()
+    
+    if lead:
+        # Link gift to existing lead
+        link_created = GiftEnrollmentLeadLink.objects.get_or_create(
+            gift_enrollment=instance,
+            lead=lead,
+            defaults={'created_by': None}  # System action
+        )[1]  # Returns (link, created) tuple
+        
+        # Create timeline events
+        if link_created:
+            LeadTimelineEvent.objects.create(
+                lead=lead,
+                event_type='GIFT_CREATED',
+                actor=None,  # System
+                summary=f"Gift enrollment for {instance.course.title} purchased",
+                metadata={'gift_id': instance.id, 'buyer_id': instance.buyer.id if instance.buyer else None}
+            )
+            LeadTimelineEvent.objects.create(
+                lead=lead,
+                event_type='GIFT_LINKED_TO_LEAD',
+                actor=None,  # System
+                summary=f"Gift enrollment for {instance.course.title} automatically linked to lead",
+                metadata={'gift_id': instance.id, 'auto': True}
+            )
+    else:
+        # Auto-create new lead from gift
+        lead = Lead.objects.create(
+            name=instance.recipient_name or instance.recipient_email.split('@')[0],
+            email=instance.recipient_email,
+            source='gift',
+            status='contacted',
+            owner=None,
+        )
+        # Link gift to new lead
+        GiftEnrollmentLeadLink.objects.create(
+            gift_enrollment=instance,
+            lead=lead,
+            created_by=None
+        )
+        # Create timeline events
+        LeadTimelineEvent.objects.create(
+            lead=lead,
+            event_type='AUTO_LEAD_CREATED_FROM_GIFT',
+            actor=None,
+            summary=f"Lead automatically created from gift enrollment for {instance.course.title}",
+            metadata={'gift_id': instance.id}
+        )
+        LeadTimelineEvent.objects.create(
+            lead=lead,
+            event_type='GIFT_CREATED',
+            actor=None,
+            summary=f"Gift enrollment for {instance.course.title} purchased",
+            metadata={'gift_id': instance.id, 'buyer_id': instance.buyer.id if instance.buyer else None}
+        )
+        LeadTimelineEvent.objects.create(
+            lead=lead,
+            event_type='GIFT_LINKED_TO_LEAD',
+            actor=None,
+            summary=f"Gift enrollment automatically linked",
+            metadata={'gift_id': instance.id, 'auto': True}
+        )
+
+
+@receiver(post_save, sender=User)
+def auto_link_user_to_lead(sender, instance, created, **kwargs):
+    """Auto-link User to Lead when user account is created"""
+    if not created or not instance.email:
+        return
+    
+    # Try to find lead by email
+    lead = Lead.objects.filter(email__iexact=instance.email).first()
+    
+    if lead and not lead.linked_user:
+        lead.linked_user = instance
+        lead.save(update_fields=['linked_user', 'updated_at'])
+        # Create timeline event
+        LeadTimelineEvent.objects.create(
+            lead=lead,
+            event_type='USER_LINKED_TO_LEAD',
+            actor=None,  # System
+            summary=f"User account {instance.username} automatically linked to lead",
+            metadata={'user_id': instance.id, 'auto': True}
+        )
+
+
+@receiver(post_save, sender=Enrollment)
+def auto_link_enrollment_to_lead(sender, instance, created, **kwargs):
+    """Auto-link Enrollment to Lead when enrollment is created"""
+    if not created or not instance.user:
+        return
+    
+    # Check if user is linked to a lead
+    lead = Lead.objects.filter(linked_user=instance.user).first()
+    
+    # Also check by email if no direct link
+    if not lead and instance.user.email:
+        lead = Lead.objects.filter(email__iexact=instance.user.email).first()
+    
+    if lead:
+        # Link enrollment to lead
+        link_created = EnrollmentLeadLink.objects.get_or_create(
+            enrollment=instance,
+            lead=lead,
+            defaults={'created_by': None}
+        )[1]  # Returns (link, created) tuple
+        
+        # Create timeline events
+        if link_created:
+            LeadTimelineEvent.objects.create(
+                lead=lead,
+                event_type='ENROLLMENT_CREATED',
+                actor=None,
+                summary=f"Enrollment in {instance.course.title} created",
+                metadata={'enrollment_id': instance.id, 'user_id': instance.user.id}
+            )
+            LeadTimelineEvent.objects.create(
+                lead=lead,
+                event_type='ENROLLMENT_LINKED_TO_LEAD',
+                actor=None,
+                summary=f"Enrollment in {instance.course.title} automatically linked to lead",
+                metadata={'enrollment_id': instance.id, 'auto': True}
+            )
+        
+        # Update lead status to Enrolled if not already
+        if lead.status != 'enrolled':
+            old_status = lead.status
+            lead.status = 'enrolled'
+            lead.save(update_fields=['status', 'updated_at'])
+            # Create status change event
+            LeadTimelineEvent.objects.create(
+                lead=lead,
+                event_type='LEAD_STATUS_CHANGED',
+                actor=None,
+                summary=f"Status automatically changed from {dict(Lead.STATUS_CHOICES).get(old_status, old_status)} to Enrolled",
+                metadata={'old_status': old_status, 'new_status': 'enrolled', 'auto': True}
+            )
+            # Create conversion event
+            LeadTimelineEvent.objects.create(
+                lead=lead,
+                event_type='LEAD_CONVERTED_TO_ENROLLED',
+                actor=None,
+                summary=f"Lead converted to enrolled status",
+                metadata={'enrollment_id': instance.id, 'auto': True}
+            )
+
+
+# ============================================
+# LIVE CLASS TEACHER ASSIGNMENT AUDIT LOG
+# ============================================
+
+class LiveClassTeacherAssignment(models.Model):
+    """Audit log for teacher assignments to live class sessions"""
+    session = models.ForeignKey(LiveClassSession, on_delete=models.CASCADE, related_name='assignment_history')
+    
+    # Assignment details
+    assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='teacher_assignments_made')
+    old_teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True, blank=True, related_name='assignment_history_old')
+    new_teacher = models.ForeignKey(Teacher, on_delete=models.SET_NULL, null=True, blank=True, related_name='assignment_history_new')
+    
+    # Metadata
+    reason = models.TextField(blank=True, help_text='Reason for assignment/reassignment')
+    notes = models.TextField(blank=True, help_text='Additional notes')
+    
+    # Timestamp
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Teacher Assignment'
+        verbose_name_plural = 'Teacher Assignments'
+    
+    def __str__(self):
+        if self.old_teacher and self.new_teacher:
+            return f"{self.session.title}: {self.old_teacher.user.username} → {self.new_teacher.user.username}"
+        elif self.new_teacher:
+            return f"{self.session.title}: Assigned to {self.new_teacher.user.username}"
+        else:
+            return f"{self.session.title}: Unassigned"
+
+
+# ============================================
+# CRM - LEAD TRACKER
+# ============================================
+
+class Lead(models.Model):
+    """CRM Lead tracking from first contact through enrollment"""
+    STATUS_CHOICES = [
+        ('new', 'New'),
+        ('contacted', 'Contacted'),
+        ('follow_up', 'Follow-up'),
+        ('negotiating', 'Negotiating'),
+        ('enrolled', 'Enrolled'),
+        ('lost', 'Lost'),
+    ]
+    
+    SOURCE_CHOICES = [
+        ('facebook', 'Facebook'),
+        ('instagram', 'Instagram'),
+        ('referral', 'Referral'),
+        ('event', 'Event'),
+        ('website', 'Website'),
+        ('gift', 'Gift'),
+        ('other', 'Other'),
+    ]
+    
+    # Basic Information
+    name = models.CharField(max_length=200)
+    email = models.EmailField(blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True)
+    
+    # CRM Fields
+    source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default='other')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
+    notes = models.TextField(blank=True)
+    last_contact_date = models.DateTimeField(null=True, blank=True)
+    
+    # Ownership
+    owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_leads', help_text='Assigned staff member')
+    
+    # Linked Records
+    linked_user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='lead_profile', help_text='Linked user account if exists')
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-updated_at']
+        verbose_name = 'Lead'
+        verbose_name_plural = 'Leads'
+        indexes = [
+            models.Index(fields=['email']),
+            models.Index(fields=['status']),
+            models.Index(fields=['source']),
+        ]
+    
+    def __str__(self):
+        return f"{self.name} ({self.email or 'No email'})"
+    
+    def get_gift_enrollments(self):
+        """Get all linked gift enrollments"""
+        return self.gift_enrollments.all()
+    
+    def get_enrollments(self):
+        """Get all linked enrollments"""
+        return self.enrollments.all()
+    
+    def update_status(self, new_status, actor=None, reason=''):
+        """Update lead status and create timeline event"""
+        old_status = self.status
+        if old_status != new_status:
+            self.status = new_status
+            self.save(update_fields=['status', 'updated_at'])
+            # Create timeline event
+            LeadTimelineEvent.objects.create(
+                lead=self,
+                event_type='LEAD_STATUS_CHANGED',
+                actor=actor,
+                summary=f"Status changed from {self.get_status_display()} to {self.get_status_display()}",
+                metadata={'old_status': old_status, 'new_status': new_status, 'reason': reason}
+            )
+            return True
+        return False
+
+
+class LeadTimelineEvent(models.Model):
+    """Timeline/audit events for leads - immutable audit log"""
+    EVENT_TYPE_CHOICES = [
+        # Lead Events
+        ('LEAD_CREATED', 'Lead Created'),
+        ('LEAD_UPDATED', 'Lead Updated'),
+        ('LEAD_STATUS_CHANGED', 'Status Changed'),
+        ('LEAD_OWNER_CHANGED', 'Owner Changed'),
+        ('LEAD_NOTE_ADDED', 'Note Added'),
+        ('LEAD_NOTE_EDITED', 'Note Edited'),
+        # Gift Events
+        ('GIFT_CREATED', 'Gift Created'),
+        ('GIFT_LINKED_TO_LEAD', 'Gift Linked to Lead'),
+        ('GIFT_UNLINKED_FROM_LEAD', 'Gift Unlinked from Lead'),
+        ('GIFT_CLAIMED', 'Gift Claimed'),
+        # User Events
+        ('USER_LINKED_TO_LEAD', 'User Linked to Lead'),
+        ('USER_UNLINKED_FROM_LEAD', 'User Unlinked from Lead'),
+        # Enrollment Events
+        ('ENROLLMENT_CREATED', 'Enrollment Created'),
+        ('ENROLLMENT_LINKED_TO_LEAD', 'Enrollment Linked to Lead'),
+        ('ENROLLMENT_UNLINKED_FROM_LEAD', 'Enrollment Unlinked from Lead'),
+        # Conversion Events
+        ('LEAD_CONVERTED_TO_ENROLLED', 'Lead Converted to Enrolled'),
+        # Auto Events
+        ('AUTO_LEAD_CREATED_FROM_GIFT', 'Auto Lead Created from Gift'),
+        ('AUTO_LINK_PERFORMED', 'Auto Link Performed'),
+        # Manual Events
+        ('MANUAL_OVERRIDE_PERFORMED', 'Manual Override Performed'),
+    ]
+    
+    lead = models.ForeignKey(Lead, on_delete=models.CASCADE, related_name='timeline_events')
+    event_type = models.CharField(max_length=50, choices=EVENT_TYPE_CHOICES)
+    actor = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='lead_timeline_actions', help_text='User who performed action, null for system')
+    summary = models.TextField(help_text='Human-readable event summary')
+    metadata = models.JSONField(default=dict, blank=True, help_text='Additional event data')
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Lead Timeline Event'
+        verbose_name_plural = 'Lead Timeline Events'
+        indexes = [
+            models.Index(fields=['lead', '-created_at']),
+        ]
+    
+    def __str__(self):
+        actor_name = self.actor.get_full_name() if self.actor else 'System'
+        return f"{self.get_event_type_display()} - {actor_name} - {self.created_at}"
+
+
+# Add reverse relationships to existing models
+# GiftEnrollment -> Lead (many-to-many for multiple gifts per lead)
+class GiftEnrollmentLeadLink(models.Model):
+    """Link between GiftEnrollment and Lead"""
+    gift_enrollment = models.ForeignKey(GiftEnrollment, on_delete=models.CASCADE, related_name='lead_links')
+    lead = models.ForeignKey(Lead, on_delete=models.CASCADE, related_name='gift_enrollments')
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        unique_together = [['gift_enrollment', 'lead']]
+        verbose_name = 'Gift Enrollment Lead Link'
+        verbose_name_plural = 'Gift Enrollment Lead Links'
+    
+    def __str__(self):
+        return f"{self.gift_enrollment} ↔ {self.lead}"
+
+
+# Enrollment -> Lead (many-to-many for multiple enrollments per lead)
+class EnrollmentLeadLink(models.Model):
+    """Link between Enrollment and Lead"""
+    enrollment = models.ForeignKey(Enrollment, on_delete=models.CASCADE, related_name='lead_links')
+    lead = models.ForeignKey(Lead, on_delete=models.CASCADE, related_name='enrollments')
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    
+    class Meta:
+        unique_together = [['enrollment', 'lead']]
+        verbose_name = 'Enrollment Lead Link'
+        verbose_name_plural = 'Enrollment Lead Links'
+    
+    def __str__(self):
+        return f"{self.enrollment} ↔ {self.lead}"
