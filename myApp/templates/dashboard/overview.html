@@ -6,13 +6,13 @@
     <div class="mb-8 sm:mb-10 animate-fade-in-up stagger-1">
         <div class="flex items-center justify-between mb-3">
             <div>
-                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-white mb-3 tracking-[-0.02em]">
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-gray-900 dark:text-white mb-3 tracking-[-0.02em]">
                     Dashboard
                 </h1>
-                <p class="text-base sm:text-lg text-white/70 font-light">Real-time insights and action items</p>
+                <p class="text-base sm:text-lg text-gray-600 dark:text-white/70 font-light">Real-time insights and action items</p>
             </div>
             <div class="text-right">
-                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#82C293]/20 border border-[#82C293]/30 text-[#82C293] text-sm font-medium">
+                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-100 dark:bg-[#82C293]/20 border border-emerald-300 dark:border-[#82C293]/30 text-emerald-700 dark:text-[#82C293] text-sm font-medium">
                     <i class="fas fa-shield-alt"></i>
                     <span>Godlike Admin Mode</span>
                 </div>
@@ -22,76 +22,76 @@
     
     <!-- Clean KPI Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 mb-8 sm:mb-10">
-        <div class="rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 sm:p-7 border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] hover:border-[#82C293]/30 transition-all duration-300 animate-fade-in-up stagger-1 hover:scale-[1.02] hover:-translate-y-1 group">
+        <div class="rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 sm:p-7 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)] hover:shadow-xl dark:hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] hover:border-emerald-300 dark:hover:border-[#82C293]/30 transition-all duration-300 animate-fade-in-up stagger-1 hover:scale-[1.02] hover:-translate-y-1 group">
             <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 rounded-xl bg-[#259d78]/20 border border-[#259d78]/30 grid place-items-center transition-all duration-300 group-hover:scale-110 group-hover:bg-[#259d78]/30 group-hover:border-[#259d78]/50">
-                    <i class="fas fa-user-plus text-[#259d78] transition-transform duration-300 group-hover:scale-110"></i>
+                <div class="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-[#259d78]/20 border border-emerald-300 dark:border-[#259d78]/30 grid place-items-center transition-all duration-300 group-hover:scale-110 group-hover:bg-emerald-200 dark:group-hover:bg-[#259d78]/30 group-hover:border-emerald-400 dark:group-hover:border-[#259d78]/50">
+                    <i class="fas fa-user-plus text-emerald-600 dark:text-[#259d78] transition-transform duration-300 group-hover:scale-110"></i>
                 </div>
-                <span class="text-xs px-3 py-1.5 rounded-full bg-[#259d78]/20 text-[#259d78] border border-[#259d78]/30 font-medium">Today</span>
+                <span class="text-xs px-3 py-1.5 rounded-full bg-emerald-100 dark:bg-[#259d78]/20 text-emerald-700 dark:text-[#259d78] border border-emerald-300 dark:border-[#259d78]/30 font-medium">Today</span>
             </div>
-            <div class="text-xs uppercase tracking-wider text-white/50 mb-2 font-medium">New Students Today</div>
-            <div class="text-3xl sm:text-4xl font-extralight text-white mb-2">{{ new_students_today }}</div>
-            <div class="text-sm text-white/70 font-medium">New registrations</div>
+            <div class="text-xs uppercase tracking-wider text-gray-500 dark:text-white/50 mb-2 font-medium">New Students Today</div>
+            <div class="text-3xl sm:text-4xl font-extralight text-gray-900 dark:text-white mb-2">{{ new_students_today }}</div>
+            <div class="text-sm text-gray-600 dark:text-white/70 font-medium">New registrations</div>
         </div>
         
-        <div class="rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 sm:p-7 border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] hover:border-[#82C293]/30 transition-all duration-300 animate-fade-in-up stagger-2 hover:scale-[1.02] hover:-translate-y-1 group">
+        <div class="rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 sm:p-7 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)] hover:shadow-xl dark:hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] hover:border-emerald-300 dark:hover:border-[#82C293]/30 transition-all duration-300 animate-fade-in-up stagger-2 hover:scale-[1.02] hover:-translate-y-1 group">
             <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 rounded-xl bg-[#369dbf]/20 border border-[#369dbf]/30 grid place-items-center transition-all duration-300 group-hover:scale-110 group-hover:bg-[#369dbf]/30 group-hover:border-[#369dbf]/50">
-                    <i class="fas fa-dollar-sign text-[#369dbf] transition-transform duration-300 group-hover:scale-110"></i>
+                <div class="w-12 h-12 rounded-xl bg-blue-100 dark:bg-[#369dbf]/20 border border-blue-300 dark:border-[#369dbf]/30 grid place-items-center transition-all duration-300 group-hover:scale-110 group-hover:bg-blue-200 dark:group-hover:bg-[#369dbf]/30 group-hover:border-blue-400 dark:group-hover:border-[#369dbf]/50">
+                    <i class="fas fa-dollar-sign text-blue-600 dark:text-[#369dbf] transition-transform duration-300 group-hover:scale-110"></i>
                 </div>
-                <span class="text-xs px-3 py-1.5 rounded-full bg-[#369dbf]/20 text-[#369dbf] border border-[#369dbf]/30 font-medium">This Month</span>
+                <span class="text-xs px-3 py-1.5 rounded-full bg-blue-100 dark:bg-[#369dbf]/20 text-blue-700 dark:text-[#369dbf] border border-blue-300 dark:border-[#369dbf]/30 font-medium">This Month</span>
             </div>
-            <div class="text-xs uppercase tracking-wider text-white/50 mb-2 font-medium">Revenue This Month</div>
-            <div class="text-3xl sm:text-4xl font-extralight text-white mb-2">${{ revenue_this_month|floatformat:0 }}</div>
-            <div class="text-sm text-white/70 font-medium">Total revenue</div>
+            <div class="text-xs uppercase tracking-wider text-gray-500 dark:text-white/50 mb-2 font-medium">Revenue This Month</div>
+            <div class="text-3xl sm:text-4xl font-extralight text-gray-900 dark:text-white mb-2">${{ revenue_this_month|floatformat:0 }}</div>
+            <div class="text-sm text-gray-600 dark:text-white/70 font-medium">Total revenue</div>
         </div>
         
-        <div class="rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 sm:p-7 border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] hover:border-[#82C293]/30 transition-all duration-300 animate-fade-in-up stagger-3 hover:scale-[1.02] hover:-translate-y-1 group">
+        <div class="rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 sm:p-7 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)] hover:shadow-xl dark:hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] hover:border-emerald-300 dark:hover:border-[#82C293]/30 transition-all duration-300 animate-fade-in-up stagger-3 hover:scale-[1.02] hover:-translate-y-1 group">
             <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 rounded-xl bg-[#82C293]/20 border border-[#82C293]/30 grid place-items-center transition-all duration-300 group-hover:scale-110 group-hover:bg-[#82C293]/30 group-hover:border-[#82C293]/50">
-                    <i class="fas fa-graduation-cap text-[#82C293] transition-transform duration-300 group-hover:scale-110"></i>
+                <div class="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-[#82C293]/20 border border-emerald-300 dark:border-[#82C293]/30 grid place-items-center transition-all duration-300 group-hover:scale-110 group-hover:bg-emerald-200 dark:group-hover:bg-[#82C293]/30 group-hover:border-emerald-400 dark:group-hover:border-[#82C293]/50">
+                    <i class="fas fa-graduation-cap text-emerald-600 dark:text-[#82C293] transition-transform duration-300 group-hover:scale-110"></i>
                 </div>
-                <span class="text-xs px-3 py-1.5 rounded-full bg-[#82C293]/20 text-[#82C293] border border-[#82C293]/30 font-medium">{{ completion_rate|floatformat:0 }}%</span>
+                <span class="text-xs px-3 py-1.5 rounded-full bg-emerald-100 dark:bg-[#82C293]/20 text-emerald-700 dark:text-[#82C293] border border-emerald-300 dark:border-[#82C293]/30 font-medium">{{ completion_rate|floatformat:0 }}%</span>
             </div>
-            <div class="text-xs uppercase tracking-wider text-white/50 mb-2 font-medium">Course Completion Rate</div>
-            <div class="text-3xl sm:text-4xl font-extralight text-white mb-2">{{ completion_rate|floatformat:0 }}%</div>
-            <div class="text-sm text-white/70 font-medium">Overall completion</div>
+            <div class="text-xs uppercase tracking-wider text-gray-500 dark:text-white/50 mb-2 font-medium">Course Completion Rate</div>
+            <div class="text-3xl sm:text-4xl font-extralight text-gray-900 dark:text-white mb-2">{{ completion_rate|floatformat:0 }}%</div>
+            <div class="text-sm text-gray-600 dark:text-white/70 font-medium">Overall completion</div>
         </div>
         
-        <div class="rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 sm:p-7 border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] hover:border-[#82C293]/30 transition-all duration-300 animate-fade-in-up stagger-4 hover:scale-[1.02] hover:-translate-y-1 group">
+        <div class="rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 sm:p-7 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)] hover:shadow-xl dark:hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] hover:border-emerald-300 dark:hover:border-[#82C293]/30 transition-all duration-300 animate-fade-in-up stagger-4 hover:scale-[1.02] hover:-translate-y-1 group">
             <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 rounded-xl bg-[#b8c943]/20 border border-[#b8c943]/30 grid place-items-center transition-all duration-300 group-hover:scale-110 group-hover:bg-[#b8c943]/30 group-hover:border-[#b8c943]/50">
-                    <i class="fas fa-users text-[#b8c943] transition-transform duration-300 group-hover:scale-110"></i>
+                <div class="w-12 h-12 rounded-xl bg-lime-100 dark:bg-[#b8c943]/20 border border-lime-300 dark:border-[#b8c943]/30 grid place-items-center transition-all duration-300 group-hover:scale-110 group-hover:bg-lime-200 dark:group-hover:bg-[#b8c943]/30 group-hover:border-lime-400 dark:group-hover:border-[#b8c943]/50">
+                    <i class="fas fa-users text-lime-600 dark:text-[#b8c943] transition-transform duration-300 group-hover:scale-110"></i>
                 </div>
-                <span class="text-xs px-3 py-1.5 rounded-full bg-[#b8c943]/20 text-[#b8c943] border border-[#b8c943]/30 font-medium">Live</span>
+                <span class="text-xs px-3 py-1.5 rounded-full bg-lime-100 dark:bg-[#b8c943]/20 text-lime-700 dark:text-[#b8c943] border border-lime-300 dark:border-[#b8c943]/30 font-medium">Live</span>
             </div>
-            <div class="text-xs uppercase tracking-wider text-white/50 mb-2 font-medium">Active Learners (24h)</div>
-            <div class="text-3xl sm:text-4xl font-extralight text-white mb-2">{{ active_learners }}</div>
-            <div class="text-sm text-white/70 font-medium">Learning now</div>
+            <div class="text-xs uppercase tracking-wider text-gray-500 dark:text-white/50 mb-2 font-medium">Active Learners (24h)</div>
+            <div class="text-3xl sm:text-4xl font-extralight text-gray-900 dark:text-white mb-2">{{ active_learners }}</div>
+            <div class="text-sm text-gray-600 dark:text-white/70 font-medium">Learning now</div>
         </div>
         
-        <div class="rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 sm:p-7 border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] hover:border-[#82C293]/30 transition-all duration-300 animate-fade-in-up stagger-5 hover:scale-[1.02] hover:-translate-y-1 group">
+        <div class="rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 sm:p-7 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)] hover:shadow-xl dark:hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] hover:border-emerald-300 dark:hover:border-[#82C293]/30 transition-all duration-300 animate-fade-in-up stagger-5 hover:scale-[1.02] hover:-translate-y-1 group">
             <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 rounded-xl bg-[#03495f]/20 border border-[#03495f]/30 grid place-items-center transition-all duration-300 group-hover:scale-110 group-hover:bg-[#03495f]/30 group-hover:border-[#03495f]/50">
-                    <i class="fas fa-check-circle text-[#03495f] transition-transform duration-300 group-hover:scale-110"></i>
+                <div class="w-12 h-12 rounded-xl bg-cyan-100 dark:bg-[#03495f]/20 border border-cyan-300 dark:border-[#03495f]/30 grid place-items-center transition-all duration-300 group-hover:scale-110 group-hover:bg-cyan-200 dark:group-hover:bg-[#03495f]/30 group-hover:border-cyan-400 dark:group-hover:border-[#03495f]/50">
+                    <i class="fas fa-check-circle text-cyan-600 dark:text-[#03495f] transition-transform duration-300 group-hover:scale-110"></i>
                 </div>
-                <span class="text-xs px-3 py-1.5 rounded-full bg-[#03495f]/20 text-[#03495f] border border-[#03495f]/30 font-medium">{{ quiz_pass_rate|floatformat:0 }}%</span>
+                <span class="text-xs px-3 py-1.5 rounded-full bg-cyan-100 dark:bg-[#03495f]/20 text-cyan-700 dark:text-[#03495f] border border-cyan-300 dark:border-[#03495f]/30 font-medium">{{ quiz_pass_rate|floatformat:0 }}%</span>
             </div>
-            <div class="text-xs uppercase tracking-wider text-white/50 mb-2 font-medium">Quiz Pass Rate</div>
-            <div class="text-3xl sm:text-4xl font-extralight text-white mb-2">{{ quiz_pass_rate|floatformat:0 }}%</div>
-            <div class="text-sm text-white/70 font-medium">First attempt</div>
+            <div class="text-xs uppercase tracking-wider text-gray-500 dark:text-white/50 mb-2 font-medium">Quiz Pass Rate</div>
+            <div class="text-3xl sm:text-4xl font-extralight text-gray-900 dark:text-white mb-2">{{ quiz_pass_rate|floatformat:0 }}%</div>
+            <div class="text-sm text-gray-600 dark:text-white/70 font-medium">First attempt</div>
         </div>
         
-        <div class="rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 sm:p-7 {% if support_flags > 0 %}border-2 border-[#f8da03]/50{% else %}border border-white/10{% endif %} shadow-[0_15px_40px_rgba(0,0,0,0.3)] hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] hover:border-[#82C293]/30 transition-all duration-300 animate-fade-in-up stagger-6 hover:scale-[1.02] hover:-translate-y-1 group">
+        <div class="rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 sm:p-7 {% if support_flags > 0 %}border-2 border-yellow-300 dark:border-[#f8da03]/50{% else %}border border-gray-200 dark:border-white/10{% endif %} shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)] hover:shadow-xl dark:hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] hover:border-emerald-300 dark:hover:border-[#82C293]/30 transition-all duration-300 animate-fade-in-up stagger-6 hover:scale-[1.02] hover:-translate-y-1 group">
             <div class="flex items-center justify-between mb-4">
-                <div class="w-12 h-12 rounded-xl {% if support_flags > 0 %}bg-[#f8da03]/20 border-2 border-[#f8da03]/40{% else %}bg-[#259d78]/20 border border-[#259d78]/30{% endif %} grid place-items-center transition-all duration-300 group-hover:scale-110 {% if support_flags > 0 %}group-hover:bg-[#f8da03]/30 group-hover:border-[#f8da03]/60{% else %}group-hover:bg-[#259d78]/30 group-hover:border-[#259d78]/50{% endif %}">
-                    <i class="fas {% if support_flags > 0 %}fa-exclamation-triangle text-[#f8da03]{% else %}fa-check text-[#259d78]{% endif %} transition-transform duration-300 group-hover:scale-110"></i>
+                <div class="w-12 h-12 rounded-xl {% if support_flags > 0 %}bg-yellow-100 dark:bg-[#f8da03]/20 border-2 border-yellow-300 dark:border-[#f8da03]/40{% else %}bg-emerald-100 dark:bg-[#259d78]/20 border border-emerald-300 dark:border-[#259d78]/30{% endif %} grid place-items-center transition-all duration-300 group-hover:scale-110 {% if support_flags > 0 %}group-hover:bg-yellow-200 dark:group-hover:bg-[#f8da03]/30 group-hover:border-yellow-400 dark:group-hover:border-[#f8da03]/60{% else %}group-hover:bg-emerald-200 dark:group-hover:bg-[#259d78]/30 group-hover:border-emerald-400 dark:group-hover:border-[#259d78]/50{% endif %}">
+                    <i class="fas {% if support_flags > 0 %}fa-exclamation-triangle text-yellow-600 dark:text-[#f8da03]{% else %}fa-check text-emerald-600 dark:text-[#259d78]{% endif %} transition-transform duration-300 group-hover:scale-110"></i>
                 </div>
-                <span class="text-xs px-3 py-1.5 rounded-full {% if support_flags > 0 %}bg-[#f8da03]/20 text-[#f8da03] border-2 border-[#f8da03]/40{% else %}bg-[#259d78]/20 text-[#259d78] border border-[#259d78]/30{% endif %} font-medium">{{ support_flags }}</span>
+                <span class="text-xs px-3 py-1.5 rounded-full {% if support_flags > 0 %}bg-yellow-100 dark:bg-[#f8da03]/20 text-yellow-700 dark:text-[#f8da03] border-2 border-yellow-300 dark:border-[#f8da03]/40{% else %}bg-emerald-100 dark:bg-[#259d78]/20 text-emerald-700 dark:text-[#259d78] border border-emerald-300 dark:border-[#259d78]/30{% endif %} font-medium">{{ support_flags }}</span>
             </div>
-            <div class="text-xs uppercase tracking-wider text-white/50 mb-2 font-medium">Support Flags</div>
-            <div class="text-3xl sm:text-4xl font-extralight text-white mb-2">{{ support_flags }}</div>
-            <div class="text-sm {% if support_flags > 0 %}text-[#f8da03]{% else %}text-[#259d78]{% endif %} font-medium">
+            <div class="text-xs uppercase tracking-wider text-gray-500 dark:text-white/50 mb-2 font-medium">Support Flags</div>
+            <div class="text-3xl sm:text-4xl font-extralight text-gray-900 dark:text-white mb-2">{{ support_flags }}</div>
+            <div class="text-sm {% if support_flags > 0 %}text-yellow-600 dark:text-[#f8da03]{% else %}text-emerald-600 dark:text-[#259d78]{% endif %} font-medium">
                 {% if support_flags > 0 %}Requires attention{% else %}All clear{% endif %}
             </div>
         </div>
@@ -99,13 +99,13 @@
     
     <!-- Clean Action Center -->
     {% if action_items %}
-    <div class="rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 sm:p-8 border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] mb-8 sm:mb-10 animate-fade-in-up stagger-2 hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] transition-all duration-300">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-            <div>
-                <h2 class="text-2xl sm:text-3xl font-extralight text-white mb-2">Action Center</h2>
-                <p class="text-sm sm:text-base text-white/70 font-light">Items requiring your attention</p>
-            </div>
-            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#f8da03]/20 text-[#f8da03] border-2 border-[#f8da03]/40 text-sm font-medium">
+        <div class="rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 sm:p-8 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)] mb-8 sm:mb-10 animate-fade-in-up stagger-2 hover:shadow-xl dark:hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] transition-all duration-300">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                <div>
+                    <h2 class="text-2xl sm:text-3xl font-extralight text-gray-900 dark:text-white mb-2">Action Center</h2>
+                    <p class="text-sm sm:text-base text-gray-600 dark:text-white/70 font-light">Items requiring your attention</p>
+                </div>
+            <span class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-100 dark:bg-[#f8da03]/20 text-yellow-700 dark:text-[#f8da03] border-2 border-yellow-300 dark:border-[#f8da03]/40 text-sm font-medium">
                 <i class="fas fa-exclamation-circle"></i>
                 <span>{{ action_items|length }} item{{ action_items|length|pluralize }}</span>
             </span>
@@ -114,27 +114,27 @@
         <div class="space-y-4">
             {% for item in action_items %}
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-5 rounded-2xl 
-                {% if item.color == 'red' %}bg-[#f8da03]/10 border-2 border-[#f8da03]/30 hover:border-[#f8da03]/50
-                {% elif item.color == 'yellow' %}bg-[#b8c943]/10 border-2 border-[#b8c943]/30 hover:border-[#b8c943]/50
-                {% else %}bg-[#82C293]/10 border-2 border-[#82C293]/30 hover:border-[#82C293]/50{% endif %} transition-all duration-300 animate-slide-in-right stagger-3 hover:scale-[1.01] hover:-translate-y-0.5 group relative"
+                {% if item.color == 'red' %}bg-yellow-50 dark:bg-[#f8da03]/10 border-2 border-yellow-200 dark:border-[#f8da03]/30 hover:border-yellow-300 dark:hover:border-[#f8da03]/50
+                {% elif item.color == 'yellow' %}bg-lime-50 dark:bg-[#b8c943]/10 border-2 border-lime-200 dark:border-[#b8c943]/30 hover:border-lime-300 dark:hover:border-[#b8c943]/50
+                {% else %}bg-emerald-50 dark:bg-[#82C293]/10 border-2 border-emerald-200 dark:border-[#82C293]/30 hover:border-emerald-300 dark:hover:border-[#82C293]/50{% endif %} transition-all duration-300 animate-slide-in-right stagger-3 hover:scale-[1.01] hover:-translate-y-0.5 group relative"
                 style="pointer-events: auto;">
                 <div class="flex items-center gap-4 flex-1 min-w-0">
                     <div class="w-12 h-12 rounded-xl 
-                        {% if item.color == 'red' %}bg-[#f8da03]/20 border-2 border-[#f8da03]/40
-                        {% elif item.color == 'yellow' %}bg-[#b8c943]/20 border-2 border-[#b8c943]/40
-                        {% else %}bg-[#82C293]/20 border-2 border-[#82C293]/40{% endif %} grid place-items-center shrink-0">
+                        {% if item.color == 'red' %}bg-yellow-100 dark:bg-[#f8da03]/20 border-2 border-yellow-300 dark:border-[#f8da03]/40
+                        {% elif item.color == 'yellow' %}bg-lime-100 dark:bg-[#b8c943]/20 border-2 border-lime-300 dark:border-[#b8c943]/40
+                        {% else %}bg-emerald-100 dark:bg-[#82C293]/20 border-2 border-emerald-300 dark:border-[#82C293]/40{% endif %} grid place-items-center shrink-0">
                         <i class="fas {{ item.icon }} 
-                            {% if item.color == 'red' %}text-[#f8da03]
-                            {% elif item.color == 'yellow' %}text-[#b8c943]
-                            {% else %}text-[#82C293]{% endif %}"></i>
+                            {% if item.color == 'red' %}text-yellow-600 dark:text-[#f8da03]
+                            {% elif item.color == 'yellow' %}text-lime-600 dark:text-[#b8c943]
+                            {% else %}text-emerald-600 dark:text-[#82C293]{% endif %}"></i>
                     </div>
                     <div class="min-w-0">
-                        <div class="text-base sm:text-lg font-medium text-white mb-1">{{ item.title }}</div>
-                        <div class="text-sm text-white/70">{{ item.description }}</div>
+                        <div class="text-base sm:text-lg font-medium text-gray-900 dark:text-white mb-1">{{ item.title }}</div>
+                        <div class="text-sm text-gray-600 dark:text-white/70">{{ item.description }}</div>
                     </div>
                 </div>
                 <a href="{{ item.url|default:'/dashboard/' }}" 
-                   class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl text-sm font-medium hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] transition-all duration-300 hover:scale-105 group/btn inline-flex items-center justify-center no-underline focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:ring-offset-2 focus:ring-offset-[#04363a] relative z-10"
+                   class="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl text-sm font-medium hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] transition-all duration-300 hover:scale-105 group/btn inline-flex items-center justify-center no-underline focus:outline-none focus:ring-2 focus:ring-emerald-400 dark:focus:ring-[#82C293]/50 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-[#04363a] relative z-10"
                    aria-label="Review {{ item.title }}"
                    tabindex="0">
                     Review
@@ -149,75 +149,75 @@
     <!-- Clean Insights Section -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
         <!-- Course Popularity -->
-        <div class="rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 sm:p-8 border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] animate-fade-in-up stagger-3 hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] hover:border-[#82C293]/30 transition-all duration-300">
+        <div class="rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 sm:p-8 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)] animate-fade-in-up stagger-3 hover:shadow-xl dark:hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] hover:border-emerald-300 dark:hover:border-[#82C293]/30 transition-all duration-300">
             <div class="flex items-center gap-3 mb-6">
-                <div class="w-10 h-10 rounded-xl bg-[#82C293]/20 border border-[#82C293]/30 grid place-items-center">
-                    <i class="fas fa-chart-bar text-[#82C293]"></i>
+                <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-[#82C293]/20 border border-emerald-300 dark:border-[#82C293]/30 grid place-items-center">
+                    <i class="fas fa-chart-bar text-emerald-600 dark:text-[#82C293]"></i>
                 </div>
-                <h3 class="text-xl sm:text-2xl font-extralight text-white">Course Popularity</h3>
+                <h3 class="text-xl sm:text-2xl font-extralight text-gray-900 dark:text-white">Course Popularity</h3>
             </div>
             <div class="space-y-5">
                 {% for course in popular_courses %}
                 {% with max_enrolled=popular_courses.0.enrolled_count %}
                 <div>
                     <div class="flex items-center justify-between mb-2">
-                        <span class="text-sm sm:text-base font-medium text-white">{{ course.title|truncatechars:30 }}</span>
-                        <span class="text-lg sm:text-xl font-extralight text-white">{{ course.enrolled_count }}</span>
+                        <span class="text-sm sm:text-base font-medium text-gray-900 dark:text-white">{{ course.title|truncatechars:30 }}</span>
+                        <span class="text-lg sm:text-xl font-extralight text-gray-900 dark:text-white">{{ course.enrolled_count }}</span>
                     </div>
-                    <div class="h-2.5 bg-[#254346]/70 rounded-full overflow-hidden">
+                    <div class="h-2.5 bg-gray-200 dark:bg-[#254346]/70 rounded-full overflow-hidden">
                         <div class="h-full bg-gradient-to-r from-[#00655F] to-[#82C293] rounded-full transition-all duration-500" style="width: {% widthratio course.enrolled_count max_enrolled 100 %}%"></div>
                     </div>
                 </div>
                 {% endwith %}
                 {% empty %}
-                <p class="text-white/60 text-center py-4">No course data yet</p>
+                <p class="text-gray-500 dark:text-white/60 text-center py-4">No course data yet</p>
                 {% endfor %}
             </div>
         </div>
         
         <!-- Conversion Funnel -->
-        <div class="rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 sm:p-8 border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] animate-fade-in-up stagger-4 hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] hover:border-[#82C293]/30 transition-all duration-300">
+        <div class="rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 sm:p-8 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)] animate-fade-in-up stagger-4 hover:shadow-xl dark:hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] hover:border-emerald-300 dark:hover:border-[#82C293]/30 transition-all duration-300">
             <div class="flex items-center gap-3 mb-6">
-                <div class="w-10 h-10 rounded-xl bg-[#82C293]/20 border border-[#82C293]/30 grid place-items-center">
-                    <i class="fas fa-funnel-dollar text-[#82C293]"></i>
+                <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-[#82C293]/20 border border-emerald-300 dark:border-[#82C293]/30 grid place-items-center">
+                    <i class="fas fa-funnel-dollar text-emerald-600 dark:text-[#82C293]"></i>
                 </div>
-                <h3 class="text-xl sm:text-2xl font-extralight text-white">Conversion Funnel</h3>
+                <h3 class="text-xl sm:text-2xl font-extralight text-gray-900 dark:text-white">Conversion Funnel</h3>
             </div>
             <div class="space-y-4">
-                <div class="flex items-center justify-between p-4 rounded-xl bg-[#254346]/50 border border-white/10 hover:bg-[#254346]/70 transition-all duration-300 hover:scale-[1.02] hover:border-[#82C293]/30 group cursor-pointer">
+                <div class="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-[#254346]/50 border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-[#254346]/70 transition-all duration-300 hover:scale-[1.02] hover:border-emerald-300 dark:hover:border-[#82C293]/30 group cursor-pointer">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-[#82C293]/20 border border-[#82C293]/30 grid place-items-center">
-                            <i class="fas fa-clipboard-check text-[#82C293] text-sm"></i>
+                        <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-[#82C293]/20 border border-emerald-300 dark:border-[#82C293]/30 grid place-items-center">
+                            <i class="fas fa-clipboard-check text-emerald-600 dark:text-[#82C293] text-sm"></i>
                         </div>
-                        <span class="text-sm sm:text-base font-medium text-white">Placement Tests</span>
+                        <span class="text-sm sm:text-base font-medium text-gray-900 dark:text-white">Placement Tests</span>
                     </div>
-                    <span class="text-lg sm:text-xl font-extralight text-white">{{ placement_tests_taken }}</span>
+                    <span class="text-lg sm:text-xl font-extralight text-gray-900 dark:text-white">{{ placement_tests_taken }}</span>
                 </div>
-                <div class="flex items-center justify-between p-4 rounded-xl bg-[#254346]/50 border border-white/10 hover:bg-[#254346]/70 transition-all duration-300 hover:scale-[1.02] hover:border-[#82C293]/30 group cursor-pointer">
+                <div class="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-[#254346]/50 border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-[#254346]/70 transition-all duration-300 hover:scale-[1.02] hover:border-emerald-300 dark:hover:border-[#82C293]/30 group cursor-pointer">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-[#82C293]/20 border border-[#82C293]/30 grid place-items-center">
-                            <i class="fas fa-shopping-cart text-[#82C293] text-sm"></i>
+                        <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-[#82C293]/20 border border-emerald-300 dark:border-[#82C293]/30 grid place-items-center">
+                            <i class="fas fa-shopping-cart text-emerald-600 dark:text-[#82C293] text-sm"></i>
                         </div>
-                        <span class="text-sm sm:text-base font-medium text-white">Purchases</span>
+                        <span class="text-sm sm:text-base font-medium text-gray-900 dark:text-white">Purchases</span>
                     </div>
                     <div class="text-right">
-                        <span class="text-lg sm:text-xl font-extralight text-white">{{ purchases }}</span>
+                        <span class="text-lg sm:text-xl font-extralight text-gray-900 dark:text-white">{{ purchases }}</span>
                         {% if placement_tests_taken > 0 %}
-                        <span class="text-xs text-white/60 ml-2">({% widthratio purchases placement_tests_taken 100 %}%)</span>
+                        <span class="text-xs text-gray-500 dark:text-white/60 ml-2">({% widthratio purchases placement_tests_taken 100 %}%)</span>
                         {% endif %}
                     </div>
                 </div>
-                <div class="flex items-center justify-between p-4 rounded-xl bg-[#254346]/50 border border-white/10 hover:bg-[#254346]/70 transition-all duration-300 hover:scale-[1.02] hover:border-[#82C293]/30 group cursor-pointer">
+                <div class="flex items-center justify-between p-4 rounded-xl bg-gray-50 dark:bg-[#254346]/50 border border-gray-200 dark:border-white/10 hover:bg-gray-100 dark:hover:bg-[#254346]/70 transition-all duration-300 hover:scale-[1.02] hover:border-emerald-300 dark:hover:border-[#82C293]/30 group cursor-pointer">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-[#82C293]/20 border border-[#82C293]/30 grid place-items-center">
-                            <i class="fas fa-check-circle text-[#82C293] text-sm"></i>
+                        <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-[#82C293]/20 border border-emerald-300 dark:border-[#82C293]/30 grid place-items-center">
+                            <i class="fas fa-check-circle text-emerald-600 dark:text-[#82C293] text-sm"></i>
                         </div>
-                        <span class="text-sm sm:text-base font-medium text-white">Completions</span>
+                        <span class="text-sm sm:text-base font-medium text-gray-900 dark:text-white">Completions</span>
                     </div>
                     <div class="text-right">
-                        <span class="text-lg sm:text-xl font-extralight text-white">{{ completions }}</span>
+                        <span class="text-lg sm:text-xl font-extralight text-gray-900 dark:text-white">{{ completions }}</span>
                         {% if purchases > 0 %}
-                        <span class="text-xs text-white/60 ml-2">({% widthratio completions purchases 100 %}%)</span>
+                        <span class="text-xs text-gray-500 dark:text-white/60 ml-2">({% widthratio completions purchases 100 %}%)</span>
                         {% endif %}
                     </div>
                 </div>

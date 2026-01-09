@@ -6,71 +6,71 @@
     <div class="mb-8 sm:mb-10">
         <div class="flex items-center justify-between mb-3 flex-wrap gap-4">
             <div>
-                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-white mb-3 tracking-[-0.02em]">
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-gray-900 dark:text-white mb-3 tracking-[-0.02em]">
                     Analytics Dashboard
                 </h1>
-                <p class="text-base sm:text-lg text-white/70 font-light">Comprehensive insights and metrics</p>
+                <p class="text-base sm:text-lg text-gray-600 dark:text-white/70 font-light">Comprehensive insights and metrics</p>
             </div>
             <!-- Period Filter -->
             <div class="flex items-center gap-2">
-                <a href="?period=day" class="px-4 py-2 rounded-lg text-sm font-medium transition {% if period == 'day' %}bg-[#82C293]/20 text-[#82C293] border border-[#82C293]/30{% else %}bg-[#254346] text-white/70 border border-white/10 hover:bg-[#254346]/70{% endif %}">Day</a>
-                <a href="?period=week" class="px-4 py-2 rounded-lg text-sm font-medium transition {% if period == 'week' %}bg-[#82C293]/20 text-[#82C293] border border-[#82C293]/30{% else %}bg-[#254346] text-white/70 border border-white/10 hover:bg-[#254346]/70{% endif %}">Week</a>
-                <a href="?period=month" class="px-4 py-2 rounded-lg text-sm font-medium transition {% if period == 'month' %}bg-[#82C293]/20 text-[#82C293] border border-[#82C293]/30{% else %}bg-[#254346] text-white/70 border border-white/10 hover:bg-[#254346]/70{% endif %}">Month</a>
-                <a href="?period=year" class="px-4 py-2 rounded-lg text-sm font-medium transition {% if period == 'year' %}bg-[#82C293]/20 text-[#82C293] border border-[#82C293]/30{% else %}bg-[#254346] text-white/70 border border-white/10 hover:bg-[#254346]/70{% endif %}">Year</a>
-                <a href="?period=all" class="px-4 py-2 rounded-lg text-sm font-medium transition {% if period == 'all' %}bg-[#82C293]/20 text-[#82C293] border border-[#82C293]/30{% else %}bg-[#254346] text-white/70 border border-white/10 hover:bg-[#254346]/70{% endif %}">All</a>
+                <a href="?period=day" class="px-4 py-2 rounded-lg text-sm font-medium transition {% if period == 'day' %}bg-emerald-100 dark:bg-[#82C293]/20 text-emerald-700 dark:text-[#82C293] border border-emerald-300 dark:border-[#82C293]/30{% else %}bg-white dark:bg-[#254346] text-gray-600 dark:text-white/70 border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-[#254346]/70{% endif %} shadow-sm dark:shadow-none">Day</a>
+                <a href="?period=week" class="px-4 py-2 rounded-lg text-sm font-medium transition {% if period == 'week' %}bg-emerald-100 dark:bg-[#82C293]/20 text-emerald-700 dark:text-[#82C293] border border-emerald-300 dark:border-[#82C293]/30{% else %}bg-white dark:bg-[#254346] text-gray-600 dark:text-white/70 border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-[#254346]/70{% endif %} shadow-sm dark:shadow-none">Week</a>
+                <a href="?period=month" class="px-4 py-2 rounded-lg text-sm font-medium transition {% if period == 'month' %}bg-emerald-100 dark:bg-[#82C293]/20 text-emerald-700 dark:text-[#82C293] border border-emerald-300 dark:border-[#82C293]/30{% else %}bg-white dark:bg-[#254346] text-gray-600 dark:text-white/70 border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-[#254346]/70{% endif %} shadow-sm dark:shadow-none">Month</a>
+                <a href="?period=year" class="px-4 py-2 rounded-lg text-sm font-medium transition {% if period == 'year' %}bg-emerald-100 dark:bg-[#82C293]/20 text-emerald-700 dark:text-[#82C293] border border-emerald-300 dark:border-[#82C293]/30{% else %}bg-white dark:bg-[#254346] text-gray-600 dark:text-white/70 border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-[#254346]/70{% endif %} shadow-sm dark:shadow-none">Year</a>
+                <a href="?period=all" class="px-4 py-2 rounded-lg text-sm font-medium transition {% if period == 'all' %}bg-emerald-100 dark:bg-[#82C293]/20 text-emerald-700 dark:text-[#82C293] border border-emerald-300 dark:border-[#82C293]/30{% else %}bg-white dark:bg-[#254346] text-gray-600 dark:text-white/70 border border-gray-200 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-[#254346]/70{% endif %} shadow-sm dark:shadow-none">All</a>
             </div>
         </div>
     </div>
     
     <!-- 1. REVENUE ANALYTICS -->
     <div class="mb-8 sm:mb-10">
-        <h2 class="text-2xl sm:text-3xl font-extralight text-white mb-6 flex items-center gap-3">
-            <i class="fas fa-dollar-sign text-[#82C293]"></i>
+        <h2 class="text-2xl sm:text-3xl font-extralight text-gray-900 dark:text-white mb-6 flex items-center gap-3">
+            <i class="fas fa-dollar-sign text-emerald-600 dark:text-[#82C293]"></i>
             Revenue Analytics
         </h2>
         
         <!-- Total Revenue Card -->
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
-            <div class="rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 border border-white/10 shadow-lg">
-                <div class="text-xs uppercase tracking-wider text-white/50 mb-2">Total Revenue</div>
-                <div class="text-3xl font-extralight text-white mb-1">${{ total_revenue|floatformat:2 }}</div>
-                <div class="text-sm text-white/60">Period: {{ period|title }}</div>
+            <div class="rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)]">
+                <div class="text-xs uppercase tracking-wider text-gray-500 dark:text-white/50 mb-2">Total Revenue</div>
+                <div class="text-3xl font-extralight text-gray-900 dark:text-white mb-1">${{ total_revenue|floatformat:2 }}</div>
+                <div class="text-sm text-gray-600 dark:text-white/60">Period: {{ period|title }}</div>
             </div>
         </div>
         
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Revenue by Currency -->
-            <div class="rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 border border-white/10 shadow-lg">
-                <h3 class="text-xl font-extralight text-white mb-4">Revenue by Currency</h3>
+            <div class="rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)]">
+                <h3 class="text-xl font-extralight text-gray-900 dark:text-white mb-4">Revenue by Currency</h3>
                 <div class="space-y-3">
                     {% for item in revenue_by_currency %}
-                    <div class="flex items-center justify-between p-3 bg-[#254346]/50 rounded-lg">
-                        <span class="text-white font-medium">{{ item.currency }}</span>
+                    <div class="flex items-center justify-between p-3 bg-gray-50 dark:bg-[#254346]/50 rounded-lg">
+                        <span class="text-gray-900 dark:text-white font-medium">{{ item.currency }}</span>
                         <div class="text-right">
-                            <div class="text-white font-semibold">${{ item.currency_total_revenue|floatformat:2 }}</div>
-                            <div class="text-xs text-white/60">{{ item.count }} payment{{ item.count|pluralize }}</div>
+                            <div class="text-gray-900 dark:text-white font-semibold">${{ item.currency_total_revenue|floatformat:2 }}</div>
+                            <div class="text-xs text-gray-500 dark:text-white/60">{{ item.count }} payment{{ item.count|pluralize }}</div>
                         </div>
                     </div>
                     {% empty %}
-                    <p class="text-white/60 text-center py-4">No revenue data</p>
+                    <p class="text-gray-500 dark:text-white/60 text-center py-4">No revenue data</p>
                     {% endfor %}
                 </div>
             </div>
             
             <!-- Revenue by Course -->
-            <div class="rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 border border-white/10 shadow-lg">
-                <h3 class="text-xl font-extralight text-white mb-4">Top Courses by Revenue</h3>
+            <div class="rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)]">
+                <h3 class="text-xl font-extralight text-gray-900 dark:text-white mb-4">Top Courses by Revenue</h3>
                 <div class="space-y-3">
                     {% for course in revenue_by_course %}
-                    <div class="p-3 bg-[#254346]/50 rounded-lg">
+                    <div class="p-3 bg-gray-50 dark:bg-[#254346]/50 rounded-lg">
                         <div class="flex items-center justify-between mb-1">
-                            <span class="text-white font-medium truncate">{{ course.title|truncatechars:40 }}</span>
-                            <span class="text-white font-semibold">${{ course.course_total_revenue|floatformat:2 }}</span>
+                            <span class="text-gray-900 dark:text-white font-medium truncate">{{ course.title|truncatechars:40 }}</span>
+                            <span class="text-gray-900 dark:text-white font-semibold">${{ course.course_total_revenue|floatformat:2 }}</span>
                         </div>
-                        <div class="text-xs text-white/60">{{ course.payment_count }} payment{{ course.payment_count|pluralize }}</div>
+                        <div class="text-xs text-gray-500 dark:text-white/60">{{ course.payment_count }} payment{{ course.payment_count|pluralize }}</div>
                     </div>
                     {% empty %}
-                    <p class="text-white/60 text-center py-4">No course revenue data</p>
+                    <p class="text-gray-500 dark:text-white/60 text-center py-4">No course revenue data</p>
                     {% endfor %}
                 </div>
             </div>
@@ -78,36 +78,36 @@
         
         <!-- Revenue by Teacher & Partner -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-            <div class="rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 border border-white/10 shadow-lg">
-                <h3 class="text-xl font-extralight text-white mb-4">Revenue by Teacher</h3>
+            <div class="rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)]">
+                <h3 class="text-xl font-extralight text-gray-900 dark:text-white mb-4">Revenue by Teacher</h3>
                 <div class="space-y-3">
                     {% for teacher in revenue_by_teacher %}
-                    <div class="p-3 bg-[#254346]/50 rounded-lg">
+                    <div class="p-3 bg-gray-50 dark:bg-[#254346]/50 rounded-lg">
                         <div class="flex items-center justify-between mb-1">
-                            <span class="text-white font-medium">{{ teacher.user.get_full_name|default:teacher.user.username }}</span>
-                            <span class="text-white font-semibold">${{ teacher.teacher_total_revenue|floatformat:2 }}</span>
+                            <span class="text-gray-900 dark:text-white font-medium">{{ teacher.user.get_full_name|default:teacher.user.username }}</span>
+                            <span class="text-gray-900 dark:text-white font-semibold">${{ teacher.teacher_total_revenue|floatformat:2 }}</span>
                         </div>
-                        <div class="text-xs text-white/60">{{ teacher.course_count }} course{{ teacher.course_count|pluralize }}</div>
+                        <div class="text-xs text-gray-500 dark:text-white/60">{{ teacher.course_count }} course{{ teacher.course_count|pluralize }}</div>
                     </div>
                     {% empty %}
-                    <p class="text-white/60 text-center py-4">No teacher revenue data</p>
+                    <p class="text-gray-500 dark:text-white/60 text-center py-4">No teacher revenue data</p>
                     {% endfor %}
                 </div>
             </div>
             
-            <div class="rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 border border-white/10 shadow-lg">
-                <h3 class="text-xl font-extralight text-white mb-4">Revenue by Partner</h3>
+            <div class="rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)]">
+                <h3 class="text-xl font-extralight text-gray-900 dark:text-white mb-4">Revenue by Partner</h3>
                 <div class="space-y-3">
                     {% for partner in revenue_by_partner %}
-                    <div class="p-3 bg-[#254346]/50 rounded-lg">
+                    <div class="p-3 bg-gray-50 dark:bg-[#254346]/50 rounded-lg">
                         <div class="flex items-center justify-between mb-1">
-                            <span class="text-white font-medium">{{ partner.company_name|default:"Unnamed Partner" }}</span>
-                            <span class="text-white font-semibold">${{ partner.partner_total_revenue|floatformat:2 }}</span>
+                            <span class="text-gray-900 dark:text-white font-medium">{{ partner.company_name|default:"Unnamed Partner" }}</span>
+                            <span class="text-gray-900 dark:text-white font-semibold">${{ partner.partner_total_revenue|floatformat:2 }}</span>
                         </div>
-                        <div class="text-xs text-white/60">{{ partner.payment_count }} payment{{ partner.payment_count|pluralize }}</div>
+                        <div class="text-xs text-gray-500 dark:text-white/60">{{ partner.payment_count }} payment{{ partner.payment_count|pluralize }}</div>
                     </div>
                     {% empty %}
-                    <p class="text-white/60 text-center py-4">No partner revenue data</p>
+                    <p class="text-gray-500 dark:text-white/60 text-center py-4">No partner revenue data</p>
                     {% endfor %}
                 </div>
             </div>
@@ -116,45 +116,45 @@
     
     <!-- 2. ENROLLMENT FUNNEL -->
     <div class="mb-8 sm:mb-10">
-        <h2 class="text-2xl sm:text-3xl font-extralight text-white mb-6 flex items-center gap-3">
-            <i class="fas fa-funnel-dollar text-[#82C293]"></i>
+        <h2 class="text-2xl sm:text-3xl font-extralight text-gray-900 dark:text-white mb-6 flex items-center gap-3">
+            <i class="fas fa-funnel-dollar text-emerald-600 dark:text-[#82C293]"></i>
             Enrollment Funnel
         </h2>
         
-        <div class="rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 border border-white/10 shadow-lg">
+        <div class="rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)]">
             <div class="space-y-4">
                 {% for stage in funnel_data %}
                 <div>
                     <div class="flex items-center justify-between mb-2">
-                        <span class="text-white font-medium">{{ stage.stage }}</span>
+                        <span class="text-gray-900 dark:text-white font-medium">{{ stage.stage }}</span>
                         <div class="text-right">
-                            <span class="text-white font-semibold">{{ stage.count }}</span>
-                            <span class="text-white/60 ml-2">({{ stage.percentage|floatformat:1 }}%)</span>
+                            <span class="text-gray-900 dark:text-white font-semibold">{{ stage.count }}</span>
+                            <span class="text-gray-500 dark:text-white/60 ml-2">({{ stage.percentage|floatformat:1 }}%)</span>
                         </div>
                     </div>
-                    <div class="h-3 bg-[#254346] rounded-full overflow-hidden">
+                    <div class="h-3 bg-gray-200 dark:bg-[#254346] rounded-full overflow-hidden">
                         <div class="h-full bg-gradient-to-r from-[#00655F] to-[#82C293] rounded-full transition-all duration-500" style="width: {{ stage.percentage }}%"></div>
                     </div>
                 </div>
                 {% endfor %}
             </div>
             
-            <div class="mt-6 pt-6 border-t border-white/10 grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="mt-6 pt-6 border-t border-gray-200 dark:border-white/10 grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="text-center">
-                    <div class="text-2xl font-extralight text-white mb-1">{{ visit_to_placement|floatformat:1 }}%</div>
-                    <div class="text-xs text-white/60">Visit → Placement</div>
+                    <div class="text-2xl font-extralight text-gray-900 dark:text-white mb-1">{{ visit_to_placement|floatformat:1 }}%</div>
+                    <div class="text-xs text-gray-500 dark:text-white/60">Visit → Placement</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-2xl font-extralight text-white mb-1">{{ placement_to_checkout|floatformat:1 }}%</div>
-                    <div class="text-xs text-white/60">Placement → Checkout</div>
+                    <div class="text-2xl font-extralight text-gray-900 dark:text-white mb-1">{{ placement_to_checkout|floatformat:1 }}%</div>
+                    <div class="text-xs text-gray-500 dark:text-white/60">Placement → Checkout</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-2xl font-extralight text-white mb-1">{{ checkout_to_enroll|floatformat:1 }}%</div>
-                    <div class="text-xs text-white/60">Checkout → Enroll</div>
+                    <div class="text-2xl font-extralight text-gray-900 dark:text-white mb-1">{{ checkout_to_enroll|floatformat:1 }}%</div>
+                    <div class="text-xs text-gray-500 dark:text-white/60">Checkout → Enroll</div>
                 </div>
                 <div class="text-center">
-                    <div class="text-2xl font-extralight text-white mb-1">{{ enroll_to_complete|floatformat:1 }}%</div>
-                    <div class="text-xs text-white/60">Enroll → Complete</div>
+                    <div class="text-2xl font-extralight text-gray-900 dark:text-white mb-1">{{ enroll_to_complete|floatformat:1 }}%</div>
+                    <div class="text-xs text-gray-500 dark:text-white/60">Enroll → Complete</div>
                 </div>
             </div>
         </div>
@@ -162,106 +162,106 @@
     
     <!-- 3. STUDENT RETENTION -->
     <div class="mb-8 sm:mb-10">
-        <h2 class="text-2xl sm:text-3xl font-extralight text-white mb-6 flex items-center gap-3">
-            <i class="fas fa-users text-[#82C293]"></i>
+        <h2 class="text-2xl sm:text-3xl font-extralight text-gray-900 dark:text-white mb-6 flex items-center gap-3">
+            <i class="fas fa-users text-emerald-600 dark:text-[#82C293]"></i>
             Student Retention
         </h2>
         
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div class="rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 border border-white/10 shadow-lg">
-                <div class="text-xs uppercase tracking-wider text-white/50 mb-2">Week 1 Retention</div>
-                <div class="text-3xl font-extralight text-white mb-1">{{ week1_retention|floatformat:1 }}%</div>
+            <div class="rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)]">
+                <div class="text-xs uppercase tracking-wider text-gray-500 dark:text-white/50 mb-2">Week 1 Retention</div>
+                <div class="text-3xl font-extralight text-gray-900 dark:text-white mb-1">{{ week1_retention|floatformat:1 }}%</div>
             </div>
-            <div class="rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 border border-white/10 shadow-lg">
-                <div class="text-xs uppercase tracking-wider text-white/50 mb-2">Week 2 Retention</div>
-                <div class="text-3xl font-extralight text-white mb-1">{{ week2_retention|floatformat:1 }}%</div>
+            <div class="rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)]">
+                <div class="text-xs uppercase tracking-wider text-gray-500 dark:text-white/50 mb-2">Week 2 Retention</div>
+                <div class="text-3xl font-extralight text-gray-900 dark:text-white mb-1">{{ week2_retention|floatformat:1 }}%</div>
             </div>
-            <div class="rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 border border-white/10 shadow-lg">
-                <div class="text-xs uppercase tracking-wider text-white/50 mb-2">Week 4 Retention</div>
-                <div class="text-3xl font-extralight text-white mb-1">{{ week4_retention|floatformat:1 }}%</div>
+            <div class="rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)]">
+                <div class="text-xs uppercase tracking-wider text-gray-500 dark:text-white/50 mb-2">Week 4 Retention</div>
+                <div class="text-3xl font-extralight text-gray-900 dark:text-white mb-1">{{ week4_retention|floatformat:1 }}%</div>
             </div>
-            <div class="rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 border border-white/10 shadow-lg">
-                <div class="text-xs uppercase tracking-wider text-white/50 mb-2">Churned Students</div>
-                <div class="text-3xl font-extralight text-white mb-1">{{ churned }}</div>
-                <div class="text-xs text-white/60 mt-2">No activity (14+ days)</div>
+            <div class="rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)]">
+                <div class="text-xs uppercase tracking-wider text-gray-500 dark:text-white/50 mb-2">Churned Students</div>
+                <div class="text-3xl font-extralight text-gray-900 dark:text-white mb-1">{{ churned }}</div>
+                <div class="text-xs text-gray-500 dark:text-white/60 mt-2">No activity (14+ days)</div>
             </div>
         </div>
         
-        <div class="mt-6 rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 border border-white/10 shadow-lg">
-            <div class="text-xs uppercase tracking-wider text-white/50 mb-2">Average Lessons per User</div>
-            <div class="text-3xl font-extralight text-white">{{ avg_lessons_per_user|floatformat:1 }}</div>
+        <div class="mt-6 rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)]">
+            <div class="text-xs uppercase tracking-wider text-gray-500 dark:text-white/50 mb-2">Average Lessons per User</div>
+            <div class="text-3xl font-extralight text-gray-900 dark:text-white">{{ avg_lessons_per_user|floatformat:1 }}</div>
         </div>
     </div>
     
     <!-- 4. COURSE PERFORMANCE -->
     <div class="mb-8 sm:mb-10">
-        <h2 class="text-2xl sm:text-3xl font-extralight text-white mb-6 flex items-center gap-3">
-            <i class="fas fa-graduation-cap text-[#82C293]"></i>
+        <h2 class="text-2xl sm:text-3xl font-extralight text-gray-900 dark:text-white mb-6 flex items-center gap-3">
+            <i class="fas fa-graduation-cap text-emerald-600 dark:text-[#82C293]"></i>
             Course Performance
         </h2>
         
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Completion Rates -->
-            <div class="rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 border border-white/10 shadow-lg">
-                <h3 class="text-xl font-extralight text-white mb-4">Completion Rates by Course</h3>
+            <div class="rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)]">
+                <h3 class="text-xl font-extralight text-gray-900 dark:text-white mb-4">Completion Rates by Course</h3>
                 <div class="space-y-3 max-h-96 overflow-y-auto">
                     {% for course in course_performance %}
-                    <div class="p-3 bg-[#254346]/50 rounded-lg">
+                    <div class="p-3 bg-gray-50 dark:bg-[#254346]/50 rounded-lg">
                         <div class="flex items-center justify-between mb-2">
-                            <span class="text-white font-medium truncate">{{ course.title|truncatechars:35 }}</span>
-                            <span class="text-white font-semibold">{{ course.computed_completion_rate|floatformat:1 }}%</span>
+                            <span class="text-gray-900 dark:text-white font-medium truncate">{{ course.title|truncatechars:35 }}</span>
+                            <span class="text-gray-900 dark:text-white font-semibold">{{ course.computed_completion_rate|floatformat:1 }}%</span>
                         </div>
-                        <div class="h-2 bg-[#254346] rounded-full overflow-hidden mb-1">
+                        <div class="h-2 bg-gray-200 dark:bg-[#254346] rounded-full overflow-hidden mb-1">
                             <div class="h-full bg-gradient-to-r from-[#00655F] to-[#82C293] rounded-full" style="width: {{ course.computed_completion_rate }}%"></div>
                         </div>
-                        <div class="text-xs text-white/60">{{ course.completed_enrollments }} / {{ course.total_enrollments }} completed</div>
+                        <div class="text-xs text-gray-500 dark:text-white/60">{{ course.completed_enrollments }} / {{ course.total_enrollments }} completed</div>
                         {% if course.avg_rating %}
-                        <div class="text-xs text-white/60 mt-1">⭐ {{ course.avg_rating|floatformat:1 }}/5.0 ({{ course.review_count }} review{{ course.review_count|pluralize }})</div>
+                        <div class="text-xs text-gray-500 dark:text-white/60 mt-1">⭐ {{ course.avg_rating|floatformat:1 }}/5.0 ({{ course.review_count }} review{{ course.review_count|pluralize }})</div>
                         {% endif %}
                     </div>
                     {% empty %}
-                    <p class="text-white/60 text-center py-4">No course performance data</p>
+                    <p class="text-gray-500 dark:text-white/60 text-center py-4">No course performance data</p>
                     {% endfor %}
                 </div>
             </div>
             
             <!-- Quiz Pass Rates -->
-            <div class="rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 border border-white/10 shadow-lg">
-                <h3 class="text-xl font-extralight text-white mb-4">Quiz Pass Rates by Course</h3>
+            <div class="rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)]">
+                <h3 class="text-xl font-extralight text-gray-900 dark:text-white mb-4">Quiz Pass Rates by Course</h3>
                 <div class="space-y-3 max-h-96 overflow-y-auto">
                     {% for course in quiz_performance %}
-                    <div class="p-3 bg-[#254346]/50 rounded-lg">
+                    <div class="p-3 bg-gray-50 dark:bg-[#254346]/50 rounded-lg">
                         <div class="flex items-center justify-between mb-2">
-                            <span class="text-white font-medium truncate">{{ course.title|truncatechars:35 }}</span>
-                            <span class="text-white font-semibold">{{ course.computed_pass_rate|floatformat:1 }}%</span>
+                            <span class="text-gray-900 dark:text-white font-medium truncate">{{ course.title|truncatechars:35 }}</span>
+                            <span class="text-gray-900 dark:text-white font-semibold">{{ course.computed_pass_rate|floatformat:1 }}%</span>
                         </div>
-                        <div class="h-2 bg-[#254346] rounded-full overflow-hidden">
+                        <div class="h-2 bg-gray-200 dark:bg-[#254346] rounded-full overflow-hidden">
                             <div class="h-full bg-gradient-to-r from-[#00655F] to-[#82C293] rounded-full" style="width: {{ course.computed_pass_rate }}%"></div>
                         </div>
-                        <div class="text-xs text-white/60 mt-1">{{ course.passed_attempts }} / {{ course.total_attempts }} passed</div>
+                        <div class="text-xs text-gray-500 dark:text-white/60 mt-1">{{ course.passed_attempts }} / {{ course.total_attempts }} passed</div>
                     </div>
                     {% empty %}
-                    <p class="text-white/60 text-center py-4">No quiz performance data</p>
+                    <p class="text-gray-500 dark:text-white/60 text-center py-4">No quiz performance data</p>
                     {% endfor %}
                 </div>
             </div>
         </div>
         
         <!-- Course Ratings -->
-        <div class="mt-6 rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 border border-white/10 shadow-lg">
-            <h3 class="text-xl font-extralight text-white mb-4">Top Rated Courses</h3>
+        <div class="mt-6 rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)]">
+            <h3 class="text-xl font-extralight text-gray-900 dark:text-white mb-4">Top Rated Courses</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {% for course in course_ratings %}
-                <div class="p-4 bg-[#254346]/50 rounded-lg">
-                    <div class="text-white font-medium mb-2 truncate">{{ course.title|truncatechars:40 }}</div>
+                <div class="p-4 bg-gray-50 dark:bg-[#254346]/50 rounded-lg">
+                    <div class="text-gray-900 dark:text-white font-medium mb-2 truncate">{{ course.title|truncatechars:40 }}</div>
                     <div class="flex items-center gap-2 mb-1">
-                        <span class="text-yellow-400">⭐</span>
-                        <span class="text-white font-semibold">{{ course.avg_rating|floatformat:1 }}/5.0</span>
+                        <span class="text-yellow-500 dark:text-yellow-400">⭐</span>
+                        <span class="text-gray-900 dark:text-white font-semibold">{{ course.avg_rating|floatformat:1 }}/5.0</span>
                     </div>
-                    <div class="text-xs text-white/60">{{ course.rating_count }} review{{ course.rating_count|pluralize }}</div>
+                    <div class="text-xs text-gray-500 dark:text-white/60">{{ course.rating_count }} review{{ course.rating_count|pluralize }}</div>
                 </div>
                 {% empty %}
-                <p class="text-white/60 col-span-full text-center py-4">No ratings data</p>
+                <p class="text-gray-500 dark:text-white/60 col-span-full text-center py-4">No ratings data</p>
                 {% endfor %}
             </div>
         </div>
@@ -269,55 +269,55 @@
     
     <!-- 5. AI TUTOR USAGE -->
     <div class="mb-8 sm:mb-10">
-        <h2 class="text-2xl sm:text-3xl font-extralight text-white mb-6 flex items-center gap-3">
-            <i class="fas fa-robot text-[#82C293]"></i>
+        <h2 class="text-2xl sm:text-3xl font-extralight text-gray-900 dark:text-white mb-6 flex items-center gap-3">
+            <i class="fas fa-robot text-emerald-600 dark:text-[#82C293]"></i>
             AI Tutor Usage
         </h2>
         
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-            <div class="rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 border border-white/10 shadow-lg">
-                <div class="text-xs uppercase tracking-wider text-white/50 mb-2">Total Messages</div>
-                <div class="text-3xl font-extralight text-white mb-1">{{ total_messages }}</div>
-                <div class="text-xs text-white/60 mt-2">{{ user_messages }} user / {{ ai_messages }} AI</div>
+            <div class="rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)]">
+                <div class="text-xs uppercase tracking-wider text-gray-500 dark:text-white/50 mb-2">Total Messages</div>
+                <div class="text-3xl font-extralight text-gray-900 dark:text-white mb-1">{{ total_messages }}</div>
+                <div class="text-xs text-gray-500 dark:text-white/60 mt-2">{{ user_messages }} user / {{ ai_messages }} AI</div>
             </div>
-            <div class="rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 border border-white/10 shadow-lg">
-                <div class="text-xs uppercase tracking-wider text-white/50 mb-2">Total Tokens</div>
-                <div class="text-3xl font-extralight text-white mb-1">{{ total_tokens|floatformat:0 }}</div>
-                <div class="text-xs text-white/60 mt-2">Tokens consumed</div>
+            <div class="rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)]">
+                <div class="text-xs uppercase tracking-wider text-gray-500 dark:text-white/50 mb-2">Total Tokens</div>
+                <div class="text-3xl font-extralight text-gray-900 dark:text-white mb-1">{{ total_tokens|floatformat:0 }}</div>
+                <div class="text-xs text-gray-500 dark:text-white/60 mt-2">Tokens consumed</div>
             </div>
         </div>
         
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <!-- Top Users -->
-            <div class="rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 border border-white/10 shadow-lg">
-                <h3 class="text-xl font-extralight text-white mb-4">Top Engaged Users</h3>
+            <div class="rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)]">
+                <h3 class="text-xl font-extralight text-gray-900 dark:text-white mb-4">Top Engaged Users</h3>
                 <div class="space-y-3">
                     {% for conv in top_users %}
-                    <div class="p-3 bg-[#254346]/50 rounded-lg">
+                    <div class="p-3 bg-gray-50 dark:bg-[#254346]/50 rounded-lg">
                         <div class="flex items-center justify-between mb-1">
-                            <span class="text-white font-medium">{{ conv.user.get_full_name|default:conv.user.username }}</span>
-                            <span class="text-white font-semibold">{{ conv.message_count }} msg{{ conv.message_count|pluralize }}</span>
+                            <span class="text-gray-900 dark:text-white font-medium">{{ conv.user.get_full_name|default:conv.user.username }}</span>
+                            <span class="text-gray-900 dark:text-white font-semibold">{{ conv.message_count }} msg{{ conv.message_count|pluralize }}</span>
                         </div>
-                        <div class="text-xs text-white/60">{{ conv.course.title|default:"General" }}</div>
-                        <div class="text-xs text-white/60">{{ conv.token_count|default:0 }} tokens</div>
+                        <div class="text-xs text-gray-500 dark:text-white/60">{{ conv.course.title|default:"General" }}</div>
+                        <div class="text-xs text-gray-500 dark:text-white/60">{{ conv.token_count|default:0 }} tokens</div>
                     </div>
                     {% empty %}
-                    <p class="text-white/60 text-center py-4">No user engagement data</p>
+                    <p class="text-gray-500 dark:text-white/60 text-center py-4">No user engagement data</p>
                     {% endfor %}
                 </div>
             </div>
             
             <!-- Common Questions -->
-            <div class="rounded-2xl bg-[#04363a]/70 backdrop-blur-xl p-6 border border-white/10 shadow-lg">
-                <h3 class="text-xl font-extralight text-white mb-4">Common Questions</h3>
+            <div class="rounded-2xl bg-white dark:bg-[#04363a]/70 backdrop-blur-xl p-6 border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)]">
+                <h3 class="text-xl font-extralight text-gray-900 dark:text-white mb-4">Common Questions</h3>
                 <div class="space-y-3">
                     {% for question in common_questions %}
-                    <div class="p-3 bg-[#254346]/50 rounded-lg">
-                        <div class="text-white/90 mb-1">{{ question.content|truncatechars:80 }}</div>
-                        <div class="text-xs text-white/60">{{ question.count }} time{{ question.count|pluralize }}</div>
+                    <div class="p-3 bg-gray-50 dark:bg-[#254346]/50 rounded-lg">
+                        <div class="text-gray-700 dark:text-white/90 mb-1">{{ question.content|truncatechars:80 }}</div>
+                        <div class="text-xs text-gray-500 dark:text-white/60">{{ question.count }} time{{ question.count|pluralize }}</div>
                     </div>
                     {% empty %}
-                    <p class="text-white/60 text-center py-4">No common questions data</p>
+                    <p class="text-gray-500 dark:text-white/60 text-center py-4">No common questions data</p>
                     {% endfor %}
                 </div>
             </div>

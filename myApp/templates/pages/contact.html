@@ -146,7 +146,7 @@
                 
                 // Validate form
                 if (!name || !email || !subject || !message) {
-                    alert('Please fill in all fields.');
+                    FluentoryModal.show('warning', 'Please fill in all fields.');
                     return;
                 }
                 

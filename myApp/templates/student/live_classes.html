@@ -272,7 +272,8 @@ window.closeLiveClassModal = closeLiveClassModal;
 
 // Enroll in course and optionally book session
 async function enrollInCourse(courseId, sessionId) {
-    if (!confirm('Enroll in this course to book the live class?')) {
+    const confirmed = await FluentoryModal.show('confirm', 'Enroll in this course to book the live class?');
+    if (!confirmed) {
         return;
     }
     
@@ -308,12 +309,12 @@ async function enrollInCourse(courseId, sessionId) {
                 // Already enrolled, just redirect to booking
                 window.location.href = `/student/sessions/${sessionId}/book/`;
             } else {
-                alert(data.error || 'Failed to enroll');
+                FluentoryModal.show('error', data.error || 'Failed to enroll');
             }
         }
     } catch (error) {
         console.error('Enrollment error:', error);
-        alert(error.message || 'Something went wrong. Please try again.');
+        FluentoryModal.show('error', error.message || 'Something went wrong. Please try again.');
     }
 }
 

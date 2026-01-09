@@ -1,0 +1,396 @@
+<!-- Premium Modal Component -->
+<div id="fluentoryModal" class="fixed inset-0 z-[9999] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm transition-opacity duration-300" id="modalBackdrop" onclick="FluentoryModal.close()"></div>
+    
+    <!-- Modal Container -->
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div id="modalContainer" class="relative w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-[#04363a]/95 backdrop-blur-xl border border-gray-200 dark:border-white/10 shadow-2xl dark:shadow-[0_25px_60px_rgba(0,0,0,0.5)] transition-all duration-300 scale-95 opacity-0">
+            <!-- Modal Header -->
+            <div id="modalHeader" class="flex items-center justify-between px-6 py-5 border-b border-gray-200 dark:border-white/10 bg-gradient-to-r from-gray-50 to-white dark:from-[#254346]/30 dark:to-[#254346]/20">
+                <div class="flex items-center gap-3">
+                    <div id="modalIcon" class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-500/30 flex items-center justify-center">
+                        <i id="modalIconClass" class="fas fa-info-circle text-emerald-600 dark:text-emerald-400"></i>
+                    </div>
+                    <div>
+                        <h3 id="modalTitle" class="text-lg font-semibold text-gray-900 dark:text-white">Modal Title</h3>
+                        <p id="modalSubtitle" class="text-xs text-gray-500 dark:text-white/60 hidden">Subtitle</p>
+                    </div>
+                </div>
+                <button onclick="FluentoryModal.close()" class="p-2 text-gray-400 dark:text-white/60 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-all duration-300">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Content -->
+            <div class="px-6 py-6">
+                <p id="modalMessage" class="text-gray-700 dark:text-white/90 leading-relaxed mb-6">Modal message</p>
+                
+                <!-- Input field for prompt type -->
+                <div id="modalInputContainer" class="hidden mb-4">
+                    <input 
+                        type="text" 
+                        id="modalInput"
+                        class="w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 backdrop-blur-md text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-emerald-400 dark:focus:ring-emerald-500/40 focus:border-emerald-500 dark:focus:border-emerald-500/50 transition-all duration-300 shadow-sm dark:shadow-none"
+                        placeholder="Enter value..."
+                    >
+                </div>
+                
+                <!-- Error message -->
+                <div id="modalError" class="hidden mb-4 p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-lg">
+                    <p id="modalErrorText" class="text-red-700 dark:text-red-400 text-sm"></p>
+                </div>
+            </div>
+            
+            <!-- Modal Footer -->
+            <div id="modalFooter" class="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-[#254346]/20">
+                <button id="modalCancelBtn" onclick="FluentoryModal.close()" class="px-5 py-2.5 bg-white dark:bg-[#254346]/70 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-white rounded-xl hover:bg-gray-50 dark:hover:bg-[#254346]/90 hover:border-gray-300 dark:hover:border-white/20 transition-all duration-300 font-medium shadow-sm dark:shadow-none">
+                    Cancel
+                </button>
+                <button id="modalConfirmBtn" onclick="FluentoryModal.confirm()" class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 dark:from-[#00655F] dark:to-[#82C293] text-white rounded-xl hover:shadow-[0_8px_25px_rgba(16,185,129,0.4)] dark:hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] transition-all duration-300 font-medium hover:scale-105">
+                    <span id="modalConfirmText">Confirm</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Premium Modal System
+const FluentoryModal = {
+    currentResolve: null,
+    currentReject: null,
+    modal: null,
+    container: null,
+    backdrop: null,
+    
+    init() {
+        this.modal = document.getElementById('fluentoryModal');
+        this.container = document.getElementById('modalContainer');
+        this.backdrop = document.getElementById('modalBackdrop');
+        
+        // Close on ESC key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !this.modal.classList.contains('hidden')) {
+                this.close();
+            }
+        });
+    },
+    
+    show(type, message, options = {}) {
+        return new Promise((resolve, reject) => {
+            this.currentResolve = resolve;
+            this.currentReject = reject;
+            
+            const title = options.title || this.getDefaultTitle(type);
+            const subtitle = options.subtitle || '';
+            const confirmText = options.confirmText || 'Confirm';
+            const cancelText = options.cancelText || 'Cancel';
+            const icon = options.icon || this.getDefaultIcon(type);
+            const iconColor = options.iconColor || this.getDefaultIconColor(type);
+            
+            // Set content
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalMessage').textContent = message;
+            document.getElementById('modalConfirmText').textContent = confirmText;
+            document.getElementById('modalCancelBtn').textContent = cancelText;
+            
+            // Set subtitle
+            const subtitleEl = document.getElementById('modalSubtitle');
+            if (subtitle) {
+                subtitleEl.textContent = subtitle;
+                subtitleEl.classList.remove('hidden');
+            } else {
+                subtitleEl.classList.add('hidden');
+            }
+            
+            // Set icon
+            const iconEl = document.getElementById('modalIcon');
+            const iconClassEl = document.getElementById('modalIconClass');
+            iconClassEl.className = icon;
+            iconEl.className = `w-10 h-10 rounded-xl ${iconColor.bg} ${iconColor.border} flex items-center justify-center`;
+            iconClassEl.className = `${icon} ${iconColor.text}`;
+            
+            // Show/hide input for prompt
+            const inputContainer = document.getElementById('modalInputContainer');
+            const input = document.getElementById('modalInput');
+            if (type === 'prompt') {
+                inputContainer.classList.remove('hidden');
+                input.value = options.defaultValue || '';
+                input.focus();
+                input.select();
+            } else {
+                inputContainer.classList.add('hidden');
+            }
+            
+            // Show/hide cancel button
+            const cancelBtn = document.getElementById('modalCancelBtn');
+            if (type === 'alert') {
+                cancelBtn.classList.add('hidden');
+                document.getElementById('modalConfirmBtn').textContent = 'OK';
+            } else {
+                cancelBtn.classList.remove('hidden');
+            }
+            
+            // Hide error
+            document.getElementById('modalError').classList.add('hidden');
+            
+            // Show modal with animation
+            this.modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            
+            // Trigger animation
+            setTimeout(() => {
+                this.container.classList.remove('scale-95', 'opacity-0');
+                this.container.classList.add('scale-100', 'opacity-100');
+                this.backdrop.classList.remove('opacity-0');
+                this.backdrop.classList.add('opacity-100');
+            }, 10);
+        });
+    },
+    
+    confirm() {
+        const input = document.getElementById('modalInput');
+        const inputContainer = document.getElementById('modalInputContainer');
+        
+        if (!inputContainer.classList.contains('hidden')) {
+            // Prompt type - return input value
+            const value = input.value.trim();
+            if (!value && input.required) {
+                this.showError('Please enter a value');
+                return;
+            }
+            this.close(value);
+        } else {
+            // Confirm/Alert type
+            this.close(true);
+        }
+    },
+    
+    close(value = false) {
+        if (this.currentResolve) {
+            this.currentResolve(value);
+            this.currentResolve = null;
+        }
+        
+        // Animate out
+        this.container.classList.remove('scale-100', 'opacity-100');
+        this.container.classList.add('scale-95', 'opacity-0');
+        this.backdrop.classList.remove('opacity-100');
+        this.backdrop.classList.add('opacity-0');
+        
+        setTimeout(() => {
+            this.modal.classList.add('hidden');
+            document.body.style.overflow = '';
+        }, 300);
+    },
+    
+    showError(message) {
+        const errorEl = document.getElementById('modalError');
+        const errorText = document.getElementById('modalErrorText');
+        errorText.textContent = message;
+        errorEl.classList.remove('hidden');
+    },
+    
+    getDefaultTitle(type) {
+        switch(type) {
+            case 'alert': 
+            case 'info': return 'Notification';
+            case 'confirm': return 'Confirm Action';
+            case 'prompt': return 'Enter Information';
+            case 'error': return 'Error';
+            case 'success': return 'Success';
+            case 'warning': return 'Warning';
+            default: return 'Notification';
+        }
+    },
+    
+    getDefaultIcon(type) {
+        switch(type) {
+            case 'alert': 
+            case 'info': return 'fas fa-info-circle';
+            case 'confirm': return 'fas fa-question-circle';
+            case 'prompt': return 'fas fa-edit';
+            case 'error': return 'fas fa-exclamation-triangle';
+            case 'success': return 'fas fa-check-circle';
+            case 'warning': return 'fas fa-exclamation-circle';
+            default: return 'fas fa-info-circle';
+        }
+    },
+    
+    getDefaultIconColor(type) {
+        switch(type) {
+            case 'error':
+                return {
+                    bg: 'bg-red-100 dark:bg-red-500/20',
+                    border: 'border-red-300 dark:border-red-500/30',
+                    text: 'text-red-600 dark:text-red-400'
+                };
+            case 'success':
+                return {
+                    bg: 'bg-emerald-100 dark:bg-emerald-500/20',
+                    border: 'border-emerald-300 dark:border-emerald-500/30',
+                    text: 'text-emerald-600 dark:text-emerald-400'
+                };
+            case 'warning':
+                return {
+                    bg: 'bg-amber-100 dark:bg-amber-500/20',
+                    border: 'border-amber-300 dark:border-amber-500/30',
+                    text: 'text-amber-600 dark:text-amber-400'
+                };
+            default:
+                return {
+                    bg: 'bg-blue-100 dark:bg-blue-500/20',
+                    border: 'border-blue-300 dark:border-blue-500/30',
+                    text: 'text-blue-600 dark:text-blue-400'
+                };
+        }
+    }
+};
+
+// Replace native alert/confirm/prompt with async versions
+window.alert = async function(message, options = {}) {
+    await FluentoryModal.show('alert', message, { ...options, title: options.title || 'Notification' });
+    return true;
+};
+
+window.confirm = async function(message, options = {}) {
+    const result = await FluentoryModal.show('confirm', message, { ...options, title: options.title || 'Confirm Action' });
+    return result === true;
+};
+
+window.prompt = async function(message, defaultValue = '', options = {}) {
+    const result = await FluentoryModal.show('prompt', message, { ...options, defaultValue, title: options.title || 'Enter Information' });
+    return result || null;
+};
+
+// Helper for form submissions - converts onsubmit="return confirm(...)" to async
+window.handleFormConfirm = async function(event, message, options = {}) {
+    event.preventDefault();
+    const form = event.target;
+    const confirmed = await FluentoryModal.show('confirm', message, { ...options, title: options.title || 'Confirm Action' });
+    if (confirmed === true) {
+        form.submit();
+    }
+    return false;
+};
+
+// Auto-convert onsubmit="return confirm(...)" and data-confirm patterns
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle forms with data-confirm attribute
+    document.querySelectorAll('form[data-confirm]').forEach(form => {
+        const message = form.getAttribute('data-confirm');
+        form.removeAttribute('data-confirm');
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const confirmed = await FluentoryModal.show('confirm', message);
+            if (confirmed === true) {
+                form.submit();
+            }
+        });
+    });
+    
+    // Handle buttons with data-confirm attribute
+    document.querySelectorAll('button[data-confirm], a[data-confirm]').forEach(element => {
+        const message = element.getAttribute('data-confirm');
+        element.removeAttribute('data-confirm');
+        element.addEventListener('click', async function(e) {
+            e.preventDefault();
+            const confirmed = await FluentoryModal.show('confirm', message);
+            if (confirmed === true) {
+                if (element.tagName === 'BUTTON' && element.type === 'submit') {
+                    element.closest('form')?.submit();
+                } else if (element.tagName === 'A') {
+                    window.location.href = element.href;
+                } else if (element.tagName === 'BUTTON') {
+                    element.closest('form')?.submit();
+                }
+            }
+        });
+    });
+    
+    // Find all forms with onsubmit containing confirm
+    document.querySelectorAll('form[onsubmit*="confirm"]').forEach(form => {
+        const onsubmitAttr = form.getAttribute('onsubmit');
+        if (onsubmitAttr && onsubmitAttr.includes('confirm')) {
+            const match = onsubmitAttr.match(/confirm\(['"]([^'"]+)['"]\)/);
+            if (match) {
+                const message = match[1];
+                form.removeAttribute('onsubmit');
+                form.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    const confirmed = await FluentoryModal.show('confirm', message);
+                    if (confirmed === true) {
+                        form.submit();
+                    }
+                });
+            }
+        }
+    });
+    
+    // Find all buttons/links with onclick containing confirm
+    document.querySelectorAll('[onclick*="confirm"]').forEach(element => {
+        const onclickAttr = element.getAttribute('onclick');
+        if (onclickAttr && onclickAttr.includes('confirm')) {
+            const match = onclickAttr.match(/confirm\(['"]([^'"]+)['"]\)/);
+            if (match) {
+                const message = match[1];
+                element.removeAttribute('onclick');
+                element.addEventListener('click', async function(e) {
+                    if (element.tagName === 'A' || element.tagName === 'BUTTON') {
+                        e.preventDefault();
+                        const confirmed = await FluentoryModal.show('confirm', message);
+                        if (confirmed === true) {
+                            if (element.tagName === 'A') {
+                                window.location.href = element.href;
+                            } else {
+                                element.closest('form')?.submit();
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    });
+});
+
+// Initialize on DOM ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => FluentoryModal.init());
+} else {
+    FluentoryModal.init();
+}
+</script>
+
+<style>
+/* Smooth modal animations */
+#fluentoryModal {
+    animation: fadeIn 0.3s ease-out;
+}
+
+#modalContainer {
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px) scale(0.95);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0) scale(1);
+        opacity: 1;
+    }
+}
+
+/* Focus styles */
+#modalInput:focus {
+    transform: scale(1.01);
+}
+</style>
+

@@ -30,7 +30,7 @@
                     <a href="{% url 'teacher_lesson_edit' course.id lesson.id %}" class="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors">Edit</a>
                     <form method="post" action="{% url 'teacher_lesson_delete' course.id lesson.id %}" class="inline">
                         {% csrf_token %}
-                        <button type="submit" class="text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors" onclick="return confirm('Delete this lesson?')">Delete</button>
+                        <button type="submit" class="text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors" data-confirm="Delete this lesson?">Delete</button>
                     </form>
                 </div>
             </div>

@@ -6,12 +6,12 @@
     <div class="mb-8 sm:mb-10 animate-fade-in-up stagger-1">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <div>
-                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-white mb-3 tracking-[-0.02em]">
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-gray-900 dark:text-white mb-3 tracking-[-0.02em]">
                     Gifted Courses
                 </h1>
-                <p class="text-base sm:text-lg text-white/70 font-light">Manage all course gifts purchased on Fluentory</p>
+                <p class="text-base sm:text-lg text-gray-600 dark:text-white/70 font-light">Manage all course gifts purchased on Fluentory</p>
                 {% if total_count is not None %}
-                <p class="text-sm text-white/50 mt-2">Total gifts in database: <strong class="text-white/70">{{ total_count }}</strong></p>
+                <p class="text-sm text-gray-500 dark:text-white/50 mt-2">Total gifts in database: <strong class="text-gray-600 dark:text-white/70">{{ total_count }}</strong></p>
                 {% endif %}
             </div>
         </div>
@@ -20,21 +20,21 @@
         <div class="flex flex-wrap gap-4 mb-6 animate-fade-in-up stagger-2">
             <form method="get" class="flex flex-wrap gap-4 items-end">
                 <div>
-                    <label class="block text-xs uppercase tracking-wider text-white/60 mb-2 font-medium">Status</label>
-                    <select name="status" class="px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                    <label class="block text-xs uppercase tracking-wider text-gray-500 dark:text-white/60 mb-2 font-medium">Status</label>
+                    <select name="status" class="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 backdrop-blur-md text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 dark:focus:ring-[#82C293]/40 focus:border-emerald-400 dark:focus:border-[#82C293]/50 transition-all duration-300 shadow-sm dark:shadow-none">
                         <option value="">All Status</option>
                         <option value="pending_claim" {% if status_filter == 'pending_claim' %}selected{% endif %}>Pending Claim</option>
                         <option value="claimed" {% if status_filter == 'claimed' %}selected{% endif %}>Claimed</option>
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs uppercase tracking-wider text-white/60 mb-2 font-medium">Search</label>
-                    <input type="text" name="search" value="{{ search_query }}" placeholder="Buyer, recipient, or course..." class="px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                    <label class="block text-xs uppercase tracking-wider text-gray-500 dark:text-white/60 mb-2 font-medium">Search</label>
+                    <input type="text" name="search" value="{{ search_query }}" placeholder="Buyer, recipient, or course..." class="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 backdrop-blur-md text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 dark:focus:ring-[#82C293]/40 focus:border-emerald-400 dark:focus:border-[#82C293]/50 transition-all duration-300 shadow-sm dark:shadow-none">
                 </div>
                 <button type="submit" class="px-6 py-2.5 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] transition-all duration-300 font-medium hover:scale-105 group">
                     <i class="fas fa-search mr-2 transition-transform duration-300 group-hover:scale-110"></i>Filter
                 </button>
-                <a href="{% url 'dashboard:gifted_courses' %}" class="px-6 py-2.5 bg-[#254346]/70 border border-white/10 text-white rounded-xl hover:bg-[#254346]/90 hover:border-[#82C293]/40 transition-all duration-300 font-medium hover:scale-105">
+                <a href="{% url 'dashboard:gifted_courses' %}" class="px-6 py-2.5 bg-white dark:bg-[#254346]/70 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-xl hover:bg-gray-50 dark:hover:bg-[#254346]/90 hover:border-emerald-300 dark:hover:border-[#82C293]/40 transition-all duration-300 font-medium hover:scale-105 shadow-sm dark:shadow-none">
                     <i class="fas fa-times mr-2"></i>Clear
                 </a>
             </form>
@@ -42,48 +42,48 @@
     </div>
     
     <!-- Gifts Table -->
-    <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] overflow-hidden animate-fade-in-up stagger-3 hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] transition-all duration-300">
+    <div class="bg-white dark:bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)] overflow-hidden animate-fade-in-up stagger-3 hover:shadow-xl dark:hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] transition-all duration-300">
         <div class="overflow-x-auto">
             <table class="w-full">
-                <thead class="bg-[#254346]/50 border-b border-white/10">
+                <thead class="bg-gray-50 dark:bg-[#254346]/50 border-b border-gray-200 dark:border-white/10">
                     <tr>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">ID</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Course</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Buyer</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Recipient</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Status</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Purchase Date</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Claim Date</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-white">Actions</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">ID</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Course</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Buyer</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Recipient</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Status</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Purchase Date</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Claim Date</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Actions</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-white/10">
+                <tbody class="divide-y divide-gray-200 dark:divide-white/10">
                     {% for gift in gifts %}
-                    <tr class="hover:bg-[#82C293]/5 transition-all duration-300 animate-fade-in stagger-{{ forloop.counter|add:3 }} hover:scale-[1.01] group">
+                    <tr class="hover:bg-emerald-50 dark:hover:bg-[#82C293]/5 transition-all duration-300 animate-fade-in stagger-{{ forloop.counter|add:3 }} hover:scale-[1.01] group">
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="font-medium text-white">#{{ gift.id }}</div>
+                            <div class="font-medium text-gray-900 dark:text-white">#{{ gift.id }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="font-medium text-white">{{ gift.course.title }}</div>
-                            <div class="text-sm text-white/60">{{ gift.course.get_course_type_display }}</div>
+                            <div class="font-medium text-gray-900 dark:text-white">{{ gift.course.title }}</div>
+                            <div class="text-sm text-gray-500 dark:text-white/60">{{ gift.course.get_course_type_display }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="font-medium text-white">{{ gift.buyer.get_full_name|default:gift.buyer.username }}</div>
-                            <div class="text-sm text-white/60">{{ gift.buyer.email }}</div>
+                            <div class="font-medium text-gray-900 dark:text-white">{{ gift.buyer.get_full_name|default:gift.buyer.username }}</div>
+                            <div class="text-sm text-gray-500 dark:text-white/60">{{ gift.buyer.email }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="font-medium text-white">{{ gift.recipient_name|default:"—" }}</div>
-                            <div class="text-sm text-white/60">{{ gift.recipient_email }}</div>
+                            <div class="font-medium text-gray-900 dark:text-white">{{ gift.recipient_name|default:"—" }}</div>
+                            <div class="text-sm text-gray-500 dark:text-white/60">{{ gift.recipient_email }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             {% if gift.status == 'claimed' %}
-                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-[#259d78]/20 text-[#259d78] border border-[#259d78]/30">Claimed</span>
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 dark:bg-[#259d78]/20 text-emerald-700 dark:text-[#259d78] border border-emerald-300 dark:border-[#259d78]/30">Claimed</span>
                             {% else %}
-                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-[#f8da03]/20 text-[#f8da03] border border-[#f8da03]/40">Pending Claim</span>
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-[#f8da03]/20 text-yellow-700 dark:text-[#f8da03] border border-yellow-300 dark:border-[#f8da03]/40">Pending Claim</span>
                             {% endif %}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white/70">{{ gift.created_at|date:"M d, Y" }}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white/70">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-white/70">{{ gift.created_at|date:"M d, Y" }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-white/70">
                             {% if gift.claimed_at %}{{ gift.claimed_at|date:"M d, Y" }}{% else %}—{% endif %}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm">
@@ -91,19 +91,19 @@
                                 {% if gift.status == 'pending_claim' %}
                                 <form method="post" action="{% url 'dashboard:resend_gift_email' gift.id %}" class="inline">
                                     {% csrf_token %}
-                                    <button type="submit" class="text-[#82C293] hover:text-[#8abc59] transition-all duration-300 hover:scale-110 inline-block" title="Resend email">
+                                    <button type="submit" class="text-emerald-600 dark:text-[#82C293] hover:text-emerald-700 dark:hover:text-[#8abc59] transition-all duration-300 hover:scale-110 inline-block" title="Resend email">
                                         <i class="fas fa-envelope"></i>
                                     </button>
                                 </form>
                                 <form method="post" action="{% url 'dashboard:manual_claim_gift' gift.id %}" class="inline" 
-                                      onsubmit="return confirm('Manually claim this gift? This will create an enrollment if the recipient has an account.');">
+                                      data-confirm="Manually claim this gift? This will create an enrollment if the recipient has an account.">
                                     {% csrf_token %}
-                                    <button type="submit" class="text-[#82C293] hover:text-[#8abc59] transition-all duration-300 hover:scale-110 inline-block" title="Manual claim">
+                                    <button type="submit" class="text-emerald-600 dark:text-[#82C293] hover:text-emerald-700 dark:hover:text-[#8abc59] transition-all duration-300 hover:scale-110 inline-block" title="Manual claim">
                                         <i class="fas fa-check-circle"></i>
                                     </button>
                                 </form>
                                 {% endif %}
-                                <a href="/django-admin/myApp/giftenrollment/{{ gift.id }}/change/" class="text-[#82C293] hover:text-[#8abc59] transition-all duration-300 hover:scale-110 inline-block" title="Edit in Django Admin">
+                                <a href="/django-admin/myApp/giftenrollment/{{ gift.id }}/change/" class="text-emerald-600 dark:text-[#82C293] hover:text-emerald-700 dark:hover:text-[#8abc59] transition-all duration-300 hover:scale-110 inline-block" title="Edit in Django Admin">
                                     <i class="fas fa-edit"></i>
                                 </a>
                             </div>
@@ -111,8 +111,8 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="8" class="px-6 py-12 text-center text-white/60">
-                            <i class="fas fa-gift text-4xl mb-4 text-white/40"></i>
+                        <td colspan="8" class="px-6 py-12 text-center text-gray-500 dark:text-white/60">
+                            <i class="fas fa-gift text-4xl mb-4 text-gray-400 dark:text-white/40"></i>
                             <p>No gifts found</p>
                         </td>
                     </tr>
@@ -123,18 +123,18 @@
         
         <!-- Pagination -->
         {% if gifts.has_other_pages %}
-        <div class="px-6 py-4 border-t border-white/10 flex items-center justify-between">
-            <div class="text-sm text-white/60">
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-white/10 flex items-center justify-between">
+            <div class="text-sm text-gray-600 dark:text-white/60">
                 Showing {{ gifts.start_index }} to {{ gifts.end_index }} of {{ gifts.paginator.count }} gifts
             </div>
             <div class="flex gap-2">
                 {% if gifts.has_previous %}
-                <a href="?page={{ gifts.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="px-4 py-2 rounded-xl border border-white/10 bg-[#254346]/70 text-white hover:bg-[#82C293]/20 hover:border-[#82C293]/40 transition-all duration-300 hover:scale-110 group">
+                <a href="?page={{ gifts.previous_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="px-4 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 text-gray-900 dark:text-white hover:bg-emerald-50 dark:hover:bg-[#82C293]/20 hover:border-emerald-300 dark:hover:border-[#82C293]/40 transition-all duration-300 hover:scale-110 group shadow-sm dark:shadow-none">
                     <i class="fas fa-chevron-left transition-transform duration-300 group-hover:-translate-x-1"></i>
                 </a>
                 {% endif %}
                 {% if gifts.has_next %}
-                <a href="?page={{ gifts.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="px-4 py-2 rounded-xl border border-white/10 bg-[#254346]/70 text-white hover:bg-[#82C293]/20 hover:border-[#82C293]/40 transition-all duration-300 hover:scale-110 group">
+                <a href="?page={{ gifts.next_page_number }}{% if search_query %}&search={{ search_query }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="px-4 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 text-gray-900 dark:text-white hover:bg-emerald-50 dark:hover:bg-[#82C293]/20 hover:border-emerald-300 dark:hover:border-[#82C293]/40 transition-all duration-300 hover:scale-110 group shadow-sm dark:shadow-none">
                     <i class="fas fa-chevron-right transition-transform duration-300 group-hover:translate-x-1"></i>
                 </a>
                 {% endif %}

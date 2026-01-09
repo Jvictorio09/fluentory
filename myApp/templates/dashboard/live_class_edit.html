@@ -396,10 +396,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // Form validation
     document.querySelector('form').addEventListener('submit', function(e) {
         if (conflictWarning && !conflictWarning.classList.contains('hidden') && !overrideConflict.checked) {
-            if (!confirm('Scheduling conflict detected. Continue anyway?')) {
-                e.preventDefault();
-                return false;
-            }
+            e.preventDefault();
+            FluentoryModal.show('confirm', 'Scheduling conflict detected. Continue anyway?').then(confirmed => {
+                if (confirmed) {
+                    document.querySelector('form').submit();
+                }
+            });
+            return false;
         }
     });
 });

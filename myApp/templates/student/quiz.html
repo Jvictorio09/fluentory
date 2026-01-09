@@ -253,7 +253,7 @@
             const hasAnswer = isQuestionAnswered(currentCard);
             
             if (!hasAnswer) {
-                alert('Please select or enter an answer before proceeding.');
+                FluentoryModal.show('warning', 'Please select or enter an answer before proceeding.');
                 return;
             }
             
@@ -313,7 +313,7 @@
             const message = unanswered.length === 1 
                 ? `Question ${unanswered[0]} is unanswered. Please answer all questions before submitting.`
                 : `Questions ${unanswered.join(', ')} are unanswered. Please answer all questions before submitting.`;
-            alert(message);
+            FluentoryModal.show('warning', message);
             // Show first unanswered question
             currentQuestion = unanswered[0] - 1;
             showQuestion(currentQuestion);

@@ -212,12 +212,12 @@ function previewUrlImage(input) {
 document.querySelector('form').addEventListener('submit', function(e) {
     if (currentMethod === 'file' && !document.getElementById('file-input').files.length) {
         e.preventDefault();
-        alert('Please select a file to upload or switch to URL upload method.');
+        FluentoryModal.show('warning', 'Please select a file to upload or switch to URL upload method.');
         return false;
     }
     if (currentMethod === 'url' && !document.getElementById('image-url-input').value.trim()) {
         e.preventDefault();
-        alert('Please enter a Cloudinary URL or switch to file upload method.');
+        FluentoryModal.show('warning', 'Please enter a Cloudinary URL or switch to file upload method.');
         return false;
     }
 });

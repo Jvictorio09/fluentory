@@ -406,7 +406,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Enroll in course function
 async function enrollInCourse(courseId) {
-    if (!confirm('Enroll in this course to access live sessions and quizzes?')) {
+    const confirmed = await FluentoryModal.show('confirm', 'Enroll in this course to access live sessions and quizzes?');
+    if (!confirmed) {
         return;
     }
     
@@ -431,11 +432,11 @@ async function enrollInCourse(courseId) {
         if (data.success) {
             window.location.reload();
         } else {
-            alert(data.error || 'Failed to enroll');
+            FluentoryModal.show('error', data.error || 'Failed to enroll');
         }
     } catch (error) {
         console.error('Enrollment error:', error);
-        alert(error.message || 'Something went wrong. Please try again.');
+        FluentoryModal.show('error', error.message || 'Something went wrong. Please try again.');
     }
 }
 
@@ -613,11 +614,11 @@ async function purchaseGift(courseId) {
         if (result.success) {
             window.location.href = result.redirect_url;
         } else {
-            alert(result.error || 'Failed to purchase gift');
+            FluentoryModal.show('error', result.error || 'Failed to purchase gift');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Something went wrong. Please try again.');
+        FluentoryModal.show('error', 'Something went wrong. Please try again.');
     }
 }
 </script>

@@ -324,7 +324,7 @@ document.getElementById('tutor-form').addEventListener('submit', async function(
     {% if current_enrollment %}
     window.location.href = "{% url 'student_course_player_enrollment' current_enrollment.id %}?question=" + encodeURIComponent(question);
     {% else %}
-    alert('Start a course first to chat with the AI tutor!');
+    FluentoryModal.show('info', 'Start a course first to chat with the AI tutor!');
     {% endif %}
 });
 </script>

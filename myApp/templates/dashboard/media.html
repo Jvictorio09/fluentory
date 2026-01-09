@@ -74,7 +74,7 @@
                     <a href="{% url 'dashboard:media_edit' media.id %}" class="px-4 py-2 bg-[#254346]/70 backdrop-blur-md text-white rounded-lg font-medium hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] hover:scale-105 hover:text-white transition-all duration-300 group/edit">
                         <i class="fas fa-edit transition-transform duration-300 group-hover/edit:rotate-12"></i> Edit
                     </a>
-                    <form method="post" action="{% url 'dashboard:media_delete' media.id %}" class="inline" onsubmit="return confirm('Are you sure you want to delete this media?');">
+                    <form method="post" action="{% url 'dashboard:media_delete' media.id %}" class="inline" data-confirm="Are you sure you want to delete this media?">
                         {% csrf_token %}
                         <button type="submit" class="px-4 py-2 bg-[#f8da03]/20 border border-[#f8da03]/40 text-[#f8da03] rounded-lg font-medium hover:bg-[#f8da03]/30 hover:border-[#f8da03]/60 transition-all duration-300 hover:scale-105 group/delete">
                             <i class="fas fa-trash transition-transform duration-300 group-hover/delete:scale-110"></i> Delete

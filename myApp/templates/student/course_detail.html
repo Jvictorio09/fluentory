@@ -385,11 +385,11 @@ async function enrollCourse(courseId) {
         if (data.success) {
             window.location.href = data.redirect_url;
         } else {
-            alert(data.error || 'Failed to enroll');
+            FluentoryModal.show('error', data.error || 'Failed to enroll');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Something went wrong. Please try again.');
+        FluentoryModal.show('error', 'Something went wrong. Please try again.');
     }
 }
 
@@ -601,11 +601,11 @@ async function purchaseGift(courseId) {
         if (result.success) {
             window.location.href = result.redirect_url;
         } else {
-            alert(result.error || 'Failed to purchase gift');
+            FluentoryModal.show('error', result.error || 'Failed to purchase gift');
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Something went wrong. Please try again.');
+        FluentoryModal.show('error', 'Something went wrong. Please try again.');
     }
 }
 
