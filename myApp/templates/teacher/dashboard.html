@@ -3,11 +3,11 @@
 {% block content %}
 <div class="space-y-8 max-w-7xl mx-auto">
     <!-- Page Header -->
-    <div class="mb-10">
-        <h1 class="text-4xl sm:text-5xl font-bold mb-3 tracking-tight text-slate-900 dark:text-white">
+    <div class="mb-8 sm:mb-10">
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-slate-900 dark:text-slate-50 mb-3 tracking-[-0.02em]">
             Teacher Dashboard
         </h1>
-        <p class="text-base sm:text-lg font-normal text-slate-700 dark:text-slate-300 tracking-wide">
+        <p class="text-base sm:text-lg text-slate-600 dark:text-slate-300 font-light">
             Welcome back, {{ request.user.first_name|default:request.user.username }}!
         </p>
     </div>
@@ -66,7 +66,7 @@
                     <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-500/20 flex items-center justify-center">
                         <i class="fas fa-calendar-alt text-emerald-600 dark:text-emerald-400 text-xl"></i>
                     </div>
-                    <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Upcoming Live Classes</h2>
+                    <h2 class="text-xl sm:text-2xl font-extralight text-slate-900 dark:text-white">Upcoming Live Classes</h2>
                 </div>
                 <a href="{% url 'teacher_schedule' %}" class="btn-link text-sm text-emerald-700 hover:text-emerald-800 dark:text-emerald-300">
                     View All →
@@ -122,7 +122,7 @@
                     <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-500/20 flex items-center justify-center">
                         <i class="fas fa-bullhorn text-emerald-600 dark:text-emerald-400 text-xl"></i>
                     </div>
-                    <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">Recent Announcements</h2>
+                    <h2 class="text-xl sm:text-2xl font-extralight text-slate-900 dark:text-white">Recent Announcements</h2>
                 </div>
             </div>
             {% if recent_announcements %}
@@ -168,7 +168,7 @@
                 <div class="w-12 h-12 rounded-xl bg-emerald-50 dark:bg-emerald-500/20 flex items-center justify-center">
                     <i class="fas fa-book-open text-emerald-600 dark:text-emerald-400 text-xl"></i>
                 </div>
-                <h2 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">My Courses</h2>
+                <h2 class="text-xl sm:text-2xl font-extralight text-slate-900 dark:text-white">My Courses</h2>
             </div>
             <a href="{% url 'teacher_courses' %}" class="btn-link text-sm text-emerald-700 hover:text-emerald-800 dark:text-emerald-300">
                 View All →

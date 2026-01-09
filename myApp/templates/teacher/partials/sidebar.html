@@ -1,43 +1,28 @@
-<aside class="fixed left-0 top-[4.5rem] h-[calc(100vh-4.5rem)] w-56 backdrop-blur-xl border-r border-slate-200 dark:border-white/10 z-40 hidden lg:block overflow-y-auto scrollbar-hide transition-all duration-300 bg-white dark:bg-slate-900/50">
+<!-- TEACHER_SIDEBAR_LOADED_DEBUG_MARKER_v2 -->
+<aside class="hidden lg:block fixed left-0 top-[4.5rem] h-[calc(100vh-4.5rem)] w-56 overflow-y-auto z-40 scrollbar-hide transition-all duration-300" style="background-color: var(--sidebar-bg); border-right: 1px solid var(--border-primary);">
     <style>
         .sidebar-nav-link {
             position: relative;
             display: flex;
             align-items: center;
             gap: 0.75rem;
-            padding: 0.75rem 1rem;
+            padding: 0.625rem 0.75rem;
             border-radius: 0.75rem;
             font-size: 0.875rem;
-            font-weight: 500;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            color: rgb(71 85 105 / 1);
-            margin: 0.25rem 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--text-secondary);
         }
         
-        .dark .sidebar-nav-link {
-            color: rgba(255, 255, 255, 0.7);
-        }
-        
-        .sidebar-nav-link:hover:not(.active) {
-            color: rgb(16 185 129 / 1);
-            background-color: rgb(236 253 245 / 0.5);
-            transform: translateX(2px);
-        }
-        
-        .dark .sidebar-nav-link:hover:not(.active) {
-            color: rgb(16 185 129 / 1);
-            background-color: rgba(16, 185, 129, 0.1);
+        .sidebar-nav-link:hover {
+            color: var(--accent-primary);
+            background-color: rgba(130, 194, 147, 0.1);
+            transform: translateX(4px);
         }
         
         .sidebar-nav-link.active {
-            color: rgb(16 185 129 / 1);
-            background-color: rgb(236 253 245 / 0.8);
-            font-weight: 600;
-        }
-        
-        .dark .sidebar-nav-link.active {
-            color: rgb(16 185 129 / 1);
-            background-color: rgba(16, 185, 129, 0.15);
+            color: var(--accent-primary);
+            background-color: rgba(130, 194, 147, 0.12);
+            font-weight: 500;
         }
         
         .sidebar-nav-link.active::before {
@@ -48,23 +33,35 @@
             transform: translateY(-50%);
             width: 3px;
             height: 60%;
-            background: linear-gradient(to bottom, rgb(16 185 129 / 1), rgb(5 150 105 / 1));
+            background: linear-gradient(to bottom, var(--accent-primary), var(--accent-cta));
             border-radius: 0 2px 2px 0;
-            box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
+            box-shadow: 0 0 12px rgba(130, 194, 147, 0.5);
+            animation: accentLineSlide 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        @keyframes accentLineSlide {
+            from {
+                opacity: 0;
+                transform: translateY(-50%) scaleY(0);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(-50%) scaleY(1);
+            }
         }
         
         .sidebar-nav-link i {
-            width: 1.25rem;
+            width: 1rem;
             text-align: center;
-            font-size: 1rem;
-            transition: all 0.2s ease;
+            transition: all 0.3s ease;
         }
         
+        .sidebar-nav-link:hover i,
         .sidebar-nav-link.active i {
-            color: rgb(16 185 129 / 1);
+            color: var(--accent-primary);
         }
     </style>
-    <nav class="p-4 space-y-1">
+    <nav class="p-6 space-y-1">
         <a href="{% url 'teacher_dashboard' %}" class="sidebar-nav-link {% if request.resolver_match.url_name == 'teacher_dashboard' %}active{% endif %}">
             <i class="fas fa-tachometer-alt"></i>
             <span>Dashboard</span>

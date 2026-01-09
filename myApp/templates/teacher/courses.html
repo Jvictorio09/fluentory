@@ -4,8 +4,8 @@
 <div class="space-y-8 sm:space-y-10">
     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10">
         <div>
-            <h1 class="text-4xl sm:text-5xl font-bold text-slate-900 dark:text-white mb-3 tracking-tight leading-tight">My Courses</h1>
-            <p class="text-base sm:text-lg font-normal text-slate-600 dark:text-slate-400 tracking-wide leading-relaxed">Manage and organize your teaching courses</p>
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-slate-900 dark:text-slate-50 mb-3 tracking-[-0.02em]">My Courses</h1>
+            <p class="text-base sm:text-lg text-slate-600 dark:text-slate-300 font-light">Manage and organize your teaching courses</p>
         </div>
         <a href="{% url 'teacher_course_create' %}" class="inline-flex items-center gap-2 bg-gradient-to-r from-[#82C293] via-[#6fb380] to-[#82C293] text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-[#82C293]/30 hover:shadow-xl hover:shadow-[#82C293]/40 hover:scale-105 transition-all duration-300">
             <i class="fas fa-plus"></i>
@@ -26,8 +26,8 @@
                     <i class="fas fa-book text-4xl text-slate-400 dark:text-slate-300"></i>
                 </div>
                 {% endif %}
-                <h3 class="font-bold text-lg text-slate-900 dark:text-white mb-2 line-clamp-2 leading-snug">{{ course.title }}</h3>
-                <p class="text-sm text-slate-600 dark:text-slate-300 mb-3 line-clamp-2 leading-relaxed">{{ course.short_description|default:course.description|truncatewords:20 }}</p>
+                <h3 class="text-xl sm:text-2xl font-extralight text-slate-900 dark:text-white mb-2 line-clamp-2">{{ course.title }}</h3>
+                <p class="text-sm text-slate-600 dark:text-white/70 font-light mb-3 line-clamp-2">{{ course.short_description|default:course.description|truncatewords:20 }}</p>
                 <div class="flex items-center gap-2 mb-3">
                     <span class="inline-block px-2.5 py-1.5 text-xs font-semibold rounded-md bg-[#82C293]/25 text-[#82C293] border border-[#82C293]/40">
                         {{ course.get_level_display }}
