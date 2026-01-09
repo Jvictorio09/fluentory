@@ -9,9 +9,9 @@
         </a>
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-                <h1 class="text-4xl sm:text-5xl font-bold text-slate-900 dark:text-white mb-3 tracking-tight leading-tight">{{ course.title }} – Lessons</h1>
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-slate-900 dark:text-slate-50 mb-3 tracking-[-0.02em]">{{ course.title }} – Lessons</h1>
             </div>
-            <a href="{% url 'teacher_lesson_create' course.id %}" class="inline-flex items-center gap-2 bg-gradient-to-r from-[#82C293] via-[#6fb380] to-[#82C293] text-white px-6 py-3 rounded-xl font-semibold shadow-lg shadow-[#82C293]/30 hover:shadow-xl hover:shadow-[#82C293]/40 hover:scale-105 transition-all duration-300">
+            <a href="{% url 'teacher_lesson_create' course.id %}" class="btn-cta-primary">
                 <i class="fas fa-plus"></i>
                 Create Lesson
             </a>

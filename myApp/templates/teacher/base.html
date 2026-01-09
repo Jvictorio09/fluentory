@@ -160,14 +160,16 @@
         
         /* Light mode: Premium buttons - enhanced contrast */
         [data-theme="light"] .btn-primary,
+        /* Light mode: Use exact same styling as Update Course button */
         [data-theme="light"] .btn-cta-primary {
-            background: linear-gradient(to right, #059669, #047857, #059669) !important;
+            background: linear-gradient(to right, #047857, #065f46, #047857) !important;
             background-size: 200% 100%;
             color: #FFFFFF !important;
-            box-shadow: 0 4px 14px rgba(5, 150, 105, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1) inset !important;
+            box-shadow: 0 4px 14px rgba(4, 120, 87, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1) inset !important;
+            border: none !important;
         }
         
-        /* Ensure button text and icons are white in light mode */
+        /* Ensure button text and icons are white in light mode (same as Update Course) */
         [data-theme="light"] .btn-primary,
         [data-theme="light"] .btn-primary *,
         [data-theme="light"] .btn-primary i,
@@ -177,6 +179,7 @@
             color: #FFFFFF !important;
         }
         
+        /* Light mode hover: exact same as Update Course */
         [data-theme="light"] .btn-primary:hover:not(:disabled),
         [data-theme="light"] .btn-cta-primary:hover:not(:disabled) {
             box-shadow: 0 8px 20px rgba(5, 150, 105, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.15) inset !important;
@@ -276,6 +279,34 @@
             color: #475569 !important; /* slate-600 */
         }
         
+        /* Exception: Green gradient buttons must keep white text - HIGH PRIORITY */
+        [data-theme="light"] .teacher-content a[class*="bg-gradient-to-r"][class*="emerald"],
+        [data-theme="light"] .teacher-content a[class*="bg-gradient-to-r"][class*="emerald"] *,
+        [data-theme="light"] .teacher-content a[class*="bg-gradient-to-r"][class*="emerald"] i,
+        [data-theme="light"] .teacher-content a[class*="bg-gradient-to-r"][class*="emerald"] span,
+        [data-theme="light"] .teacher-content button[class*="bg-gradient-to-r"][class*="emerald"],
+        [data-theme="light"] .teacher-content button[class*="bg-gradient-to-r"][class*="emerald"] *,
+        [data-theme="light"] .teacher-content button[class*="bg-gradient-to-r"][class*="emerald"] i,
+        [data-theme="light"] .teacher-content button[class*="bg-gradient-to-r"][class*="emerald"] span,
+        [data-theme="light"] .teacher-content a[class*="from-emerald-700"],
+        [data-theme="light"] .teacher-content a[class*="from-emerald-700"] *,
+        [data-theme="light"] .teacher-content a[class*="from-emerald-700"] i,
+        [data-theme="light"] .teacher-content a[class*="from-emerald-700"] span,
+        [data-theme="light"] .teacher-content button[class*="from-emerald-700"],
+        [data-theme="light"] .teacher-content button[class*="from-emerald-700"] *,
+        [data-theme="light"] .teacher-content button[class*="from-emerald-700"] i,
+        [data-theme="light"] .teacher-content button[class*="from-emerald-700"] span,
+        [data-theme="light"] .teacher-content a[href*="teacher_lesson_create"],
+        [data-theme="light"] .teacher-content a[href*="teacher_lesson_create"] *,
+        [data-theme="light"] .teacher-content a[href*="teacher_lesson_create"] i,
+        [data-theme="light"] .teacher-content a[href*="teacher_lesson_create"] span,
+        [data-theme="light"] .teacher-content a[href*="teacher_quiz_create"],
+        [data-theme="light"] .teacher-content a[href*="teacher_quiz_create"] *,
+        [data-theme="light"] .teacher-content a[href*="teacher_quiz_create"] i,
+        [data-theme="light"] .teacher-content a[href*="teacher_quiz_create"] span {
+            color: #FFFFFF !important; /* Force white text on green buttons */
+        }
+        
         [data-theme="light"] .teacher-content .text-slate-100,
         [data-theme="light"] .teacher-content .text-slate-200,
         [data-theme="light"] .teacher-content .text-slate-300,
@@ -338,6 +369,54 @@
         [data-theme="light"] .teacher-content *[class*="text-white"],
         [data-theme="light"] .teacher-content *.text-white {
             color: #475569 !important;
+        }
+        
+        /* CRITICAL OVERRIDE: Force white text on green gradient Create buttons - highest priority */
+        [data-theme="light"] .teacher-content a[href*="teacher_lesson_create"].bg-gradient-to-r,
+        [data-theme="light"] .teacher-content a[href*="teacher_lesson_create"].bg-gradient-to-r *,
+        [data-theme="light"] .teacher-content a[href*="teacher_lesson_create"].bg-gradient-to-r i.fas,
+        [data-theme="light"] .teacher-content a[href*="teacher_lesson_create"].bg-gradient-to-r i.fa-plus,
+        [data-theme="light"] .teacher-content a[href*="teacher_lesson_create"].bg-gradient-to-r span,
+        [data-theme="light"] .teacher-content a[href*="teacher_quiz_create"].bg-gradient-to-r,
+        [data-theme="light"] .teacher-content a[href*="teacher_quiz_create"].bg-gradient-to-r *,
+        [data-theme="light"] .teacher-content a[href*="teacher_quiz_create"].bg-gradient-to-r i.fas,
+        [data-theme="light"] .teacher-content a[href*="teacher_quiz_create"].bg-gradient-to-r i.fa-plus,
+        [data-theme="light"] .teacher-content a[href*="teacher_quiz_create"].bg-gradient-to-r span,
+        [data-theme="light"] .teacher-content button[class*="from-emerald-700"],
+        [data-theme="light"] .teacher-content button[class*="from-emerald-700"] *,
+        [data-theme="light"] .teacher-content button[class*="from-emerald-700"] i.fas,
+        [data-theme="light"] .teacher-content button[class*="from-emerald-700"] i.fa-plus,
+        [data-theme="light"] .teacher-content button[class*="from-emerald-700"] span {
+            color: #FFFFFF !important; /* Force white - must override all other rules */
+        }
+        
+        /* DARK MODE: Force white text on green gradient Create buttons */
+        [data-theme="dark"] .teacher-content a[href*="teacher_lesson_create"].bg-gradient-to-r,
+        [data-theme="dark"] .teacher-content a[href*="teacher_lesson_create"].bg-gradient-to-r *,
+        [data-theme="dark"] .teacher-content a[href*="teacher_lesson_create"].bg-gradient-to-r i.fas,
+        [data-theme="dark"] .teacher-content a[href*="teacher_lesson_create"].bg-gradient-to-r i.fa-plus,
+        [data-theme="dark"] .teacher-content a[href*="teacher_lesson_create"].bg-gradient-to-r span,
+        [data-theme="dark"] .teacher-content a[href*="teacher_quiz_create"].bg-gradient-to-r,
+        [data-theme="dark"] .teacher-content a[href*="teacher_quiz_create"].bg-gradient-to-r *,
+        [data-theme="dark"] .teacher-content a[href*="teacher_quiz_create"].bg-gradient-to-r i.fas,
+        [data-theme="dark"] .teacher-content a[href*="teacher_quiz_create"].bg-gradient-to-r i.fa-plus,
+        [data-theme="dark"] .teacher-content a[href*="teacher_quiz_create"].bg-gradient-to-r span,
+        [data-theme="dark"] .teacher-content button[class*="from-emerald-700"],
+        [data-theme="dark"] .teacher-content button[class*="from-emerald-700"] *,
+        [data-theme="dark"] .teacher-content button[class*="from-emerald-700"] i.fas,
+        [data-theme="dark"] .teacher-content button[class*="from-emerald-700"] i.fa-plus,
+        [data-theme="dark"] .teacher-content button[class*="from-emerald-700"] span,
+        html.dark .teacher-content a[href*="teacher_lesson_create"].bg-gradient-to-r,
+        html.dark .teacher-content a[href*="teacher_lesson_create"].bg-gradient-to-r *,
+        html.dark .teacher-content a[href*="teacher_lesson_create"].bg-gradient-to-r i.fas,
+        html.dark .teacher-content a[href*="teacher_lesson_create"].bg-gradient-to-r i.fa-plus,
+        html.dark .teacher-content a[href*="teacher_lesson_create"].bg-gradient-to-r span,
+        html.dark .teacher-content a[href*="teacher_quiz_create"].bg-gradient-to-r,
+        html.dark .teacher-content a[href*="teacher_quiz_create"].bg-gradient-to-r *,
+        html.dark .teacher-content a[href*="teacher_quiz_create"].bg-gradient-to-r i.fas,
+        html.dark .teacher-content a[href*="teacher_quiz_create"].bg-gradient-to-r i.fa-plus,
+        html.dark .teacher-content a[href*="teacher_quiz_create"].bg-gradient-to-r span {
+            color: #FFFFFF !important; /* Force white in dark mode */
         }
         
         /* Subtitle text */
@@ -464,7 +543,7 @@
             background-color: rgba(245, 247, 246, 0.9) !important;
         }
         
-        /* Premium Button System */
+        /* Base btn-cta-primary - matches Update Course button exactly */
         .btn-primary,
         .btn-cta-primary {
             display: inline-flex;
@@ -481,16 +560,43 @@
             cursor: pointer;
         }
         
+        /* Dark mode: Use same gradient as Update Course */
+        [data-theme="dark"] .btn-cta-primary,
+        html.dark .btn-cta-primary {
+            background: linear-gradient(to right, #005a54, #75b088) !important;
+            box-shadow: 0 10px 15px -3px rgba(130, 194, 147, 0.4), 0 4px 6px rgba(0, 0, 0, 0.3) !important;
+        }
+        
+        /* Dark mode: Ensure white text */
+        [data-theme="dark"] .btn-cta-primary,
+        [data-theme="dark"] .btn-cta-primary *,
+        [data-theme="dark"] .btn-cta-primary i,
+        html.dark .btn-cta-primary,
+        html.dark .btn-cta-primary *,
+        html.dark .btn-cta-primary i {
+            color: #FFFFFF !important;
+        }
+        
+        /* Hover: same as Update Course */
         .btn-primary:hover:not(:disabled),
         .btn-cta-primary:hover:not(:disabled) {
             background-color: #34d399;
         }
         
+        /* Dark mode hover: same as Update Course */
+        [data-theme="dark"] .btn-cta-primary:hover:not(:disabled),
+        html.dark .btn-cta-primary:hover:not(:disabled) {
+            background: linear-gradient(to right, #00655F, #82C293) !important;
+            box-shadow: 0 12px 20px -3px rgba(130, 194, 147, 0.5), 0 6px 8px rgba(0, 0, 0, 0.3) !important;
+        }
+        
+        /* Active state */
         .btn-primary:active:not(:disabled),
         .btn-cta-primary:active:not(:disabled) {
             transform: scale(0.99);
         }
         
+        /* Focus: same as Update Course */
         .btn-primary:focus-visible,
         .btn-cta-primary:focus-visible {
             outline: none;
@@ -856,6 +962,69 @@
             -webkit-backdrop-filter: blur(8px) !important;
             border-top: 1px solid rgba(130, 194, 147, 0.1) !important;
             box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.2) !important;
+        }
+        
+        /* Course Card Text Contrast - Force High Contrast in Dark Mode */
+        /* Target course cards specifically - override any dimming from parent wrappers */
+        /* Course Title - Must be near-white in dark mode (override ALL possible dimming) */
+        [data-theme="dark"] .teacher-content .bg-white\/5 h3,
+        [data-theme="dark"] .teacher-content .bg-white\/5 h3.text-xl,
+        [data-theme="dark"] .teacher-content .bg-white\/5 h3.text-2xl,
+        [data-theme="dark"] .teacher-content .bg-white\/5 h3[class*="text-xl"],
+        [data-theme="dark"] .teacher-content .bg-white\/5 h3[class*="text-2xl"],
+        [data-theme="dark"] .teacher-content .bg-white\/5 h3.dark\:text-slate-50,
+        html.dark .teacher-content .bg-white\/5 h3,
+        html.dark .teacher-content .bg-white\/5 h3.text-xl,
+        html.dark .teacher-content .bg-white\/5 h3.text-2xl,
+        html.dark .teacher-content .bg-white\/5 h3[class*="text-xl"],
+        html.dark .teacher-content .bg-white\/5 h3[class*="text-2xl"],
+        html.dark .teacher-content .bg-white\/5 h3.dark\:text-slate-50 {
+            color: rgb(248, 250, 252) !important; /* slate-50 - near-white for maximum contrast */
+            opacity: 1 !important;
+        }
+        
+        /* Course Subtitle - Must be light gray (readable but muted) in dark mode */
+        [data-theme="dark"] .teacher-content .bg-white\/5 p.text-sm,
+        [data-theme="dark"] .teacher-content .bg-white\/5 p[class*="text-sm"],
+        [data-theme="dark"] .teacher-content .bg-white\/5 p.dark\:text-slate-300,
+        html.dark .teacher-content .bg-white\/5 p.text-sm,
+        html.dark .teacher-content .bg-white\/5 p[class*="text-sm"],
+        html.dark .teacher-content .bg-white\/5 p.dark\:text-slate-300 {
+            color: rgb(203, 213, 225) !important; /* slate-300 - light gray, readable */
+            opacity: 1 !important;
+        }
+        
+        /* Remove any opacity dimming from course card parent wrappers */
+        [data-theme="dark"] .teacher-content .bg-white\/5[class*="opacity"],
+        [data-theme="dark"] .teacher-content .bg-white\/5 > div[class*="opacity"],
+        html.dark .teacher-content .bg-white\/5[class*="opacity"],
+        html.dark .teacher-content .bg-white\/5 > div[class*="opacity"] {
+            opacity: 1 !important;
+        }
+        
+        /* Create Course Button - Dark Mode Fix */
+        [data-theme="dark"] .create-course-btn,
+        html.dark .create-course-btn {
+            color: rgb(255, 255, 255) !important; /* Force white text */
+        }
+        
+        [data-theme="dark"] .create-course-btn span,
+        [data-theme="dark"] .create-course-btn i,
+        html.dark .create-course-btn span,
+        html.dark .create-course-btn i {
+            color: rgb(255, 255, 255) !important; /* Force white text on all elements */
+        }
+        
+        [data-theme="dark"] .create-course-btn:hover,
+        html.dark .create-course-btn:hover {
+            filter: brightness(1.1) !important; /* Slight brightness lift on hover */
+            box-shadow: 0 20px 25px -5px rgba(130, 194, 147, 0.4), 0 10px 10px -5px rgba(130, 194, 147, 0.2) !important;
+        }
+        
+        [data-theme="dark"] .create-course-btn:focus,
+        html.dark .create-course-btn:focus {
+            outline: 2px solid rgba(130, 194, 147, 0.5) !important;
+            outline-offset: 2px !important;
         }
     </style>
 </head>

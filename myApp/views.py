@@ -2751,7 +2751,7 @@ def teacher_quiz_edit(request, course_id, quiz_id):
         quiz.save()
         
         messages.success(request, 'Quiz updated successfully!')
-        return redirect('teacher_quiz_questions', course_id=course.id, quiz_id=quiz.id)
+        return redirect('teacher_quiz_edit', course_id=course.id, quiz_id=quiz.id)
     
     context = {
         'course': course,
@@ -2778,8 +2778,9 @@ def teacher_quiz_delete(request, course_id, quiz_id):
         messages.error(request, 'You do not have permission to delete quizzes.')
         return redirect('teacher_courses')
     
+    # Delete quiz (cascade will automatically delete all related questions and answers)
     quiz.delete()
-    messages.success(request, 'Quiz deleted successfully!')
+    messages.success(request, 'Quiz deleted successfully.')
     return redirect('teacher_quizzes', course_id=course.id)
 
 
@@ -2860,21 +2861,35 @@ def teacher_quiz_questions(request, course_id, quiz_id):
                     messages.error(request, 'Multiple choice questions require at least 2 answer options.')
                     return redirect('teacher_quiz_questions', course_id=course.id, quiz_id=quiz.id)
             
-            # Validate True/False has exactly 2 answers
+            # Validate True/False has exactly 2 answers and exactly one correct answer
             if question_type == 'true_false':
                 filled_answers = [a for a in answers_data if a.strip()]
                 if len(filled_answers) != 2:
                     question.delete()  # Rollback question creation
                     messages.error(request, 'True/False questions must have exactly 2 answer options.')
                     return redirect('teacher_quiz_questions', course_id=course.id, quiz_id=quiz.id)
+                
+                # Validate exactly one correct answer for True/False
+                if len(is_correct_data) != 1:
+                    question.delete()  # Rollback question creation
+                    messages.error(request, 'True/False questions must have exactly one correct answer selected.')
+                    return redirect('teacher_quiz_questions', course_id=course.id, quiz_id=quiz.id)
+            
+            # Validate MCQ has exactly one correct answer
+            if question_type == 'multiple_choice':
+                if len(is_correct_data) != 1:
+                    question.delete()  # Rollback question creation
+                    messages.error(request, 'Multiple choice questions must have exactly one correct answer selected.')
+                    return redirect('teacher_quiz_questions', course_id=course.id, quiz_id=quiz.id)
             
             # Create answers
             for i, answer_text in enumerate(answers_data):
                 if answer_text.strip():
+                    is_correct = str(i) in is_correct_data
                     Answer.objects.create(
                         question=question,
                         answer_text=answer_text,
-                        is_correct=str(i) in is_correct_data,
+                        is_correct=is_correct,
                         order=i
                     )
         

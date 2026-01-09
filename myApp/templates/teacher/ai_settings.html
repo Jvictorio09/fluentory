@@ -10,11 +10,11 @@
                 <span>Back to Course</span>
             </a>
             <div>
-                <h1 class="text-3xl sm:text-4xl font-extralight text-slate-900 dark:text-white mb-2 tracking-[-0.02em]">
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-slate-900 dark:text-slate-50 mb-3 tracking-[-0.02em]">
                     AI Tutor Settings
                 </h1>
-                <p class="text-base sm:text-lg text-slate-600 dark:text-slate-300/80 font-light">
-                    Configure AI tutor behavior for <span class="font-medium text-slate-900 dark:text-white">{{ course.title }}</span>
+                <p class="text-base sm:text-lg text-slate-600 dark:text-slate-300 font-light">
+                    Configure AI tutor behavior for <span class="font-medium text-slate-900 dark:text-slate-50">{{ course.title }}</span>
                 </p>
             </div>
         </div>
@@ -112,7 +112,7 @@
                            class="w-5 h-5 rounded border-white/20 bg-[#1a1a1a] text-green-accent focus:ring-2 focus:ring-green-accent focus:ring-offset-0 cursor-pointer">
                     <span class="ml-3 text-slate-800 dark:text-slate-200">
                         Include Course Context
-                        <span class="text-xs text-slate-600 dark:text-slate-300/80 block mt-1">Include course title and description in AI context</span>
+                        <span class="text-xs text-slate-600 dark:text-slate-400 block mt-1">Include course title and description in AI context</span>
                     </span>
                 </label>
 
@@ -122,7 +122,7 @@
                            class="w-5 h-5 rounded border-white/20 bg-[#1a1a1a] text-green-accent focus:ring-2 focus:ring-green-accent focus:ring-offset-0 cursor-pointer">
                     <span class="ml-3 text-slate-800 dark:text-slate-200">
                         Include Lesson Context
-                        <span class="text-xs text-slate-600 dark:text-slate-300/80 block mt-1">Include lesson content in AI context when available</span>
+                        <span class="text-xs text-slate-600 dark:text-slate-400 block mt-1">Include lesson content in AI context when available</span>
                     </span>
                 </label>
             </div>
@@ -141,7 +141,7 @@
         <!-- Submit Button -->
         <div class="flex items-center justify-end gap-4 pt-4">
             <a href="{% url 'teacher_course_edit' course.id %}" 
-               class="px-6 py-2.5 text-slate-600 dark:text-slate-300/80 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/20 rounded-lg hover:border-slate-300 dark:hover:border-white/30 transition-colors">
+               class="px-6 py-2.5 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/20 rounded-lg hover:border-slate-300 dark:hover:border-white/30 transition-colors">
                 Cancel
             </a>
             <button type="submit" 
@@ -156,7 +156,7 @@
         <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-3">
             <i class="fas fa-info-circle mr-2 text-emerald-600 dark:text-emerald-400"></i>About AI Tutor Settings
         </h3>
-        <div class="space-y-3 text-slate-600 dark:text-slate-300/80 text-sm">
+        <div class="space-y-3 text-slate-600 dark:text-slate-300 text-sm">
             <p><strong class="text-slate-900 dark:text-white">Temperature:</strong> Lower values (0.0-0.5) make responses more focused and consistent. Higher values (1.0-2.0) make responses more creative and varied.</p>
             <p><strong class="text-slate-900 dark:text-white">Max Tokens:</strong> Limits the length of AI responses. Higher values allow longer, more detailed responses but cost more.</p>
             <p><strong class="text-slate-900 dark:text-white">Personality:</strong> Choose a default teaching style. You can override this with a custom system prompt.</p>
