@@ -1320,13 +1320,19 @@ class LiveClassSession(models.Model):
         # Compute scheduled_end if not set (optional, but recommended)
         # scheduled_end is nullable, but we try to compute it from scheduled_start + duration when possible
         # Priority: use explicitly set value, then compute from scheduled_start + duration
-        if self.scheduled_start and self.duration_minutes:
-            # If scheduled_end is None or not set, compute it
-            # Use getattr with default None to check actual value (not just attribute existence)
-            current_scheduled_end = getattr(self, 'scheduled_end', None)
-            if current_scheduled_end is None:
-                # Compute scheduled_end from scheduled_start + duration_minutes
-                self.scheduled_end = self.scheduled_start + timedelta(minutes=self.duration_minutes)
+        try:
+            if self.scheduled_start and self.duration_minutes:
+                # If scheduled_end is None or not set, compute it
+                # Use getattr with default None to check actual value (not just attribute existence)
+                current_scheduled_end = getattr(self, 'scheduled_end', None)
+                if current_scheduled_end is None:
+                    # Compute scheduled_end from scheduled_start + duration_minutes
+                    self.scheduled_end = self.scheduled_start + timedelta(minutes=self.duration_minutes)
+        except Exception as e:
+            # Ignore errors in scheduled_end computation - don't block save
+            import traceback
+            print(f"WARNING: Error computing scheduled_end in save() (non-blocking): {str(e)}")
+            print(traceback.format_exc())
         
         # Sync max_attendees with total_seats for backwards compatibility
         if self.max_attendees is None:
@@ -1336,18 +1342,26 @@ class LiveClassSession(models.Model):
             self.max_attendees = self.total_seats
         
         # Phase 2: Auto-populate start_at_utc and end_at_utc from scheduled_start if not set
-        if self.scheduled_start and not self.start_at_utc:
-            # Ensure scheduled_start is timezone-aware for start_at_utc
-            if hasattr(self.scheduled_start, 'tzinfo') and self.scheduled_start.tzinfo is None:
-                from django.utils import timezone as tz
-                # Assume UTC if naive
-                self.start_at_utc = tz.make_aware(self.scheduled_start, tz.utc)
-            else:
-                self.start_at_utc = self.scheduled_start
+        try:
+            if self.scheduled_start and not self.start_at_utc:
+                # Ensure scheduled_start is timezone-aware for start_at_utc
+                if hasattr(self.scheduled_start, 'tzinfo') and self.scheduled_start.tzinfo is None:
+                    from django.utils import timezone as tz
+                    # Assume UTC if naive
+                    self.start_at_utc = tz.make_aware(self.scheduled_start, tz.utc)
+                else:
+                    self.start_at_utc = self.scheduled_start
+        except Exception as e:
+            # Ignore errors in start_at_utc computation - don't block save
+            print(f"WARNING: Error computing start_at_utc in save() (non-blocking): {str(e)}")
         
         # Compute end_at_utc if not set
-        if self.start_at_utc and not self.end_at_utc:
-            self.end_at_utc = self.start_at_utc + timedelta(minutes=self.duration_minutes)
+        try:
+            if self.start_at_utc and not self.end_at_utc:
+                self.end_at_utc = self.start_at_utc + timedelta(minutes=self.duration_minutes)
+        except Exception as e:
+            # Ignore errors in end_at_utc computation - don't block save
+            print(f"WARNING: Error computing end_at_utc in save() (non-blocking): {str(e)}")
         
         # FINAL CHECK: Try to compute scheduled_end if still not set (use end_at_utc as fallback if needed)
         # This is a safety net in case scheduled_start wasn't available earlier

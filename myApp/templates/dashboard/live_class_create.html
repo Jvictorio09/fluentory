@@ -1,7 +1,21 @@
 {% extends 'dashboard/base.html' %}
 
 {% block content %}
-<div class="w-full max-w-[1600px] mx-auto">
+<div class="w-full max-w-[1600px] mx-auto live-class-create-page">
+    <!-- Messages -->
+    {% if messages %}
+    <div class="mb-6 space-y-3">
+        {% for message in messages %}
+        <div class="p-4 rounded-xl border text-sm transition-all duration-300 {% if message.tags == 'error' %}bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800/40 text-red-700 dark:text-red-300{% elif message.tags == 'success' %}bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800/40 text-emerald-700 dark:text-emerald-300{% elif message.tags == 'warning' %}bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800/40 text-yellow-700 dark:text-yellow-300{% else %}bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800/40 text-blue-700 dark:text-blue-300{% endif %}">
+            <div class="flex items-start gap-3">
+                <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'success' %}fa-check-circle{% elif message.tags == 'warning' %}fa-exclamation-triangle{% else %}fa-info-circle{% endif %} mt-0.5"></i>
+                <span>{{ message }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
     <!-- Header -->
     <div class="mb-8 sm:mb-10 animate-fade-in-up stagger-1">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
@@ -30,23 +44,38 @@
                     
                     <div class="space-y-4">
                         <div>
-                            <label class="block text-sm font-medium text-white/80 mb-2">Course <span class="text-red-400">*</span></label>
+                            <div class="flex items-center justify-between mb-2">
+                                <label class="block text-sm font-medium text-white/80">Course <span class="text-red-400">*</span></label>
+                                <div class="flex items-center gap-2">
+                                    <button type="button" id="edit-course-btn" class="text-xs text-[#82C293] hover:text-[#8abc59] font-medium flex items-center gap-1 transition-colors hidden">
+                                        <i class="fas fa-edit"></i>
+                                        <span>Edit Course</span>
+                                    </button>
+                                    <button type="button" id="create-course-btn" class="text-xs text-[#82C293] hover:text-[#8abc59] font-medium flex items-center gap-1 transition-colors">
+                                        <i class="fas fa-plus"></i>
+                                        <span>Create Course</span>
+                                    </button>
+                                </div>
+                            </div>
                             <select name="course" id="course-select" required class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
                                 <option value="">Select Course</option>
                                 {% for course in courses %}
-                                <option value="{{ course.id }}">{{ course.title }}</option>
+                                <option value="{{ course.id }}" data-price="{{ course.price }}" data-currency="{{ course.currency }}" data-is-free="{% if course.is_free %}true{% else %}false{% endif %}">{{ course.title }}</option>
                                 {% endfor %}
                             </select>
+                            {% if not courses %}
+                            <p class="text-xs text-white/60 mt-2">No courses available. <button type="button" id="create-course-empty-btn" class="text-[#82C293] hover:text-[#8abc59] underline">Create one now</button></p>
+                            {% endif %}
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium text-white/80 mb-2">Title <span class="text-red-400">*</span></label>
-                            <input type="text" name="title" required class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300" placeholder="Session title">
+                            <input type="text" name="title" required class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300" placeholder="Session title">
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium text-white/80 mb-2">Description</label>
-                            <textarea name="description" rows="4" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300" placeholder="Session description"></textarea>
+                            <textarea name="description" rows="4" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300" placeholder="Session description"></textarea>
                         </div>
                     </div>
                 </div>
@@ -101,18 +130,18 @@
                         
                         <div>
                             <label class="block text-sm font-medium text-white/80 mb-2">Meeting Link <span class="text-red-400">*</span></label>
-                            <input type="url" name="meeting_link" required class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300" placeholder="https://zoom.us/j/...">
+                            <input type="url" name="meeting_link" required class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300" placeholder="https://zoom.us/j/...">
                         </div>
                         
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-white/80 mb-2">Meeting ID</label>
-                                <input type="text" name="meeting_id" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300" placeholder="Optional">
+                                <input type="text" name="meeting_id" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300" placeholder="Optional">
                             </div>
                             
                             <div>
                                 <label class="block text-sm font-medium text-white/80 mb-2">Passcode</label>
-                                <input type="text" name="meeting_passcode" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300" placeholder="Optional">
+                                <input type="text" name="meeting_passcode" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/50 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300" placeholder="Optional">
                             </div>
                         </div>
                     </div>
@@ -148,14 +177,14 @@
             
             <!-- Teacher Assignment Sidebar (1/3) -->
             <div class="lg:col-span-1">
-                <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] p-8 animate-fade-in-up stagger-3 sticky top-24">
+                <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] p-8 animate-fade-in-up stagger-3">
                     <h2 class="text-xl font-semibold text-white mb-6">Teacher Assignment</h2>
                     
                     <!-- Teacher Filters -->
                     <div class="space-y-4 mb-6">
                         <div>
-                            <label class="block text-xs uppercase tracking-wider text-white/60 mb-2 font-medium">Filter Teachers</label>
-                            <input type="text" id="teacher-search" placeholder="Search teachers..." class="w-full px-4 py-2 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                            <label class="block text-xs uppercase tracking-wider text-white/80 mb-2 font-medium">Filter Teachers</label>
+                            <input type="text" id="teacher-search" placeholder="Search teachers..." class="w-full px-4 py-2 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
                         </div>
                     </div>
                     
@@ -196,18 +225,18 @@
                             <div class="flex items-center justify-between">
                                 <div class="flex-1">
                                     <div class="font-medium text-white text-sm">{{ teacher.user.get_full_name|default:teacher.user.username }}</div>
-                                    <div class="text-xs text-white/60">{{ teacher.user.email }}</div>
+                                    <div class="text-xs text-white/70">{{ teacher.user.email }}</div>
                                 </div>
                                 <button type="button" class="select-teacher-btn text-[#82C293] hover:text-[#8abc59] transition-all duration-300">
                                     <i class="fas fa-check-circle"></i>
                                 </button>
                             </div>
-                            <div class="mt-2 text-xs text-white/50">
+                            <div class="mt-2 text-xs text-white/70">
                                 <span class="upcoming-count" data-teacher-id="{{ teacher.id }}">Loading...</span> upcoming sessions
                             </div>
                         </div>
                         {% empty %}
-                        <p class="text-sm text-white/60 text-center py-4">No approved teachers available</p>
+                        <p class="text-sm text-white/80 text-center py-4">No approved teachers available</p>
                         {% endfor %}
                     </div>
                     
@@ -218,12 +247,12 @@
                     <div class="mt-6 space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-white/80 mb-2">Assignment Reason (Optional)</label>
-                            <textarea name="assignment_reason" rows="2" class="w-full px-4 py-2 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300" placeholder="Reason for this assignment"></textarea>
+                            <textarea name="assignment_reason" rows="2" class="w-full px-4 py-2 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300" placeholder="Reason for this assignment"></textarea>
                         </div>
                         
                         <div>
                             <label class="block text-sm font-medium text-white/80 mb-2">Notes (Optional)</label>
-                            <textarea name="assignment_notes" rows="2" class="w-full px-4 py-2 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300" placeholder="Additional notes"></textarea>
+                            <textarea name="assignment_notes" rows="2" class="w-full px-4 py-2 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/50 text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300" placeholder="Additional notes"></textarea>
                         </div>
                     </div>
                 </div>
@@ -280,7 +309,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const teacherEmail = this.dataset.teacherEmail;
             
             selectedTeacherId.value = teacherId;
-            selectedTeacherInfo.innerHTML = `<div class="font-medium">${teacherName}</div><div class="text-xs text-white/60">${teacherEmail}</div>`;
+            selectedTeacherInfo.innerHTML = `<div class="font-medium">${teacherName}</div><div class="text-xs text-white/70">${teacherEmail}</div>`;
             selectedTeacherDisplay.classList.remove('hidden');
             
             // Update visual selection
@@ -338,7 +367,18 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(data => {
                 if (data.has_conflict) {
                     conflictWarning.classList.remove('hidden');
-                    const conflictsList = data.conflicts.map(c => `${c.title} (${new Date(c.start).toLocaleString()})`).join(', ');
+                    const conflictsList = data.conflicts
+                        .map(c => {
+                            if (c.start) {
+                                try {
+                                    return `${c.title || 'Untitled'} (${new Date(c.start).toLocaleString()})`;
+                                } catch (e) {
+                                    return c.title || 'Untitled';
+                                }
+                            }
+                            return c.title || 'Untitled';
+                        })
+                        .join(', ');
                     conflictDetails.textContent = `Teacher has conflicting sessions: ${conflictsList}`;
                     teacherAvailabilityStatus.innerHTML = '<span class="text-red-400">⚠ Conflict detected</span>';
                 } else if (data.has_availability) {
@@ -361,22 +401,780 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             FluentoryModal.show('confirm', 'No teacher selected. Continue without assigning a teacher?').then(confirmed => {
                 if (confirmed) {
-                    document.querySelector('form').submit();
+                    // Remove the submit event listener to avoid infinite loop
+                    const form = document.querySelector('form');
+                    form.removeEventListener('submit', arguments.callee);
+                    form.submit();
                 }
             });
             return false;
         }
         
-        if (conflictWarning && !conflictWarning.classList.contains('hidden') && !overrideConflict.checked) {
-            e.preventDefault();
-            FluentoryModal.show('confirm', 'Scheduling conflict detected. Continue anyway?').then(confirmed => {
-                if (confirmed) {
-                    document.querySelector('form').submit();
+        // Don't block form submission - let backend handle conflict detection
+        // The override checkbox will be sent with the form if checked
+    });
+});
+</script>
+
+<style>
+    /* Light Mode Overrides for Live Class Create Page - Using CSS Variables */
+    [data-theme="light"] .live-class-create-page {
+        --card-bg: #FFFFFF;
+        --input-bg: #F8F9FA;
+        --text-color: rgba(10, 31, 31, 0.95);
+        --text-muted: rgba(10, 31, 31, 0.50);
+        --border-color: rgba(10, 31, 31, 0.08);
+        --card-shadow: 0 1px 3px rgba(10, 31, 31, 0.06), 0 1px 2px rgba(10, 31, 31, 0.04);
+    }
+    
+    [data-theme="dark"] .live-class-create-page {
+        --card-bg: rgba(4, 54, 58, 0.7);
+        --input-bg: rgba(37, 67, 70, 0.7);
+        --text-color: #FFFFFF;
+        --text-muted: rgba(255, 255, 255, 0.5);
+        --border-color: rgba(255, 255, 255, 0.1);
+        --card-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+    }
+</style>
+
+<script>
+// Apply theme-aware styles to elements with hardcoded dark colors
+function applyThemeStyles() {
+    const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+    const page = document.querySelector('.live-class-create-page');
+    if (!page) return;
+    
+    if (isLight) {
+        // Update card backgrounds
+        page.querySelectorAll('[class*="bg-[#04363a]"]').forEach(el => {
+            el.style.backgroundColor = '#FFFFFF';
+            el.style.borderColor = 'rgba(10, 31, 31, 0.08)';
+            el.style.boxShadow = '0 1px 3px rgba(10, 31, 31, 0.06), 0 1px 2px rgba(10, 31, 31, 0.04)';
+        });
+        
+        // Update input/select/textarea backgrounds
+        page.querySelectorAll('input[class*="bg-[#254346]"], select[class*="bg-[#254346]"], textarea[class*="bg-[#254346]"]').forEach(el => {
+            el.style.backgroundColor = '#F8F9FA';
+            el.style.color = 'rgba(10, 31, 31, 0.95)';
+            el.style.borderColor = 'rgba(10, 31, 31, 0.08)';
+        });
+        
+        // Update text colors
+        page.querySelectorAll('[class*="text-white"]').forEach(el => {
+            if (!el.closest('button[type="submit"]')) { // Don't change submit button
+                el.style.color = 'rgba(10, 31, 31, 0.95)';
+            }
+        });
+        
+        // Update borders
+        page.querySelectorAll('[class*="border-white"]').forEach(el => {
+            el.style.borderColor = 'rgba(10, 31, 31, 0.08)';
+        });
+        
+        // Update teacher items
+        page.querySelectorAll('.teacher-item').forEach(el => {
+            el.style.backgroundColor = '#F8F9FA';
+            el.style.borderColor = 'rgba(10, 31, 31, 0.08)';
+        });
+        
+        // Update selected teacher display
+        const selectedDisplay = page.querySelector('#selected-teacher-display');
+        if (selectedDisplay) {
+            selectedDisplay.style.backgroundColor = '#F8F9FA';
+            selectedDisplay.style.borderColor = 'rgba(130, 194, 147, 0.25)';
+        }
+        
+        // Update checkboxes
+        page.querySelectorAll('input[type="checkbox"]').forEach(el => {
+            el.style.backgroundColor = '#FFFFFF';
+            el.style.borderColor = 'rgba(10, 31, 31, 0.08)';
+        });
+        
+        // Update buttons
+        page.querySelectorAll('a[class*="bg-[#254346]"]').forEach(el => {
+            el.style.backgroundColor = '#F8F9FA';
+            el.style.borderColor = 'rgba(10, 31, 31, 0.08)';
+            el.style.color = 'rgba(10, 31, 31, 0.95)';
+        });
+    }
+}
+
+// Apply on load
+document.addEventListener('DOMContentLoaded', applyThemeStyles);
+
+// Watch for theme changes
+const observer = new MutationObserver(applyThemeStyles);
+observer.observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ['data-theme']
+});
+</script>
+
+<!-- Create Course Modal -->
+<div id="create-course-modal" class="fixed inset-0 z-[10000] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div id="create-course-modal-backdrop" class="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm transition-opacity duration-300"></div>
+    
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div class="relative w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-[#04363a]/95 backdrop-blur-xl border border-gray-200 dark:border-white/10 shadow-2xl dark:shadow-[0_25px_60px_rgba(0,0,0,0.5)] transition-all duration-300">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between px-6 py-5 border-b border-gray-200 dark:border-white/10 bg-gradient-to-r from-gray-50 to-white dark:from-[#254346]/30 dark:to-[#254346]/20">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/20 border border-emerald-300 dark:border-emerald-500/30 flex items-center justify-center">
+                        <i class="fas fa-plus text-emerald-600 dark:text-emerald-400"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Create New Course</h3>
+                        <p class="text-xs text-gray-500 dark:text-white/60">Quick create a course for this live class</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeCreateCourseModal()" class="p-2 text-gray-400 dark:text-white/60 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-all duration-300">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Content -->
+            <form id="create-course-form" class="px-6 py-6">
+                {% csrf_token %}
+                
+                <div id="create-course-error" class="hidden mb-4 p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-lg">
+                    <p class="text-red-700 dark:text-red-400 text-sm"></p>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-white/80 mb-2">Course Title <span class="text-red-400">*</span></label>
+                        <input type="text" name="title" id="new-course-title" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 backdrop-blur-md text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-emerald-400 dark:focus:ring-emerald-500/40 focus:border-emerald-500 dark:focus:border-emerald-500/50 transition-all duration-300" placeholder="Enter course title">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-white/80 mb-2">Description</label>
+                        <textarea name="description" rows="3" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 backdrop-blur-md text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-emerald-400 dark:focus:ring-emerald-500/40 focus:border-emerald-500 dark:focus:border-emerald-500/50 transition-all duration-300" placeholder="Course description (optional)"></textarea>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-white/80 mb-2">Course Type</label>
+                            <select name="course_type" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 backdrop-blur-md text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 dark:focus:ring-emerald-500/40 focus:border-emerald-500 dark:focus:border-emerald-500/50 transition-all duration-300">
+                                <option value="live" selected>Live</option>
+                                <option value="hybrid">Hybrid</option>
+                                <option value="recorded">Recorded</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-white/80 mb-2">Level</label>
+                            <select name="level" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 backdrop-blur-md text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 dark:focus:ring-emerald-500/40 focus:border-emerald-500 dark:focus:border-emerald-500/50 transition-all duration-300">
+                                <option value="beginner" selected>Beginner</option>
+                                <option value="intermediate">Intermediate</option>
+                                <option value="advanced">Advanced</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-white/80 mb-2">Price</label>
+                            <div class="relative">
+                                <select name="currency" class="absolute left-0 top-0 h-full px-3 py-2.5 text-xs rounded-l-xl border border-r-0 border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-[#254346]/90 text-gray-700 dark:text-white/80 focus:outline-none">
+                                    <option value="USD" selected>USD</option>
+                                    <option value="EUR">EUR</option>
+                                    <option value="GBP">GBP</option>
+                                    <option value="AED">AED</option>
+                                </select>
+                                <input type="number" name="price" step="0.01" min="0" value="0" class="w-full pl-20 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 backdrop-blur-md text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-emerald-400 dark:focus:ring-emerald-500/40 focus:border-emerald-500 dark:focus:border-emerald-500/50 transition-all duration-300" placeholder="0.00">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-white/80 mb-2">Free Course</label>
+                            <div class="flex items-center h-11">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" name="is_free" id="new-course-free" class="w-5 h-5 rounded border-gray-200 dark:border-white/20 bg-white dark:bg-[#254346]/70 text-emerald-600 dark:text-emerald-400 focus:ring-emerald-400 dark:focus:ring-emerald-500/40">
+                                    <span class="text-sm text-gray-700 dark:text-white/80">Mark as free</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Modal Footer -->
+                <div class="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-white/10">
+                    <button type="button" onclick="closeCreateCourseModal()" class="px-5 py-2.5 bg-white dark:bg-[#254346]/70 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-white rounded-xl hover:bg-gray-50 dark:hover:bg-[#254346]/90 hover:border-gray-300 dark:hover:border-white/20 transition-all duration-300 font-medium">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 dark:from-[#00655F] dark:to-[#82C293] text-white rounded-xl hover:shadow-[0_8px_25px_rgba(16,185,129,0.4)] dark:hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] transition-all duration-300 font-medium hover:scale-105">
+                        <i class="fas fa-plus mr-2"></i>Create Course
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Course Modal -->
+<div id="edit-course-modal" class="fixed inset-0 z-[10000] hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+    <div id="edit-course-modal-backdrop" class="fixed inset-0 bg-black/60 dark:bg-black/80 backdrop-blur-sm transition-opacity duration-300"></div>
+    
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div class="relative w-full max-w-md transform overflow-hidden rounded-2xl bg-white dark:bg-[#04363a]/95 backdrop-blur-xl border border-gray-200 dark:border-white/10 shadow-2xl dark:shadow-[0_25px_60px_rgba(0,0,0,0.5)] transition-all duration-300">
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between px-6 py-5 border-b border-gray-200 dark:border-white/10 bg-gradient-to-r from-gray-50 to-white dark:from-[#254346]/30 dark:to-[#254346]/20">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-500/20 border border-blue-300 dark:border-blue-500/30 flex items-center justify-center">
+                        <i class="fas fa-edit text-blue-600 dark:text-blue-400"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Edit Course</h3>
+                        <p class="text-xs text-gray-500 dark:text-white/60">Update course details</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeEditCourseModal()" class="p-2 text-gray-400 dark:text-white/60 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-white/10 rounded-lg transition-all duration-300">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            
+            <!-- Modal Content -->
+            <form id="edit-course-form" class="px-6 py-6">
+                {% csrf_token %}
+                <input type="hidden" name="course_id" id="edit-course-id">
+                
+                <div id="edit-course-error" class="hidden mb-4 p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-lg">
+                    <p class="text-red-700 dark:text-red-400 text-sm"></p>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-white/80 mb-2">Course Title <span class="text-red-400">*</span></label>
+                        <input type="text" name="title" id="edit-course-title" required class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 backdrop-blur-md text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500/40 focus:border-blue-500 dark:focus:border-blue-500/50 transition-all duration-300" placeholder="Enter course title">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-white/80 mb-2">Description</label>
+                        <textarea name="description" id="edit-course-description" rows="3" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 backdrop-blur-md text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500/40 focus:border-blue-500 dark:focus:border-blue-500/50 transition-all duration-300" placeholder="Course description (optional)"></textarea>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-white/80 mb-2">Course Type</label>
+                            <select name="course_type" id="edit-course-type" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 backdrop-blur-md text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500/40 focus:border-blue-500 dark:focus:border-blue-500/50 transition-all duration-300">
+                                <option value="live">Live</option>
+                                <option value="hybrid">Hybrid</option>
+                                <option value="recorded">Recorded</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-white/80 mb-2">Level</label>
+                            <select name="level" id="edit-course-level" class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 backdrop-blur-md text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500/40 focus:border-blue-500 dark:focus:border-blue-500/50 transition-all duration-300">
+                                <option value="beginner">Beginner</option>
+                                <option value="intermediate">Intermediate</option>
+                                <option value="advanced">Advanced</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-white/80 mb-2">Price</label>
+                            <div class="relative">
+                                <select name="currency" id="edit-course-currency" class="absolute left-0 top-0 h-full px-3 py-2.5 text-xs rounded-l-xl border border-r-0 border-gray-200 dark:border-white/10 bg-gray-100 dark:bg-[#254346]/90 text-gray-700 dark:text-white/80 focus:outline-none">
+                                    <option value="USD">USD</option>
+                                    <option value="EUR">EUR</option>
+                                    <option value="GBP">GBP</option>
+                                    <option value="AED">AED</option>
+                                </select>
+                                <input type="number" name="price" id="edit-course-price" step="0.01" min="0" value="0" class="w-full pl-20 pr-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 backdrop-blur-md text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-blue-400 dark:focus:ring-blue-500/40 focus:border-blue-500 dark:focus:border-blue-500/50 transition-all duration-300" placeholder="0.00">
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-white/80 mb-2">Free Course</label>
+                            <div class="flex items-center h-11">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="checkbox" name="is_free" id="edit-course-free" class="w-5 h-5 rounded border-gray-200 dark:border-white/20 bg-white dark:bg-[#254346]/70 text-blue-600 dark:text-blue-400 focus:ring-blue-400 dark:focus:ring-blue-500/40">
+                                    <span class="text-sm text-gray-700 dark:text-white/80">Mark as free</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Modal Footer -->
+                <div class="flex items-center justify-end gap-3 mt-6 pt-6 border-t border-gray-200 dark:border-white/10">
+                    <button type="button" onclick="closeEditCourseModal()" class="px-5 py-2.5 bg-white dark:bg-[#254346]/70 border border-gray-200 dark:border-white/10 text-gray-700 dark:text-white rounded-xl hover:bg-gray-50 dark:hover:bg-[#254346]/90 hover:border-gray-300 dark:hover:border-white/20 transition-all duration-300 font-medium">
+                        Cancel
+                    </button>
+                    <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 dark:from-[#00655F] dark:to-[#82C293] text-white rounded-xl hover:shadow-[0_8px_25px_rgba(37,99,235,0.4)] dark:hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] transition-all duration-300 font-medium hover:scale-105">
+                        <i class="fas fa-save mr-2"></i>Update Course
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+// Create Course Modal Functions
+function openCreateCourseModal() {
+    const modal = document.getElementById('create-course-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        const titleInput = document.getElementById('new-course-title');
+        if (titleInput) {
+            setTimeout(() => titleInput.focus(), 100);
+        }
+    }
+}
+
+function closeCreateCourseModal() {
+    const modal = document.getElementById('create-course-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = '';
+        const form = document.getElementById('create-course-form');
+        if (form) {
+            form.reset();
+            // Reset price field state
+            const priceInput = form.querySelector('input[name="price"]');
+            const freeCheckbox = document.getElementById('new-course-free');
+            if (priceInput) {
+                priceInput.disabled = false;
+            }
+            if (freeCheckbox) {
+                freeCheckbox.checked = false;
+            }
+        }
+        const error = document.getElementById('create-course-error');
+        if (error) {
+            error.classList.add('hidden');
+        }
+    }
+}
+
+// Initialize modal functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const createCourseBtn = document.getElementById('create-course-btn');
+    const createCourseEmptyBtn = document.getElementById('create-course-empty-btn');
+    const editCourseBtn = document.getElementById('edit-course-btn');
+    const createCourseForm = document.getElementById('create-course-form');
+    const editCourseForm = document.getElementById('edit-course-form');
+    const createCourseError = document.getElementById('create-course-error');
+    const editCourseError = document.getElementById('edit-course-error');
+    const courseSelect = document.getElementById('course-select');
+    const modalBackdrop = document.getElementById('create-course-modal-backdrop');
+    const editModalBackdrop = document.getElementById('edit-course-modal-backdrop');
+    const freeCheckbox = document.getElementById('new-course-free');
+    const editFreeCheckbox = document.getElementById('edit-course-free');
+    const priceInput = createCourseForm?.querySelector('input[name="price"]');
+    const editPriceInput = editCourseForm?.querySelector('input[name="price"]');
+    
+    // Handle course select change - show/hide edit button
+    if (courseSelect && editCourseBtn) {
+        function toggleEditButton() {
+            const selectedValue = courseSelect.value;
+            if (selectedValue) {
+                editCourseBtn.classList.remove('hidden');
+            } else {
+                editCourseBtn.classList.add('hidden');
+            }
+        }
+        
+        courseSelect.addEventListener('change', toggleEditButton);
+        
+        // Check initial state
+        toggleEditButton();
+    }
+    
+    // Handle free course checkbox
+    if (freeCheckbox && priceInput) {
+        freeCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                priceInput.value = '0';
+                priceInput.disabled = true;
+            } else {
+                priceInput.disabled = false;
+                if (priceInput.value === '0') {
+                    priceInput.value = '';
                 }
-            });
-            return false;
+            }
+        });
+    }
+    
+    // Handle free course checkbox (edit modal)
+    if (editFreeCheckbox && editPriceInput) {
+        editFreeCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                editPriceInput.value = '0';
+                editPriceInput.disabled = true;
+            } else {
+                editPriceInput.disabled = false;
+                if (editPriceInput.value === '0') {
+                    editPriceInput.value = '';
+                }
+            }
+        });
+    }
+    
+    // Open modal buttons
+    if (createCourseBtn) {
+        createCourseBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            openCreateCourseModal();
+        });
+    }
+    
+    if (createCourseEmptyBtn) {
+        createCourseEmptyBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            openCreateCourseModal();
+        });
+    }
+    
+    // Close on backdrop click
+    if (modalBackdrop) {
+        modalBackdrop.addEventListener('click', closeCreateCourseModal);
+    }
+    
+    // Close on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const modal = document.getElementById('create-course-modal');
+            if (modal && !modal.classList.contains('hidden')) {
+                closeCreateCourseModal();
+            }
         }
     });
+    
+    // Handle form submission
+    if (createCourseForm) {
+        createCourseForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Hide error
+            if (createCourseError) {
+                createCourseError.classList.add('hidden');
+            }
+            
+            // Get CSRF token from cookie
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            const csrfToken = getCookie('csrftoken');
+            
+            // Get form data
+            const formData = new FormData(createCourseForm);
+            const isFree = formData.get('is_free') === 'on';
+            const price = isFree ? 0 : (parseFloat(formData.get('price')) || 0);
+            
+            const data = {
+                title: formData.get('title'),
+                description: formData.get('description') || '',
+                course_type: formData.get('course_type') || 'live',
+                level: formData.get('level') || 'beginner',
+                price: price,
+                currency: formData.get('currency') || 'USD',
+                is_free: isFree,
+            };
+            
+            // Validate
+            if (!data.title || !data.title.trim()) {
+                if (createCourseError) {
+                    createCourseError.querySelector('p').textContent = 'Course title is required';
+                    createCourseError.classList.remove('hidden');
+                }
+                return;
+            }
+            
+            // Show loading state
+            const submitBtn = createCourseForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn ? submitBtn.innerHTML : '';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creating...';
+            }
+            
+            try {
+                const response = await fetch('/dashboard/api/create-course/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                    },
+                    body: JSON.stringify(data),
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    // Add new course to dropdown
+                    const option = document.createElement('option');
+                    option.value = result.course.id;
+                    option.textContent = result.course.title;
+                    option.setAttribute('data-price', result.course.price || 0);
+                    option.setAttribute('data-currency', result.course.currency || 'USD');
+                    option.setAttribute('data-is-free', result.course.is_free ? 'true' : 'false');
+                    option.selected = true;
+                    if (courseSelect) {
+                        courseSelect.appendChild(option);
+                    }
+                    
+                    // Show edit button
+                    const editBtn = document.getElementById('edit-course-btn');
+                    if (editBtn) {
+                        editBtn.classList.remove('hidden');
+                    }
+                    
+                    // Close modal
+                    closeCreateCourseModal();
+                } else {
+                    // Show error
+                    if (createCourseError) {
+                        createCourseError.querySelector('p').textContent = result.error || 'Error creating course';
+                        createCourseError.classList.remove('hidden');
+                    }
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    }
+                }
+            } catch (error) {
+                console.error('Error creating course:', error);
+                if (createCourseError) {
+                    createCourseError.querySelector('p').textContent = 'Something went wrong. Please try again.';
+                    createCourseError.classList.remove('hidden');
+                }
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+            }
+        });
+    }
+    
+    // Edit Course Modal Functions
+    function openEditCourseModal(courseId) {
+        const modal = document.getElementById('edit-course-modal');
+        if (!modal || !courseId) return;
+        
+        // Show loading state
+        const titleInput = document.getElementById('edit-course-title');
+        if (titleInput) {
+            titleInput.value = 'Loading...';
+            titleInput.disabled = true;
+        }
+        
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        
+        // Load course data
+        fetch(`/dashboard/api/courses/${courseId}/`)
+            .then(r => r.json())
+            .then(data => {
+                if (data.success && data.course) {
+                    const course = data.course;
+                    document.getElementById('edit-course-id').value = course.id;
+                    document.getElementById('edit-course-title').value = course.title;
+                    document.getElementById('edit-course-description').value = course.description || '';
+                    document.getElementById('edit-course-type').value = course.course_type;
+                    document.getElementById('edit-course-level').value = course.level;
+                    document.getElementById('edit-course-price').value = course.price || 0;
+                    document.getElementById('edit-course-currency').value = course.currency || 'USD';
+                    document.getElementById('edit-course-free').checked = course.is_free || false;
+                    
+                    if (titleInput) {
+                        titleInput.disabled = false;
+                    }
+                    
+                    const priceInput = document.getElementById('edit-course-price');
+                    const freeCheckbox = document.getElementById('edit-course-free');
+                    if (freeCheckbox.checked && priceInput) {
+                        priceInput.disabled = true;
+                    }
+                }
+            })
+            .catch(err => {
+                console.error('Error loading course:', err);
+                closeEditCourseModal();
+                alert('Error loading course data');
+            });
+    }
+    
+    function closeEditCourseModal() {
+        const modal = document.getElementById('edit-course-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+            document.body.style.overflow = '';
+            const form = document.getElementById('edit-course-form');
+            if (form) {
+                form.reset();
+                const priceInput = document.getElementById('edit-course-price');
+                const freeCheckbox = document.getElementById('edit-course-free');
+                if (priceInput) {
+                    priceInput.disabled = false;
+                }
+                if (freeCheckbox) {
+                    freeCheckbox.checked = false;
+                }
+            }
+            const error = document.getElementById('edit-course-error');
+            if (error) {
+                error.classList.add('hidden');
+            }
+        }
+    }
+    
+    // Handle edit course button
+    if (editCourseBtn) {
+        editCourseBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const selectedCourseId = courseSelect?.value;
+            if (selectedCourseId) {
+                openEditCourseModal(selectedCourseId);
+            }
+        });
+    }
+    
+    // Close edit modal on backdrop click
+    if (editModalBackdrop) {
+        editModalBackdrop.addEventListener('click', closeEditCourseModal);
+    }
+    
+    // Close edit modal on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const editModal = document.getElementById('edit-course-modal');
+            if (editModal && !editModal.classList.contains('hidden')) {
+                closeEditCourseModal();
+            }
+        }
+    });
+    
+    // Handle edit form submission
+    if (editCourseForm) {
+        editCourseForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Hide error
+            if (editCourseError) {
+                editCourseError.classList.add('hidden');
+            }
+            
+            // Get CSRF token
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            const csrfToken = getCookie('csrftoken');
+            
+            // Get form data
+            const formData = new FormData(editCourseForm);
+            const courseId = formData.get('course_id');
+            const isFree = formData.get('is_free') === 'on';
+            const price = isFree ? 0 : (parseFloat(formData.get('price')) || 0);
+            
+            const data = {
+                title: formData.get('title'),
+                description: formData.get('description') || '',
+                course_type: formData.get('course_type'),
+                level: formData.get('level'),
+                price: price,
+                currency: formData.get('currency') || 'USD',
+                is_free: isFree,
+            };
+            
+            // Validate
+            if (!data.title || !data.title.trim()) {
+                if (editCourseError) {
+                    editCourseError.querySelector('p').textContent = 'Course title is required';
+                    editCourseError.classList.remove('hidden');
+                }
+                return;
+            }
+            
+            // Show loading state
+            const submitBtn = editCourseForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn ? submitBtn.innerHTML : '';
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Updating...';
+            }
+            
+            try {
+                const response = await fetch(`/dashboard/api/courses/${courseId}/update/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken,
+                    },
+                    body: JSON.stringify(data),
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    // Update dropdown option
+                    const option = courseSelect?.querySelector(`option[value="${courseId}"]`);
+                    if (option) {
+                        option.textContent = result.course.title;
+                        option.setAttribute('data-price', result.course.price || 0);
+                        option.setAttribute('data-currency', result.course.currency || 'USD');
+                        option.setAttribute('data-is-free', result.course.is_free ? 'true' : 'false');
+                    }
+                    
+                    // Close modal
+                    closeEditCourseModal();
+                } else {
+                    // Show error
+                    if (editCourseError) {
+                        editCourseError.querySelector('p').textContent = result.error || 'Error updating course';
+                        editCourseError.classList.remove('hidden');
+                    }
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating course:', error);
+                if (editCourseError) {
+                    editCourseError.querySelector('p').textContent = 'Something went wrong. Please try again.';
+                    editCourseError.classList.remove('hidden');
+                }
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalText;
+                }
+            }
+        });
+    }
+    
+    // Make functions globally accessible
+    window.openCreateCourseModal = openCreateCourseModal;
+    window.closeCreateCourseModal = closeCreateCourseModal;
+    window.openEditCourseModal = openEditCourseModal;
+    window.closeEditCourseModal = closeEditCourseModal;
 });
 </script>
 {% endblock %}

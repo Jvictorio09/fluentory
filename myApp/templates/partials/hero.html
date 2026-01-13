@@ -1,3 +1,4 @@
+{% load i18n %}
 <section class="relative overflow-hidden py-16 lg:py-24" style="background-color: var(--bg-primary);">
   <!-- Background radial gradient -->
   <div class="absolute inset-0 z-0">
@@ -21,18 +22,18 @@
           <!-- Eyebrow Label -->
           <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs uppercase tracking-wider mb-6 font-medium" style="background-color: var(--hero-eyebrow-bg); border: 1px solid var(--hero-eyebrow-border); color: var(--accent-cta);">
             <i class="fas fa-bolt" style="color: var(--accent-primary);"></i>
-            <span>AI-Powered Learning Paths</span>
+            <span>{% trans "AI-Powered Learning Paths" %}</span>
           </div>
 
           <!-- Headline -->
           <h1 class="text-5xl sm:text-6xl lg:text-[5.2rem] font-extralight leading-[1.05] mb-6 tracking-[-2px]" style="color: var(--text-primary);">
-            The Modern Way<br class="hidden sm:block" />
-            To Learn Globally.
+            {% trans "The Modern Way" %}<br class="hidden sm:block" />
+            {% trans "To Learn Globally." %}
           </h1>
 
           <!-- Subheadline -->
           <p class="text-lg sm:text-xl mb-8 leading-relaxed font-light max-w-[760px] mx-auto" style="color: var(--text-secondary);">
-            Placement-based learning. Milestone quizzes. Verified certification. Built for outcomes.
+            {% trans "Placement-based learning. Milestone quizzes. Verified certification. Built for outcomes." %}
           </p>
 
           <!-- Primary CTA -->
@@ -42,7 +43,7 @@
               class="group inline-flex items-center justify-center gap-3 py-5 px-12 rounded-2xl no-underline text-lg font-medium transition-all duration-300 transform hover:scale-[1.02]"
               style="background: linear-gradient(to right, var(--accent-cta), var(--accent-primary)); color: white; box-shadow: var(--hero-cta-shadow); border: 1px solid rgba(130,194,147,0.35);"
             >
-              Take the Free Placement Test
+              {% trans "Take the Free Placement Test" %}
               <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform" style="color: rgba(255,255,255,0.85);"></i>
             </a>
 
@@ -52,7 +53,7 @@
               class="inline-flex items-center justify-center backdrop-blur-lg py-5 px-12 rounded-2xl no-underline text-lg font-medium transition-all duration-300 smooth-scroll"
               style="background-color: var(--bg-elevated); border: 2px solid var(--border-primary); color: var(--text-primary);"
             >
-              Browse Courses
+              {% trans "Browse Courses" %}
             </a>
           </div>
 
@@ -60,15 +61,15 @@
           <div class="flex flex-wrap gap-6 justify-center mb-8 pb-6" style="border-bottom: 1px solid var(--border-primary);">
             <div class="flex items-center gap-2.5 text-sm font-medium" style="color: var(--text-secondary);">
               <i class="fas fa-shield-halved" style="color: var(--accent-primary);"></i>
-              <span>Secure Payments</span>
+              <span>{% trans "Secure Payments" %}</span>
             </div>
             <div class="flex items-center gap-2.5 text-sm font-medium" style="color: var(--text-secondary);">
               <i class="fas fa-award" style="color: var(--accent-primary);"></i>
-              <span>Verified Certificates</span>
+              <span>{% trans "Verified Certificates" %}</span>
             </div>
             <div class="flex items-center gap-2.5 text-sm font-medium" style="color: var(--text-secondary);">
               <i class="fas fa-globe" style="color: var(--accent-primary);"></i>
-              <span>Multi-language Support</span>
+              <span>{% trans "Multi-language Support" %}</span>
             </div>
           </div>
 
@@ -79,21 +80,21 @@
                 <i class="fas fa-book-open text-xl" style="color: var(--accent-primary);"></i>
                 <div class="text-3xl font-semibold" style="color: var(--text-primary);">120,000+</div>
               </div>
-              <div class="text-xs uppercase tracking-wider font-medium" style="color: var(--text-tertiary);">Lessons Completed</div>
+              <div class="text-xs uppercase tracking-wider font-medium" style="color: var(--text-tertiary);">{% trans "Lessons Completed" %}</div>
             </div>
             <div class="rounded-2xl px-7 py-6 transition-all duration-300 hover:-translate-y-1" style="background-color: var(--bg-elevated); border: 1px solid var(--border-primary); box-shadow: var(--hero-stat-shadow);">
               <div class="flex items-center justify-center gap-3 mb-3">
                 <i class="fas fa-star text-xl" style="color: #F5C451;"></i>
                 <div class="text-3xl font-semibold" style="color: var(--text-primary);">4.8</div>
               </div>
-              <div class="text-xs uppercase tracking-wider font-medium" style="color: var(--text-tertiary);">Average Satisfaction</div>
+              <div class="text-xs uppercase tracking-wider font-medium" style="color: var(--text-tertiary);">{% trans "Average Satisfaction" %}</div>
             </div>
             <div class="rounded-2xl px-7 py-6 transition-all duration-300 hover:-translate-y-1" style="background-color: var(--bg-elevated); border: 1px solid var(--border-primary); box-shadow: var(--hero-stat-shadow);">
               <div class="flex items-center justify-center gap-3 mb-3">
                 <i class="fas fa-globe-americas text-xl" style="color: var(--accent-primary);"></i>
                 <div class="text-3xl font-semibold" style="color: var(--text-primary);">40+</div>
               </div>
-              <div class="text-xs uppercase tracking-wider font-medium" style="color: var(--text-tertiary);">Countries</div>
+              <div class="text-xs uppercase tracking-wider font-medium" style="color: var(--text-tertiary);">{% trans "Countries" %}</div>
             </div>
           </div>
 

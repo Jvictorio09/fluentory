@@ -1,3 +1,4 @@
+{% load i18n %}
 <section id="pricing"
   class="relative overflow-hidden py-20 lg:py-28"
   style="background-color: var(--bg-primary);">
@@ -29,17 +30,17 @@
       <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs uppercase tracking-wider font-medium mb-8"
            style="background-color: rgba(130,194,147,0.18); color: var(--accent-cta);">
         <i class="fas fa-tag"></i>
-        Pricing
+        {% trans "Pricing" %}
       </div>
 
       <h2 class="text-[3rem] sm:text-[3.8rem] lg:text-[4.2rem] font-extralight tracking-[-1px] leading-[1.05] mb-6"
           style="color: var(--text-primary);">
-        Simple. Global. Confident.
+        {% trans "Simple. Global. Confident." %}
       </h2>
 
       <p class="text-lg font-light max-w-[720px] mx-auto mb-12"
          style="color: var(--text-secondary);">
-        Choose a plan that fits your pace. Upgrade anytime — your progress always stays with you.
+        {% trans "Choose a plan that fits your pace. Upgrade anytime — your progress always stays with you." %}
       </p>
 
       <!-- Currency Selector -->
@@ -76,8 +77,8 @@
            ">
 
         <div class="mb-7">
-          <h3 class="text-2xl font-semibold mb-1" style="color: var(--text-primary);">Starter</h3>
-          <p class="text-sm font-light" style="color: var(--text-secondary);">For casual learners</p>
+          <h3 class="text-2xl font-semibold mb-1" style="color: var(--text-primary);">{% trans "Starter" %}</h3>
+          <p class="text-sm font-light" style="color: var(--text-secondary);">{% trans "For casual learners" %}</p>
         </div>
 
         <div class="mb-8">
@@ -89,21 +90,21 @@
           </div>
           <div class="text-xs uppercase tracking-wider mt-1"
                style="color: var(--text-tertiary);">
-            Billed monthly
+            {% trans "Billed monthly" %}
           </div>
         </div>
 
         <ul class="space-y-4 mb-10">
-          <li>• Access to all courses</li>
-          <li>• AI Tutor support</li>
-          <li>• Progress tracking</li>
-          <li>• Community access</li>
+          <li>• {% trans "Access to all courses" %}</li>
+          <li>• {% trans "AI Tutor support" %}</li>
+          <li>• {% trans "Progress tracking" %}</li>
+          <li>• {% trans "Community access" %}</li>
         </ul>
 
         <a href="#"
            class="inline-flex w-full justify-center items-center gap-2 rounded-2xl px-6 py-4 font-semibold text-white transition-transform hover:scale-[1.02]"
            style="background: linear-gradient(to right, var(--accent-cta), var(--accent-primary)); box-shadow: 0 18px 45px rgba(0,101,95,0.35);">
-          Get Started
+          {% trans "Get Started" %}
           <i class="fas fa-arrow-right"></i>
         </a>
       </div>
@@ -115,7 +116,7 @@
         <div class="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
           <div class="px-5 py-2 rounded-full text-xs uppercase font-semibold"
                style="background-color: #f8da03; color: #04363A;">
-            Most Popular
+            {% trans "Most Popular" %}
           </div>
         </div>
 
@@ -126,8 +127,8 @@
              ">
 
           <div class="mb-7 pt-4">
-            <h3 class="text-2xl font-semibold mb-1" style="color: var(--text-primary);">Professional</h3>
-            <p class="text-sm font-light" style="color: var(--text-secondary);">For serious learners</p>
+            <h3 class="text-2xl font-semibold mb-1" style="color: var(--text-primary);">{% trans "Professional" %}</h3>
+            <p class="text-sm font-light" style="color: var(--text-secondary);">{% trans "For serious learners" %}</p>
           </div>
 
           <div class="mb-8">
@@ -139,27 +140,27 @@
             </div>
             <div class="text-xs uppercase tracking-wider mt-1"
                  style="color: var(--accent-primary);">
-              Includes certificates
+              {% trans "Includes certificates" %}
             </div>
           </div>
 
           <ul class="space-y-4 mb-10">
-            <li>• Everything in Starter</li>
-            <li>• Verified certificates</li>
-            <li>• Priority support</li>
-            <li>• Advanced analytics</li>
+            <li>• {% trans "Everything in Starter" %}</li>
+            <li>• {% trans "Verified certificates" %}</li>
+            <li>• {% trans "Priority support" %}</li>
+            <li>• {% trans "Advanced analytics" %}</li>
           </ul>
 
           <a href="#"
              class="inline-flex w-full justify-center items-center gap-2 rounded-2xl px-6 py-4 font-semibold text-white transition-transform hover:scale-[1.02]"
              style="background: linear-gradient(to right, var(--accent-cta), var(--accent-primary)); box-shadow: 0 22px 55px rgba(0,101,95,0.45);">
-            Get Started
+            {% trans "Get Started" %}
             <i class="fas fa-arrow-right"></i>
           </a>
 
           <div class="mt-6 pt-6 text-sm text-center"
                style="border-top: 1px solid var(--border-primary); color: var(--text-secondary);">
-            🎁 Gift a course available
+            🎁 {% trans "Gift a course available" %}
           </div>
         </div>
       </div>
@@ -173,29 +174,29 @@
            ">
 
         <div class="mb-7">
-          <h3 class="text-2xl font-semibold mb-1" style="color: var(--text-primary);">Enterprise</h3>
-          <p class="text-sm font-light" style="color: var(--text-secondary);">For teams & institutions</p>
+          <h3 class="text-2xl font-semibold mb-1" style="color: var(--text-primary);">{% trans "Enterprise" %}</h3>
+          <p class="text-sm font-light" style="color: var(--text-secondary);">{% trans "For teams & institutions" %}</p>
         </div>
 
         <div class="mb-8">
-          <div class="text-5xl font-extralight" style="color: var(--text-primary);">Custom</div>
+          <div class="text-5xl font-extralight" style="color: var(--text-primary);">{% trans "Custom" %}</div>
           <div class="text-xs uppercase tracking-wider"
                style="color: var(--text-tertiary);">
-            Talk to sales
+            {% trans "Talk to sales" %}
           </div>
         </div>
 
         <ul class="space-y-4 mb-10">
-          <li>• Everything in Professional</li>
-          <li>• Team management</li>
-          <li>• Custom learning paths</li>
-          <li>• Dedicated support</li>
+          <li>• {% trans "Everything in Professional" %}</li>
+          <li>• {% trans "Team management" %}</li>
+          <li>• {% trans "Custom learning paths" %}</li>
+          <li>• {% trans "Dedicated support" %}</li>
         </ul>
 
         <a href="#"
            class="inline-flex w-full justify-center items-center gap-2 rounded-2xl px-6 py-4 font-semibold text-white transition-transform hover:scale-[1.02]"
            style="background: linear-gradient(to right, var(--accent-cta), var(--accent-primary)); box-shadow: 0 18px 45px rgba(0,101,95,0.35);">
-          Contact Sales
+          {% trans "Contact Sales" %}
           <i class="fas fa-arrow-right"></i>
         </a>
       </div>
@@ -205,7 +206,7 @@
     <!-- Footnote -->
     <div class="mt-16 text-center text-sm font-medium"
          style="color: var(--text-secondary);">
-      ✔ Cancel anytime · Keep your progress
+      ✔ {% trans "Cancel anytime · Keep your progress" %}
     </div>
 
   </div>

@@ -1001,5 +1001,119 @@
         color: var(--accent-primary);
         font-weight: 500;
     }
+    
+    /* ============================================
+       LIVE CLASS CREATE PAGE - LIGHT MODE FIXES
+       Fix dark form elements on light background
+       ============================================ */
+    
+    /* Cards - White background in light mode */
+    [data-theme="light"] .bg-\[#04363a\]\/70,
+    [data-theme="light"] .bg-\[#04363a\] {
+        background-color: #FFFFFF !important;
+        border-color: var(--border-primary) !important;
+        box-shadow: var(--card-shadow) !important;
+    }
+    
+    /* Input fields - Light background with dark text in light mode */
+    [data-theme="light"] .bg-\[#254346\]\/70,
+    [data-theme="light"] .bg-\[#254346\]\/50,
+    [data-theme="light"] .bg-\[#254346\] {
+        background-color: #F8F9FA !important;
+        border-color: var(--border-primary) !important;
+        color: var(--text-primary) !important;
+    }
+    
+    /* Text colors - Dark text in light mode */
+    [data-theme="light"] .text-white,
+    [data-theme="light"] .text-white\/80,
+    [data-theme="light"] .text-white\/70,
+    [data-theme="light"] .text-white\/60,
+    [data-theme="light"] .text-white\/50 {
+        color: var(--text-primary) !important;
+    }
+    
+    /* Labels - Dark text in light mode */
+    [data-theme="light"] label.text-white,
+    [data-theme="light"] label.text-white\/80 {
+        color: var(--text-primary) !important;
+    }
+    
+    /* Headings - Dark text in light mode */
+    [data-theme="light"] h1.text-white,
+    [data-theme="light"] h2.text-white,
+    [data-theme="light"] h3.text-white {
+        color: var(--text-primary) !important;
+    }
+    
+    /* Paragraphs and spans - Dark text in light mode */
+    [data-theme="light"] p.text-white,
+    [data-theme="light"] p.text-white\/70,
+    [data-theme="light"] p.text-white\/80,
+    [data-theme="light"] span.text-white,
+    [data-theme="light"] span.text-white\/70,
+    [data-theme="light"] span.text-white\/80,
+    [data-theme="light"] div.text-white,
+    [data-theme="light"] div.text-white\/70,
+    [data-theme="light"] div.text-white\/80 {
+        color: var(--text-primary) !important;
+    }
+    
+    /* Input, select, textarea - Dark text in light mode */
+    [data-theme="light"] input.text-white,
+    [data-theme="light"] select.text-white,
+    [data-theme="light"] textarea.text-white {
+        color: var(--text-primary) !important;
+        background-color: #F8F9FA !important;
+    }
+    
+    /* Placeholder text - Muted dark in light mode */
+    [data-theme="light"] input::placeholder,
+    [data-theme="light"] textarea::placeholder {
+        color: var(--text-muted) !important;
+    }
+    
+    /* Borders - Subtle dark borders in light mode */
+    [data-theme="light"] .border-white\/10,
+    [data-theme="light"] .border-white\/20 {
+        border-color: var(--border-primary) !important;
+    }
+    
+    /* Buttons - Light background with dark text in light mode */
+    [data-theme="light"] .bg-\[#254346\]\/70,
+    [data-theme="light"] a.bg-\[#254346\]\/70 {
+        background-color: var(--bg-elevated) !important;
+        border-color: var(--border-primary) !important;
+        color: var(--text-primary) !important;
+    }
+    
+    /* Teacher items - Light background in light mode */
+    [data-theme="light"] .teacher-item {
+        background-color: var(--bg-elevated) !important;
+        border-color: var(--border-primary) !important;
+    }
+    
+    [data-theme="light"] .teacher-item:hover {
+        background-color: #F0F0F0 !important;
+        border-color: var(--border-accent) !important;
+    }
+    
+    /* Selected teacher display - Light background in light mode */
+    [data-theme="light"] #selected-teacher-display {
+        background-color: var(--bg-elevated) !important;
+        border-color: var(--border-accent) !important;
+    }
+    
+    /* Checkboxes - Light background in light mode */
+    [data-theme="light"] input[type="checkbox"] {
+        background-color: #FFFFFF !important;
+        border-color: var(--border-primary) !important;
+    }
+    
+    /* Select options - Dark text in light mode */
+    [data-theme="light"] select option {
+        background-color: #FFFFFF !important;
+        color: var(--text-primary) !important;
+    }
 </style>
 

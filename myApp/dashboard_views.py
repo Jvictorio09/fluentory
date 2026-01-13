@@ -707,7 +707,7 @@ def dashboard_live_class_create(request):
     if request.method == 'POST':
         try:
             course_id = request.POST.get('course')
-            teacher_id = request.POST.get('teacher')
+            teacher_id = request.POST.get('teacher', '').strip()
             title = request.POST.get('title')
             scheduled_start_str = request.POST.get('scheduled_start')
             duration_minutes = int(request.POST.get('duration_minutes', 60))
@@ -715,88 +715,188 @@ def dashboard_live_class_create(request):
             total_seats = int(request.POST.get('total_seats', 10))
             
             course = get_object_or_404(Course, id=course_id)
-            teacher = get_object_or_404(Teacher, id=teacher_id) if teacher_id else None
+            # Handle teacher assignment - make it non-blocking
+            teacher = None
+            if teacher_id:
+                try:
+                    teacher = Teacher.objects.get(id=teacher_id)
+                except Teacher.DoesNotExist:
+                    # Teacher not found - log but don't block creation
+                    print(f"WARNING: Teacher with ID {teacher_id} not found. Creating live class without teacher assignment.")
+                    messages.warning(request, f'Teacher with ID {teacher_id} not found. Live class will be created without a teacher assignment.')
             
-            # Parse datetime
-            from django.utils.dateparse import parse_datetime
-            scheduled_start = parse_datetime(scheduled_start_str)
+            # Parse datetime - handle None/empty strings safely
+            scheduled_start = None
+            try:
+                from django.utils.dateparse import parse_datetime
+                if scheduled_start_str:
+                    scheduled_start = parse_datetime(str(scheduled_start_str))
+            except (ValueError, TypeError, AttributeError) as e:
+                print(f"WARNING: Error parsing scheduled_start_str: {str(e)}")
+                scheduled_start = None
+            
             if not scheduled_start:
                 # Try parsing as date + time separately
                 date_str = request.POST.get('scheduled_date')
                 time_str = request.POST.get('scheduled_time')
                 if date_str and time_str:
-                    from datetime import datetime
-                    scheduled_start = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
-                    scheduled_start = timezone.make_aware(scheduled_start)
+                    try:
+                        from datetime import datetime
+                        scheduled_start = datetime.strptime(f"{date_str} {time_str}", "%Y-%m-%d %H:%M")
+                        scheduled_start = timezone.make_aware(scheduled_start)
+                    except (ValueError, TypeError, AttributeError) as e:
+                        print(f"WARNING: Error parsing date/time: {str(e)}")
+                        scheduled_start = None
             
             if not scheduled_start:
-                raise ValueError("Invalid scheduled start time")
+                messages.error(request, 'Please provide a valid date and time for the live class.')
+                return redirect('dashboard:live_class_create')
             
-            scheduled_end = scheduled_start + timedelta(minutes=duration_minutes)
+            # Compute scheduled_end safely
+            try:
+                scheduled_end = scheduled_start + timedelta(minutes=duration_minutes)
+            except (TypeError, ValueError) as e:
+                print(f"ERROR: Failed to compute scheduled_end: {str(e)}")
+                messages.error(request, 'Invalid scheduled start time or duration.')
+                return redirect('dashboard:live_class_create')
             
-            # Check for conflicts if teacher is assigned
+            # Check for conflicts if teacher is assigned (non-blocking - errors are ignored)
+            teacher_conflict = False
             if teacher:
-                start_utc = scheduled_start
-                end_utc = scheduled_end
+                try:
+                    start_utc = scheduled_start
+                    end_utc = scheduled_end
+                    if hasattr(scheduled_start, 'tzinfo') and scheduled_start.tzinfo is None:
+                        start_utc = timezone.make_aware(scheduled_start)
+                    if hasattr(scheduled_end, 'tzinfo') and scheduled_end.tzinfo is None:
+                        end_utc = timezone.make_aware(scheduled_end)
+                    
+                    conflict = LiveClassSession.objects.filter(
+                        teacher=teacher,
+                        status__in=['draft', 'scheduled', 'live'],
+                    ).filter(
+                        Q(start_at_utc__lt=end_utc, end_at_utc__gt=start_utc) |
+                        Q(scheduled_start__lt=end_utc, scheduled_end__gt=start_utc)
+                    ).exists()
+                    
+                    override_conflict = request.POST.get('override_conflict') == 'on'
+                    if conflict and not override_conflict:
+                        teacher_conflict = True
+                        messages.warning(request, f'Teacher {teacher.user.username} has a conflicting session at this time. Live class will be created anyway. You can override conflicts if needed.')
+                except Exception as e:
+                    # Ignore conflict check errors - don't block creation
+                    print(f"WARNING: Error checking teacher conflicts (non-blocking): {str(e)}")
+                    teacher_conflict = False
+            
+            # Create session (always proceed, regardless of teacher assignment status)
+            # Safely compute UTC times
+            try:
                 if hasattr(scheduled_start, 'tzinfo') and scheduled_start.tzinfo is None:
-                    start_utc = timezone.make_aware(scheduled_start)
+                    start_at_utc = timezone.make_aware(scheduled_start)
+                else:
+                    start_at_utc = scheduled_start
+            except Exception as e:
+                print(f"WARNING: Error making start timezone-aware (non-blocking): {str(e)}")
+                start_at_utc = scheduled_start
+            
+            try:
                 if hasattr(scheduled_end, 'tzinfo') and scheduled_end.tzinfo is None:
-                    end_utc = timezone.make_aware(scheduled_end)
-                
-                conflict = LiveClassSession.objects.filter(
+                    end_at_utc = timezone.make_aware(scheduled_end)
+                else:
+                    end_at_utc = scheduled_end
+            except Exception as e:
+                print(f"WARNING: Error making end timezone-aware (non-blocking): {str(e)}")
+                end_at_utc = scheduled_end
+            
+            # Create the live class session
+            try:
+                live_class = LiveClassSession.objects.create(
+                    course=course,
                     teacher=teacher,
-                    status__in=['draft', 'scheduled', 'live'],
-                ).filter(
-                    Q(start_at_utc__lt=end_utc, end_at_utc__gt=start_utc) |
-                    Q(scheduled_start__lt=end_utc, scheduled_end__gt=start_utc)
-                ).exists()
-                
-                if conflict and request.POST.get('override_conflict') != 'on':
-                    messages.error(request, f'Teacher {teacher.user.username} has a conflicting session at this time. Check "Override conflict" to proceed.')
-                    return redirect('dashboard:live_class_create')
-            
-            # Create session
-            live_class = LiveClassSession.objects.create(
-                course=course,
-                teacher=teacher,
-                title=title,
-                description=request.POST.get('description', ''),
-                scheduled_start=scheduled_start,
-                scheduled_end=scheduled_end,
-                start_at_utc=timezone.make_aware(scheduled_start) if hasattr(scheduled_start, 'tzinfo') and scheduled_start.tzinfo is None else scheduled_start,
-                end_at_utc=timezone.make_aware(scheduled_end) if hasattr(scheduled_end, 'tzinfo') and scheduled_end.tzinfo is None else scheduled_end,
-                duration_minutes=duration_minutes,
-                timezone_snapshot=request.POST.get('timezone', 'UTC'),
-                meeting_link=meeting_link or '',
-                meeting_provider=request.POST.get('meeting_provider', 'zoom'),
-                meeting_id=request.POST.get('meeting_id', ''),
-                meeting_passcode=request.POST.get('meeting_passcode', ''),
-                total_seats=total_seats,
-                seats_taken=0,
-                enable_waitlist=request.POST.get('enable_waitlist') == 'on',
-                status=request.POST.get('status', 'draft'),
-                reminder_sent=False,
-            )
-            
-            # Create audit log entry if teacher assigned
-            if teacher:
-                assignment = LiveClassTeacherAssignment.objects.create(
-                    session=live_class,
-                    assigned_by=request.user,
-                    new_teacher=teacher,
-                    reason=request.POST.get('assignment_reason', ''),
-                    notes=request.POST.get('assignment_notes', ''),
+                    title=title,
+                    description=request.POST.get('description', ''),
+                    scheduled_start=scheduled_start,
+                    scheduled_end=scheduled_end,
+                    start_at_utc=start_at_utc,
+                    end_at_utc=end_at_utc,
+                    duration_minutes=duration_minutes,
+                    timezone_snapshot=request.POST.get('timezone', 'UTC'),
+                    meeting_link=meeting_link or '',
+                    meeting_provider=request.POST.get('meeting_provider', 'zoom'),
+                    meeting_id=request.POST.get('meeting_id', ''),
+                    meeting_passcode=request.POST.get('meeting_passcode', ''),
+                    total_seats=total_seats,
+                    seats_taken=0,
+                    enable_waitlist=request.POST.get('enable_waitlist') == 'on',
+                    status=request.POST.get('status', 'draft'),
+                    reminder_sent=False,
                 )
-                # Create activity log entry
+            except Exception as create_error:
+                # If creation fails, try again with minimal fields (override model save method issues)
+                import traceback
+                print(f"WARNING: First creation attempt failed: {str(create_error)}")
+                print(traceback.format_exc())
+                try:
+                    # Try creating with minimal required fields only
+                    live_class = LiveClassSession(
+                        course=course,
+                        teacher=teacher,
+                        title=title,
+                        description=request.POST.get('description', ''),
+                        scheduled_start=scheduled_start,
+                        scheduled_end=scheduled_end,
+                        duration_minutes=duration_minutes,
+                        timezone_snapshot=request.POST.get('timezone', 'UTC'),
+                        meeting_link=meeting_link or '',
+                        meeting_provider=request.POST.get('meeting_provider', 'zoom'),
+                        meeting_id=request.POST.get('meeting_id', ''),
+                        meeting_passcode=request.POST.get('meeting_passcode', ''),
+                        total_seats=total_seats,
+                        seats_taken=0,
+                        enable_waitlist=request.POST.get('enable_waitlist') == 'on',
+                        status=request.POST.get('status', 'draft'),
+                        reminder_sent=False,
+                    )
+                    # Try to set UTC fields separately to avoid save() method issues
+                    try:
+                        live_class.start_at_utc = start_at_utc
+                        live_class.end_at_utc = end_at_utc
+                    except Exception:
+                        pass  # Ignore UTC field errors
+                    live_class.save()
+                except Exception as second_error:
+                    # Last resort: re-raise with detailed error
+                    raise Exception(f"Failed to create live class: {str(second_error)}. Original error: {str(create_error)}")
+            
+            # Create audit log entry if teacher assigned (non-blocking - errors are ignored)
+            if teacher:
+                try:
+                    assignment = LiveClassTeacherAssignment.objects.create(
+                        session=live_class,
+                        assigned_by=request.user,
+                        new_teacher=teacher,
+                        reason=request.POST.get('assignment_reason', ''),
+                        notes=request.POST.get('assignment_notes', ''),
+                    )
+                except Exception as e:
+                    # Ignore assignment log errors - don't block creation
+                    print(f"WARNING: Error creating teacher assignment log (non-blocking): {str(e)}")
+                
+                # Create activity log entry (non-blocking)
                 try:
                     from myApp.activity_log import log_teacher_assigned
                     log_teacher_assigned(live_class, teacher, request.user, reason=request.POST.get('assignment_reason'))
-                except Exception:
-                    pass
+                except Exception as e:
+                    # Ignore activity log errors - don't block creation
+                    print(f"WARNING: Error creating activity log (non-blocking): {str(e)}")
             
             messages.success(request, f'Live class "{live_class.title}" created successfully!')
-            return redirect('dashboard:live_class_detail', session_id=live_class.id)
+            return redirect('dashboard:live_classes')
         except Exception as e:
+            import traceback
+            error_traceback = traceback.format_exc()
+            print(f"ERROR creating live class: {str(e)}")
+            print(f"Full traceback:\n{error_traceback}")
             messages.error(request, f'Error creating live class: {str(e)}')
     
     courses = Course.objects.filter(course_type__in=['live', 'hybrid']).order_by('title')
@@ -979,11 +1079,27 @@ def dashboard_check_teacher_availability(request):
     end_time_str = request.GET.get('end_time')
     exclude_session_id = request.GET.get('exclude_session_id')
     
-    if not teacher_id or not start_time_str or not end_time_str:
-        return JsonResponse({'error': 'Missing required parameters'}, status=400)
+    if not teacher_id:
+        return JsonResponse({'error': 'Missing required parameter: teacher_id'}, status=400)
     
     try:
         teacher = Teacher.objects.get(id=teacher_id)
+        
+        # Get upcoming sessions count (always available)
+        upcoming_sessions_count = LiveClassSession.objects.filter(
+            teacher=teacher,
+            status__in=['draft', 'scheduled', 'live'],
+            scheduled_start__gt=timezone.now()
+        ).count()
+        
+        # If start_time and end_time are not provided, just return the count
+        if not start_time_str or not end_time_str:
+            return JsonResponse({
+                'upcoming_sessions_count': upcoming_sessions_count,
+                'has_conflict': False,
+                'has_availability': None,
+                'conflicts': [],
+            })
         
         # Parse datetime strings
         from django.utils.dateparse import parse_datetime
@@ -1040,26 +1156,215 @@ def dashboard_check_teacher_availability(request):
         
         has_availability = recurring_match.exists() or one_time_match.exists()
         
+        conflicts_list = []
+        for c in conflicts[:5]:
+            conflict_data = {
+                'id': c.id,
+                'title': c.title or 'Untitled Session',
+            }
+            # Safely handle datetime serialization
+            if c.scheduled_start:
+                try:
+                    conflict_data['start'] = c.scheduled_start.isoformat()
+                except (AttributeError, TypeError):
+                    conflict_data['start'] = None
+            else:
+                conflict_data['start'] = None
+            
+            if c.scheduled_end:
+                try:
+                    conflict_data['end'] = c.scheduled_end.isoformat()
+                except (AttributeError, TypeError):
+                    conflict_data['end'] = None
+            else:
+                conflict_data['end'] = None
+            
+            conflicts_list.append(conflict_data)
+        
         return JsonResponse({
             'has_conflict': conflicts.exists(),
             'has_availability': has_availability,
-            'conflicts': [
-                {
-                    'id': c.id,
-                    'title': c.title,
-                    'start': c.scheduled_start.isoformat() if c.scheduled_start else None,
-                    'end': c.scheduled_end.isoformat() if c.scheduled_end else None,
-                }
-                for c in conflicts[:5]
-            ],
-            'upcoming_sessions_count': LiveClassSession.objects.filter(
-                teacher=teacher,
-                status__in=['draft', 'scheduled', 'live'],
-                scheduled_start__gt=timezone.now()
-            ).count(),
+            'conflicts': conflicts_list,
+            'upcoming_sessions_count': upcoming_sessions_count,
         })
     except Teacher.DoesNotExist:
         return JsonResponse({'error': 'Teacher not found'}, status=404)
+    except Exception as e:
+        import traceback
+        error_traceback = traceback.format_exc()
+        print(f"ERROR in check_teacher_availability: {str(e)}")
+        print(f"Full traceback:\n{error_traceback}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_create_course_api(request):
+    """API endpoint to create a course (returns JSON)"""
+    from django.http import JsonResponse
+    from django.utils.text import slugify
+    from django.utils import timezone
+    from myApp.models import Category
+    import json
+    
+    try:
+        # Handle JSON request body
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+        else:
+            data = request.POST
+        
+        title = data.get('title', '').strip()
+        if not title:
+            return JsonResponse({'error': 'Course title is required'}, status=400)
+        
+        # Generate slug
+        slug = data.get('slug', '').strip() or slugify(title)
+        base_slug = slug
+        counter = 1
+        while Course.objects.filter(slug=slug).exists():
+            slug = f"{base_slug}-{counter}"
+            counter += 1
+        
+        # Get price and currency
+        price = data.get('price', 0)
+        if price:
+            try:
+                price = float(price)
+            except (ValueError, TypeError):
+                price = 0
+        else:
+            price = 0
+        
+        currency = data.get('currency', 'USD')
+        is_free = data.get('is_free') == True or data.get('is_free') == 'true' or price == 0
+        
+        # Create course with minimal required fields
+        course = Course.objects.create(
+            title=title,
+            slug=slug,
+            description=data.get('description', ''),
+            short_description=data.get('short_description', '')[:300],
+            course_type=data.get('course_type', 'live'),  # Default to 'live' for live classes
+            level=data.get('level', 'beginner'),
+            price=price,
+            currency=currency,
+            is_free=is_free,
+            status='draft',
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'course': {
+                'id': course.id,
+                'title': course.title,
+                'slug': course.slug,
+                'description': course.description,
+                'course_type': course.course_type,
+                'level': course.level,
+                'price': float(course.price),
+                'currency': course.currency,
+                'is_free': course.is_free,
+            }
+        }, status=201)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@role_required(['admin'])
+def dashboard_get_course_api(request, course_id):
+    """API endpoint to get course data (returns JSON)"""
+    from django.http import JsonResponse
+    
+    try:
+        course = get_object_or_404(Course, id=course_id)
+        return JsonResponse({
+            'success': True,
+            'course': {
+                'id': course.id,
+                'title': course.title,
+                'description': course.description,
+                'course_type': course.course_type,
+                'level': course.level,
+                'price': float(course.price),
+                'currency': course.currency,
+                'is_free': course.is_free,
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_update_course_api(request, course_id):
+    """API endpoint to update a course (returns JSON)"""
+    from django.http import JsonResponse
+    import json
+    
+    try:
+        course = get_object_or_404(Course, id=course_id)
+        
+        # Handle JSON request body
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+        else:
+            data = request.POST
+        
+        # Update course fields
+        title = data.get('title', '').strip()
+        if title:
+            course.title = title
+        
+        if 'description' in data:
+            course.description = data.get('description', '')
+        
+        if 'course_type' in data:
+            course.course_type = data.get('course_type', course.course_type)
+        
+        if 'level' in data:
+            course.level = data.get('level', course.level)
+        
+        # Get price and currency
+        if 'price' in data:
+            price = data.get('price', 0)
+            if price:
+                try:
+                    price = float(price)
+                except (ValueError, TypeError):
+                    price = course.price
+            else:
+                price = 0
+            course.price = price
+        
+        if 'currency' in data:
+            course.currency = data.get('currency', course.currency)
+        
+        if 'is_free' in data:
+            is_free = data.get('is_free') == True or data.get('is_free') == 'true'
+            course.is_free = is_free
+            if is_free:
+                course.price = 0
+        
+        course.save()
+        
+        return JsonResponse({
+            'success': True,
+            'course': {
+                'id': course.id,
+                'title': course.title,
+                'slug': course.slug,
+                'description': course.description,
+                'course_type': course.course_type,
+                'level': course.level,
+                'price': float(course.price),
+                'currency': course.currency,
+                'is_free': course.is_free,
+            }
+        })
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 

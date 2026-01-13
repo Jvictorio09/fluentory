@@ -64,6 +64,9 @@ urlpatterns = [
     path('live-classes/<int:session_id>/', dashboard_views.dashboard_live_class_detail, name='live_class_detail'),
     path('live-classes/<int:session_id>/edit/', dashboard_views.dashboard_live_class_edit, name='live_class_edit'),
     path('api/check-teacher-availability/', dashboard_views.dashboard_check_teacher_availability, name='check_teacher_availability'),
+    path('api/create-course/', dashboard_views.dashboard_create_course_api, name='create_course_api'),
+    path('api/courses/<int:course_id>/', dashboard_views.dashboard_get_course_api, name='get_course_api'),
+    path('api/courses/<int:course_id>/update/', dashboard_views.dashboard_update_course_api, name='update_course_api'),
     
     # Analytics Dashboard
     path('analytics/', dashboard_views.dashboard_analytics, name='analytics'),

@@ -108,7 +108,15 @@
                 <p class="text-sm text-white/70 mb-4 leading-relaxed line-clamp-2">{{ course.outcome }}</p>
                 
                 <div class="flex items-center gap-4 text-xs text-white/60 mb-4">
+                    {% if course.course_type == 'live' %}
+                        {% if course.upcoming_sessions_count > 0 %}
+                        <span><i class="fas fa-video mr-1"></i> {{ course.upcoming_sessions_count }} upcoming session{{ course.upcoming_sessions_count|pluralize }}</span>
+                        {% else %}
+                        <span><i class="fas fa-video mr-1"></i> Live sessions coming soon</span>
+                        {% endif %}
+                    {% else %}
                     <span><i class="fas fa-layer-group mr-1"></i> {{ course.lessons_count }} lessons</span>
+                    {% endif %}
                     {% if course.has_certificate %}
                     <span><i class="fas fa-certificate mr-1"></i> Certificate</span>
                     {% endif %}

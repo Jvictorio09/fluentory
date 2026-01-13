@@ -103,6 +103,7 @@
   }
 </style>
 
+{% load i18n %}
 <section id="proof" class="relative overflow-hidden py-12 lg:py-16" style="background-color: var(--bg-primary);">
   <!-- Premium background -->
   <div class="absolute inset-0 z-0">
@@ -140,26 +141,25 @@
             <i class="fas fa-award text-sm" style="color: var(--accent-primary);"></i>
           </span>
           <span class="text-xs uppercase tracking-wider font-semibold" style="color: var(--text-primary);">
-            Proof of Learning
+            {% trans "Proof of Learning" %}
           </span>
           <span class="text-[10px] uppercase tracking-[0.28em] font-semibold"
             style="color: var(--text-tertiary);">
-            • placement • milestones • verification
+            • {% trans "placement" %} • {% trans "milestones" %} • {% trans "verification" %}
           </span>
         </div>
 
         <!-- Headline -->
         <h2 class="text-[2.9rem] sm:text-[3.5rem] lg:text-[3.9rem] font-extralight leading-[1.03] tracking-[-1px] mb-7"
           style="color: var(--text-primary);">
-          Not more courses.<br />
-          <span style="color: rgba(130,194,147,0.95);">Better outcomes.</span>
+          <span>{% trans "Not more courses." %}</span><br />
+          <span style="color: rgba(130,194,147,0.95);">{% trans "Better outcomes." %}</span>
         </h2>
 
         <!-- Description -->
         <p class="proof-muted text-base sm:text-lg leading-relaxed font-light mb-10 max-w-[560px]"
           style="color: var(--text-secondary);">
-          Fluentory places you correctly, keeps you moving with checkpoints, and certifies you with proof that can be verified.
-          No fluff. No “watched a video = completed.”
+          {% trans "Fluentory places you correctly, keeps you moving with checkpoints, and certifies you with proof that can be verified. No fluff. No \"watched a video = completed.\"" %}
         </p>
 
         <!-- Outcome rail -->
@@ -168,12 +168,12 @@
           <div class="flex items-center justify-between px-7 py-5"
             style="border-bottom: 1px solid var(--border-primary);">
             <div class="text-xs uppercase tracking-widest font-semibold" style="color: var(--text-secondary);">
-              Outcome System
+              {% trans "Outcome System" %}
             </div>
             <div class="inline-flex items-center gap-2 text-xs font-semibold"
               style="color: rgba(130,194,147,0.95);">
               <span class="w-2 h-2 rounded-full animate-pulse" style="background-color: rgba(130,194,147,0.95);"></span>
-              Live progress tracking
+              {% trans "Live progress tracking" %}
             </div>
           </div>
 
@@ -185,8 +185,8 @@
                 <span class="text-xs font-bold" style="color: rgba(130,194,147,0.95);">01</span>
               </div>
               <div>
-                <div class="text-base font-semibold mb-1" style="color: var(--text-primary);">Start at the right level</div>
-                <div class="proof-muted text-sm font-light" style="color: var(--text-secondary);">AI placement removes repetition and guesswork.</div>
+                <div class="text-base font-semibold mb-1" style="color: var(--text-primary);">{% trans "01 Start at the right level" %}</div>
+                <div class="proof-muted text-sm font-light" style="color: var(--text-secondary);">{% trans "AI placement removes repetition and guesswork." %}</div>
               </div>
             </div>
 
@@ -196,8 +196,8 @@
                 <span class="text-xs font-bold" style="color: rgba(130,194,147,0.95);">02</span>
               </div>
               <div>
-                <div class="text-base font-semibold mb-1" style="color: var(--text-primary);">Advance with milestones</div>
-                <div class="proof-muted text-sm font-light" style="color: var(--text-secondary);">Quizzes verify understanding before moving on.</div>
+                <div class="text-base font-semibold mb-1" style="color: var(--text-primary);">{% trans "02 Advance with milestones" %}</div>
+                <div class="proof-muted text-sm font-light" style="color: var(--text-secondary);">{% trans "Quizzes verify understanding before moving on." %}</div>
               </div>
             </div>
 
@@ -207,8 +207,8 @@
                 <span class="text-xs font-bold" style="color: rgba(130,194,147,0.95);">03</span>
               </div>
               <div>
-                <div class="text-base font-semibold mb-1" style="color: var(--text-primary);">Graduate with proof</div>
-                <div class="proof-muted text-sm font-light" style="color: var(--text-secondary);">QR + Certificate ID verification for employers.</div>
+                <div class="text-base font-semibold mb-1" style="color: var(--text-primary);">{% trans "03 Graduate with proof" %}</div>
+                <div class="proof-muted text-sm font-light" style="color: var(--text-secondary);">{% trans "QR + Certificate ID verification for employers." %}</div>
               </div>
             </div>
 
@@ -218,14 +218,14 @@
               <a href="{% url 'login' %}?next={% url 'student_placement' %}"
                 class="inline-flex items-center gap-2.5 rounded-2xl px-6 py-4 no-underline font-semibold transition-all duration-300 transform hover:scale-[1.02]"
                 style="background: linear-gradient(to right, var(--accent-cta), var(--accent-primary)); color: white; box-shadow: 0 16px 40px rgba(0,101,95,0.35);">
-                Take the Placement Test
+                {% trans "Take the Placement Test" %}
                 <i class="fas fa-arrow-right text-sm" style="color: rgba(255,255,255,0.9);"></i>
               </a>
 
               <a href="#certificates"
                 class="inline-flex items-center gap-2.5 rounded-2xl px-6 py-4 no-underline font-semibold transition-all duration-300 smooth-scroll"
                 style="border: 1px solid var(--border-primary); color: var(--text-primary);">
-                Verify a Certificate
+                {% trans "Verify a Certificate" %}
                 <i class="fas fa-qrcode text-sm" style="color: var(--accent-primary);"></i>
               </a>
             </div>
@@ -249,31 +249,31 @@
                   <i class="fas fa-brain text-lg" style="color: rgba(130,194,147,0.95);"></i>
                 </div>
                 <div>
-                  <h3 class="text-2xl font-semibold mb-1.5" style="color: var(--text-primary);">AI Placement Test</h3>
+                  <h3 class="text-2xl font-semibold mb-1.5" style="color: var(--text-primary);">{% trans "AI Placement Test" %}</h3>
                   <p class="proof-muted text-base font-light" style="color: var(--text-secondary);">
-                    Fast assessment + course recommendation tailored to your level.
+                    {% trans "Fast assessment + course recommendation tailored to your level." %}
                   </p>
                 </div>
               </div>
 
               <span class="hidden sm:inline-flex items-center gap-2 text-xs uppercase tracking-wider px-4 py-2 rounded-full font-semibold"
                 style="background-color: rgba(130,194,147,0.12); border: 1px solid rgba(130,194,147,0.22); color: rgba(130,194,147,0.95);">
-                Placement
+                {% trans "Placement" %}
               </span>
             </div>
 
             <div class="grid grid-cols-3 gap-3 mb-6">
               <div class="proof-chip rounded-2xl px-4 py-3">
-                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">Time</div>
-                <div class="text-sm font-semibold" style="color: var(--text-primary);">5–10 min</div>
+                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">{% trans "Time" %}</div>
+                <div class="text-sm font-semibold" style="color: var(--text-primary);">{% trans "5–10 min" %}</div>
               </div>
               <div class="proof-chip rounded-2xl px-4 py-3">
-                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">Result</div>
-                <div class="text-sm font-semibold" style="color: var(--text-primary);">Instant</div>
+                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">{% trans "Result" %}</div>
+                <div class="text-sm font-semibold" style="color: var(--text-primary);">{% trans "Instant" %}</div>
               </div>
               <div class="proof-chip rounded-2xl px-4 py-3">
-                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">Fit</div>
-                <div class="text-sm font-semibold" style="color: var(--text-primary);">Accurate</div>
+                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">{% trans "Fit" %}</div>
+                <div class="text-sm font-semibold" style="color: var(--text-primary);">{% trans "Accurate" %}</div>
               </div>
             </div>
 
@@ -282,11 +282,11 @@
               <a href="{% url 'login' %}?next={% url 'student_placement' %}"
                 class="inline-flex items-center gap-2.5 no-underline font-semibold"
                 style="color: var(--accent-primary);">
-                See example
+                {% trans "See example" %}
                 <i class="fas fa-arrow-right text-xs opacity-80 group-hover:translate-x-1 transition-all"></i>
               </a>
               <span class="text-xs font-semibold" style="color: var(--text-tertiary);">
-                Eliminates wasted time
+                {% trans "Eliminates wasted time" %}
               </span>
             </div>
           </div>
@@ -305,31 +305,31 @@
                   <i class="fas fa-tasks text-lg" style="color: rgba(130,194,147,0.95);"></i>
                 </div>
                 <div>
-                  <h3 class="text-2xl font-semibold mb-1.5" style="color: var(--text-primary);">Milestone Quizzes</h3>
+                  <h3 class="text-2xl font-semibold mb-1.5" style="color: var(--text-primary);">{% trans "Milestone Quizzes" %}</h3>
                   <p class="proof-muted text-base font-light" style="color: var(--text-secondary);">
-                    Checkpoints tied to lessons so progress is real—not assumed.
+                    {% trans "Checkpoints tied to lessons so progress is real—not assumed." %}
                   </p>
                 </div>
               </div>
 
               <span class="hidden sm:inline-flex items-center gap-2 text-xs uppercase tracking-wider px-4 py-2 rounded-full font-semibold"
                 style="background-color: rgba(130,194,147,0.12); border: 1px solid rgba(130,194,147,0.22); color: rgba(130,194,147,0.95);">
-                Milestones
+                {% trans "Milestones" %}
               </span>
             </div>
 
             <div class="grid grid-cols-3 gap-3 mb-6">
               <div class="proof-chip rounded-2xl px-4 py-3">
-                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">Format</div>
-                <div class="text-sm font-semibold" style="color: var(--text-primary);">Lesson-tied</div>
+                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">{% trans "Format" %}</div>
+                <div class="text-sm font-semibold" style="color: var(--text-primary);">{% trans "Lesson-tied" %}</div>
               </div>
               <div class="proof-chip rounded-2xl px-4 py-3">
-                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">Goal</div>
-                <div class="text-sm font-semibold" style="color: var(--text-primary);">Mastery</div>
+                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">{% trans "Goal" %}</div>
+                <div class="text-sm font-semibold" style="color: var(--text-primary);">{% trans "Mastery" %}</div>
               </div>
               <div class="proof-chip rounded-2xl px-4 py-3">
-                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">Path</div>
-                <div class="text-sm font-semibold" style="color: var(--text-primary);">Structured</div>
+                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">{% trans "Path" %}</div>
+                <div class="text-sm font-semibold" style="color: var(--text-primary);">{% trans "Structured" %}</div>
               </div>
             </div>
 
@@ -338,11 +338,11 @@
               <a href="#courses"
                 class="inline-flex items-center gap-2.5 no-underline font-semibold smooth-scroll"
                 style="color: var(--accent-primary);">
-                See example
+                {% trans "See example" %}
                 <i class="fas fa-arrow-right text-xs opacity-80 group-hover:translate-x-1 transition-all"></i>
               </a>
               <span class="text-xs font-semibold" style="color: var(--text-tertiary);">
-                Prevents drop-off
+                {% trans "Prevents drop-off" %}
               </span>
             </div>
           </div>
@@ -361,31 +361,31 @@
                   <i class="fas fa-qrcode text-lg" style="color: rgba(130,194,147,0.95);"></i>
                 </div>
                 <div>
-                  <h3 class="text-2xl font-semibold mb-1.5" style="color: var(--text-primary);">QR Verified Certificates</h3>
+                  <h3 class="text-2xl font-semibold mb-1.5" style="color: var(--text-primary);">{% trans "QR Verified Certificates" %}</h3>
                   <p class="proof-muted text-base font-light" style="color: var(--text-secondary);">
-                    Share proof that employers can verify instantly—no screenshots needed.
+                    {% trans "Share proof that employers can verify instantly—no screenshots needed." %}
                   </p>
                 </div>
               </div>
 
               <span class="hidden sm:inline-flex items-center gap-2 text-xs uppercase tracking-wider px-4 py-2 rounded-full font-semibold"
                 style="background-color: rgba(130,194,147,0.12); border: 1px solid rgba(130,194,147,0.22); color: rgba(130,194,147,0.95);">
-                Proof
+                {% trans "Proof" %}
               </span>
             </div>
 
             <div class="grid grid-cols-3 gap-3 mb-6">
               <div class="proof-chip rounded-2xl px-4 py-3">
-                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">Verify</div>
-                <div class="text-sm font-semibold" style="color: var(--text-primary);">QR + ID</div>
+                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">{% trans "Verify" %}</div>
+                <div class="text-sm font-semibold" style="color: var(--text-primary);">{% trans "QR + ID" %}</div>
               </div>
               <div class="proof-chip rounded-2xl px-4 py-3">
-                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">Status</div>
-                <div class="text-sm font-semibold" style="color: var(--text-primary);">Tamper-safe</div>
+                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">{% trans "Status" %}</div>
+                <div class="text-sm font-semibold" style="color: var(--text-primary);">{% trans "Tamper-safe" %}</div>
               </div>
               <div class="proof-chip rounded-2xl px-4 py-3">
-                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">Share</div>
-                <div class="text-sm font-semibold" style="color: var(--text-primary);">Global</div>
+                <div class="text-[10px] uppercase tracking-wider font-semibold" style="color: var(--text-tertiary);">{% trans "Share" %}</div>
+                <div class="text-sm font-semibold" style="color: var(--text-primary);">{% trans "Global" %}</div>
               </div>
             </div>
 
@@ -394,11 +394,11 @@
               <a href="#certificates"
                 class="inline-flex items-center gap-2.5 no-underline font-semibold smooth-scroll"
                 style="color: var(--accent-primary);">
-                See example
+                {% trans "See example" %}
                 <i class="fas fa-arrow-right text-xs opacity-80 group-hover:translate-x-1 transition-all"></i>
               </a>
               <span class="text-xs font-semibold" style="color: var(--text-tertiary);">
-                Employer-ready
+                {% trans "Employer-ready" %}
               </span>
             </div>
           </div>

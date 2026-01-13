@@ -2,9 +2,33 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.conf.urls.i18n import i18n_patterns
 from myApp import views
 
+# Language switcher endpoint (must be outside i18n_patterns)
 urlpatterns = [
+    path('i18n/', include('django.conf.urls.i18n')),
+]
+
+# API endpoints (don't need translation)
+urlpatterns += [
+    path('api/enroll/', views.enroll_course, name='enroll_course'),
+    path('api/set-currency/', views.set_currency, name='set_currency'),
+    path('api/course/<int:course_id>/price/', views.get_course_price, name='get_course_price'),
+    path('api/mark-complete/', views.mark_lesson_complete, name='mark_lesson_complete'),
+    path('api/tutor/chat/', views.ai_tutor_chat, name='ai_tutor_chat'),
+    path('api/purchase-gift/', views.purchase_gift, name='purchase_gift'),
+    path('api/claim-gift/', views.claim_gift_authenticated, name='claim_gift_authenticated'),
+    path('api/courses/', views.api_courses, name='api_courses'),
+    path('api/courses/filter/', views.api_courses_filter, name='api_courses_filter'),
+    path('api/notifications/', views.api_notifications, name='api_notifications'),
+    path('api/notifications/read/', views.api_mark_notification_read, name='api_mark_notification_read'),
+    path('api/update-language/', views.api_update_language, name='api_update_language'),
+    path('api/teacher/activity-feed/', views.api_teacher_activity_feed, name='api_teacher_activity_feed'),
+]
+
+# URLs that need translation (wrapped in i18n_patterns)
+urlpatterns += i18n_patterns(
     # Django's default admin (hidden from regular users)
     path('django-admin/', admin.site.urls),
     
@@ -38,7 +62,6 @@ urlpatterns = [
     path('student/live-classes/', views.student_live_classes, name='student_live_classes'),
     path('student/live-classes/<int:session_id>/detail/', views.student_live_class_detail_modal, name='student_live_class_detail_modal'),
     path('student/teachers/<int:teacher_id>/', views.student_teacher_profile, name='student_teacher_profile'),
-    path('api/enroll/', views.enroll_course, name='enroll_course'),
     path('student/placement/', views.student_placement, name='student_placement'),
     path('student/learning/', views.student_learning, name='student_learning'),
     path('student/certificates/', views.student_certificates, name='student_certificates'),
@@ -59,17 +82,8 @@ urlpatterns = [
     path('student/quiz/<int:quiz_id>/', views.take_quiz, name='take_quiz'),
     path('student/quiz/result/<int:attempt_id>/', views.quiz_result, name='quiz_result'),
     
-    # Student API endpoints
-    path('api/set-currency/', views.set_currency, name='set_currency'),
-    path('api/course/<int:course_id>/price/', views.get_course_price, name='get_course_price'),
-    path('api/mark-complete/', views.mark_lesson_complete, name='mark_lesson_complete'),
-    path('api/enroll/', views.enroll_course, name='enroll_course'),
-    path('api/tutor/chat/', views.ai_tutor_chat, name='ai_tutor_chat'),
-    
     # Gift a Course
-    path('api/purchase-gift/', views.purchase_gift, name='purchase_gift'),
     path('gift/claim/<uuid:gift_token>/', views.claim_gift, name='claim_gift'),
-    path('api/claim-gift/', views.claim_gift_authenticated, name='claim_gift_authenticated'),
     path('student/gift-confirmation/<int:gift_id>/', views.gift_confirmation, name='gift_confirmation'),
     
     # Certificate verification (public)
@@ -131,7 +145,8 @@ urlpatterns = [
     path('api/notifications/read/', views.api_mark_notification_read, name='api_mark_notification_read'),
     path('api/update-language/', views.api_update_language, name='api_update_language'),
     path('api/teacher/activity-feed/', views.api_teacher_activity_feed, name='api_teacher_activity_feed'),
-]
+    prefix_default_language=False,  # Don't prefix /en/ for English
+)
 
 # Serve media files in development
 if settings.DEBUG:

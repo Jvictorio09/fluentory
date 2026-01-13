@@ -1,3 +1,4 @@
+{% load i18n %}
 <section id="courses"
   class="relative overflow-hidden py-20 lg:py-28"
   style="background-color: var(--bg-primary);">
@@ -23,11 +24,11 @@
       <div>
         <h2 class="text-[3.4rem] sm:text-[3.8rem] lg:text-[4.2rem] font-extralight tracking-[-1px] mb-4"
             style="color: var(--text-primary);">
-          Featured Programs
+          {% trans "Featured Programs" %}
         </h2>
         <p class="text-lg font-light max-w-[520px]"
            style="color: var(--text-secondary);">
-          Curated learning paths designed for measurable outcomes and real-world impact.
+          {% trans "Curated learning paths designed for measurable outcomes and real-world impact." %}
         </p>
       </div>
 
@@ -39,32 +40,32 @@
             color: white;
             box-shadow: 0 12px 30px rgba(0,101,95,0.35);
           ">
-          All Programs
+          {% trans "All Programs" %}
         </button>
 
         <button data-filter="beginner" class="filter-btn px-6 py-3 rounded-full text-sm font-medium transition-all"
           style="background-color: var(--bg-elevated); color: var(--text-primary);">
-          Beginner
+          {% trans "Beginner" %}
         </button>
 
         <button data-filter="intermediate" class="filter-btn px-6 py-3 rounded-full text-sm font-medium transition-all"
           style="background-color: var(--bg-elevated); color: var(--text-primary);">
-          Intermediate
+          {% trans "Intermediate" %}
         </button>
 
         <button data-filter="advanced" class="filter-btn px-6 py-3 rounded-full text-sm font-medium transition-all"
           style="background-color: var(--bg-elevated); color: var(--text-primary);">
-          Advanced
+          {% trans "Advanced" %}
         </button>
 
         <button data-filter="business" class="filter-btn px-6 py-3 rounded-full text-sm font-medium transition-all"
           style="background-color: var(--bg-elevated); color: var(--text-primary);">
-          Business
+          {% trans "Business" %}
         </button>
 
         <button data-filter="language" class="filter-btn px-6 py-3 rounded-full text-sm font-medium transition-all"
           style="background-color: var(--bg-elevated); color: var(--text-primary);">
-          Language
+          {% trans "Language" %}
         </button>
       </div>
     </div>
@@ -85,29 +86,29 @@
                style="background: linear-gradient(to top, rgba(4,54,58,0.45), transparent);"></div>
           <div class="absolute top-5 right-5 px-4 py-2 rounded-full text-xs font-medium"
                style="background-color: rgba(255,255,255,0.85); color: #04363A;">
-            30-sec Preview
+            {% trans "30-sec Preview" %}
           </div>
         </div>
 
         <div class="p-8">
           <div class="flex justify-between items-start mb-5">
             <h3 class="text-2xl font-light leading-tight" style="color: var(--text-primary);">
-              Introduction to Data Science
+              {% trans "Introduction to Data Science" %}
             </h3>
             <span class="text-xs px-4 py-1.5 rounded-full"
                   style="background-color: rgba(130,194,147,0.18); color: var(--accent-cta);">
-              Beginner
+              {% trans "Beginner" %}
             </span>
           </div>
 
           <p class="text-base font-light leading-relaxed mb-8"
              style="color: var(--text-secondary);">
-            Master the foundations of data analysis, visualization, and decision-making.
+            {% trans "Master the foundations of data analysis, visualization, and decision-making." %}
           </p>
 
           <div class="flex gap-6 text-sm mb-8" style="color: var(--text-secondary);">
-            <span>40 hrs</span>
-            <span>Preview Included</span>
+            <span>{% trans "40 hrs" %}</span>
+            <span>{% trans "Preview Included" %}</span>
           </div>
 
           <div class="flex justify-between items-center pt-6"
@@ -115,7 +116,7 @@
             <span class="text-3xl font-semibold" style="color: var(--text-primary);">$299</span>
             <a href="#" class="inline-flex items-center gap-2 text-sm font-medium transition-all"
                style="color: var(--accent-primary);">
-              View Program <i class="fas fa-arrow-right text-xs"></i>
+              {% trans "View Program" %} <i class="fas fa-arrow-right text-xs"></i>
             </a>
           </div>
         </div>

@@ -575,6 +575,28 @@ def student_courses(request):
     page = request.GET.get('page', 1)
     courses = paginator.get_page(page)
     
+    # Add upcoming sessions count for live courses on the current page
+    from django.utils import timezone
+    now = timezone.now()
+    from myApp.models import LiveClassSession
+    from django.db.models import Count
+    live_course_ids = [c.id for c in courses if c.course_type == 'live']
+    upcoming_sessions_count = {}
+    if live_course_ids:
+        upcoming_sessions_count = dict(
+            LiveClassSession.objects.filter(
+                course_id__in=live_course_ids,
+                status='scheduled',
+                scheduled_start__gt=now
+            ).values('course_id').annotate(
+                count=Count('id')
+            ).values_list('course_id', 'count')
+        )
+        # Add count to each live course in the page
+        for course in courses:
+            if course.course_type == 'live':
+                course.upcoming_sessions_count = upcoming_sessions_count.get(course.id, 0)
+    
     # Get selected currency from session
     selected_currency = request.session.get('selected_currency', 'USD')
     

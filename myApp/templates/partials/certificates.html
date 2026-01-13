@@ -1,3 +1,4 @@
+{% load i18n %}
 <section id="certificates"
   class="relative overflow-hidden py-20 lg:py-28"
   style="background-color: var(--bg-primary);">
@@ -32,21 +33,20 @@
         <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs uppercase tracking-wider font-medium"
              style="background-color: rgba(130,194,147,0.18); color: var(--accent-cta);">
           <i class="fas fa-shield-halved"></i>
-          Trust & Verification
+          {% trans "Trust & Verification" %}
         </div>
 
         <!-- Headline -->
         <h2 class="text-[3rem] sm:text-[3.6rem] lg:text-[4rem] font-extralight leading-[1.05]"
             style="color: var(--text-primary);">
-          Verified Certificates.<br />
-          Employer-Ready Proof.
+          {% trans "Verified Certificates." %}<br />
+          {% trans "Employer-Ready Proof." %}
         </h2>
 
         <!-- Copy -->
         <p class="text-lg font-light leading-relaxed max-w-[620px]"
            style="color: var(--text-secondary);">
-          Every Fluentory certificate is uniquely issued, QR-verifiable, and
-          backed by a tamper-resistant verification record.
+          {% trans "Every Fluentory certificate is uniquely issued, QR-verifiable, and backed by a tamper-resistant verification record." %}
         </p>
 
         <!-- Verification Panel -->
@@ -74,13 +74,13 @@
 
             <div class="text-xs uppercase tracking-widest font-semibold"
                  style="color: var(--text-tertiary);">
-              Verify Certificate
+              {% trans "Verify Certificate" %}
             </div>
 
             <div class="flex flex-col sm:flex-row gap-4">
               <input
                 type="text"
-                placeholder="Certificate ID (e.g., FLU-2026-0X92A)"
+                placeholder="{% trans 'Certificate ID (e.g., FLU-2026-0X92A)' %}"
                 class="w-full rounded-2xl px-5 py-4 focus:outline-none"
                 style="
                   background-color: var(--bg-elevated);
@@ -97,14 +97,14 @@
                   color: white;
                   box-shadow: 0 18px 45px rgba(0,101,95,0.35);
                 ">
-                Verify
+                {% trans "Verify" %}
                 <i class="fas fa-arrow-right ml-2 opacity-80"></i>
               </button>
             </div>
 
             <p class="text-xs font-medium"
                style="color: var(--text-secondary);">
-              Verification confirms issuance, completion status, and authenticity.
+              {% trans "Verification confirms issuance, completion status, and authenticity." %}
             </p>
           </div>
         </div>
@@ -114,19 +114,19 @@
           <div class="inline-flex items-center gap-2.5 px-5 py-3 rounded-full text-sm font-medium"
                style="background-color: rgba(130,194,147,0.16); color: var(--text-primary);">
             <i class="fas fa-qrcode" style="color: var(--accent-primary);"></i>
-            QR Verified
+            {% trans "QR Verified" %}
           </div>
 
           <div class="inline-flex items-center gap-2.5 px-5 py-3 rounded-full text-sm font-medium"
                style="background-color: rgba(130,194,147,0.16); color: var(--text-primary);">
             <i class="fas fa-building" style="color: var(--accent-primary);"></i>
-            Employer-Ready
+            {% trans "Employer-Ready" %}
           </div>
 
           <div class="inline-flex items-center gap-2.5 px-5 py-3 rounded-full text-sm font-medium"
                style="background-color: rgba(130,194,147,0.16); color: var(--text-primary);">
             <i class="fas fa-lock" style="color: var(--accent-primary);"></i>
-            Fraud-Resistant
+            {% trans "Fraud-Resistant" %}
           </div>
         </div>
       </div>
@@ -148,13 +148,13 @@
             <div class="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs uppercase tracking-wider font-medium"
                  style="background-color: rgba(130,194,147,0.18); color: var(--accent-cta);">
               <i class="fas fa-award"></i>
-              Certificate Preview
+              {% trans "Certificate Preview" %}
             </div>
 
             <div class="hidden sm:inline-flex items-center gap-2 text-xs px-4 py-2 rounded-full"
                  style="background-color: rgba(130,194,147,0.14); color: var(--text-secondary);">
               <i class="fas fa-qrcode" style="color: var(--accent-primary);"></i>
-              QR Verified
+              {% trans "QR Verified" %}
             </div>
           </div>
 
@@ -187,7 +187,7 @@
                   </div>
                   <div class="text-3xl font-light mt-3"
                        style="color: var(--text-primary);">
-                    Certificate of Completion
+                    {% trans "Certificate of Completion" %}
                   </div>
                 </div>
 
@@ -209,7 +209,7 @@
                      style="background-color: var(--bg-elevated);">
                   <div class="text-xs uppercase tracking-wider font-semibold"
                        style="color: var(--text-tertiary);">
-                    Certificate ID
+                    {% trans "Certificate ID" %}
                   </div>
                   <div class="text-base font-semibold"
                        style="color: var(--text-primary);">
@@ -221,11 +221,11 @@
                      style="background-color: var(--bg-elevated);">
                   <div class="text-xs uppercase tracking-wider font-semibold"
                        style="color: var(--text-tertiary);">
-                    Issued
+                    {% trans "Issued" %}
                   </div>
                   <div class="text-base font-semibold"
                        style="color: var(--text-primary);">
-                    Instantly after completion
+                    {% trans "Instantly after completion" %}
                   </div>
                 </div>
               </div>
@@ -234,7 +234,7 @@
 
           <p class="text-xs mt-5 font-medium"
              style="color: var(--text-secondary);">
-            Preview only. Actual certificates include live QR verification.
+            {% trans "Preview only. Actual certificates include live QR verification." %}
           </p>
         </div>
       </div>

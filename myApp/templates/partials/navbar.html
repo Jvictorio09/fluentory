@@ -1,3 +1,4 @@
+{% load i18n %}
 <nav class="navbar sticky top-0 bg-transparent backdrop-blur-md z-[1000] transition-all duration-300 border-b border-transparent" style="height: 72px; min-height: 72px; max-height: 72px; pointer-events: auto;">
     <style>
         /* Logo visibility in light mode */
@@ -12,8 +13,34 @@
             filter: none;
             opacity: 1;
         }
+        
+        /* RTL support for navbar */
+        html[dir="rtl"] .navbar .ml-auto {
+            margin-left: 0;
+            margin-right: auto;
+        }
+        
+        /* Better spacing for Arabic text */
+        html[dir="rtl"] .navbar a,
+        html[dir="rtl"] .navbar button {
+            text-align: right;
+        }
+        
+        /* Responsive button text */
+        @media (max-width: 1024px) {
+            .navbar .placement-test-btn {
+                font-size: 0.75rem;
+                padding-left: 0.75rem;
+                padding-right: 0.75rem;
+            }
+        }
+        
+        /* Ensure buttons don't overflow */
+        .navbar .flex-shrink-0 {
+            flex-shrink: 0;
+        }
     </style>
-    <div class="max-w-[1600px] mx-auto px-8 lg:px-20 h-full flex items-center relative">
+    <div class="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 xl:px-20 h-full flex items-center relative">
         <!-- Logo Container - Left side -->
         <div class="flex items-center" style="min-width: 0;">
             <a href="{% url 'home' %}" class="inline-flex items-center hover:opacity-90 transition-opacity" style="line-height: 0;">
@@ -28,62 +55,51 @@
         </div>
         
         <!-- Navigation Links - Centered -->
-        <div class="hidden lg:flex gap-10 items-center h-full absolute left-1/2 transform -translate-x-1/2" style="pointer-events: auto; z-index: 10;">
+        <div class="hidden lg:flex gap-6 xl:gap-10 items-center h-full absolute left-1/2 transform -translate-x-1/2" style="pointer-events: auto; z-index: 10;">
             <a href="{% url 'home' %}#courses" class="no-underline text-sm font-semibold relative group transition-colors flex items-center h-full smooth-scroll" style="color: var(--text-secondary); pointer-events: auto;">
-                <span>Courses</span>
+                <span>{% trans "Courses" %}</span>
                 <span class="absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full" style="background-color: var(--accent-primary);"></span>
             </a>
             <a href="{% url 'home' %}#outcomes" class="no-underline text-sm font-semibold relative group transition-colors flex items-center h-full smooth-scroll" style="color: var(--text-secondary); pointer-events: auto;">
-                <span>Outcomes</span>
+                <span>{% trans "Outcomes" %}</span>
                 <span class="absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full" style="background-color: var(--accent-primary);"></span>
             </a>
             <a href="{% url 'home' %}#proof" class="no-underline text-sm font-semibold relative group transition-colors flex items-center h-full smooth-scroll" style="color: var(--text-secondary); pointer-events: auto;">
-                <span>Proof</span>
+                <span>{% trans "Proof" %}</span>
                 <span class="absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full" style="background-color: var(--accent-primary);"></span>
             </a>
             <a href="{% url 'home' %}#pricing" class="no-underline text-sm font-semibold relative group transition-colors flex items-center h-full smooth-scroll" style="color: var(--text-secondary); pointer-events: auto;">
-                <span>Pricing</span>
+                <span>{% trans "Pricing" %}</span>
                 <span class="absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full" style="background-color: var(--accent-primary);"></span>
             </a>
         </div>
         
         <!-- Right Side Actions -->
-        <div class="flex items-center gap-4 h-full ml-auto" style="pointer-events: auto; z-index: 10;">
+        <div class="flex items-center gap-3 sm:gap-4 h-full ml-auto flex-shrink-0" style="pointer-events: auto; z-index: 10;">
             {% include 'partials/theme_toggle.html' %}
-            <div class="relative group" id="language-selector">
-                <div class="text-base cursor-pointer flex items-center gap-2 transition-colors font-medium" style="color: var(--text-secondary);">
-                    <i class="fas fa-globe text-sm"></i>
-                    <span class="text-sm" id="current-language">EN</span>
-                    <i class="fas fa-chevron-down text-xs ml-1"></i>
-                </div>
-                <div class="absolute right-0 top-full mt-2 w-40 backdrop-blur-xl rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50" style="background-color: var(--bg-elevated); border: 1px solid var(--border-primary);">
-                    <a href="#" class="language-option block px-4 py-2.5 text-sm transition-colors rounded-t-xl" style="color: var(--text-tertiary);" data-lang="en" data-code="EN">English</a>
-                    <a href="#" class="language-option block px-4 py-2.5 text-sm transition-colors" style="color: var(--text-tertiary);" data-lang="es" data-code="ES">Español</a>
-                    <a href="#" class="language-option block px-4 py-2.5 text-sm transition-colors rounded-b-xl" style="color: var(--text-tertiary);" data-lang="fr" data-code="FR">Français</a>
-                </div>
-            </div>
-            <!-- Global Switch View (visible on marketing pages, hidden on home and footer pages via context processor) -->
+            {% include 'partials/language_switcher.html' %}
+            <!-- Global Switch View (visible on marketing pages, hidden on home and footer pages via context processor, and only for authenticated users) -->
             {% comment %}hide_switch_view is provided by myApp.context_processors.hide_switch_view_context{% endcomment %}
-            {% if not hide_switch_view %}
-            <div class="relative" id="global-switch-view">
-                <button id="switch-view-btn" aria-haspopup="true" aria-expanded="false" aria-controls="switch-view-menu" class="px-3 py-2 rounded-md text-sm font-medium flex items-center gap-2 transition-all" style="background-color: var(--bg-elevated); border: 1px solid var(--border-primary); color: var(--text-primary);">
-                    <i class="fas fa-exchange-alt"></i>
-                    <span>Switch View</span>
-                    <i class="fas fa-chevron-down text-xs ml-1" aria-hidden="true"></i>
+            {% if user.is_authenticated and not hide_switch_view %}
+            <div class="relative hidden xl:block" id="global-switch-view">
+                <button id="switch-view-btn" aria-haspopup="true" aria-expanded="false" aria-controls="switch-view-menu" class="px-3 py-2 rounded-md text-xs sm:text-sm font-medium flex items-center gap-1.5 sm:gap-2 transition-all whitespace-nowrap" style="background-color: var(--bg-elevated); border: 1px solid var(--border-primary); color: var(--text-primary);">
+                    <i class="fas fa-exchange-alt text-xs"></i>
+                    <span class="hidden lg:inline">{% trans "Switch View" %}</span>
+                    <i class="fas fa-chevron-down text-xs" aria-hidden="true"></i>
                 </button>
                 <div id="switch-view-menu" role="menu" aria-labelledby="switch-view-btn" class="absolute right-0 top-full mt-2 w-48 backdrop-blur-xl rounded-lg shadow-lg opacity-0 invisible transition-all duration-200 z-50" style="transform-origin: top right; background-color: var(--bg-elevated); border: 1px solid var(--border-primary);">
-                    <a role="menuitem" href="{% url 'dashboard:switch_role' %}?role=admin_dashboard" class="block px-4 py-2 text-sm" style="color: var(--text-tertiary);">Admin</a>
-                    <a role="menuitem" href="{% url 'dashboard:switch_role' %}?role=student" class="block px-4 py-2 text-sm" style="color: var(--text-tertiary);">Student</a>
-                    <a role="menuitem" href="{% url 'dashboard:switch_role' %}?role=teacher" class="block px-4 py-2 text-sm" style="color: var(--text-tertiary);">Teacher</a>
-                    <a role="menuitem" href="{% url 'dashboard:switch_role' %}?role=partner" class="block px-4 py-2 text-sm" style="color: var(--text-tertiary);">Partner</a>
+                    <a role="menuitem" href="{% url 'dashboard:switch_role' %}?role=admin_dashboard" class="block px-4 py-2 text-sm" style="color: var(--text-tertiary);">{% trans "Admin" %}</a>
+                    <a role="menuitem" href="{% url 'dashboard:switch_role' %}?role=student" class="block px-4 py-2 text-sm" style="color: var(--text-tertiary);">{% trans "Student" %}</a>
+                    <a role="menuitem" href="{% url 'dashboard:switch_role' %}?role=teacher" class="block px-4 py-2 text-sm" style="color: var(--text-tertiary);">{% trans "Teacher" %}</a>
+                    <a role="menuitem" href="{% url 'dashboard:switch_role' %}?role=partner" class="block px-4 py-2 text-sm" style="color: var(--text-tertiary);">{% trans "Partner" %}</a>
                 </div>
             </div>
             {% endif %}
-            <a href="{% url 'login' %}?show=login" class="no-underline text-[0.95rem] font-semibold relative group transition-colors flex items-center h-full" style="color: var(--text-secondary);">
-                <span>Login</span>
+            <a href="{% url 'login' %}?show=login" class="no-underline text-sm font-semibold relative group transition-colors flex items-center h-full whitespace-nowrap px-2" style="color: var(--text-secondary);">
+                <span>{% trans "Login" %}</span>
                 <span class="absolute bottom-0 left-0 w-0 h-0.5 transition-all duration-300 group-hover:w-full" style="background-color: var(--accent-primary);"></span>
             </a>
-            <a href="{% url 'login' %}?next={% url 'student_placement' %}" class="text-white px-6 py-2 rounded-full no-underline text-sm font-medium hover:opacity-90 transition-all duration-300 flex items-center transform hover:scale-[1.02]" style="height: 40px; line-height: 1; background: linear-gradient(to right, var(--accent-cta), var(--accent-primary)); box-shadow: 0 4px 12px rgba(0,101,95,0.25);">Take Placement Test</a>
+            <a href="{% url 'login' %}?next={% url 'student_placement' %}" class="placement-test-btn text-white px-4 sm:px-5 lg:px-6 py-2 rounded-full no-underline text-xs sm:text-sm font-medium hover:opacity-90 transition-all duration-300 flex items-center justify-center transform hover:scale-[1.02] whitespace-nowrap flex-shrink-0" style="height: 40px; line-height: 1.2; background: linear-gradient(to right, var(--accent-cta), var(--accent-primary)); box-shadow: 0 4px 12px rgba(0,101,95,0.25); min-width: fit-content; max-width: 100%;">{% trans "Take Placement Test" %}</a>
         </div>
     </div>
 </nav>

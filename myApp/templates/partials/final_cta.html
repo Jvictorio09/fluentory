@@ -1,3 +1,4 @@
+{% load i18n %}
 <section class="relative py-12 lg:py-16 text-center overflow-hidden" style="background-color: var(--bg-primary); color: var(--text-primary);">
     <!-- Background gradient splashes in corners -->
     <div class="absolute inset-0">
@@ -12,22 +13,22 @@
     <div class="max-w-[900px] mx-auto px-8 lg:px-20 relative z-10">
         <!-- Headline with improved spacing -->
         <h2 class="text-5xl sm:text-6xl lg:text-[5.5rem] font-extralight mb-8 tracking-[-2px] leading-[1.05]" style="color: var(--text-primary);">
-            Find Your Level.<br>Start Today.
+            {% trans "Find Your Level." %}<br>{% trans "Start Today." %}
         </h2>
         
         <!-- Description with better spacing -->
         <p class="text-xl sm:text-2xl mb-14 font-light leading-relaxed max-w-[680px] mx-auto" style="color: var(--text-secondary);">
-            Take the placement test and get a personalized path in minutes.
+            {% trans "Take the placement test and get a personalized path in minutes." %}
         </p>
         
         <!-- Enhanced CTAs -->
         <div class="flex flex-col sm:flex-row gap-5 justify-center mb-12">
             <a href="{% url 'login' %}?next={% url 'student_placement' %}" class="group inline-flex items-center justify-center gap-3 py-6 px-14 rounded-2xl no-underline text-lg font-semibold transition-all duration-300 transform hover:scale-[1.02]" style="background-color: var(--bg-secondary); color: var(--accent-cta); box-shadow: 0 20px 50px rgba(255,255,255,0.2);">
-                Take the Free Placement Test
+                {% trans "Take the Free Placement Test" %}
                 <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform" style="color: rgba(0,101,95,0.7);"></i>
             </a>
             <a href="#courses" class="inline-flex items-center justify-center border-2 backdrop-blur-md py-6 px-14 rounded-2xl no-underline text-lg font-semibold transition-all duration-300 smooth-scroll" style="background-color: rgba(4,54,58,0.4); border-color: var(--border-primary); color: var(--text-primary);">
-                Browse Programs
+                {% trans "Browse Programs" %}
             </a>
         </div>
         
@@ -37,19 +38,19 @@
                 <div class="w-10 h-10 rounded-xl border grid place-items-center" style="background-color: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.3);">
                     <i class="fas fa-shield-halved" style="color: var(--text-primary);"></i>
                 </div>
-                <span>Secure checkout</span>
+                <span>{% trans "Secure checkout" %}</span>
             </div>
             <div class="flex items-center gap-3 text-sm font-medium" style="color: var(--text-secondary);">
                 <div class="w-10 h-10 rounded-xl border grid place-items-center" style="background-color: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.3);">
                     <i class="fas fa-globe" style="color: var(--text-primary);"></i>
                 </div>
-                <span>Global access</span>
+                <span>{% trans "Global access" %}</span>
             </div>
             <div class="flex items-center gap-3 text-sm font-medium" style="color: var(--text-secondary);">
                 <div class="w-10 h-10 rounded-xl border grid place-items-center" style="background-color: rgba(255,255,255,0.2); border-color: rgba(255,255,255,0.3);">
                     <i class="fas fa-award" style="color: var(--text-primary);"></i>
                 </div>
-                <span>Verified certification</span>
+                <span>{% trans "Verified certification" %}</span>
             </div>
         </div>
     </div>
