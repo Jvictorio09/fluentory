@@ -3,37 +3,15 @@
 {% block content %}
 <div class="max-w-4xl mx-auto space-y-8 sm:space-y-10">
     <!-- Page Header with Back Button -->
-    <div class="flex flex-col gap-4 mb-10">
-        <a href="{% url 'teacher_quiz_edit' course.id quiz.id %}" class="inline-flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors w-fit">
+    <div class="mb-8 sm:mb-10">
+        <a href="{% url 'teacher_quiz_edit' course.id quiz.id %}" class="inline-flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors w-fit mb-6">
             <i class="fas fa-arrow-left"></i>
             <span>Back to Quiz</span>
         </a>
         <div>
-            <h1 class="text-4xl sm:text-5xl font-bold mb-3 tracking-tight leading-tight" style="color: #0f172a !important;" onmouseover="this.style.color='#0f172a'" onmouseout="this.style.color='#0f172a'">{{ quiz.title }} – Questions</h1>
-            <p class="text-base sm:text-lg font-normal tracking-wide leading-relaxed" style="color: #475569 !important;">Add and manage quiz questions</p>
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-slate-900 dark:text-slate-50 mb-3 tracking-[-0.02em]">{{ quiz.title }} – Questions</h1>
+            <p class="text-base sm:text-lg text-slate-600 dark:text-slate-300 font-light">Add and manage quiz questions</p>
         </div>
-        <style>
-            [data-theme="light"] h1.text-4xl,
-            [data-theme="light"] h1.text-5xl {
-                color: #0f172a !important; /* slate-900 - very dark */
-            }
-            [data-theme="light"] p.text-base,
-            [data-theme="light"] p.text-lg {
-                color: #475569 !important; /* slate-600 - dark grey */
-            }
-            [data-theme="dark"] h1.text-4xl,
-            [data-theme="dark"] h1.text-5xl,
-            .dark h1.text-4xl,
-            .dark h1.text-5xl {
-                color: #f8fafc !important; /* slate-50 - very light, almost white */
-            }
-            [data-theme="dark"] p.text-base,
-            [data-theme="dark"] p.text-lg,
-            .dark p.text-base,
-            .dark p.text-lg {
-                color: #e2e8f0 !important; /* slate-200 - light grey, very readable */
-            }
-        </style>
     </div>
     
     <div class="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent mb-8"></div>
@@ -126,7 +104,7 @@
             
             <!-- Submit Button -->
             <div class="pt-6 border-t border-slate-200 dark:border-white/10">
-                <button type="submit" class="btn-primary">
+                <button type="submit" class="btn-cta-primary">
                     <i class="fas fa-plus"></i>
                     Add Question
                 </button>
@@ -253,79 +231,125 @@
                 descriptionEl.textContent = 'Create a short answer question where students type their response';
             }
             
-            // Remove required from all hidden fields to prevent validation blocking
-            const mcqInputs = document.querySelectorAll('#mcqSection input[required]');
-            const tfInputs = document.querySelectorAll('#trueFalseSection input[required]');
-            const saInputs = document.querySelectorAll('#shortAnswerSection input[required]');
+            // Get all sections
+            const mcqSection = document.getElementById('mcqSection');
+            const trueFalseSection = document.getElementById('trueFalseSection');
+            const shortAnswerSection = document.getElementById('shortAnswerSection');
+            const mcqContainer = document.getElementById('answersContainer');
+            const trueFalseContainer = document.getElementById('trueFalseContainer');
             
-            // Hide all sections and remove required from hidden ones
-            document.getElementById('mcqSection').style.display = 'none';
-            mcqInputs.forEach(input => {
-                input.removeAttribute('required');
-                input.setAttribute('data-was-required', 'true');
+            // Hide all sections first and disable their inputs
+            [mcqSection, trueFalseSection, shortAnswerSection].forEach(section => {
+                if (section) {
+                    section.style.display = 'none';
+                    // Disable all inputs in hidden sections to prevent submission
+                    const inputs = section.querySelectorAll('input, textarea, select');
+                    inputs.forEach(input => {
+                        input.disabled = true;
+                        input.removeAttribute('required');
+                    });
+                }
             });
             
-            document.getElementById('trueFalseSection').style.display = 'none';
-            tfInputs.forEach(input => {
-                input.removeAttribute('required');
-                input.setAttribute('data-was-required', 'true');
-            });
-            
-            document.getElementById('shortAnswerSection').style.display = 'none';
-            saInputs.forEach(input => {
-                input.removeAttribute('required');
-                input.setAttribute('data-was-required', 'true');
-            });
-            
+            // Clear and reset sections based on selected type
             if (questionType === 'multiple_choice') {
-                document.getElementById('mcqSection').style.display = 'block';
-                // Restore required attributes for visible MCQ fields
+                // Show MCQ section
+                mcqSection.style.display = 'block';
+                // Clear True/False container if it exists
+                if (trueFalseContainer) {
+                    trueFalseContainer.innerHTML = '';
+                }
+                // Show add answer button for MCQ
+                const addAnswerBtn = document.getElementById('addAnswerBtn');
+                if (addAnswerBtn) {
+                    addAnswerBtn.style.display = 'block';
+                }
+                // Enable MCQ inputs
+                const mcqInputs = mcqSection.querySelectorAll('input, textarea, select');
                 mcqInputs.forEach(input => {
-                    if (input.getAttribute('data-was-required') === 'true') {
+                    input.disabled = false;
+                    if (input.type === 'text' && input.name === 'answers[]') {
                         input.setAttribute('required', 'required');
                     }
                 });
-            } else if (questionType === 'true_false') {
-                document.getElementById('trueFalseSection').style.display = 'block';
-                // Auto-generate True/False options
-                const container = document.getElementById('trueFalseContainer');
-                container.innerHTML = `
-                    <div class="answer-field flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/30 hover:border-emerald-400/30 transition-all group" data-index="0">
-                        <div class="flex-shrink-0 pt-2">
-                            <div class="flex flex-col gap-2">
-                                <span class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-sm font-semibold text-slate-700 dark:text-slate-300">T</span>
-                                <label for="correct_tf_0" class="flex items-center gap-2 cursor-pointer group/radio">
-                                    <input type="radio" name="is_correct[]" value="0" id="correct_tf_0" class="w-5 h-5 text-emerald-600 dark:text-emerald-400 border-slate-300 dark:border-slate-600 focus:ring-emerald-500 dark:focus:ring-emerald-400 cursor-pointer">
-                                    <span class="text-xs font-medium text-slate-600 dark:text-slate-400 group-hover/radio:text-emerald-600 dark:group-hover/radio:text-emerald-400 transition-colors">Correct</span>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="flex-1">
-                            <input type="text" name="answers[]" value="True" class="form-input w-full bg-slate-100 dark:bg-slate-700 cursor-not-allowed" readonly required>
-                        </div>
-                    </div>
-                    <div class="answer-field flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/30 hover:border-emerald-400/30 transition-all group" data-index="1">
-                        <div class="flex-shrink-0 pt-2">
-                            <div class="flex flex-col gap-2">
-                                <span class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-sm font-semibold text-slate-700 dark:text-slate-300">F</span>
-                                <label for="correct_tf_1" class="flex items-center gap-2 cursor-pointer group/radio">
-                                    <input type="radio" name="is_correct[]" value="1" id="correct_tf_1" class="w-5 h-5 text-emerald-600 dark:text-emerald-400 border-slate-300 dark:border-slate-600 focus:ring-emerald-500 dark:focus:ring-emerald-400 cursor-pointer">
-                                    <span class="text-xs font-medium text-slate-600 dark:text-slate-400 group-hover/radio:text-emerald-600 dark:group-hover/radio:text-emerald-400 transition-colors">Correct</span>
-                                </label>
-                            </div>
-                        </div>
-                        <div class="flex-1">
-                            <input type="text" name="answers[]" value="False" class="form-input w-full bg-slate-100 dark:bg-slate-700 cursor-not-allowed" readonly required>
-                        </div>
-                    </div>
-                `;
-            } else if (questionType === 'short_answer') {
-                document.getElementById('shortAnswerSection').style.display = 'block';
-                // Restore required for short answer field
-                const saField = document.getElementById('correct_answer_text');
-                if (saField) {
-                    saField.setAttribute('required', 'required');
+                // Ensure MCQ container has at least 2 fields
+                const existingFields = mcqContainer.querySelectorAll('.answer-field');
+                if (existingFields.length === 0) {
+                    for (let i = 0; i < 4; i++) {
+                        addAnswerField();
+                    }
                 }
+            } else if (questionType === 'true_false') {
+                // Show True/False section
+                trueFalseSection.style.display = 'block';
+                // Clear MCQ container
+                if (mcqContainer) {
+                    mcqContainer.innerHTML = '';
+                }
+                // Hide add answer button for True/False
+                const addAnswerBtn = document.getElementById('addAnswerBtn');
+                if (addAnswerBtn) {
+                    addAnswerBtn.style.display = 'none';
+                }
+                // Auto-generate True/False options
+                if (trueFalseContainer) {
+                    trueFalseContainer.innerHTML = `
+                        <div class="answer-field flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/30 hover:border-emerald-400/30 transition-all group" data-index="0" data-tf="true">
+                            <div class="flex-shrink-0 pt-2">
+                                <div class="flex flex-col gap-2">
+                                    <span class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-sm font-semibold text-slate-700 dark:text-slate-300">T</span>
+                                    <label for="correct_tf_0" class="flex items-center gap-2 cursor-pointer group/radio">
+                                        <input type="radio" name="is_correct[]" value="0" id="correct_tf_0" class="w-5 h-5 text-emerald-600 dark:text-emerald-400 border-slate-300 dark:border-slate-600 focus:ring-emerald-500 dark:focus:ring-emerald-400 cursor-pointer" required>
+                                        <span class="text-xs font-medium text-slate-600 dark:text-slate-400 group-hover/radio:text-emerald-600 dark:group-hover/radio:text-emerald-400 transition-colors">Correct</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <input type="text" name="answers[]" value="True" class="form-input w-full bg-slate-100 dark:bg-slate-700 cursor-not-allowed" readonly required>
+                            </div>
+                        </div>
+                        <div class="answer-field flex items-start gap-4 p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-slate-800/30 hover:border-emerald-400/30 transition-all group" data-index="1" data-tf="true">
+                            <div class="flex-shrink-0 pt-2">
+                                <div class="flex flex-col gap-2">
+                                    <span class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-sm font-semibold text-slate-700 dark:text-slate-300">F</span>
+                                    <label for="correct_tf_1" class="flex items-center gap-2 cursor-pointer group/radio">
+                                        <input type="radio" name="is_correct[]" value="1" id="correct_tf_1" class="w-5 h-5 text-emerald-600 dark:text-emerald-400 border-slate-300 dark:border-slate-600 focus:ring-emerald-500 dark:focus:ring-emerald-400 cursor-pointer" required>
+                                        <span class="text-xs font-medium text-slate-600 dark:text-slate-400 group-hover/radio:text-emerald-600 dark:group-hover/radio:text-emerald-400 transition-colors">Correct</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <input type="text" name="answers[]" value="False" class="form-input w-full bg-slate-100 dark:bg-slate-700 cursor-not-allowed" readonly required>
+                            </div>
+                        </div>
+                    `;
+                }
+                // Enable True/False inputs
+                const tfInputs = trueFalseSection.querySelectorAll('input, textarea, select');
+                tfInputs.forEach(input => {
+                    input.disabled = false;
+                });
+            } else if (questionType === 'short_answer') {
+                // Show Short Answer section
+                shortAnswerSection.style.display = 'block';
+                // Clear MCQ and True/False containers
+                if (mcqContainer) {
+                    mcqContainer.innerHTML = '';
+                }
+                if (trueFalseContainer) {
+                    trueFalseContainer.innerHTML = '';
+                }
+                // Hide add answer button for Short Answer
+                const addAnswerBtn = document.getElementById('addAnswerBtn');
+                if (addAnswerBtn) {
+                    addAnswerBtn.style.display = 'none';
+                }
+                // Enable Short Answer inputs
+                const saInputs = shortAnswerSection.querySelectorAll('input, textarea, select');
+                saInputs.forEach(input => {
+                    input.disabled = false;
+                    input.setAttribute('required', 'required');
+                });
             }
         }
         
@@ -336,31 +360,42 @@
                 addAnswerField();
             }
             
-            // Question type change handler
-            document.getElementById('question_type').addEventListener('change', handleQuestionTypeChange);
-            
             // Add answer button (MCQ only)
-            document.getElementById('addAnswerBtn').addEventListener('click', function() {
+            const addAnswerBtn = document.getElementById('addAnswerBtn');
+            addAnswerBtn.addEventListener('click', function() {
                 if (currentQuestionType === 'multiple_choice') {
                     addAnswerField();
                 }
             });
+            
+            // Question type change handler
+            document.getElementById('question_type').addEventListener('change', handleQuestionTypeChange);
+            
+            // Ensure initial state is correct (MCQ is default)
+            handleQuestionTypeChange();
             
             // Form validation with inline error display
             document.getElementById('questionForm').addEventListener('submit', function(e) {
                 // Clear any existing error messages and error styles
                 clearAllErrors();
                 
-                // Remove required from all hidden fields to prevent HTML5 validation blocking
-                const allSections = ['mcqSection', 'trueFalseSection', 'shortAnswerSection'];
+                // Disable all inputs in hidden sections to prevent them from being submitted
                 const questionType = document.getElementById('question_type').value;
+                const allSections = ['mcqSection', 'trueFalseSection', 'shortAnswerSection'];
                 allSections.forEach(sectionId => {
                     const section = document.getElementById(sectionId);
-                    if (section && section.style.display === 'none') {
-                        const inputs = section.querySelectorAll('input[required], textarea[required]');
+                    if (section) {
+                        const isActive = section.style.display !== 'none';
+                        const inputs = section.querySelectorAll('input, textarea, select');
                         inputs.forEach(input => {
-                            input.removeAttribute('required');
-                            input.setAttribute('data-was-required', 'true');
+                            if (!isActive) {
+                                // Disable inputs in hidden sections
+                                input.disabled = true;
+                                input.removeAttribute('required');
+                            } else {
+                                // Ensure inputs in active section are enabled
+                                input.disabled = false;
+                            }
                         });
                     }
                 });
@@ -374,22 +409,40 @@
                     hasErrors = true;
                 }
                 
-                if (questionType === 'multiple_choice' || questionType === 'true_false') {
-                    // Check for correct answer selection
-                    const correctAnswers = document.querySelectorAll('input[name="is_correct[]"]:checked');
+                if (questionType === 'multiple_choice') {
+                    // Validate MCQ: check for correct answer selection
+                    const mcqSection = document.getElementById('mcqSection');
+                    const correctAnswers = mcqSection.querySelectorAll('input[name="is_correct[]"]:checked');
                     if (correctAnswers.length === 0) {
-                        showSectionError(questionType === 'multiple_choice' ? 'mcqSection' : 'trueFalseSection', 'Please select the correct answer for this question.');
+                        showSectionError('mcqSection', 'Please select the correct answer for this question.');
                         hasErrors = true;
                     }
                     
                     // Validate minimum answers for MCQ
-                    if (questionType === 'multiple_choice') {
-                        const answerFields = document.querySelectorAll('#answersContainer .answer-field input[type="text"]');
-                        const filledAnswers = Array.from(answerFields).filter(input => input.value.trim());
-                        if (filledAnswers.length < 2) {
-                            showSectionError('mcqSection', 'Multiple choice questions require at least 2 answer options.');
-                            hasErrors = true;
-                        }
+                    const answerFields = document.querySelectorAll('#answersContainer .answer-field input[type="text"]');
+                    const filledAnswers = Array.from(answerFields).filter(input => input.value.trim() && !input.disabled);
+                    if (filledAnswers.length < 2) {
+                        showSectionError('mcqSection', 'Multiple choice questions require at least 2 answer options.');
+                        hasErrors = true;
+                    }
+                } else if (questionType === 'true_false') {
+                    // Validate True/False: check for correct answer selection
+                    const trueFalseSection = document.getElementById('trueFalseSection');
+                    const correctAnswers = trueFalseSection.querySelectorAll('input[name="is_correct[]"]:checked');
+                    if (correctAnswers.length === 0) {
+                        showSectionError('trueFalseSection', 'Please select the correct answer (True or False).');
+                        hasErrors = true;
+                    } else if (correctAnswers.length > 1) {
+                        showSectionError('trueFalseSection', 'Please select exactly one correct answer.');
+                        hasErrors = true;
+                    }
+                    
+                    // Ensure True/False has exactly 2 answers
+                    const tfAnswers = trueFalseSection.querySelectorAll('input[name="answers[]"]');
+                    const filledTfAnswers = Array.from(tfAnswers).filter(input => input.value.trim());
+                    if (filledTfAnswers.length !== 2) {
+                        showSectionError('trueFalseSection', 'True/False questions must have exactly 2 answer options.');
+                        hasErrors = true;
                     }
                 } else if (questionType === 'short_answer') {
                     const correctAnswer = document.getElementById('correct_answer_text');

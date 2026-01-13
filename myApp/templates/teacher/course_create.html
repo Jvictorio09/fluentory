@@ -1,54 +1,73 @@
 {% extends 'teacher/base.html' %}
 
 {% block content %}
-<div class="space-y-8 sm:space-y-10">
-    <div class="mb-10">
-        <h1 class="text-4xl sm:text-5xl font-bold mb-3 tracking-tight" style="color: var(--text-primary);">Create Course</h1>
-        <p class="text-base sm:text-lg font-normal tracking-wide" style="color: var(--text-tertiary);">Create a new course for your students</p>
+<div class="w-full max-w-[1600px] mx-auto">
+    <!-- Simple Back Button -->
+    <div class="mb-6">
+        <a href="{% url 'teacher_courses' %}" class="inline-flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:ring-offset-2 focus:ring-offset-transparent rounded">
+            <i class="fas fa-arrow-left text-xs"></i>
+            <span>Back</span>
+        </a>
     </div>
-    <div class="h-px bg-gradient-to-r from-transparent mb-8" style="background: linear-gradient(to right, transparent, var(--border-primary), transparent);"></div>
     
-    <div class="glass-card backdrop-blur-2xl p-8 sm:p-10 rounded-2xl border shadow-xl" style="border-color: var(--border-primary);">
-        <form method="post" class="space-y-6">
-            {% csrf_token %}
-            <div>
-                <label class="block mb-2 font-medium" style="color: var(--text-primary);">Title</label>
-                <input type="text" name="title" required class="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50 transition-all" style="background-color: var(--bg-elevated); border-color: var(--border-primary); color: var(--text-primary);">
+    <!-- Premium Card -->
+    <div class="max-w-4xl mx-auto">
+        <div class="relative bg-white dark:bg-white/5 backdrop-blur-xl rounded-2xl border border-gray-200 dark:border-white/10 shadow-sm dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)] overflow-hidden">
+            <!-- Subtle Top Accent Line -->
+            <div class="h-px bg-gradient-to-r from-transparent via-[#82C293]/20 to-transparent dark:via-[#82C293]/30"></div>
+            
+            <!-- Card Header Section -->
+            <div class="px-8 sm:px-10 pt-8 pb-6 border-b border-gray-100 dark:border-white/10">
+                <h2 class="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-slate-50 mb-2">Course Details</h2>
+                <p class="text-sm text-slate-600 dark:text-slate-400">Create a new course for your students</p>
             </div>
-            <div>
-                <label class="block mb-2 font-medium" style="color: var(--text-primary);">Slug</label>
-                <input type="text" name="slug" required class="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50 transition-all" style="background-color: var(--bg-elevated); border-color: var(--border-primary); color: var(--text-primary);" placeholder="url-friendly-slug">
-                <p class="text-sm mt-1" style="color: var(--text-muted);">URL-friendly version of the title (lowercase, hyphens instead of spaces)</p>
-            </div>
-            <div>
-                <label class="block mb-2 font-medium" style="color: var(--text-primary);">Description</label>
-                <textarea name="description" required class="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50 transition-all" rows="5" style="background-color: var(--bg-elevated); border-color: var(--border-primary); color: var(--text-primary);"></textarea>
-            </div>
-            <div>
-                <label class="block mb-2 font-medium" style="color: var(--text-primary);">Course Type <span class="text-red-500">*</span></label>
-                <select name="course_type" required class="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2 focus:ring-[#82C293]/50 focus:border-[#82C293]/50 transition-all" style="background-color: var(--bg-elevated); border-color: var(--border-primary); color: var(--text-primary);">
-                    <option value="recorded">Recorded (Self-paced)</option>
-                    <option value="live">Live (Scheduled sessions)</option>
-                    <option value="hybrid">Hybrid (Combination of recorded and live)</option>
-                </select>
-                <p class="text-sm mt-1" style="color: var(--text-muted);">Select the type of course delivery method</p>
-            </div>
-            <div class="flex items-center gap-4 pt-4">
-                <button type="submit" class="inline-flex items-center gap-2 bg-gradient-to-r from-[#82C293] via-[#6fb380] to-[#82C293] text-white px-8 py-4 rounded-xl font-semibold shadow-lg shadow-[#82C293]/30 hover:shadow-xl hover:shadow-[#82C293]/40 hover:scale-105 transition-all duration-300">
-                    <i class="fas fa-plus"></i>
-                    Create Course
-                </button>
-                <a href="{% url 'teacher_courses' %}" class="px-6 py-4 rounded-xl font-medium transition-all duration-300" style="color: var(--text-secondary); border: 1px solid var(--border-primary);">
-                    Cancel
-                </a>
-            </div>
-        </form>
+            
+            <!-- Form Content -->
+            <form method="post" class="p-8 sm:p-10 space-y-6">
+                {% csrf_token %}
+                
+                <!-- Title and Slug in 2-column grid on desktop -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Title -->
+                    <div>
+                        <label for="title" class="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-200">Title</label>
+                        <input type="text" name="title" id="title" required class="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all" placeholder="Enter course title">
+                    </div>
+                    
+                    <!-- Slug -->
+                    <div>
+                        <label for="slug" class="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-200">Slug</label>
+                        <input type="text" name="slug" id="slug" required class="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all" placeholder="url-friendly-slug">
+                        <p class="text-xs mt-1.5 text-slate-500 dark:text-slate-400">URL-friendly version (lowercase, hyphens)</p>
+                    </div>
+                </div>
+                
+                <!-- Description (Full Width) -->
+                <div>
+                    <label for="description" class="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-200">Description</label>
+                    <textarea name="description" id="description" required class="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all resize-y" rows="4" placeholder="Enter a detailed description of your course"></textarea>
+                </div>
+                
+                <!-- Course Type -->
+                <div>
+                    <label for="course_type" class="block mb-2 text-sm font-medium text-slate-700 dark:text-slate-200">Course Type <span class="text-red-500">*</span></label>
+                    <select name="course_type" id="course_type" required class="w-full px-4 py-2.5 rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all">
+                        <option value="recorded">Recorded (Self-paced)</option>
+                        <option value="live">Live (Scheduled sessions)</option>
+                        <option value="hybrid">Hybrid (Combination of recorded and live)</option>
+                    </select>
+                    <p class="text-xs mt-1.5 text-slate-500 dark:text-slate-400">Select the type of course delivery method</p>
+                </div>
+                
+                <!-- Action Button (Bottom Left) -->
+                <div class="flex items-center gap-4 pt-4">
+                    <button type="submit" class="inline-flex items-center gap-2 bg-[#82C293] hover:bg-[#75b088] text-white px-6 py-2.5 rounded-lg font-medium shadow-sm hover:shadow-md hover:shadow-[#82C293]/25 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:ring-offset-2 focus:ring-offset-transparent">
+                        <i class="fas fa-plus text-sm"></i>
+                        <span>Create Course</span>
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 {% endblock %}
-
-
-
-
-
-

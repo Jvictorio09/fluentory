@@ -3,14 +3,14 @@
 {% block content %}
 <div class="max-w-3xl mx-auto">
     <!-- Page Header with Back Button -->
-    <div class="flex flex-col gap-4 mb-10">
-        <a href="{% url 'teacher_quizzes' course.id %}" class="inline-flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors w-fit">
+    <div class="mb-8 sm:mb-10">
+        <a href="{% url 'teacher_quizzes' course.id %}" class="inline-flex items-center gap-2 text-sm font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors w-fit mb-6">
             <i class="fas fa-arrow-left"></i>
             <span>Back to Quizzes</span>
         </a>
         <div>
-            <h1 class="text-4xl sm:text-5xl font-bold mb-3 tracking-tight text-slate-900 dark:text-white">Create Quiz</h1>
-            <p class="text-base sm:text-lg font-normal text-slate-600 dark:text-slate-300 tracking-wide">Add a new quiz or assessment to your course</p>
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-slate-900 dark:text-slate-50 mb-3 tracking-[-0.02em]">Create Quiz</h1>
+            <p class="text-base sm:text-lg text-slate-600 dark:text-slate-300 font-light">Add a new quiz or assessment to your course</p>
         </div>
     </div>
     
