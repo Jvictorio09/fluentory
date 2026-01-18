@@ -1,0 +1,140 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="w-full max-w-[1200px] mx-auto">
+    <!-- Header -->
+    <div class="mb-8 sm:mb-10 animate-fade-in-up stagger-1">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-gray-900 dark:text-white mb-3 tracking-[-0.02em]">
+                    Create Teacher Account
+                </h1>
+                <p class="text-base sm:text-lg text-gray-600 dark:text-white/70 font-light">Create a new teacher account with user credentials</p>
+            </div>
+            <div class="flex gap-3">
+                <a href="{% url 'dashboard:teachers' %}" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 text-gray-900 dark:text-white font-medium hover:bg-gray-50 dark:hover:bg-[#254346]/90 hover:border-emerald-300 dark:hover:border-[#82C293]/40 transition-all duration-300 hover:scale-105">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to Teachers</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Form -->
+    <div class="bg-white dark:bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)] overflow-hidden animate-fade-in-up stagger-2">
+        <form method="post" class="p-6 sm:p-8 space-y-6">
+            {% csrf_token %}
+            
+            <!-- Account Information -->
+            <div class="border-b border-gray-200 dark:border-white/10 pb-6">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-user text-emerald-600 dark:text-[#82C293]"></i>
+                    Account Information
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-white/70 mb-2">
+                            Username <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" name="username" required
+                            value="{{ form_data.username|default:'' }}"
+                            class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-emerald-300 dark:focus:ring-[#82C293]/40 focus:border-emerald-400 dark:focus:border-[#82C293]/50 transition-all duration-300"
+                            placeholder="Enter username">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-white/70 mb-2">
+                            Email <span class="text-red-500">*</span>
+                        </label>
+                        <input type="email" name="email" required
+                            value="{{ form_data.email|default:'' }}"
+                            class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-emerald-300 dark:focus:ring-[#82C293]/40 focus:border-emerald-400 dark:focus:border-[#82C293]/50 transition-all duration-300"
+                            placeholder="Enter email">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-white/70 mb-2">
+                            Password (Optional)
+                            <span class="text-xs text-gray-500 dark:text-white/50 ml-2">Leave blank to send password reset link via email</span>
+                        </label>
+                        <input type="password" name="password"
+                            class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-emerald-300 dark:focus:ring-[#82C293]/40 focus:border-emerald-400 dark:focus:border-[#82C293]/50 transition-all duration-300"
+                            placeholder="Leave blank to auto-generate">
+                        <p class="text-xs text-gray-500 dark:text-white/50 mt-1">If left blank, a secure password will be generated and the teacher will receive an email to set their own password.</p>
+                    </div>
+                    <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-white/70 mb-2">
+                                First Name
+                            </label>
+                            <input type="text" name="first_name"
+                                value="{{ form_data.first_name|default:'' }}"
+                                class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-emerald-300 dark:focus:ring-[#82C293]/40 focus:border-emerald-400 dark:focus:border-[#82C293]/50 transition-all duration-300"
+                                placeholder="Enter first name">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-white/70 mb-2">
+                                Last Name
+                            </label>
+                            <input type="text" name="last_name"
+                                value="{{ form_data.last_name|default:'' }}"
+                                class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-emerald-300 dark:focus:ring-[#82C293]/40 focus:border-emerald-400 dark:focus:border-[#82C293]/50 transition-all duration-300"
+                                placeholder="Enter last name">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Professional Information Note -->
+            <div class="border-b border-gray-200 dark:border-white/10 pb-6">
+                <div class="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-xl p-5">
+                    <div class="flex items-start gap-3">
+                        <i class="fas fa-info-circle text-blue-600 dark:text-blue-400 mt-1"></i>
+                        <div class="text-sm text-blue-700 dark:text-blue-300">
+                            <strong class="block mb-1">Professional Information</strong>
+                            <p>The teacher will complete their specialization, bio, and years of experience when they first log in. You can always edit these details later from the teacher management page.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="pb-6">
+                <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <i class="fas fa-cog text-emerald-600 dark:text-[#82C293]"></i>
+                    Settings
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-white/70 mb-2">
+                            Permission Level
+                        </label>
+                        <select name="permission_level"
+                            class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-300 dark:focus:ring-[#82C293]/40 focus:border-emerald-400 dark:focus:border-[#82C293]/50 transition-all duration-300">
+                            <option value="standard" {% if form_data.permission_level == 'standard' %}selected{% endif %}>Standard</option>
+                            <option value="premium" {% if form_data.permission_level == 'premium' %}selected{% endif %}>Premium</option>
+                            <option value="admin" {% if form_data.permission_level == 'admin' %}selected{% endif %}>Admin</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center pt-8">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                            <input type="checkbox" name="is_approved" {% if form_data.is_approved == 'on' %}checked{% endif %}
+                                class="w-5 h-5 rounded border-gray-300 dark:border-white/20 text-emerald-600 dark:text-[#82C293] focus:ring-2 focus:ring-emerald-300 dark:focus:ring-[#82C293]/40 transition-all duration-300">
+                            <span class="text-sm font-medium text-gray-700 dark:text-white/70">Auto-approve teacher account</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200 dark:border-white/10">
+                <button type="submit" class="flex-1 sm:flex-none px-8 py-3 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl font-medium hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] transition-all duration-300 hover:scale-105">
+                    <i class="fas fa-plus mr-2"></i>Create Teacher Account
+                </button>
+                <a href="{% url 'dashboard:teachers' %}" class="flex-1 sm:flex-none px-8 py-3 text-center border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 text-gray-900 dark:text-white rounded-xl font-medium hover:bg-gray-50 dark:hover:bg-[#254346]/90 hover:border-emerald-300 dark:hover:border-[#82C293]/40 transition-all duration-300 hover:scale-105">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+

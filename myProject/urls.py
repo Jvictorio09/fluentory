@@ -51,9 +51,16 @@ urlpatterns += i18n_patterns(
     path('signup/teacher/', views.teacher_signup_view, name='teacher_signup'),
     path('signup/teacher/pending/', views.teacher_signup_pending, name='teacher_signup_pending'),
     path('logout/', views.logout_view, name='logout'),
-    # Django built-in auth views (password reset, confirm, done, etc.)
-    # Namespace the included auth URLs to avoid name collisions with our own views
-    path('accounts/', include(('django.contrib.auth.urls', 'auth'), namespace='accounts')),
+    # Custom password reset views with custom templates
+    # IMPORTANT: Put these BEFORE any other accounts/ routes to ensure they're matched first
+    path('accounts/password_reset/', views.custom_password_reset, name='password_reset'),
+    path('accounts/password_reset/done/', views.custom_password_reset_done, name='password_reset_done'),
+    # Handle both token and set-password URLs - use <str:token> to capture both cases
+    # Django redirects to set-password after token validation, so we need to handle it
+    path('accounts/reset/<uidb64>/<str:token>/', views.custom_password_reset_confirm, name='password_reset_confirm'),
+    path('accounts/reset/done/', views.custom_password_reset_complete, name='password_reset_complete'),
+    path('accounts/password_change/', views.custom_password_change, name='password_change'),
+    path('accounts/password_change/done/', views.custom_password_change_done, name='password_change_done'),
     
     # Student routes
     path('student/', views.student_home, name='student_home'),
@@ -88,6 +95,9 @@ urlpatterns += i18n_patterns(
     
     # Certificate verification (public)
     path('verify/<uuid:certificate_id>/', views.verify_certificate, name='verify_certificate'),
+    # Certificate viewing and download (authenticated)
+    path('certificate/<uuid:certificate_id>/', views.view_certificate, name='view_certificate'),
+    path('certificate/<uuid:certificate_id>/download/', views.download_certificate_pdf, name='download_certificate_pdf'),
     
     # Custom Admin Dashboard (User-facing admin tool)
     # Django Admin is at /django-admin/ for technical users
@@ -95,6 +105,7 @@ urlpatterns += i18n_patterns(
     
     # Teacher routes
     path('teacher/', views.teacher_dashboard, name='teacher_dashboard'),
+    path('teacher/complete-profile/', views.teacher_complete_profile, name='teacher_complete_profile'),
     path('teacher/courses/', views.teacher_courses, name='teacher_courses'),
     path('teacher/courses/create/', views.teacher_course_create, name='teacher_course_create'),
     path('teacher/courses/<int:course_id>/', views.teacher_course_edit, name='teacher_course_edit'),

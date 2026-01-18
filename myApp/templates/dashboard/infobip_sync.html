@@ -1,0 +1,282 @@
+{% extends 'dashboard/base.html' %}
+
+{% block content %}
+<div class="w-full max-w-[1600px] mx-auto">
+    <!-- Header -->
+    <div class="mb-8 sm:mb-10 animate-fade-in-up stagger-1">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+            <div>
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-gray-900 dark:text-white mb-3 tracking-[-0.02em]">
+                    Infobip Integration
+                </h1>
+                <p class="text-base sm:text-lg text-gray-600 dark:text-white/70 font-light">Sync last contacted phone numbers from Infobip to CRM</p>
+            </div>
+            <div class="flex gap-3">
+                <a href="{% url 'dashboard:leads' %}" class="inline-flex items-center gap-2 bg-white dark:bg-[#254346]/70 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white px-6 py-3 rounded-xl no-underline font-medium hover:bg-gray-50 dark:hover:bg-[#254346]/90 hover:border-emerald-300 dark:hover:border-[#82C293]/40 transition-all duration-300 hover:scale-105 shadow-sm dark:shadow-none">
+                    <i class="fas fa-arrow-left"></i>
+                    <span>Back to Leads</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Connection Status -->
+    <div class="mb-8 animate-fade-in-up stagger-2">
+        <div class="bg-white dark:bg-[#254346]/70 backdrop-blur-md rounded-2xl border border-gray-200 dark:border-white/10 p-6 shadow-sm dark:shadow-none">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <i class="fas fa-plug"></i>
+                Connection Status
+            </h2>
+            
+            {% if connection_status.success %}
+            <div class="flex items-center gap-3 p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl">
+                <i class="fas fa-check-circle text-emerald-600 dark:text-emerald-400 text-xl"></i>
+                <div class="flex-1">
+                    <p class="font-medium text-emerald-900 dark:text-emerald-300">Connected</p>
+                    <p class="text-sm text-emerald-700 dark:text-emerald-400">{{ connection_status.message }}</p>
+                </div>
+                <button onclick="checkWhatsApp()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm">
+                    <i class="fas fa-whatsapp mr-2"></i>Check WhatsApp
+                </button>
+            </div>
+            {% else %}
+            <div class="flex items-center gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+                <i class="fas fa-times-circle text-red-600 dark:text-red-400 text-xl"></i>
+                <div>
+                    <p class="font-medium text-red-900 dark:text-red-300">Connection Failed</p>
+                    <p class="text-sm text-red-700 dark:text-red-400">{{ connection_status.message }}</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if not infobip_configured %}
+            <div class="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl">
+                <p class="text-sm text-yellow-800 dark:text-yellow-300">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>
+                    Infobip API key not configured. Please set <code>INFOBIP_API_KEY</code> in your environment variables.
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-fade-in-up stagger-3">
+        <div class="bg-white dark:bg-[#254346]/70 backdrop-blur-md rounded-2xl border border-gray-200 dark:border-white/10 p-6 shadow-sm dark:shadow-none">
+            <div class="flex items-center justify-between mb-2">
+                <p class="text-sm text-gray-600 dark:text-white/60 font-medium">Leads with Infobip Data</p>
+                <i class="fas fa-users text-emerald-600 dark:text-emerald-400"></i>
+            </div>
+            <p class="text-3xl font-light text-gray-900 dark:text-white">{{ total_leads_with_infobip }}</p>
+        </div>
+        
+        <div class="bg-white dark:bg-[#254346]/70 backdrop-blur-md rounded-2xl border border-gray-200 dark:border-white/10 p-6 shadow-sm dark:shadow-none">
+            <div class="flex items-center justify-between mb-2">
+                <p class="text-sm text-gray-600 dark:text-white/60 font-medium">Synced (Last 24h)</p>
+                <i class="fas fa-sync text-blue-600 dark:text-blue-400"></i>
+            </div>
+            <p class="text-3xl font-light text-gray-900 dark:text-white">{{ recently_synced }}</p>
+        </div>
+        
+        <div class="bg-white dark:bg-[#254346]/70 backdrop-blur-md rounded-2xl border border-gray-200 dark:border-white/10 p-6 shadow-sm dark:shadow-none">
+            <div class="flex items-center justify-between mb-2">
+                <p class="text-sm text-gray-600 dark:text-white/60 font-medium">Sync Channels</p>
+                <i class="fas fa-comments text-purple-600 dark:text-purple-400"></i>
+            </div>
+            <p class="text-sm font-medium text-gray-900 dark:text-white">
+                {% for channel in sync_channels %}{{ channel }}{% if not forloop.last %}, {% endif %}{% endfor %}
+            </p>
+        </div>
+    </div>
+
+    <!-- Manual Sync -->
+    <div class="mb-8 animate-fade-in-up stagger-4">
+        <div class="bg-white dark:bg-[#254346]/70 backdrop-blur-md rounded-2xl border border-gray-200 dark:border-white/10 p-6 shadow-sm dark:shadow-none">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <i class="fas fa-sync-alt"></i>
+                Manual Sync
+            </h2>
+            
+            <form method="post" class="space-y-4">
+                {% csrf_token %}
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-white/80 mb-2">
+                            Days to Look Back
+                        </label>
+                        <input type="number" name="days" value="30" min="1" max="365" 
+                               class="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-300 dark:focus:ring-[#82C293]/40 focus:border-emerald-400 dark:focus:border-[#82C293]/50 transition-all duration-300">
+                    </div>
+                    
+                    <div class="flex items-end">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="create_new" class="w-4 h-4 text-emerald-600 border-gray-300 rounded focus:ring-emerald-500">
+                            <span class="text-sm text-gray-700 dark:text-white/80">Create new Leads for contacts not found</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <button type="submit" name="sync_now" 
+                        class="inline-flex items-center gap-2 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white px-6 py-3 rounded-xl font-medium hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] hover:scale-105 transition-all duration-300">
+                    <i class="fas fa-sync-alt"></i>
+                    <span>Sync Now</span>
+                </button>
+            </form>
+            
+            {% if last_sync_info.timestamp %}
+            <div class="mt-6 p-4 bg-gray-50 dark:bg-[#254346]/50 rounded-xl">
+                <p class="text-sm text-gray-600 dark:text-white/60">
+                    <i class="fas fa-clock mr-2"></i>
+                    Last sync: {{ last_sync_info.timestamp|date:"F d, Y H:i" }}
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Sync Result -->
+    {% if sync_result %}
+    <div class="mb-8 animate-fade-in-up stagger-5">
+        <div class="bg-white dark:bg-[#254346]/70 backdrop-blur-md rounded-2xl border border-gray-200 dark:border-white/10 p-6 shadow-sm dark:shadow-none">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <i class="fas fa-info-circle"></i>
+                Sync Result
+            </h2>
+            
+            {% if sync_result.success %}
+            <div class="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl mb-4">
+                <p class="font-medium text-emerald-900 dark:text-emerald-300 mb-2">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    Sync completed successfully
+                </p>
+                {% if sync_result.output %}
+                <pre class="text-xs text-emerald-800 dark:text-emerald-400 bg-white dark:bg-[#254346]/50 p-3 rounded overflow-x-auto">{{ sync_result.output }}</pre>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl mb-4">
+                <p class="font-medium text-red-900 dark:text-red-300 mb-2">
+                    <i class="fas fa-times-circle mr-2"></i>
+                    Sync failed
+                </p>
+                {% if sync_result.error %}
+                <pre class="text-xs text-red-800 dark:text-red-400 bg-white dark:bg-[#254346]/50 p-3 rounded overflow-x-auto">{{ sync_result.error }}</pre>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Instructions -->
+    <div class="animate-fade-in-up stagger-6">
+        <div class="bg-white dark:bg-[#254346]/70 backdrop-blur-md rounded-2xl border border-gray-200 dark:border-white/10 p-6 shadow-sm dark:shadow-none">
+            <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <i class="fas fa-book"></i>
+                How It Works
+            </h2>
+            
+            <div class="space-y-3 text-sm text-gray-700 dark:text-white/80">
+                <p>1. The sync fetches contacts from Infobip that were contacted in the specified time period.</p>
+                <p>2. It matches contacts to existing Leads by phone number.</p>
+                <p>3. Updates the <code>last_contact_date</code> field if the contact is newer.</p>
+                <p>4. Optionally creates new Leads for contacts not found in the CRM.</p>
+                <p>5. Automatically updates Lead status to "Contacted" if contacted within the last 7 days.</p>
+            </div>
+            
+            <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
+                <p class="text-sm text-blue-800 dark:text-blue-300">
+                    <i class="fas fa-terminal mr-2"></i>
+                    <strong>Command Line:</strong> You can also run the sync manually using:
+                    <code class="block mt-2 p-2 bg-white dark:bg-[#254346]/50 rounded">python manage.py sync_infobip_contacts --days=30 --create-new</code>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- WhatsApp Status Modal -->
+<div id="whatsapp-status-modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+    <div class="bg-white dark:bg-[#254346]/90 rounded-2xl p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white">WhatsApp Connection Status</h3>
+            <button onclick="closeWhatsAppModal()" class="text-gray-500 hover:text-gray-700 dark:text-white/60">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="whatsapp-status-content" class="text-gray-700 dark:text-white/80">
+            <p>Loading...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+function checkWhatsApp() {
+    const modal = document.getElementById('whatsapp-status-modal');
+    const content = document.getElementById('whatsapp-status-content');
+    modal.classList.remove('hidden');
+    content.innerHTML = '<p>Checking WhatsApp connection...</p>';
+    
+    fetch('{% url "dashboard:infobip_test_connection" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: 'test_type=whatsapp'
+    })
+    .then(response => response.json())
+    .then(data => {
+        let html = '';
+        if (data.success) {
+            html += '<div class="p-4 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 rounded-xl mb-4">';
+            html += '<p class="font-medium text-emerald-900 dark:text-emerald-300">✓ ' + data.message + '</p>';
+            html += '</div>';
+        } else {
+            html += '<div class="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl mb-4">';
+            html += '<p class="font-medium text-red-900 dark:text-red-300">✗ ' + data.message + '</p>';
+            html += '</div>';
+        }
+        
+        if (data.whatsapp) {
+            const wa = data.whatsapp;
+            html += '<div class="space-y-3">';
+            html += '<div><strong>WhatsApp Enabled:</strong> ' + (wa.whatsapp_enabled ? 'Yes' : 'No') + '</div>';
+            html += '<div><strong>Can Send Messages:</strong> ' + (wa.can_send ? 'Yes' : 'No') + '</div>';
+            html += '<div><strong>Messages Found:</strong> ' + (wa.messages_count || 0) + '</div>';
+            
+            if (wa.senders && wa.senders.length > 0) {
+                html += '<div><strong>WhatsApp Senders:</strong><ul class="list-disc pl-5 mt-2">';
+                wa.senders.forEach(sender => {
+                    const name = sender.displayName || sender.name || 'Unknown';
+                    const id = sender.id || sender.senderId || 'N/A';
+                    html += '<li>' + name + ' (' + id + ')</li>';
+                });
+                html += '</ul></div>';
+            }
+            
+            html += '<div><strong>Endpoint Status:</strong><ul class="list-disc pl-5 mt-2">';
+            for (const [endpoint, status] of Object.entries(wa.endpoint_status || {})) {
+                const accessible = status.accessible ? '✓' : '✗';
+                html += '<li>' + endpoint + ': Status ' + (status.status_code || 'N/A') + ' ' + accessible;
+                if (status.message) html += ' - ' + status.message;
+                html += '</li>';
+            }
+            html += '</ul></div>';
+            html += '</div>';
+        }
+        
+        content.innerHTML = html;
+    })
+    .catch(error => {
+        content.innerHTML = '<p class="text-red-600">Error: ' + error + '</p>';
+    });
+}
+
+function closeWhatsAppModal() {
+    document.getElementById('whatsapp-status-modal').classList.add('hidden');
+}
+</script>
+{% endblock %}
+

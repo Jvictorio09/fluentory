@@ -226,6 +226,16 @@ class Teacher(models.Model):
         if not self.last_seen:
             return False
         return self.last_seen > timezone.now() - timedelta(minutes=15)
+    
+    @property
+    def profile_complete(self):
+        """Check if teacher profile is complete (has required fields)"""
+        # Check if critical fields are filled
+        return bool(self.specialization and self.bio)
+    
+    def needs_profile_completion(self):
+        """Check if profile needs completion"""
+        return not self.profile_complete
 
 
 class CourseTeacher(models.Model):
@@ -465,7 +475,8 @@ class Lesson(models.Model):
     # Content
     video_url = models.URLField(blank=True)
     video_duration = models.PositiveIntegerField(default=0)  # In seconds
-    text_content = models.TextField(blank=True)  # Rich text/HTML
+    text_content = models.TextField(blank=True)  # Rich text/HTML (legacy)
+    content = models.JSONField(default=dict, blank=True, help_text='Editor.js JSON blocks for rich content')
     
     # Order & Settings
     order = models.PositiveIntegerField(default=0)
@@ -713,9 +724,23 @@ class Certificate(models.Model):
         img = qr.make_image(fill_color="black", back_color="white")
         buffer = BytesIO()
         img.save(buffer, format='PNG')
+        buffer.seek(0)
         
         self.qr_code.save(f'qr_{self.certificate_id}.png', File(buffer), save=False)
         self.save()
+    
+    def save(self, *args, **kwargs):
+        """Override save to auto-generate QR code if not present"""
+        from django.conf import settings
+        
+        # Auto-generate QR code if verification_url is missing
+        if not self.verification_url:
+            base_url = getattr(settings, 'SITE_URL', 'https://fluentory.com')
+            if not base_url.startswith('http'):
+                base_url = f'https://{base_url}'
+            self.generate_qr_code(base_url=base_url)
+        
+        super().save(*args, **kwargs)
 
 
 # ============================================
@@ -2677,6 +2702,30 @@ def auto_link_user_to_lead(sender, instance, created, **kwargs):
 
 
 @receiver(post_save, sender=Enrollment)
+def auto_issue_certificate_on_completion(sender, instance, **kwargs):
+    """Automatically issue certificate when enrollment is completed"""
+    # Only issue if enrollment is completed and course has certificates enabled
+    if instance.status == 'completed' and instance.course.has_certificate:
+        # Check if certificate already exists
+        if not Certificate.objects.filter(user=instance.user, course=instance.course).exists():
+            try:
+                from myApp.utils.certificate_utils import create_certificate
+                certificate = create_certificate(
+                    user=instance.user,
+                    course=instance.course,
+                    enrollment=instance
+                )
+                # Optionally generate PDF
+                # from myApp.utils.certificate_utils import save_certificate_pdf
+                # save_certificate_pdf(certificate)
+            except Exception as e:
+                # Log error but don't fail enrollment save
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Failed to auto-issue certificate for {instance.user.username} - {instance.course.title}: {e}")
+
+
+@receiver(post_save, sender=Enrollment)
 def auto_link_enrollment_to_lead(sender, instance, created, **kwargs):
     """Auto-link Enrollment to Lead when enrollment is created"""
     if not created or not instance.user:
@@ -2807,6 +2856,11 @@ class Lead(models.Model):
     notes = models.TextField(blank=True)
     last_contact_date = models.DateTimeField(null=True, blank=True)
     
+    # Infobip Integration Fields
+    infobip_profile_id = models.CharField(max_length=100, blank=True, null=True, help_text='Infobip People profile ID')
+    infobip_last_synced_at = models.DateTimeField(null=True, blank=True, help_text='Last time synced from Infobip')
+    infobip_channel = models.CharField(max_length=20, blank=True, help_text='Last channel used (SMS, WhatsApp, etc.)')
+    
     # Ownership
     owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='assigned_leads', help_text='Assigned staff member')
     
@@ -2885,6 +2939,9 @@ class LeadTimelineEvent(models.Model):
         ('AUTO_LINK_PERFORMED', 'Auto Link Performed'),
         # Manual Events
         ('MANUAL_OVERRIDE_PERFORMED', 'Manual Override Performed'),
+        # Infobip Events
+        ('INFOBIP_SYNC_UPDATED', 'Updated from Infobip Sync'),
+        ('INFOBIP_SYNC_CREATED', 'Created from Infobip Sync'),
     ]
     
     lead = models.ForeignKey(Lead, on_delete=models.CASCADE, related_name='timeline_events')

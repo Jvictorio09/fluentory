@@ -11,6 +11,12 @@
                 </h1>
                 <p class="text-base sm:text-lg text-gray-600 dark:text-white/70 font-light">Manage all users, roles, and permissions</p>
             </div>
+            <div class="flex gap-3">
+                <button id="bulkDeleteBtn" onclick="bulkDeleteStudents()" class="hidden inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg hover:scale-105 transition-all duration-300">
+                    <i class="fas fa-trash"></i>
+                    <span>Delete Selected Students (<span id="selectedCount">0</span>)</span>
+                </button>
+            </div>
         </div>
         
         <!-- Filters -->
@@ -54,6 +60,9 @@
             <table class="w-full">
                 <thead class="bg-gray-50 dark:bg-[#254346]/50 border-b border-gray-200 dark:border-white/10">
                     <tr>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white w-12">
+                            <input type="checkbox" id="selectAll" onchange="toggleAllStudents(this)" class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                        </th>
                         <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">User</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Role</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Email</th>
@@ -66,6 +75,13 @@
                     {% for user in users %}
                     <tr class="hover:bg-emerald-50 dark:hover:bg-[#82C293]/5 transition-all duration-300 animate-fade-in stagger-{{ forloop.counter|add:3 }} hover:scale-[1.01] group">
                         <td class="px-6 py-4 whitespace-nowrap">
+                            {% if not user.profile or user.profile.role == 'student' %}
+                            <input type="checkbox" class="student-checkbox rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" value="{{ user.id }}" onchange="updateBulkDeleteButton()">
+                            {% else %}
+                            <span class="text-gray-300 dark:text-white/20">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-full bg-emerald-100 dark:bg-[#82C293]/20 border border-emerald-300 dark:border-[#82C293]/30 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:bg-emerald-200 dark:group-hover:bg-[#82C293]/30">
                                     <i class="fas fa-user text-emerald-600 dark:text-[#82C293]"></i>
@@ -77,9 +93,15 @@
                             </div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
+                            {% if user.profile %}
                             <span class="px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 dark:bg-[#82C293]/20 text-emerald-700 dark:text-[#82C293] border border-emerald-300 dark:border-[#82C293]/30">
-                                {{ user.profile.role|default:"student"|title }}
+                                {{ user.profile.role|title }}
                             </span>
+                            {% else %}
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-500/20 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-500/30">
+                                Student
+                            </span>
+                            {% endif %}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-white/70">{{ user.email }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-white/70">{{ user.date_joined|date:"M d, Y" }}</td>
@@ -98,7 +120,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="6" class="px-6 py-12 text-center text-gray-500 dark:text-white/60">
+                        <td colspan="7" class="px-6 py-12 text-center text-gray-500 dark:text-white/60">
                             <i class="fas fa-users text-4xl mb-4 text-gray-400 dark:text-white/40"></i>
                             <p>No users found</p>
                         </td>
@@ -130,5 +152,70 @@
         {% endif %}
     </div>
 </div>
+
+<script>
+function updateBulkDeleteButton() {
+    const checkboxes = document.querySelectorAll('.student-checkbox:checked');
+    const btn = document.getElementById('bulkDeleteBtn');
+    const countSpan = document.getElementById('selectedCount');
+    
+    if (checkboxes.length > 0) {
+        btn.classList.remove('hidden');
+        countSpan.textContent = checkboxes.length;
+    } else {
+        btn.classList.add('hidden');
+    }
+}
+
+function toggleAllStudents(checkbox) {
+    const checkboxes = document.querySelectorAll('.student-checkbox');
+    checkboxes.forEach(cb => cb.checked = checkbox.checked);
+    updateBulkDeleteButton();
+}
+
+function bulkDeleteStudents() {
+    const checkboxes = document.querySelectorAll('.student-checkbox:checked');
+    const userIds = Array.from(checkboxes).map(cb => cb.value);
+    
+    if (userIds.length === 0) {
+        alert('Please select at least one student to delete.');
+        return;
+    }
+    
+    if (!confirm(`Are you sure you want to delete ${userIds.length} student(s)? This action cannot be undone!`)) {
+        return;
+    }
+    
+    const formData = new FormData();
+    userIds.forEach(id => formData.append('user_ids[]', id));
+    
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                      document.cookie.match(/csrftoken=([^;]+)/)?.[1];
+    if (csrfToken) {
+        formData.append('csrfmiddlewaretoken', csrfToken);
+    }
+    
+    fetch('{% url "dashboard:students_bulk_delete" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message || `Successfully deleted ${data.deleted} student(s)!`);
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Failed to delete students'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while deleting students.');
+    });
+}
+</script>
 {% endblock %}
 

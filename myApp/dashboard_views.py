@@ -11,7 +11,7 @@ Pattern:
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Count, Sum, Q, Avg, F, Value, CharField, FloatField
+from django.db.models import Count, Sum, Q, Avg, F, Value, CharField, FloatField, Max
 from django.db.models.functions import TruncDate, TruncWeek, TruncMonth, Coalesce
 from django.utils import timezone
 from datetime import timedelta
@@ -27,8 +27,10 @@ from .models import (
     Payment, Media, SiteSettings, PlacementTest, Teacher, CourseTeacher,
     Category, Review, TutorMessage, TutorConversation, CoursePricing, Partner,
     LiveClassSession, SecurityActionLog, LiveClassTeacherAssignment, TeacherAvailability,
-    Lead, LeadTimelineEvent, GiftEnrollmentLeadLink, EnrollmentLeadLink, GiftEnrollment
+    Lead, LeadTimelineEvent, GiftEnrollmentLeadLink, EnrollmentLeadLink, GiftEnrollment,
+    Certificate, Module, Lesson, Quiz, Question, Answer
 )
+from django.db import models
 from .views import role_required, get_or_create_profile
 from django.http import JsonResponse
 import json
@@ -407,7 +409,10 @@ def dashboard_users(request):
     User management - User-friendly interface
     (Django Admin can manage User model directly)
     """
-    users = User.objects.select_related('profile').order_by('-date_joined')
+    from myApp.models import UserProfile
+    
+    # Get all users, handling those without profiles
+    users = User.objects.all().order_by('-date_joined')
     
     # Filters
     role = request.GET.get('role')
@@ -415,11 +420,19 @@ def dashboard_users(request):
     search = request.GET.get('search')
     
     if role:
-        users = users.filter(profile__role=role)
+        # Filter by role, including users without profiles (treat as 'student')
+        if role == 'student':
+            users = users.filter(
+                Q(profile__role='student') | Q(profile__isnull=True)
+            )
+        else:
+            users = users.filter(profile__role=role)
+    
     if status == 'active':
         users = users.filter(is_active=True)
     elif status == 'inactive':
         users = users.filter(is_active=False)
+    
     if search:
         users = users.filter(
             Q(username__icontains=search) |
@@ -428,12 +441,21 @@ def dashboard_users(request):
             Q(last_name__icontains=search)
         )
     
+    # Prefetch profiles to avoid N+1 queries
+    users = users.prefetch_related('profile')
+    
     paginator = Paginator(users, 20)
     page = request.GET.get('page', 1)
-    users = paginator.get_page(page)
+    try:
+        users = paginator.get_page(page)
+    except:
+        users = paginator.get_page(1)
     
     context = {
         'users': users,
+        'selected_role': role,
+        'selected_status': status,
+        'search_query': search,
     }
     return render(request, 'dashboard/users.html', context)
 
@@ -483,6 +505,270 @@ def dashboard_courses(request):
 
 @login_required
 @role_required(['admin'])
+@require_POST
+def dashboard_courses_bulk_delete(request):
+    """Bulk delete courses - Admin can delete any course"""
+    from django.http import JsonResponse
+    from django.db import connection
+    
+    def safe_delete(queryset):
+        """Safely delete queryset, handling missing tables"""
+        try:
+            if hasattr(queryset, 'delete'):
+                return queryset.delete()[0]
+            return 0
+        except Exception as e:
+            error_str = str(e).lower()
+            if 'does not exist' in error_str or 'no such table' in error_str:
+                return 0  # Table doesn't exist, skip silently
+            # For transaction errors, reset connection
+            if 'transaction' in error_str or 'atomic' in error_str:
+                connection.close()
+                return 0
+            return 0
+    
+    def safe_query(model, **filters):
+        """Safely query model, return empty queryset if table doesn't exist"""
+        try:
+            return model.objects.filter(**filters)
+        except Exception as e:
+            error_str = str(e).lower()
+            if 'does not exist' in error_str or 'no such table' in error_str:
+                return model.objects.none()
+            # For transaction errors, reset connection
+            if 'transaction' in error_str or 'atomic' in error_str:
+                connection.close()
+                return model.objects.none()
+            return model.objects.none()
+    
+    try:
+        course_ids = request.POST.getlist('course_ids[]')
+        if not course_ids:
+            return JsonResponse({'success': False, 'error': 'No courses selected'}, status=400)
+        
+        # Get courses to delete
+        courses = Course.objects.filter(id__in=course_ids)
+        count = courses.count()
+        
+        if count == 0:
+            return JsonResponse({'success': False, 'error': 'No courses found'}, status=400)
+        
+        # Delete related data first - NO transaction wrapper to avoid transaction errors
+        for course in courses:
+            # Delete enrollments and related progress
+            try:
+                enrollments = safe_query(Enrollment, course=course)
+                if enrollments.exists():
+                    enrollment_ids = list(enrollments.values_list('id', flat=True))
+                    if enrollment_ids:
+                        safe_delete(LessonProgress.objects.filter(enrollment_id__in=enrollment_ids))
+                    safe_delete(enrollments)
+            except Exception:
+                pass
+            
+            # Delete certificates
+            try:
+                safe_delete(safe_query(Certificate, course=course))
+            except Exception:
+                pass
+            
+            # Delete reviews
+            try:
+                safe_delete(safe_query(Review, course=course))
+            except Exception:
+                pass
+            
+            # Delete course pricing
+            try:
+                safe_delete(safe_query(CoursePricing, course=course))
+            except Exception:
+                pass
+            
+            # Delete course-teacher links
+            try:
+                safe_delete(safe_query(CourseTeacher, course=course))
+            except Exception:
+                pass
+            
+            # Delete quiz attempts, questions, answers
+            try:
+                quiz_ids = list(Quiz.objects.filter(
+                    Q(course=course) | Q(module__course=course)
+                ).values_list('id', flat=True))
+                if quiz_ids:
+                    safe_delete(QuizAttempt.objects.filter(quiz_id__in=quiz_ids))
+                    safe_delete(Question.objects.filter(quiz_id__in=quiz_ids))
+            except Exception:
+                pass
+            
+            # Delete modules, lessons, quizzes
+            try:
+                modules = Module.objects.filter(course=course)
+                for module in modules:
+                    # Clear unlock_quiz references first
+                    try:
+                        Lesson.objects.filter(module=module).update(unlock_quiz=None)
+                    except Exception:
+                        pass
+                    # Delete lessons
+                    try:
+                        safe_delete(Lesson.objects.filter(module=module))
+                    except Exception:
+                        pass
+                    # Delete module quizzes
+                    try:
+                        safe_delete(Quiz.objects.filter(module=module))
+                    except Exception:
+                        pass
+                
+                # Delete modules
+                safe_delete(modules)
+            except Exception:
+                pass
+            
+            # Delete course-level quizzes
+            try:
+                safe_delete(Quiz.objects.filter(course=course))
+            except Exception:
+                pass
+            
+            # Try to delete booking-related data if tables exist
+            try:
+                from .models import LiveClassSession, LiveClassBooking, BookingSeries
+                safe_delete(LiveClassSession.objects.filter(course=course))
+                safe_delete(LiveClassBooking.objects.filter(course=course))
+                safe_delete(BookingSeries.objects.filter(course=course))
+            except Exception:
+                pass
+            
+            # Try Booking model (might not have table)
+            try:
+                from .models import Booking
+                safe_delete(Booking.objects.filter(session__course=course))
+            except Exception:
+                pass
+            
+            # Try OneOnOneBooking
+            try:
+                from .models import OneOnOneBooking
+                safe_delete(OneOnOneBooking.objects.filter(course=course))
+            except Exception:
+                pass
+        
+        # Finally delete courses - use raw SQL to avoid Django ORM querying related tables
+        try:
+            # Get course IDs before deleting (convert to list of integers)
+            course_id_list = [int(cid) for cid in course_ids]
+            
+            # Get the actual table name from the model
+            course_table = Course._meta.db_table
+            
+            # For PostgreSQL, find the actual table name (case-sensitive)
+            if 'postgresql' in connection.vendor:
+                try:
+                    with connection.cursor() as check_cursor:
+                        # Query to find the actual table name (case-sensitive)
+                        check_cursor.execute("""
+                            SELECT table_name 
+                            FROM information_schema.tables 
+                            WHERE table_schema = 'public' 
+                            AND LOWER(table_name) = LOWER(%s)
+                            LIMIT 1
+                        """, [course_table])
+                        result = check_cursor.fetchone()
+                        if result:
+                            course_table = result[0]  # Use the actual case-sensitive table name
+                except:
+                    pass  # Fall back to model's db_table
+            
+            # Quote the table name properly for the database
+            quoted_table = connection.ops.quote_name(course_table)
+            
+            # Use raw SQL to delete courses directly, bypassing ORM relationships
+            # This avoids Django checking reverse relationships like Booking
+            with connection.cursor() as cursor:
+                # PostgreSQL syntax
+                if 'postgresql' in connection.vendor:
+                    cursor.execute(
+                        f"DELETE FROM {quoted_table} WHERE id = ANY(%s)",
+                        [course_id_list]
+                    )
+                else:
+                    # SQLite or other databases
+                    placeholders = ','.join(['?' if 'sqlite' in connection.vendor.lower() else '%s'] * len(course_id_list))
+                    cursor.execute(
+                        f"DELETE FROM {quoted_table} WHERE id IN ({placeholders})",
+                        course_id_list
+                    )
+            
+            deleted_count = cursor.rowcount if hasattr(cursor, 'rowcount') and cursor.rowcount > 0 else len(course_id_list)
+            
+        except Exception as e:
+            # If raw SQL fails, try to delete one by one with error handling
+            deleted_count = 0
+            course_table = Course._meta.db_table
+            for course_id in course_ids:
+                try:
+                    # Close connection to reset state
+                    connection.close()
+                    # Try to delete individual course
+                    Course.objects.filter(id=course_id).delete()
+                    deleted_count += 1
+                except Exception as e2:
+                    error_str = str(e2).lower()
+                    # If it's a missing table error, try raw SQL for this one
+                    if 'does not exist' in error_str or 'booking' in error_str:
+                        try:
+                            # Get quoted table name
+                            if 'postgresql' in connection.vendor:
+                                quoted_table = connection.ops.quote_name(Course._meta.db_table)
+                            else:
+                                quoted_table = Course._meta.db_table
+                            
+                            with connection.cursor() as cursor:
+                                if 'postgresql' in connection.vendor:
+                                    cursor.execute(f"DELETE FROM {quoted_table} WHERE id = %s", [course_id])
+                                else:
+                                    cursor.execute(f"DELETE FROM {quoted_table} WHERE id = ?", [course_id])
+                            if cursor.rowcount > 0:
+                                deleted_count += 1
+                        except:
+                            pass
+                    pass
+            
+            if deleted_count == 0:
+                raise e
+        
+        return JsonResponse({
+            'success': True, 
+            'deleted': deleted_count, 
+            'message': f'Deleted {deleted_count} course(s)'
+        })
+        
+        return JsonResponse({'success': True, 'deleted': count, 'message': f'Deleted {count} course(s)'})
+        
+    except Exception as e:
+        import traceback
+        error_msg = str(e)
+        # Reset connection if transaction error
+        if 'transaction' in error_msg.lower() or 'atomic' in error_msg.lower():
+            connection.close()
+            # Try one more time without transaction
+            try:
+                Course.objects.filter(id__in=course_ids).delete()
+                return JsonResponse({
+                    'success': True, 
+                    'deleted': count if 'count' in locals() else 0, 
+                    'message': f'Deleted courses (some related data may have been skipped)'
+                })
+            except:
+                pass
+        
+        return JsonResponse({'success': False, 'error': error_msg}, status=500)
+
+
+@login_required
+@role_required(['admin'])
 def dashboard_course_create(request):
     """Create new course"""
     from myApp.models import Category
@@ -491,9 +777,25 @@ def dashboard_course_create(request):
         try:
             from django.utils.text import slugify
             from django.utils import timezone
+            import logging
+            import traceback
             
-            title = request.POST.get('title')
-            slug = request.POST.get('slug') or slugify(title)
+            logger = logging.getLogger(__name__)
+            
+            title = request.POST.get('title', '').strip()
+            if not title:
+                messages.error(request, 'Course title is required.')
+                categories = Category.objects.all()
+                instructors = User.objects.filter(profile__role='instructor').select_related('profile')
+                context = {
+                    'categories': categories,
+                    'instructors': instructors,
+                }
+                return render(request, 'dashboard/course_create.html', context)
+            
+            slug = request.POST.get('slug', '').strip() or slugify(title)
+            if not slug:
+                slug = slugify(title) or 'course-' + str(timezone.now().timestamp())
             
             # Ensure unique slug
             base_slug = slug
@@ -501,6 +803,18 @@ def dashboard_course_create(request):
             while Course.objects.filter(slug=slug).exists():
                 slug = f"{base_slug}-{counter}"
                 counter += 1
+            
+            # Convert price to float
+            try:
+                price = float(request.POST.get('price', 0) or 0)
+            except (ValueError, TypeError):
+                price = 0.0
+            
+            # Convert estimated_hours to int
+            try:
+                estimated_hours = int(request.POST.get('estimated_hours', 10) or 10)
+            except (ValueError, TypeError):
+                estimated_hours = 10
             
             course = Course.objects.create(
                 title=title,
@@ -512,10 +826,10 @@ def dashboard_course_create(request):
                 level=request.POST.get('level', 'beginner'),
                 course_type=request.POST.get('course_type', 'recorded'),
                 language=request.POST.get('language', 'en'),
-                price=request.POST.get('price', 0) or 0,
+                price=price,
                 currency=request.POST.get('currency', 'USD'),
                 is_free=request.POST.get('is_free') == 'on',
-                estimated_hours=request.POST.get('estimated_hours', 10) or 10,
+                estimated_hours=estimated_hours,
                 has_certificate=request.POST.get('has_certificate') == 'on',
                 has_ai_tutor=request.POST.get('has_ai_tutor') == 'on',
                 has_quizzes=request.POST.get('has_quizzes') == 'on',
@@ -530,7 +844,20 @@ def dashboard_course_create(request):
             messages.success(request, f'Course "{course.title}" created successfully!')
             return redirect('dashboard:course_edit', course_id=course.id)
         except Exception as e:
-            messages.error(request, f'Error creating course: {str(e)}')
+            import logging
+            import traceback
+            logger = logging.getLogger(__name__)
+            error_msg = str(e)
+            error_traceback = traceback.format_exc()
+            logger.error(f'Error creating course: {error_msg}\n{error_traceback}')
+            messages.error(request, f'Error creating course: {error_msg}')
+            # Log full traceback to console for debugging
+            print(f'\n{"="*50}')
+            print(f'ERROR CREATING COURSE:')
+            print(f'{error_msg}')
+            print(f'\nFull traceback:')
+            print(f'{error_traceback}')
+            print(f'{"="*50}\n')
     
     categories = Category.objects.all()
     instructors = User.objects.filter(profile__role='instructor').select_related('profile')
@@ -604,10 +931,19 @@ def dashboard_course_edit(request, course_id):
     categories = Category.objects.all()
     instructors = User.objects.filter(profile__role='instructor').select_related('profile')
     
+    # Get modules, lessons, and quizzes for recorded courses
+    modules = []
+    quizzes = []
+    if course.course_type == 'recorded':
+        modules = course.modules.all().prefetch_related('lessons').order_by('order')
+        quizzes = course.quizzes.all().order_by('created_at')
+    
     context = {
         'course': course,
         'categories': categories,
         'instructors': instructors,
+        'modules': modules,
+        'quizzes': quizzes,
     }
     return render(request, 'dashboard/course_edit.html', context)
 
@@ -1866,15 +2202,37 @@ def dashboard_payments(request):
 def dashboard_gifted_courses(request):
     """Admin dashboard for managing gifted courses"""
     import logging
+    from django.db.utils import ProgrammingError, OperationalError
     logger = logging.getLogger(__name__)
     from myApp.models import GiftEnrollment
     
     # Log query attempt
     logger.info(f"Admin dashboard: Querying GiftEnrollment records. User: {request.user.username}")
     
-    # Get total count before filters
-    total_count = GiftEnrollment.objects.count()
-    logger.info(f"Total GiftEnrollment records in database: {total_count}")
+    # Safely get total count - handle missing table
+    try:
+        total_count = GiftEnrollment.objects.count()
+        logger.info(f"Total GiftEnrollment records in database: {total_count}")
+    except (ProgrammingError, OperationalError) as e:
+        error_str = str(e).lower()
+        if 'does not exist' in error_str or 'no such table' in error_str:
+            logger.warning(f"GiftEnrollment table does not exist yet. Showing empty list.")
+            total_count = 0
+            # Return empty page
+            empty_list = []
+            paginator = Paginator(empty_list, 20)
+            gifts_page = paginator.get_page(1)
+            
+            context = {
+                'gifts': gifts_page,
+                'status_filter': None,
+                'search_query': None,
+                'total_count': 0,
+                'table_missing': True,
+            }
+            return render(request, 'dashboard/gifted_courses.html', context)
+        else:
+            raise
     
     gifts = GiftEnrollment.objects.select_related('buyer', 'course', 'payment', 'enrollment').order_by('-created_at')
     
@@ -1895,8 +2253,15 @@ def dashboard_gifted_courses(request):
         logger.info(f"Filtered by search: {search}")
     
     # Log filtered count
-    filtered_count = gifts.count()
-    logger.info(f"GiftEnrollment records after filters: {filtered_count}")
+    try:
+        filtered_count = gifts.count()
+        logger.info(f"GiftEnrollment records after filters: {filtered_count}")
+    except (ProgrammingError, OperationalError) as e:
+        error_str = str(e).lower()
+        if 'does not exist' in error_str or 'no such table' in error_str:
+            filtered_count = 0
+        else:
+            raise
     
     paginator = Paginator(gifts, 20)
     page = request.GET.get('page', 1)
@@ -1912,6 +2277,7 @@ def dashboard_gifted_courses(request):
         'status_filter': status,
         'search_query': search,
         'total_count': total_count,
+        'table_missing': False,
     }
     return render(request, 'dashboard/gifted_courses.html', context)
 
@@ -1971,6 +2337,111 @@ def dashboard_manual_claim_gift(request, gift_id):
 # ============================================
 # TEACHER MANAGEMENT
 # ============================================
+
+@login_required
+@role_required(['admin'])
+def dashboard_teacher_create(request):
+    """Create a new teacher account"""
+    if request.method == 'POST':
+        try:
+            # Get form data
+            username = request.POST.get('username', '').strip()
+            email = request.POST.get('email', '').strip()
+            password = request.POST.get('password', '').strip()
+            first_name = request.POST.get('first_name', '').strip()
+            last_name = request.POST.get('last_name', '').strip()
+            specialization = request.POST.get('specialization', '').strip()
+            bio = request.POST.get('bio', '').strip()
+            years_experience = request.POST.get('years_experience', '0').strip() or '0'
+            permission_level = request.POST.get('permission_level', 'standard').strip()
+            is_approved = request.POST.get('is_approved') == 'on'
+            
+            # Validation
+            if not username:
+                messages.error(request, 'Username is required.')
+                return render(request, 'dashboard/teacher_create.html', {'form_data': request.POST})
+            
+            if not email:
+                messages.error(request, 'Email is required.')
+                return render(request, 'dashboard/teacher_create.html', {'form_data': request.POST})
+            
+            # Password is optional - will be auto-generated if not provided
+            
+            # Check if user already exists
+            if User.objects.filter(username=username).exists():
+                messages.error(request, f'Username "{username}" already exists.')
+                return render(request, 'dashboard/teacher_create.html', {'form_data': request.POST})
+            
+            if User.objects.filter(email=email).exists():
+                messages.error(request, f'Email "{email}" already exists.')
+                return render(request, 'dashboard/teacher_create.html', {'form_data': request.POST})
+            
+            # Generate a secure temporary password if not provided
+            # (User will set their own password via email link)
+            import secrets
+            import string
+            if not password:
+                alphabet = string.ascii_letters + string.digits + "!@#$%^&*"
+                password = ''.join(secrets.choice(alphabet) for i in range(16))
+            
+            # Create user
+            user = User.objects.create_user(
+                username=username,
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name
+            )
+            
+            # Update user profile role to instructor
+            if hasattr(user, 'profile'):
+                user.profile.role = 'instructor'
+                user.profile.save()
+            else:
+                # Create profile if doesn't exist
+                UserProfile.objects.create(user=user, role='instructor')
+            
+            # Create teacher profile (professional info will be filled on first login)
+            teacher = Teacher.objects.create(
+                user=user,
+                specialization=specialization or '',  # Allow empty - will be filled on first login
+                bio=bio or '',  # Allow empty - will be filled on first login
+                years_experience=int(years_experience) if years_experience and years_experience.isdigit() else 0,
+                permission_level=permission_level,
+                is_approved=is_approved,
+                approved_by=request.user if is_approved else None,
+                approved_at=timezone.now() if is_approved else None
+            )
+            
+            # Force password reset on first login
+            if hasattr(user.profile, 'force_password_reset'):
+                user.profile.force_password_reset = True
+                user.profile.save()
+            
+            # Send welcome email with password reset link
+            try:
+                from myApp.email_utils import send_teacher_account_creation_email
+                email_result = send_teacher_account_creation_email(user, teacher, request)
+                if email_result == 1:
+                    messages.success(request, f'Teacher account created successfully for {user.get_full_name() or username}. Welcome email sent to {user.email}.')
+                else:
+                    messages.warning(request, f'Teacher account created successfully, but email could not be sent to {user.email}. Please notify the teacher manually.')
+            except Exception as e:
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.error(f"Failed to send teacher account creation email: {e}", exc_info=True)
+                messages.warning(request, f'Teacher account created successfully, but email could not be sent: {str(e)}. Please notify the teacher manually.')
+            
+            # Redirect back to teachers list instead of details page
+            return redirect('dashboard:teachers')
+            
+        except Exception as e:
+            messages.error(request, f'Error creating teacher account: {str(e)}')
+            return render(request, 'dashboard/teacher_create.html', {'form_data': request.POST})
+    
+    # GET request - show form
+    return render(request, 'dashboard/teacher_create.html')
+
 
 @login_required
 @role_required(['admin'])
@@ -2048,6 +2519,590 @@ def dashboard_teacher_reject(request, teacher_id):
     
     messages.success(request, f'Teacher {teacher.user.username} rejected.')
     return redirect('dashboard:teachers')
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_teachers_bulk_delete(request):
+    """Bulk delete teachers - Admin can delete any teacher"""
+    from django.http import JsonResponse
+    from django.db import connection
+    
+    def safe_delete(queryset):
+        """Safely delete queryset, handling missing tables"""
+        try:
+            if hasattr(queryset, 'delete'):
+                return queryset.delete()[0]
+            return 0
+        except Exception as e:
+            error_str = str(e).lower()
+            if 'does not exist' in error_str or 'no such table' in error_str:
+                return 0
+            if 'transaction' in error_str or 'atomic' in error_str:
+                connection.close()
+                return 0
+            return 0
+    
+    try:
+        teacher_ids = request.POST.getlist('teacher_ids[]')
+        if not teacher_ids:
+            return JsonResponse({'success': False, 'error': 'No teachers selected'}, status=400)
+        
+        # Get teachers and associated users first
+        teachers = Teacher.objects.filter(id__in=teacher_ids)
+        count = teachers.count()
+        
+        if count == 0:
+            return JsonResponse({'success': False, 'error': 'No teachers found'}, status=400)
+        
+        # Get associated user IDs before deleting
+        user_ids = list(teachers.values_list('user_id', flat=True))
+        teacher_id_list = [int(tid) for tid in teacher_ids]
+        teacher_table = Teacher._meta.db_table
+        
+        # Delete related data first (course teachers, etc.)
+        try:
+            safe_delete(CourseTeacher.objects.filter(teacher__in=teachers))
+        except:
+            pass
+        
+        # Try to delete booking-related data if tables exist
+        try:
+            from .models import LiveClassBooking, BookingSeries, TeacherBookingPolicy, LiveClassSession, TeacherAvailability
+            safe_delete(LiveClassBooking.objects.filter(teacher__in=teachers))
+            safe_delete(BookingSeries.objects.filter(teacher__in=teachers))
+            safe_delete(TeacherBookingPolicy.objects.filter(teacher__in=teachers))
+            # Set teacher to NULL for live class sessions (they use SET_NULL)
+            try:
+                LiveClassSession.objects.filter(teacher__in=teachers).update(teacher=None)
+            except:
+                pass
+            try:
+                TeacherAvailability.objects.filter(teacher__in=teachers).delete()
+            except:
+                pass
+        except:
+            pass
+        
+        # STEP 1: Delete Teachers FIRST (removes foreign key constraint on User)
+        deleted_count = 0
+        try:
+            with connection.cursor() as cursor:
+                quoted_table = connection.ops.quote_name(teacher_table)
+                if 'postgresql' in connection.vendor:
+                    cursor.execute(
+                        f"DELETE FROM {quoted_table} WHERE id = ANY(%s)",
+                        [teacher_id_list]
+                    )
+                else:
+                    placeholders = ','.join(['%s'] * len(teacher_id_list))
+                    cursor.execute(
+                        f"DELETE FROM {teacher_table} WHERE id IN ({placeholders})",
+                        teacher_id_list
+                    )
+                deleted_count = cursor.rowcount if hasattr(cursor, 'rowcount') and cursor.rowcount else len(teacher_id_list)
+                print(f"Deleted {deleted_count} Teacher records")
+        except Exception as teacher_delete_error:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Teacher deletion failed: {teacher_delete_error}")
+            # Try ORM deletion as fallback
+            try:
+                teachers.delete()
+                deleted_count = len(teacher_id_list)
+                print(f"Deleted {deleted_count} Teacher records via ORM")
+            except Exception as orm_error:
+                logger.error(f"Teacher ORM deletion also failed: {orm_error}")
+        
+        # STEP 2: Delete UserProfiles (must be deleted before Users)
+        # Teacher has OneToOne with User (CASCADE), so deleting User deletes Teacher
+        try:
+            # Get users that are teachers (not admins/superusers)
+            users_to_delete = User.objects.filter(
+                id__in=user_ids
+            ).exclude(
+                Q(is_superuser=True) | Q(is_staff=True) | Q(profile__role='admin')
+            )
+            
+            user_id_list = list(users_to_delete.values_list('id', flat=True))
+            if user_id_list:
+                # CRITICAL: Delete UserProfiles FIRST (foreign key constraint)
+                # UserProfile has OneToOne with User, so we must delete it before User
+                try:
+                    from .models import UserProfile
+                    # Get the actual table name (handle case sensitivity)
+                    userprofile_table = UserProfile._meta.db_table
+                    # Use proper quoting for PostgreSQL
+                    quoted_table = connection.ops.quote_name(userprofile_table)
+                    
+                    with connection.cursor() as cursor:
+                        if 'postgresql' in connection.vendor:
+                            cursor.execute(
+                                f"DELETE FROM {quoted_table} WHERE user_id = ANY(%s)",
+                                [user_id_list]
+                            )
+                        else:
+                            placeholders = ','.join(['%s'] * len(user_id_list))
+                            cursor.execute(
+                                f"DELETE FROM {userprofile_table} WHERE user_id IN ({placeholders})",
+                                user_id_list
+                            )
+                    userprofile_deleted = cursor.rowcount if hasattr(cursor, 'rowcount') and cursor.rowcount else 0
+                    print(f"Deleted {userprofile_deleted} UserProfile records")
+                except Exception as e:
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.error(f"UserProfile deletion error: {e}", exc_info=True)
+                    # Try using ORM instead
+                    try:
+                        from .models import UserProfile
+                        UserProfile.objects.filter(user_id__in=user_id_list).delete()
+                        print("Deleted UserProfile records via ORM")
+                    except Exception as e2:
+                        logger.error(f"UserProfile ORM deletion also failed: {e2}")
+                        # Continue anyway - might fail at User deletion
+                
+                # STEP 3: Now delete Users (Teachers already deleted, so no constraint violation)
+                try:
+                    with connection.cursor() as cursor:
+                        if 'postgresql' in connection.vendor:
+                            cursor.execute(
+                                "DELETE FROM auth_user WHERE id = ANY(%s)",
+                                [user_id_list]
+                            )
+                        else:
+                            placeholders = ','.join(['%s'] * len(user_id_list))
+                            cursor.execute(
+                                f"DELETE FROM auth_user WHERE id IN ({placeholders})",
+                                user_id_list
+                            )
+                    users_deleted = cursor.rowcount if hasattr(cursor, 'rowcount') and cursor.rowcount else len(user_id_list)
+                    print(f"Deleted {users_deleted} User records")
+                except Exception as user_error:
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.error(f"User deletion failed: {user_error}")
+                    # Try ORM as fallback (might fail if SecurityActionLog doesn't exist)
+                    try:
+                        # Delete one by one to handle missing tables gracefully
+                        for user_id in user_id_list:
+                            try:
+                                User.objects.filter(id=user_id).delete()
+                            except Exception:
+                                # If ORM fails (e.g., missing SecurityActionLog table), use raw SQL
+                                try:
+                                    with connection.cursor() as cursor:
+                                        cursor.execute("DELETE FROM auth_user WHERE id = %s", [user_id])
+                                except:
+                                    pass
+                        print(f"Deleted {len(user_id_list)} User records")
+                    except Exception as fallback_error:
+                        logger.error(f"User deletion fallback also failed: {fallback_error}")
+                
+                # Verify all deletions succeeded
+                remaining_teachers = Teacher.objects.filter(id__in=teacher_id_list).count()
+                remaining_users = User.objects.filter(id__in=user_id_list).count()
+                if remaining_teachers == 0 and remaining_users == 0:
+                    # Success! All deletions completed
+                    connection.close()
+                    return JsonResponse({
+                        'success': True,
+                        'deleted': deleted_count,
+                        'message': f'Successfully deleted {deleted_count} teacher(s)'
+                    })
+        except Exception as user_delete_error:
+            # If user deletion fails, log it but continue
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"User deletion failed: {user_delete_error}", exc_info=True)
+            print(f"User deletion failed: {user_delete_error}")
+        
+        # If user deletion didn't work or teachers still exist, try deleting teachers directly
+        remaining_before = Teacher.objects.filter(id__in=teacher_id_list).count()
+        if remaining_before > 0:
+            try:
+                with connection.cursor() as cursor:
+                    if 'postgresql' in connection.vendor:
+                        cursor.execute(
+                            f"DELETE FROM {teacher_table} WHERE id = ANY(%s)",
+                            [teacher_id_list]
+                        )
+                    else:
+                        placeholders = ','.join(['?' if 'sqlite' in connection.vendor.lower() else '%s'] * len(teacher_id_list))
+                        cursor.execute(
+                            f"DELETE FROM {teacher_table} WHERE id IN ({placeholders})",
+                            teacher_id_list
+                        )
+                deleted_count = cursor.rowcount if hasattr(cursor, 'rowcount') and cursor.rowcount > 0 else 0
+                
+                # Verify deletion worked
+                remaining = Teacher.objects.filter(id__in=teacher_id_list).count()
+                if remaining > 0:
+                    # If some weren't deleted, try one by one
+                    for teacher_id in teacher_id_list:
+                        if Teacher.objects.filter(id=teacher_id).exists():
+                            try:
+                                with connection.cursor() as cursor:
+                                    if 'postgresql' in connection.vendor:
+                                        cursor.execute(f"DELETE FROM {teacher_table} WHERE id = %s", [teacher_id])
+                                    else:
+                                        cursor.execute(f"DELETE FROM {teacher_table} WHERE id = ?", [teacher_id])
+                                if cursor.rowcount > 0:
+                                    deleted_count += 1
+                            except Exception as e3:
+                                # Last resort: try ORM deletion
+                                try:
+                                    Teacher.objects.filter(id=teacher_id).delete()
+                                    deleted_count += 1
+                                except:
+                                    pass
+            except Exception as e:
+                # Fallback: try one by one
+                for teacher_id in teacher_id_list:
+                    try:
+                        # Try raw SQL first
+                        with connection.cursor() as cursor:
+                            if 'postgresql' in connection.vendor:
+                                cursor.execute(f"DELETE FROM {teacher_table} WHERE id = %s", [teacher_id])
+                            else:
+                                cursor.execute(f"DELETE FROM {teacher_table} WHERE id = ?", [teacher_id])
+                        if cursor.rowcount > 0:
+                            deleted_count += 1
+                    except Exception as e2:
+                        # Last resort: try ORM deletion
+                        try:
+                            Teacher.objects.filter(id=teacher_id).delete()
+                            deleted_count += 1
+                        except:
+                            pass
+        
+        # Note: Users are deleted above (before teachers), which should cascade delete teachers
+        # This section is kept for backwards compatibility but shouldn't run if deletion worked above
+        
+        # Refresh connection to ensure we see latest data
+        connection.close()
+        
+        # Final verification: check how many teachers were actually deleted
+        final_count = Teacher.objects.filter(id__in=teacher_id_list).count()
+        
+        # If all teachers were deleted via user cascade, return success early
+        if final_count == 0:
+            return JsonResponse({
+                'success': True,
+                'deleted': len(teacher_id_list),
+                'message': f'Successfully deleted {len(teacher_id_list)} teacher(s)'
+            })
+        if final_count > 0:
+            # Some teachers still exist - deletion partially failed
+            # Try one more time with ORM to see if it works
+            try:
+                remaining_teachers = Teacher.objects.filter(id__in=teacher_id_list)
+                remaining_count = remaining_teachers.count()
+                if remaining_count > 0:
+                    # Force delete using ORM
+                    for teacher in remaining_teachers:
+                        try:
+                            teacher.delete()
+                            deleted_count += 1
+                        except:
+                            pass
+                    
+                    # Check again
+                    final_count = Teacher.objects.filter(id__in=teacher_id_list).count()
+                    if final_count > 0:
+                        return JsonResponse({
+                            'success': False, 
+                            'error': f'Failed to delete all teachers. {final_count} teacher(s) still exist. Please check database constraints.',
+                            'deleted': deleted_count,
+                            'remaining': final_count
+                        }, status=500)
+            except Exception as verify_error:
+                return JsonResponse({
+                    'success': False, 
+                    'error': f'Deletion completed but verification failed: {str(verify_error)}',
+                    'deleted': deleted_count,
+                    'remaining': final_count
+                }, status=500)
+        
+        return JsonResponse({
+            'success': True, 
+            'deleted': deleted_count, 
+            'message': f'Successfully deleted {deleted_count} teacher(s)'
+        })
+    except Exception as e:
+        import traceback
+        error_msg = str(e)
+        if 'transaction' in error_msg.lower() or 'atomic' in error_msg.lower():
+            connection.close()
+        return JsonResponse({'success': False, 'error': error_msg}, status=500)
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_students_bulk_delete(request):
+    """Bulk delete students - Admin can delete any student"""
+    from django.http import JsonResponse
+    from django.db import connection
+    
+    def safe_delete(queryset):
+        """Safely delete queryset, handling missing tables"""
+        try:
+            if hasattr(queryset, 'delete'):
+                return queryset.delete()[0]
+            return 0
+        except Exception as e:
+            error_str = str(e).lower()
+            if 'does not exist' in error_str or 'no such table' in error_str:
+                return 0
+            if 'transaction' in error_str or 'atomic' in error_str:
+                connection.close()
+                return 0
+            return 0
+    
+    try:
+        user_ids = request.POST.getlist('user_ids[]')
+        if not user_ids:
+            return JsonResponse({'success': False, 'error': 'No students selected'}, status=400)
+        
+        # Convert to integers
+        user_ids = [int(uid) for uid in user_ids if uid]
+        
+        # Get students - be more lenient with filtering
+        # First get all users with those IDs (excluding superusers/staff)
+        all_users = User.objects.filter(id__in=user_ids).exclude(
+            Q(is_superuser=True) | Q(is_staff=True)
+        )
+        
+        # Filter to only students by checking profile role
+        student_user_ids = []
+        for user in all_users:
+            try:
+                # Try to get profile
+                profile = getattr(user, 'profile', None)
+                if profile is None:
+                    # No profile exists - try to access it to see if it exists
+                    try:
+                        profile = user.profile
+                    except:
+                        profile = None
+                
+                # If no profile or profile role is student, include them
+                if profile is None:
+                    # No profile - assume student if not admin
+                    student_user_ids.append(user.id)
+                elif profile.role == 'student':
+                    student_user_ids.append(user.id)
+            except Exception as e:
+                # If any error accessing profile, include user if not admin
+                if not user.is_superuser and not user.is_staff:
+                    student_user_ids.append(user.id)
+        
+        count = len(student_user_ids)
+        
+        if count == 0:
+            # Debug: check what users were sent
+            all_user_count = all_users.count()
+            return JsonResponse({
+                'success': False, 
+                'error': f'No students found to delete. Found {all_user_count} user(s) with those IDs, but none are students. User IDs sent: {user_ids}'
+            }, status=400)
+        
+        # Delete ALL related data first, in correct order
+        # 1. Delete data that depends on enrollments
+        try:
+            enrollments = Enrollment.objects.filter(user_id__in=student_user_ids)
+            enrollment_ids = list(enrollments.values_list('id', flat=True))
+            if enrollment_ids:
+                safe_delete(LessonProgress.objects.filter(enrollment_id__in=enrollment_ids))
+            safe_delete(enrollments)
+        except Exception:
+            pass
+        
+        # 2. Delete quiz attempts, certificates, placement tests
+        try:
+            safe_delete(QuizAttempt.objects.filter(user_id__in=student_user_ids))
+            safe_delete(Certificate.objects.filter(user_id__in=student_user_ids))
+            safe_delete(PlacementTest.objects.filter(user_id__in=student_user_ids))
+        except Exception:
+            pass
+        
+        # 3. Delete tutor conversations and messages
+        try:
+            from .models import TutorConversation, TutorMessage
+            conversations = TutorConversation.objects.filter(user_id__in=student_user_ids)
+            conv_ids = list(conversations.values_list('id', flat=True))
+            if conv_ids:
+                safe_delete(TutorMessage.objects.filter(conversation_id__in=conv_ids))
+            safe_delete(conversations)
+        except Exception:
+            pass
+        
+        # 4. Delete payments and gifts
+        try:
+            safe_delete(Payment.objects.filter(user_id__in=student_user_ids))
+            safe_delete(GiftEnrollment.objects.filter(buyer_id__in=student_user_ids))
+        except Exception:
+            pass
+        
+        # 5. Delete activity logs and security logs
+        try:
+            safe_delete(ActivityLog.objects.filter(actor_id__in=student_user_ids))
+            safe_delete(SecurityActionLog.objects.filter(target_user_id__in=student_user_ids))
+            safe_delete(SecurityActionLog.objects.filter(admin_user_id__in=student_user_ids))
+        except Exception:
+            pass
+        
+        # 6. Delete booking-related data
+        try:
+            from .models import LiveClassBooking, BookingSeries
+            safe_delete(LiveClassBooking.objects.filter(student_user_id__in=student_user_ids))
+            safe_delete(BookingSeries.objects.filter(student_user_id__in=student_user_ids))
+        except Exception:
+            pass
+        
+        try:
+            from .models import Booking, OneOnOneBooking
+            safe_delete(Booking.objects.filter(user_id__in=student_user_ids))
+            safe_delete(OneOnOneBooking.objects.filter(user_id__in=student_user_ids))
+        except Exception:
+            pass
+        
+        # 7. Delete user profiles LAST before users (OneToOne with CASCADE)
+        # Use raw SQL to ensure it happens
+        try:
+            profile_table = UserProfile._meta.db_table
+            with connection.cursor() as cursor:
+                if 'postgresql' in connection.vendor:
+                    cursor.execute(
+                        f"DELETE FROM {profile_table} WHERE user_id = ANY(%s)",
+                        [student_user_ids]
+                    )
+                else:
+                    placeholders = ','.join(['%s'] * len(student_user_ids))
+                    cursor.execute(
+                        f"DELETE FROM {profile_table} WHERE user_id IN ({placeholders})",
+                        student_user_ids
+                    )
+        except Exception as e:
+            # If raw SQL fails, try ORM
+            try:
+                UserProfile.objects.filter(user_id__in=student_user_ids).delete()
+            except Exception:
+                pass
+        
+        # Try to delete booking-related data if tables exist
+        try:
+            from .models import LiveClassBooking, BookingSeries
+            safe_delete(LiveClassBooking.objects.filter(student_user_id__in=student_user_ids))
+            safe_delete(BookingSeries.objects.filter(student_user_id__in=student_user_ids))
+        except Exception:
+            pass
+        
+        # Try Booking and OneOnOneBooking models
+        try:
+            from .models import Booking, OneOnOneBooking
+            safe_delete(Booking.objects.filter(user_id__in=student_user_ids))
+            safe_delete(OneOnOneBooking.objects.filter(user_id__in=student_user_ids))
+        except Exception:
+            pass
+        
+        # Delete users using raw SQL to avoid ORM relationship checks
+        # Get the actual table name from User model
+        user_table = User._meta.db_table
+        deleted_count = 0
+        error_details = []
+        
+        try:
+            user_id_list = [int(uid) for uid in student_user_ids]
+            
+            # First, verify users exist before deletion
+            existing_count = User.objects.filter(id__in=user_id_list).count()
+            
+            if existing_count == 0:
+                return JsonResponse({
+                    'success': False, 
+                    'error': f'No users found with IDs: {user_id_list}'
+                }, status=400)
+            
+            # Delete using raw SQL
+            with connection.cursor() as cursor:
+                if 'postgresql' in connection.vendor:
+                    cursor.execute(
+                        f"DELETE FROM {user_table} WHERE id = ANY(%s)",
+                        [user_id_list]
+                    )
+                else:
+                    placeholders = ','.join(['%s'] * len(user_id_list))
+                    cursor.execute(
+                        f"DELETE FROM {user_table} WHERE id IN ({placeholders})",
+                        user_id_list
+                    )
+            
+            # Verify deletion by checking remaining users
+            remaining = User.objects.filter(id__in=user_id_list).count()
+            deleted_count = existing_count - remaining
+            
+            # If still 0, try individual deletions
+            if deleted_count == 0:
+                # Try deleting one by one with raw SQL
+                for user_id in user_id_list:
+                    try:
+                        with connection.cursor() as cursor:
+                            if 'postgresql' in connection.vendor:
+                                cursor.execute(f"DELETE FROM {user_table} WHERE id = %s", [user_id])
+                            else:
+                                cursor.execute(f"DELETE FROM {user_table} WHERE id = ?", [user_id])
+                        # Check if user still exists
+                        if not User.objects.filter(id=user_id).exists():
+                            deleted_count += 1
+                    except Exception as e3:
+                        error_details.append(f"User {user_id}: {str(e3)[:50]}")
+                        pass
+                        
+        except Exception as e:
+            error_details.append(f"Bulk delete error: {str(e)[:100]}")
+            # Fallback: try one by one
+            for user_id in student_user_ids:
+                try:
+                    # Close connection to reset state
+                    connection.close()
+                    # Try raw SQL for individual user
+                    user_table = User._meta.db_table
+                    with connection.cursor() as cursor:
+                        if 'postgresql' in connection.vendor:
+                            cursor.execute(f"DELETE FROM {user_table} WHERE id = %s", [user_id])
+                        else:
+                            cursor.execute(f"DELETE FROM {user_table} WHERE id = ?", [user_id])
+                    # Verify deletion
+                    if not User.objects.filter(id=user_id).exists():
+                        deleted_count += 1
+                except Exception as e2:
+                    error_str = str(e2).lower()
+                    error_details.append(f"User {user_id}: {str(e2)[:50]}")
+                    pass
+        
+        if deleted_count == 0:
+            error_msg = 'Failed to delete students. No students were deleted.'
+            if error_details:
+                error_msg += f' Errors: {"; ".join(error_details[:3])}'
+            return JsonResponse({
+                'success': False, 
+                'error': error_msg
+            }, status=500)
+        
+        return JsonResponse({
+            'success': True, 
+            'deleted': deleted_count, 
+            'message': f'Successfully deleted {deleted_count} student(s)'
+        })
+    except Exception as e:
+        import traceback
+        error_msg = str(e)
+        if 'transaction' in error_msg.lower() or 'atomic' in error_msg.lower():
+            connection.close()
+        return JsonResponse({'success': False, 'error': error_msg}, status=500)
 
 
 @login_required
@@ -2146,7 +3201,10 @@ def dashboard_teacher_reset_password(request, teacher_id):
     try:
         token = default_token_generator.make_token(target_user)
         uid = urlsafe_base64_encode(force_bytes(target_user.pk))
-        reset_url = request.build_absolute_uri(f'/accounts/password_reset_confirm/{uid}/{token}/')
+        from django.urls import reverse
+        reset_url = request.build_absolute_uri(
+            reverse('password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
+        )
         
         send_mail(
             subject='Your Fluentory Password Has Been Reset',
@@ -2877,4 +3935,933 @@ def dashboard_analytics(request):
     }
     
     return render(request, 'dashboard/analytics.html', context)
+
+
+# ============================================
+# INFOBIP INTEGRATION
+# ============================================
+
+@login_required
+@role_required(['admin'])
+def dashboard_infobip_sync(request):
+    """Infobip sync management page"""
+    from myApp.utils.infobip_service import InfobipService
+    from django.conf import settings
+    import subprocess
+    from django.core.cache import cache
+    
+    infobip = InfobipService()
+    
+    # Test connection
+    connection_status = infobip.test_connection()
+    
+    # Get sync statistics
+    total_leads_with_infobip = Lead.objects.exclude(infobip_profile_id__isnull=True).exclude(infobip_profile_id='').count()
+    recently_synced = Lead.objects.filter(
+        infobip_last_synced_at__gte=timezone.now() - timedelta(days=1)
+    ).count()
+    
+    # Get last sync info from cache or database
+    last_sync_info = cache.get('infobip_last_sync_info', {})
+    if not last_sync_info:
+        # Try to get from most recently synced lead
+        last_synced_lead = Lead.objects.exclude(infobip_last_synced_at__isnull=True).order_by('-infobip_last_synced_at').first()
+        if last_synced_lead:
+            last_sync_info = {
+                'timestamp': last_synced_lead.infobip_last_synced_at,
+                'leads_updated': 0,
+                'leads_created': 0,
+            }
+    
+    # Handle manual sync trigger
+    sync_result = None
+    if request.method == 'POST' and 'sync_now' in request.POST:
+        days = int(request.POST.get('days', 30))
+        create_new = 'create_new' in request.POST
+        
+        try:
+            # Run sync command
+            cmd = ['python', 'manage.py', 'sync_infobip_contacts', '--days', str(days), '--limit', '100']
+            if create_new:
+                cmd.append('--create-new')
+            
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=300,  # 5 minute timeout
+                cwd=settings.BASE_DIR
+            )
+            
+            sync_result = {
+                'success': result.returncode == 0,
+                'output': result.stdout,
+                'error': result.stderr if result.returncode != 0 else None
+            }
+            
+            if sync_result['success']:
+                messages.success(request, 'Infobip sync completed successfully!')
+                # Update cache
+                cache.set('infobip_last_sync_info', {
+                    'timestamp': timezone.now(),
+                    'leads_updated': 0,  # Would need to parse output for actual numbers
+                    'leads_created': 0,
+                }, 3600)  # Cache for 1 hour
+            else:
+                messages.error(request, f"Sync failed: {sync_result.get('error', 'Unknown error')}")
+                
+        except subprocess.TimeoutExpired:
+            sync_result = {
+                'success': False,
+                'error': 'Sync timed out after 5 minutes'
+            }
+            messages.error(request, 'Sync timed out. Please try again or run manually.')
+        except Exception as e:
+            sync_result = {
+                'success': False,
+                'error': str(e)
+            }
+            messages.error(request, f'Sync error: {str(e)}')
+    
+    context = {
+        'connection_status': connection_status,
+        'total_leads_with_infobip': total_leads_with_infobip,
+        'recently_synced': recently_synced,
+        'last_sync_info': last_sync_info,
+        'sync_result': sync_result,
+        'infobip_configured': bool(getattr(settings, 'INFOBIP_API_KEY', '')),
+        'sync_channels': getattr(settings, 'INFOBIP_SYNC_CHANNELS', []),
+    }
+    
+    return render(request, 'dashboard/infobip_sync.html', context)
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_infobip_test_connection(request):
+    """Test Infobip API connection via AJAX"""
+    from myApp.utils.infobip_service import InfobipService
+    
+    infobip = InfobipService()
+    test_type = request.POST.get('test_type', 'basic')
+    
+    if test_type == 'whatsapp':
+        result = infobip.check_whatsapp_connection()
+    else:
+        result = infobip.test_connection()
+    
+    return JsonResponse(result)
+
+
+# ============================================
+# CERTIFICATES MANAGEMENT
+# ============================================
+
+@login_required
+@role_required(['admin'])
+def dashboard_certificates(request):
+    """Admin dashboard for managing certificates"""
+    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+    
+    certificates = Certificate.objects.select_related('user', 'course').order_by('-issued_at')
+    
+    # Filters
+    search = request.GET.get('search')
+    course_filter = request.GET.get('course')
+    verified_filter = request.GET.get('verified')
+    
+    if search:
+        certificates = certificates.filter(
+            Q(certificate_id__icontains=search) |
+            Q(user__username__icontains=search) |
+            Q(user__email__icontains=search) |
+            Q(course__title__icontains=search)
+        )
+    
+    if course_filter:
+        certificates = certificates.filter(course_id=course_filter)
+    
+    if verified_filter:
+        if verified_filter == 'yes':
+            certificates = certificates.filter(is_verified=True)
+        elif verified_filter == 'no':
+            certificates = certificates.filter(is_verified=False)
+    
+    # Pagination
+    paginator = Paginator(certificates, 20)
+    page = request.GET.get('page', 1)
+    try:
+        certificates_page = paginator.get_page(page)
+    except PageNotAnInteger:
+        certificates_page = paginator.get_page(1)
+    except EmptyPage:
+        certificates_page = paginator.get_page(paginator.num_pages)
+    
+    # Get courses for filter dropdown
+    courses = Course.objects.all().order_by('title')
+    
+    context = {
+        'certificates': certificates_page,
+        'courses': courses,
+        'search_query': search,
+        'course_filter': course_filter,
+        'verified_filter': verified_filter,
+        'total_count': certificates.count(),
+    }
+    return render(request, 'dashboard/certificates.html', context)
+
+
+@login_required
+@role_required(['admin'])
+def dashboard_certificate_preview(request, certificate_id):
+    """Preview how a certificate looks"""
+    certificate = get_object_or_404(Certificate, certificate_id=certificate_id)
+    
+    # Generate QR code if it doesn't exist
+    if not certificate.qr_code:
+        certificate.generate_qr_code(request.build_absolute_uri('/')[:-1])
+    
+    context = {
+        'certificate': certificate,
+        'preview_mode': True,
+    }
+    return render(request, 'dashboard/certificate_preview.html', context)
+
+
+# ============================================
+# COURSE CONTENT MANAGEMENT API (Modules, Lessons, Quizzes)
+# ============================================
+
+@login_required
+@role_required(['admin'])
+def dashboard_api_modules(request, course_id):
+    """Get all modules for a course"""
+    course = get_object_or_404(Course, id=course_id)
+    
+    # Check if content column exists by trying to defer it
+    content_column_exists = True
+    try:
+        # Try to query with defer to see if column exists
+        test_lesson = Lesson.objects.defer('content').first()
+        if test_lesson is None:
+            # No lessons exist, but column might exist
+            from django.db import connection
+            if 'postgresql' in connection.vendor:
+                with connection.cursor() as cursor:
+                    cursor.execute("""
+                        SELECT column_name FROM information_schema.columns 
+                        WHERE table_name = 'myApp_lesson' AND column_name = 'content'
+                    """)
+                    content_column_exists = cursor.fetchone() is not None
+            else:
+                # SQLite
+                with connection.cursor() as cursor:
+                    cursor.execute("PRAGMA table_info(myApp_lesson)")
+                    columns = [row[1] for row in cursor.fetchall()]
+                    content_column_exists = 'content' in columns
+    except Exception:
+        content_column_exists = False
+    
+    # Get modules
+    modules = course.modules.all().order_by('order')
+    
+    modules_data = []
+    for module in modules:
+        lessons_data = []
+        # Get lessons, deferring content if column doesn't exist
+        try:
+            if content_column_exists:
+                lessons_queryset = module.lessons.all().order_by('order')
+            else:
+                # Use only() to select specific columns, avoiding content
+                lessons_queryset = module.lessons.all().only(
+                    'id', 'title', 'content_type', 'order', 'estimated_minutes', 'is_preview'
+                ).order_by('order')
+        except Exception as e:
+            # Fallback: use raw SQL if ORM fails
+            if 'content' in str(e).lower():
+                from django.db import connection
+                with connection.cursor() as cursor:
+                    table_name = Lesson._meta.db_table
+                    cursor.execute(f"""
+                        SELECT id, title, content_type, "order", estimated_minutes, is_preview
+                        FROM {table_name}
+                        WHERE module_id = %s
+                        ORDER BY "order"
+                    """, [module.id])
+                    lessons_queryset = []
+                    for row in cursor.fetchall():
+                        class LessonObj:
+                            def __init__(self, id, title, content_type, order, estimated_minutes, is_preview):
+                                self.id = id
+                                self.title = title
+                                self.content_type = content_type
+                                self.order = order
+                                self.estimated_minutes = estimated_minutes
+                                self.is_preview = is_preview
+                        lessons_queryset.append(LessonObj(*row))
+            else:
+                raise
+        
+        for lesson in lessons_queryset:
+            lessons_data.append({
+                'id': lesson.id,
+                'title': lesson.title,
+                'content_type': lesson.content_type,
+                'order': lesson.order,
+                'estimated_minutes': lesson.estimated_minutes,
+                'is_preview': lesson.is_preview,
+            })
+        
+        modules_data.append({
+            'id': module.id,
+            'title': module.title,
+            'description': module.description,
+            'order': module.order,
+            'is_locked': module.is_locked,
+            'lessons': lessons_data,
+            'lessons_count': len(lessons_data),
+        })
+    
+    return JsonResponse({'success': True, 'modules': modules_data})
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_api_module_create(request, course_id):
+    """Create a new module"""
+    course = get_object_or_404(Course, id=course_id)
+    
+    try:
+        import json
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+        else:
+            data = request.POST
+        
+        title = data.get('title', '').strip()
+        if not title:
+            return JsonResponse({'success': False, 'error': 'Module title is required'}, status=400)
+        
+        # Get the highest order number
+        max_order = course.modules.aggregate(Max('order'))['order__max'] or 0
+        
+        module = Module.objects.create(
+            course=course,
+            title=title,
+            description=data.get('description', ''),
+            order=max_order + 1,
+            is_locked=data.get('is_locked', False) == True or data.get('is_locked') == 'true',
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'module': {
+                'id': module.id,
+                'title': module.title,
+                'description': module.description,
+                'order': module.order,
+                'is_locked': module.is_locked,
+                'lessons': [],
+                'lessons_count': 0,
+            }
+        })
+    except Exception as e:
+        import traceback
+        return JsonResponse({'success': False, 'error': str(e), 'traceback': traceback.format_exc()}, status=500)
+
+
+@login_required
+@role_required(['admin'])
+def dashboard_api_module_update(request, module_id):
+    """Update a module (or get module data if GET request)"""
+    module = get_object_or_404(Module, id=module_id)
+    
+    if request.method == 'GET':
+        return JsonResponse({
+            'success': True,
+            'module': {
+                'id': module.id,
+                'title': module.title,
+                'description': module.description,
+                'order': module.order,
+                'is_locked': module.is_locked,
+            }
+        })
+    
+    try:
+        import json
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+        else:
+            data = request.POST
+        
+        # Check if this is a GET request via POST (for compatibility)
+        if data.get('get') == True or data.get('get') == 'true':
+            return JsonResponse({
+                'success': True,
+                'module': {
+                    'id': module.id,
+                    'title': module.title,
+                    'description': module.description,
+                    'order': module.order,
+                    'is_locked': module.is_locked,
+                }
+            })
+        
+        if 'title' in data:
+            module.title = data['title'].strip()
+        if 'description' in data:
+            module.description = data.get('description', '')
+        if 'order' in data:
+            module.order = int(data['order'])
+        if 'is_locked' in data:
+            module.is_locked = data['is_locked'] == True or data['is_locked'] == 'true'
+        
+        module.save()
+        
+        return JsonResponse({
+            'success': True,
+            'module': {
+                'id': module.id,
+                'title': module.title,
+                'description': module.description,
+                'order': module.order,
+                'is_locked': module.is_locked,
+            }
+        })
+    except Exception as e:
+        import traceback
+        return JsonResponse({'success': False, 'error': str(e), 'traceback': traceback.format_exc()}, status=500)
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_api_module_delete(request, module_id):
+    """Delete a module"""
+    module = get_object_or_404(Module, id=module_id)
+    
+    try:
+        module_id_val = module.id
+        module.delete()
+        return JsonResponse({'success': True, 'message': 'Module deleted successfully'})
+    except Exception as e:
+        import traceback
+        return JsonResponse({'success': False, 'error': str(e), 'traceback': traceback.format_exc()}, status=500)
+
+
+@login_required
+@role_required(['admin'])
+def dashboard_api_lessons(request, module_id):
+    """Get all lessons for a module"""
+    module = get_object_or_404(Module, id=module_id)
+    lessons = module.lessons.all().order_by('order')
+    
+    lessons_data = []
+    for lesson in lessons:
+        lessons_data.append({
+            'id': lesson.id,
+            'title': lesson.title,
+            'description': lesson.description,
+            'content_type': lesson.content_type,
+            'video_url': lesson.video_url,
+            'video_duration': lesson.video_duration,
+            'text_content': lesson.text_content,
+            'order': lesson.order,
+            'estimated_minutes': lesson.estimated_minutes,
+            'is_preview': lesson.is_preview,
+            'is_milestone': lesson.is_milestone,
+        })
+    
+    return JsonResponse({'success': True, 'lessons': lessons_data})
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_api_lesson_create(request, module_id):
+    """Create a new lesson"""
+    module = get_object_or_404(Module, id=module_id)
+    
+    try:
+        import json
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+        else:
+            data = request.POST
+        
+        title = data.get('title', '').strip()
+        if not title:
+            return JsonResponse({'success': False, 'error': 'Lesson title is required'}, status=400)
+        
+        # Get the highest order number
+        max_order = module.lessons.aggregate(Max('order'))['order__max'] or 0
+        
+        # Handle Editor.js content
+        content_data = {}
+        if 'content' in data:
+            try:
+                content_data = data.get('content', {})
+                if isinstance(content_data, str):
+                    content_data = json.loads(content_data)
+            except (json.JSONDecodeError, TypeError):
+                content_data = {}
+        
+        lesson = Lesson.objects.create(
+            module=module,
+            title=title,
+            description=data.get('description', ''),
+            content_type=data.get('content_type', 'video'),
+            video_url=data.get('video_url', ''),
+            video_duration=int(data.get('video_duration', 0) or 0),
+            text_content=data.get('text_content', ''),
+            content=content_data,
+            order=max_order + 1,
+            estimated_minutes=int(data.get('estimated_minutes', 10) or 10),
+            is_preview=data.get('is_preview', False) == True or data.get('is_preview') == 'true',
+            is_milestone=data.get('is_milestone', False) == True or data.get('is_milestone') == 'true',
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'lesson': {
+                'id': lesson.id,
+                'title': lesson.title,
+                'description': lesson.description,
+                'content_type': lesson.content_type,
+                'video_url': lesson.video_url,
+                'video_duration': lesson.video_duration,
+                'text_content': lesson.text_content,
+                'content': lesson.content if hasattr(lesson, 'content') else {},
+                'order': lesson.order,
+                'estimated_minutes': lesson.estimated_minutes,
+                'is_preview': lesson.is_preview,
+                'is_milestone': lesson.is_milestone,
+            }
+        })
+    except Exception as e:
+        import traceback
+        return JsonResponse({'success': False, 'error': str(e), 'traceback': traceback.format_exc()}, status=500)
+
+
+@login_required
+@role_required(['admin'])
+def dashboard_api_lesson_update(request, lesson_id):
+    """Update a lesson (or get lesson data if GET request)"""
+    lesson = get_object_or_404(Lesson, id=lesson_id)
+    
+    if request.method == 'GET':
+        return JsonResponse({
+            'success': True,
+            'lesson': {
+                'id': lesson.id,
+                'title': lesson.title,
+                'description': lesson.description,
+                'content_type': lesson.content_type,
+                'video_url': lesson.video_url,
+                'video_duration': lesson.video_duration,
+                'text_content': lesson.text_content,
+                'content': lesson.content if hasattr(lesson, 'content') else {},
+                'order': lesson.order,
+                'estimated_minutes': lesson.estimated_minutes,
+                'is_preview': lesson.is_preview,
+                'is_milestone': lesson.is_milestone,
+            }
+        })
+    
+    try:
+        import json
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+        else:
+            data = request.POST
+        
+        # Check if this is a GET request via POST (for compatibility)
+        if data.get('get') == True or data.get('get') == 'true':
+            return JsonResponse({
+                'success': True,
+                'lesson': {
+                    'id': lesson.id,
+                    'title': lesson.title,
+                    'description': lesson.description,
+                    'content_type': lesson.content_type,
+                    'video_url': lesson.video_url,
+                    'video_duration': lesson.video_duration,
+                    'text_content': lesson.text_content,
+                    'content': lesson.content if hasattr(lesson, 'content') else {},
+                    'order': lesson.order,
+                    'estimated_minutes': lesson.estimated_minutes,
+                    'is_preview': lesson.is_preview,
+                    'is_milestone': lesson.is_milestone,
+                }
+            })
+        
+        if 'title' in data:
+            lesson.title = data['title'].strip()
+        if 'description' in data:
+            lesson.description = data.get('description', '')
+        if 'content_type' in data:
+            lesson.content_type = data['content_type']
+        if 'video_url' in data:
+            lesson.video_url = data.get('video_url', '')
+        if 'video_duration' in data:
+            lesson.video_duration = int(data.get('video_duration', 0) or 0)
+        if 'text_content' in data:
+            lesson.text_content = data.get('text_content', '')
+        if 'content' in data:
+            # Handle Editor.js JSON content
+            import json
+            try:
+                content_data = data.get('content', {})
+                if isinstance(content_data, str):
+                    content_data = json.loads(content_data)
+                lesson.content = content_data if content_data else {}
+            except (json.JSONDecodeError, TypeError):
+                pass  # Keep existing content if JSON is invalid
+        if 'order' in data:
+            lesson.order = int(data['order'])
+        if 'estimated_minutes' in data:
+            lesson.estimated_minutes = int(data.get('estimated_minutes', 10) or 10)
+        if 'is_preview' in data:
+            lesson.is_preview = data['is_preview'] == True or data['is_preview'] == 'true'
+        if 'is_milestone' in data:
+            lesson.is_milestone = data['is_milestone'] == True or data['is_milestone'] == 'true'
+        
+        lesson.save()
+        
+        return JsonResponse({
+            'success': True,
+            'lesson': {
+                'id': lesson.id,
+                'title': lesson.title,
+                'description': lesson.description,
+                'content_type': lesson.content_type,
+                'video_url': lesson.video_url,
+                'video_duration': lesson.video_duration,
+                'order': lesson.order,
+                'estimated_minutes': lesson.estimated_minutes,
+                'is_preview': lesson.is_preview,
+                'is_milestone': lesson.is_milestone,
+            }
+        })
+    except Exception as e:
+        import traceback
+        return JsonResponse({'success': False, 'error': str(e), 'traceback': traceback.format_exc()}, status=500)
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_api_lesson_delete(request, lesson_id):
+    """Delete a lesson"""
+    lesson = get_object_or_404(Lesson, id=lesson_id)
+    
+    try:
+        lesson.delete()
+        return JsonResponse({'success': True, 'message': 'Lesson deleted successfully'})
+    except Exception as e:
+        import traceback
+        return JsonResponse({'success': False, 'error': str(e), 'traceback': traceback.format_exc()}, status=500)
+
+
+@login_required
+@role_required(['admin'])
+def dashboard_api_quizzes(request, course_id):
+    """Get all quizzes for a course"""
+    course = get_object_or_404(Course, id=course_id)
+    quizzes = course.quizzes.all().prefetch_related('questions').order_by('created_at')
+    
+    quizzes_data = []
+    for quiz in quizzes:
+        quizzes_data.append({
+            'id': quiz.id,
+            'title': quiz.title,
+            'description': quiz.description,
+            'quiz_type': quiz.quiz_type,
+            'passing_score': quiz.passing_score,
+            'time_limit_minutes': quiz.time_limit_minutes,
+            'max_attempts': quiz.max_attempts,
+            'questions_count': quiz.questions.count(),
+        })
+    
+    return JsonResponse({'success': True, 'quizzes': quizzes_data})
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_api_quiz_create(request, course_id):
+    """Create a new quiz"""
+    course = get_object_or_404(Course, id=course_id)
+    
+    try:
+        import json
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+        else:
+            data = request.POST
+        
+        title = data.get('title', '').strip()
+        if not title:
+            return JsonResponse({'success': False, 'error': 'Quiz title is required'}, status=400)
+        
+        quiz = Quiz.objects.create(
+            course=course,
+            title=title,
+            description=data.get('description', ''),
+            quiz_type=data.get('quiz_type', 'lesson'),
+            passing_score=int(data.get('passing_score', 70) or 70),
+            time_limit_minutes=int(data.get('time_limit_minutes', 0) or 0) or None,
+            max_attempts=int(data.get('max_attempts', 3) or 3),
+            randomize_questions=data.get('randomize_questions', True) == True or data.get('randomize_questions') == 'true',
+            show_correct_answers=data.get('show_correct_answers', True) == True or data.get('show_correct_answers') == 'true',
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'quiz': {
+                'id': quiz.id,
+                'title': quiz.title,
+                'description': quiz.description,
+                'quiz_type': quiz.quiz_type,
+                'passing_score': quiz.passing_score,
+                'time_limit_minutes': quiz.time_limit_minutes,
+                'max_attempts': quiz.max_attempts,
+                'questions_count': 0,
+            }
+        })
+    except Exception as e:
+        import traceback
+        return JsonResponse({'success': False, 'error': str(e), 'traceback': traceback.format_exc()}, status=500)
+
+
+@login_required
+@role_required(['admin'])
+def dashboard_api_quiz_update(request, quiz_id):
+    """Update a quiz (or get quiz data if GET request)"""
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    
+    if request.method == 'GET':
+        return JsonResponse({
+            'success': True,
+            'quiz': {
+                'id': quiz.id,
+                'title': quiz.title,
+                'description': quiz.description,
+                'quiz_type': quiz.quiz_type,
+                'passing_score': quiz.passing_score,
+                'time_limit_minutes': quiz.time_limit_minutes,
+                'max_attempts': quiz.max_attempts,
+                'randomize_questions': quiz.randomize_questions,
+                'show_correct_answers': quiz.show_correct_answers,
+            }
+        })
+    
+    try:
+        import json
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+        else:
+            data = request.POST
+        
+        # Check if this is a GET request via POST (for compatibility)
+        if data.get('get') == True or data.get('get') == 'true':
+            return JsonResponse({
+                'success': True,
+                'quiz': {
+                    'id': quiz.id,
+                    'title': quiz.title,
+                    'description': quiz.description,
+                    'quiz_type': quiz.quiz_type,
+                    'passing_score': quiz.passing_score,
+                    'time_limit_minutes': quiz.time_limit_minutes,
+                    'max_attempts': quiz.max_attempts,
+                    'randomize_questions': quiz.randomize_questions,
+                    'show_correct_answers': quiz.show_correct_answers,
+                }
+            })
+        
+        if 'title' in data:
+            quiz.title = data['title'].strip()
+        if 'description' in data:
+            quiz.description = data.get('description', '')
+        if 'quiz_type' in data:
+            quiz.quiz_type = data['quiz_type']
+        if 'passing_score' in data:
+            quiz.passing_score = int(data.get('passing_score', 70) or 70)
+        if 'time_limit_minutes' in data:
+            time_limit = int(data.get('time_limit_minutes', 0) or 0)
+            quiz.time_limit_minutes = time_limit if time_limit > 0 else None
+        if 'max_attempts' in data:
+            quiz.max_attempts = int(data.get('max_attempts', 3) or 3)
+        if 'randomize_questions' in data:
+            quiz.randomize_questions = data['randomize_questions'] == True or data['randomize_questions'] == 'true'
+        if 'show_correct_answers' in data:
+            quiz.show_correct_answers = data['show_correct_answers'] == True or data['show_correct_answers'] == 'true'
+        
+        quiz.save()
+        
+        return JsonResponse({
+            'success': True,
+            'quiz': {
+                'id': quiz.id,
+                'title': quiz.title,
+                'description': quiz.description,
+                'quiz_type': quiz.quiz_type,
+                'passing_score': quiz.passing_score,
+                'time_limit_minutes': quiz.time_limit_minutes,
+                'max_attempts': quiz.max_attempts,
+            }
+        })
+    except Exception as e:
+        import traceback
+        return JsonResponse({'success': False, 'error': str(e), 'traceback': traceback.format_exc()}, status=500)
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_api_quiz_delete(request, quiz_id):
+    """Delete a quiz"""
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    
+    try:
+        quiz.delete()
+        return JsonResponse({'success': True, 'message': 'Quiz deleted successfully'})
+    except Exception as e:
+        import traceback
+        return JsonResponse({'success': False, 'error': str(e), 'traceback': traceback.format_exc()}, status=500)
+
+
+@login_required
+@role_required(['admin'])
+def dashboard_api_quiz_questions(request, quiz_id):
+    """Get all questions for a quiz"""
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    questions = quiz.questions.all().prefetch_related('answers').order_by('order')
+    
+    questions_data = []
+    for question in questions:
+        answers_data = []
+        for answer in question.answers.all().order_by('order'):
+            answers_data.append({
+                'id': answer.id,
+                'answer_text': answer.answer_text,
+                'is_correct': answer.is_correct,
+                'order': answer.order,
+            })
+        
+        questions_data.append({
+            'id': question.id,
+            'question_text': question.question_text,
+            'question_type': question.question_type,
+            'points': question.points,
+            'order': question.order,
+            'explanation': question.explanation,
+            'hint': question.hint,
+            'answers': answers_data,
+        })
+    
+    return JsonResponse({'success': True, 'questions': questions_data})
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_api_question_create(request, quiz_id):
+    """Create a new question for a quiz"""
+    quiz = get_object_or_404(Quiz, id=quiz_id)
+    
+    try:
+        import json
+        if request.content_type == 'application/json':
+            data = json.loads(request.body)
+        else:
+            data = request.POST
+        
+        question_text = data.get('question_text', '').strip()
+        if not question_text:
+            return JsonResponse({'success': False, 'error': 'Question text is required'}, status=400)
+        
+        # Get the highest order number
+        max_order = quiz.questions.aggregate(Max('order'))['order__max'] or 0
+        
+        question = Question.objects.create(
+            quiz=quiz,
+            question_text=question_text,
+            question_type=data.get('question_type', 'multiple_choice'),
+            points=int(data.get('points', 1) or 1),
+            order=max_order + 1,
+            explanation=data.get('explanation', ''),
+            hint=data.get('hint', ''),
+        )
+        
+        # Create answers if provided
+        answers_data = data.get('answers', [])
+        if isinstance(answers_data, str):
+            import json
+            try:
+                answers_data = json.loads(answers_data)
+            except:
+                answers_data = []
+        
+        for idx, answer_data in enumerate(answers_data):
+            if isinstance(answer_data, dict):
+                Answer.objects.create(
+                    question=question,
+                    answer_text=answer_data.get('answer_text', ''),
+                    is_correct=answer_data.get('is_correct', False) == True or answer_data.get('is_correct') == 'true',
+                    order=answer_data.get('order', idx),
+                )
+        
+        return JsonResponse({
+            'success': True,
+            'question': {
+                'id': question.id,
+                'question_text': question.question_text,
+                'question_type': question.question_type,
+                'points': question.points,
+                'order': question.order,
+            }
+        })
+    except Exception as e:
+        import traceback
+        return JsonResponse({'success': False, 'error': str(e), 'traceback': traceback.format_exc()}, status=500)
+
+
+@login_required
+@role_required(['admin'])
+@require_POST
+def dashboard_api_editor_image(request):
+    """Upload image for Editor.js"""
+    from myApp.utils.cloudinary_utils import upload_image_to_cloudinary
+    
+    if 'file' not in request.FILES:
+        return JsonResponse({'success': False, 'error': 'No file provided'}, status=400)
+    
+    try:
+        file = request.FILES['file']
+        
+        # Upload to Cloudinary
+        result = upload_image_to_cloudinary(
+            file,
+            folder='editor-images',
+            should_convert_to_webp=True
+        )
+        
+        if result and result.get('secure_url'):
+            return JsonResponse({
+                'success': True,
+                'url': result['secure_url']
+            })
+        else:
+            return JsonResponse({'success': False, 'error': 'Upload failed'}, status=500)
+            
+    except Exception as e:
+        import traceback
+        logger.error(f'Editor image upload error: {traceback.format_exc()}')
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 

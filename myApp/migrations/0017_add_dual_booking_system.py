@@ -9,165 +9,216 @@ from django.db import migrations, models
 def get_booking_table_name(schema_editor):
     """Get the actual booking table name from database"""
     from django.db import connection
-    with connection.cursor() as cursor:
-        cursor.execute("""
-            SELECT table_name FROM information_schema.tables 
-            WHERE table_schema = 'public' 
-            AND (table_name = 'myApp_booking' OR table_name = 'myapp_booking' OR table_name = '"myApp_booking"')
-            LIMIT 1;
-        """)
-        result = cursor.fetchone()
-        if result:
-            return result[0]
+    try:
+        with connection.cursor() as cursor:
+            # Check for table with case-insensitive search
+            cursor.execute("""
+                SELECT table_name FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                AND LOWER(table_name) = LOWER('myapp_booking')
+                LIMIT 1;
+            """)
+            result = cursor.fetchone()
+            if result:
+                return result[0]
+            return None
+    except Exception:
         return None
 
 
 def safe_add_seats_booked_field(apps, schema_editor):
     """Add seats_booked field only if booking table exists"""
-    table_name = get_booking_table_name(schema_editor)
-    if not table_name:
-        # Table doesn't exist - skip database operation, state-only change
-        return
-    
     from django.db import connection
-    with connection.cursor() as cursor:
-        # Check if column already exists
-        cursor.execute("""
-            SELECT EXISTS (
-                SELECT 1 FROM information_schema.columns 
-                WHERE table_schema = 'public' 
-                AND table_name = %s
-                AND column_name = 'seats_booked'
-            );
-        """, [table_name])
-        if cursor.fetchone()[0]:
-            return  # Column already exists
+    
+    try:
+        table_name = get_booking_table_name(schema_editor)
+        if not table_name:
+            # Table doesn't exist - skip database operation, state-only change
+            return
         
-        # Add the column - use quoted identifier if table name has mixed case
-        quoted_table = f'"{table_name}"' if 'A' <= table_name[0] <= 'Z' else table_name
-        cursor.execute(f'ALTER TABLE {quoted_table} ADD COLUMN "seats_booked" integer DEFAULT 1 NOT NULL CHECK ("seats_booked" >= 0);')
-        cursor.execute(f'ALTER TABLE {quoted_table} ALTER COLUMN "seats_booked" DROP DEFAULT;')
+        with connection.cursor() as cursor:
+            # Double-check table exists by trying to query it
+            try:
+                cursor.execute(f'SELECT 1 FROM {connection.ops.quote_name(table_name)} LIMIT 1')
+            except Exception:
+                # Table doesn't actually exist, skip
+                return
+            
+            # Check if column already exists
+            cursor.execute("""
+                SELECT EXISTS (
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_schema = 'public' 
+                    AND table_name = %s
+                    AND column_name = 'seats_booked'
+                );
+            """, [table_name])
+            if cursor.fetchone()[0]:
+                return  # Column already exists
+            
+            # Add the column - use quoted identifier if table name has mixed case
+            quoted_table = connection.ops.quote_name(table_name)
+            try:
+                cursor.execute(f'ALTER TABLE {quoted_table} ADD COLUMN "seats_booked" integer DEFAULT 1 NOT NULL CHECK ("seats_booked" >= 0);')
+                cursor.execute(f'ALTER TABLE {quoted_table} ALTER COLUMN "seats_booked" DROP DEFAULT;')
+            except Exception as e:
+                # If table doesn't exist or column already exists, just skip
+                if 'does not exist' not in str(e).lower() and 'already exists' not in str(e).lower():
+                    raise
+    except Exception:
+        # Silently fail if table doesn't exist - this is expected for new databases
+        pass
 
 
 def safe_add_group_booking_field(apps, schema_editor):
     """Add group_booking field only if tables exist"""
-    booking_table = get_booking_table_name(schema_editor)
-    if not booking_table:
-        return
-    
     from django.db import connection
-    with connection.cursor() as cursor:
-        # Get bookingreminder table name
-        cursor.execute("""
-            SELECT table_name FROM information_schema.tables 
-            WHERE table_schema = 'public' 
-            AND (table_name = 'myApp_bookingreminder' OR table_name = 'myapp_bookingreminder')
-            LIMIT 1;
-        """)
-        result = cursor.fetchone()
-        if not result:
+    
+    try:
+        booking_table = get_booking_table_name(schema_editor)
+        if not booking_table:
             return
-        reminder_table = result[0]
         
-        # Check if column already exists
-        cursor.execute("""
-            SELECT EXISTS (
-                SELECT 1 FROM information_schema.columns 
+        with connection.cursor() as cursor:
+            # Get bookingreminder table name (case-insensitive)
+            cursor.execute("""
+                SELECT table_name FROM information_schema.tables 
                 WHERE table_schema = 'public' 
-                AND table_name = %s
-                AND column_name = 'group_booking_id'
-            );
-        """, [reminder_table])
-        if cursor.fetchone()[0]:
-            return  # Column already exists
-        
-        # Add the column with foreign key
-        quoted_reminder = f'"{reminder_table}"' if 'A' <= reminder_table[0] <= 'Z' else reminder_table
-        quoted_booking = f'"{booking_table}"' if 'A' <= booking_table[0] <= 'Z' else booking_table
-        
-        cursor.execute(f'ALTER TABLE {quoted_reminder} ADD COLUMN "group_booking_id" bigint NULL;')
-        cursor.execute(f'ALTER TABLE {quoted_reminder} ADD CONSTRAINT "myApp_bookingreminde_group_booking_id_3ee0880a_fk_myApp_boo" FOREIGN KEY ("group_booking_id") REFERENCES {quoted_booking}("id") DEFERRABLE INITIALLY DEFERRED;')
+                AND LOWER(table_name) = LOWER('myapp_bookingreminder')
+                LIMIT 1;
+            """)
+            result = cursor.fetchone()
+            if not result:
+                return
+            reminder_table = result[0]
+            
+            # Check if column already exists
+            cursor.execute("""
+                SELECT EXISTS (
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_schema = 'public' 
+                    AND table_name = %s
+                    AND column_name = 'group_booking_id'
+                );
+            """, [reminder_table])
+            if cursor.fetchone()[0]:
+                return  # Column already exists
+            
+            # Add the column with foreign key
+            quoted_reminder = connection.ops.quote_name(reminder_table)
+            quoted_booking = connection.ops.quote_name(booking_table)
+            
+            try:
+                cursor.execute(f'ALTER TABLE {quoted_reminder} ADD COLUMN "group_booking_id" bigint NULL;')
+                cursor.execute(f'ALTER TABLE {quoted_reminder} ADD CONSTRAINT "myApp_bookingreminde_group_booking_id_3ee0880a_fk_myApp_boo" FOREIGN KEY ("group_booking_id") REFERENCES {quoted_booking}("id") DEFERRABLE INITIALLY DEFERRED;')
+            except Exception as e:
+                # If constraint already exists or table doesn't exist, skip
+                if 'already exists' not in str(e).lower() and 'does not exist' not in str(e).lower():
+                    raise
+    except Exception:
+        # Silently fail if tables don't exist
+        pass
 
 
 def safe_add_one_on_one_booking_field(apps, schema_editor):
     """Add one_on_one_booking field only if tables exist"""
     from django.db import connection
-    with connection.cursor() as cursor:
-        # Check if bookingreminder table exists
-        cursor.execute("""
-            SELECT table_name FROM information_schema.tables 
-            WHERE table_schema = 'public' 
-            AND (table_name = 'myApp_bookingreminder' OR table_name = 'myapp_bookingreminder')
-            LIMIT 1;
-        """)
-        result = cursor.fetchone()
-        if not result:
-            return  # Table doesn't exist
-        reminder_table = result[0]
-        
-        # Check if oneononebooking table exists (it should since it's created earlier in the migration)
-        cursor.execute("""
-            SELECT table_name FROM information_schema.tables 
-            WHERE table_schema = 'public' 
-            AND (table_name = 'myApp_oneononebooking' OR table_name = 'myapp_oneononebooking')
-            LIMIT 1;
-        """)
-        ooo_result = cursor.fetchone()
-        if not ooo_result:
-            return  # OneOnOneBooking table doesn't exist yet
-        
-        # Check if column already exists
-        cursor.execute("""
-            SELECT EXISTS (
-                SELECT 1 FROM information_schema.columns 
+    
+    try:
+        with connection.cursor() as cursor:
+            # Check if bookingreminder table exists (case-insensitive)
+            cursor.execute("""
+                SELECT table_name FROM information_schema.tables 
                 WHERE table_schema = 'public' 
-                AND table_name = %s
-                AND column_name = 'one_on_one_booking_id'
-            );
-        """, [reminder_table])
-        if cursor.fetchone()[0]:
-            return  # Column already exists
-        
-        # Add the column with foreign key
-        quoted_reminder = f'"{reminder_table}"' if 'A' <= reminder_table[0] <= 'Z' else reminder_table
-        quoted_ooo = f'"{ooo_result[0]}"' if 'A' <= ooo_result[0][0] <= 'Z' else ooo_result[0]
-        
-        cursor.execute(f'ALTER TABLE {quoted_reminder} ADD COLUMN "one_on_one_booking_id" bigint NULL;')
-        cursor.execute(f'ALTER TABLE {quoted_reminder} ADD CONSTRAINT "myApp_bookingreminde_one_on_one_booking_i_fcfc9457_fk_myApp_one" FOREIGN KEY ("one_on_one_booking_id") REFERENCES {quoted_ooo}("id") DEFERRABLE INITIALLY DEFERRED;')
-        # Index is created automatically by Django
+                AND LOWER(table_name) = LOWER('myapp_bookingreminder')
+                LIMIT 1;
+            """)
+            result = cursor.fetchone()
+            if not result:
+                return  # Table doesn't exist
+            reminder_table = result[0]
+            
+            # Check if oneononebooking table exists (it should since it's created earlier in the migration)
+            cursor.execute("""
+                SELECT table_name FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                AND LOWER(table_name) = LOWER('myapp_oneononebooking')
+                LIMIT 1;
+            """)
+            ooo_result = cursor.fetchone()
+            if not ooo_result:
+                return  # OneOnOneBooking table doesn't exist yet
+            
+            # Check if column already exists
+            cursor.execute("""
+                SELECT EXISTS (
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_schema = 'public' 
+                    AND table_name = %s
+                    AND column_name = 'one_on_one_booking_id'
+                );
+            """, [reminder_table])
+            if cursor.fetchone()[0]:
+                return  # Column already exists
+            
+            # Add the column with foreign key
+            quoted_reminder = connection.ops.quote_name(reminder_table)
+            quoted_ooo = connection.ops.quote_name(ooo_result[0])
+            
+            try:
+                cursor.execute(f'ALTER TABLE {quoted_reminder} ADD COLUMN "one_on_one_booking_id" bigint NULL;')
+                cursor.execute(f'ALTER TABLE {quoted_reminder} ADD CONSTRAINT "myApp_bookingreminde_one_on_one_booking_i_fcfc9457_fk_myApp_one" FOREIGN KEY ("one_on_one_booking_id") REFERENCES {quoted_ooo}("id") DEFERRABLE INITIALLY DEFERRED;')
+                # Index is created automatically by Django
+            except Exception as e:
+                # If constraint already exists or table doesn't exist, skip
+                if 'already exists' not in str(e).lower() and 'does not exist' not in str(e).lower():
+                    raise
+    except Exception:
+        # Silently fail if tables don't exist
+        pass
 
 
 def safe_remove_booking_field(apps, schema_editor):
     """Remove booking field from bookingreminder only if table exists"""
     from django.db import connection
-    with connection.cursor() as cursor:
-        # Get bookingreminder table name
-        cursor.execute("""
-            SELECT table_name FROM information_schema.tables 
-            WHERE table_schema = 'public' 
-            AND (table_name = 'myApp_bookingreminder' OR table_name = 'myapp_bookingreminder')
-            LIMIT 1;
-        """)
-        result = cursor.fetchone()
-        if not result:
-            return  # Table doesn't exist
-        reminder_table = result[0]
-        
-        # Check if column exists
-        cursor.execute("""
-            SELECT EXISTS (
-                SELECT 1 FROM information_schema.columns 
+    
+    try:
+        with connection.cursor() as cursor:
+            # Get bookingreminder table name (case-insensitive)
+            cursor.execute("""
+                SELECT table_name FROM information_schema.tables 
                 WHERE table_schema = 'public' 
-                AND table_name = %s
-                AND column_name = 'booking_id'
-            );
-        """, [reminder_table])
-        if not cursor.fetchone()[0]:
-            return  # Column doesn't exist, nothing to remove
-        
-        # Remove the column
-        quoted_table = f'"{reminder_table}"' if 'A' <= reminder_table[0] <= 'Z' else reminder_table
-        cursor.execute(f'ALTER TABLE {quoted_table} DROP COLUMN "booking_id" CASCADE;')
+                AND LOWER(table_name) = LOWER('myapp_bookingreminder')
+                LIMIT 1;
+            """)
+            result = cursor.fetchone()
+            if not result:
+                return  # Table doesn't exist
+            reminder_table = result[0]
+            
+            # Check if column exists
+            cursor.execute("""
+                SELECT EXISTS (
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_schema = 'public' 
+                    AND table_name = %s
+                    AND column_name = 'booking_id'
+                );
+            """, [reminder_table])
+            if not cursor.fetchone()[0]:
+                return  # Column doesn't exist, nothing to remove
+            
+            # Remove the column
+            quoted_table = connection.ops.quote_name(reminder_table)
+            try:
+                cursor.execute(f'ALTER TABLE {quoted_table} DROP COLUMN "booking_id" CASCADE;')
+            except Exception as e:
+                # If column doesn't exist, skip
+                if 'does not exist' not in str(e).lower():
+                    raise
+    except Exception:
+        # Silently fail if table doesn't exist
+        pass
 
 
 class Migration(migrations.Migration):

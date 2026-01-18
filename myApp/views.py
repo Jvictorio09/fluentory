@@ -4,7 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.contrib import messages
 from django.http import JsonResponse
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 from django.db.models import Count, Avg, Sum, Q
 from django.db import connection, transaction
 from django.utils import timezone
@@ -248,7 +248,7 @@ def login_view(request):
                 request.session['force_password_reset_user_id'] = user.id
                 login(request, user)
                 message_auth(request, messages.WARNING, 'You must change your password before continuing.')
-                return redirect('accounts:password_change')
+                return redirect('password_change')
             
             login(request, user)
             message_auth(request, messages.SUCCESS, f'Welcome back, {user.first_name or user.username}!')
@@ -395,6 +395,154 @@ def logout_view(request):
     return redirect('login')
 
 
+# ============================================
+# CUSTOM PASSWORD RESET VIEWS (using custom templates)
+# ============================================
+
+from django.contrib.auth.views import (
+    PasswordResetView, PasswordResetDoneView, 
+    PasswordResetConfirmView, PasswordResetCompleteView,
+    PasswordChangeView, PasswordChangeDoneView
+)
+
+class CustomPasswordResetView(PasswordResetView):
+    """Custom password reset form - uses our custom template and email"""
+    template_name = 'registration/password_reset_form.html'
+    email_template_name = 'registration/password_reset_email.html'
+    subject_template_name = 'registration/password_reset_email_subject.txt'
+    success_url = reverse_lazy('password_reset_done')
+    from_email = None  # Will use DEFAULT_FROM_EMAIL from settings
+
+class CustomPasswordResetDoneView(PasswordResetDoneView):
+    """Password reset email sent confirmation"""
+    template_name = 'registration/password_reset_done.html'
+
+class CustomPasswordResetConfirmView(PasswordResetConfirmView):
+    """Password reset confirmation - enter new password"""
+    template_name = 'registration/password_reset_confirm.html'
+    success_url = reverse_lazy('password_reset_complete')
+    # Disable automatic redirect to set-password
+    post_reset_login = False
+    post_reset_login_backend = None
+    
+    def dispatch(self, request, *args, **kwargs):
+        # Django's PasswordResetConfirmView requires both uidb64 and token
+        # When token is 'set-password', Django has already validated the original token
+        # and stored the user in the session. We still need to pass 'set-password' as the token.
+        
+        # Ensure token is in kwargs (even if it's 'set-password')
+        if 'token' not in kwargs or kwargs.get('token') is None:
+            # If missing, check if URL path contains 'set-password'
+            if 'set-password' in request.path:
+                kwargs['token'] = 'set-password'
+        
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.info(f"CustomPasswordResetConfirmView: uidb64={kwargs.get('uidb64')}, token={kwargs.get('token')}, path={request.path}")
+        
+        # Call parent dispatch - it should handle 'set-password' as a valid token
+        return super().dispatch(request, *args, **kwargs)
+    
+    def get_template_names(self):
+        # Force our custom template - check all possible template paths
+        return [
+            'registration/password_reset_confirm.html',
+            'myApp/templates/registration/password_reset_confirm.html',
+        ]
+    
+    def render_to_response(self, context, **response_kwargs):
+        # Override to explicitly use our template (Django admin template is being found first)
+        from django.template.loader import get_template, select_template
+        from django.http import HttpResponse
+        import os
+        from django.conf import settings
+        
+        # Try multiple paths to find our template
+        template_paths = [
+            'registration/password_reset_confirm.html',
+            'myApp/templates/registration/password_reset_confirm.html',
+        ]
+        
+        # Try to load from our app directory explicitly
+        try:
+            app_template_path = os.path.join(settings.BASE_DIR, 'myApp', 'templates', 'registration', 'password_reset_confirm.html')
+            if os.path.exists(app_template_path):
+                from django.template import Template, Context
+                from django.template.loader import get_template_from_string
+                with open(app_template_path, 'r', encoding='utf-8') as f:
+                    template_content = f.read()
+                template = Template(template_content)
+                html = template.render(Context(context), self.request)
+                return HttpResponse(html)
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error loading template from file: {e}")
+        
+        # Fallback: try select_template with explicit paths
+        try:
+            template = select_template(template_paths)
+            html = template.render(context, self.request)
+            return HttpResponse(html)
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Template rendering error: {e}")
+            # Fallback to parent (should not happen)
+            return super().render_to_response(context, **response_kwargs)
+
+class CustomPasswordResetCompleteView(PasswordResetCompleteView):
+    """Password reset complete - success page"""
+    template_name = 'registration/password_reset_complete.html'
+    
+    def render_to_response(self, context, **response_kwargs):
+        # Force use our custom template (not Django admin's)
+        from django.template.loader import render_to_string
+        from django.http import HttpResponse
+        import os
+        from django.conf import settings
+        
+        # Try to load from project-level templates first
+        try:
+            project_template_path = os.path.join(settings.BASE_DIR, 'templates', 'registration', 'password_reset_complete.html')
+            if os.path.exists(project_template_path):
+                with open(project_template_path, 'r', encoding='utf-8') as f:
+                    from django.template import Template, Context
+                    template_content = f.read()
+                    template = Template(template_content)
+                    html = template.render(Context(context), self.request)
+                    return HttpResponse(html)
+        except Exception:
+            pass
+        
+        # Fallback to template loader
+        try:
+            html = render_to_string('registration/password_reset_complete.html', context, request=self.request)
+            return HttpResponse(html)
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Template rendering error: {e}")
+            return super().render_to_response(context, **response_kwargs)
+
+class CustomPasswordChangeView(PasswordChangeView):
+    """Password change form for logged-in users"""
+    template_name = 'registration/password_change.html'
+    success_url = reverse_lazy('password_change_done')
+
+class CustomPasswordChangeDoneView(PasswordChangeDoneView):
+    """Password change complete"""
+    template_name = 'registration/password_change_done.html'
+
+# Create view functions from classes
+custom_password_reset = CustomPasswordResetView.as_view()
+custom_password_reset_done = CustomPasswordResetDoneView.as_view()
+custom_password_reset_confirm = CustomPasswordResetConfirmView.as_view()
+custom_password_reset_complete = CustomPasswordResetCompleteView.as_view()
+custom_password_change = CustomPasswordChangeView.as_view()
+custom_password_change_done = CustomPasswordChangeDoneView.as_view()
+
+
 def redirect_by_role(user):
     """Redirect user based on their role"""
     # Allow superusers/staff to access admin dashboard
@@ -406,10 +554,16 @@ def redirect_by_role(user):
     
     # Check if user is a teacher (must be approved)
     if role == 'instructor' or hasattr(user, 'teacher_profile'):
-        if hasattr(user, 'teacher_profile') and user.teacher_profile.is_approved:
-            return redirect('teacher_dashboard')
-        # Pending teacher - redirect to pending page
-        return redirect('teacher_signup_pending')
+        if hasattr(user, 'teacher_profile'):
+            teacher = user.teacher_profile
+            if teacher.is_approved:
+                # Check if profile needs completion
+                if teacher.needs_profile_completion():
+                    return redirect('teacher_complete_profile')
+                return redirect('teacher_dashboard')
+            # Pending teacher - redirect to pending page
+            return redirect('teacher_signup_pending')
+        return redirect('teacher_dashboard')
     elif role == 'admin':
         return redirect('dashboard:overview')
     elif role == 'partner':
@@ -1323,7 +1477,7 @@ def send_gift_email(gift_enrollment, request=None):
     
     from django.core.mail import send_mail
     from django.conf import settings
-    from django.urls import reverse
+    from django.urls import reverse, reverse_lazy
     
     # Validate recipient email
     if not gift_enrollment.recipient_email:
@@ -1882,6 +2036,53 @@ def verify_certificate(request, certificate_id):
     return render(request, 'verify_certificate.html', context)
 
 
+@login_required
+def view_certificate(request, certificate_id):
+    """View certificate (for certificate owner or admin)"""
+    certificate = get_object_or_404(Certificate, certificate_id=certificate_id)
+    
+    # Check permissions
+    if not (request.user == certificate.user or request.user.is_staff or get_or_create_profile(request.user).role == 'admin'):
+        messages.error(request, 'You do not have permission to view this certificate.')
+        return redirect('student_home')
+    
+    # Ensure QR code is generated
+    if not certificate.qr_code:
+        certificate.generate_qr_code(request.build_absolute_uri('/')[:-1])
+    
+    context = {
+        'certificate': certificate,
+    }
+    return render(request, 'student/certificate_view.html', context)
+
+
+@login_required
+def download_certificate_pdf(request, certificate_id):
+    """Download certificate as PDF"""
+    from myApp.utils.certificate_utils import generate_certificate_pdf
+    from django.http import HttpResponse
+    
+    certificate = get_object_or_404(Certificate, certificate_id=certificate_id)
+    
+    # Check permissions
+    if not (request.user == certificate.user or request.user.is_staff or get_or_create_profile(request.user).role == 'admin'):
+        messages.error(request, 'You do not have permission to download this certificate.')
+        return redirect('student_home')
+    
+    # Ensure QR code is generated
+    if not certificate.qr_code:
+        certificate.generate_qr_code(request.build_absolute_uri('/')[:-1])
+    
+    # Generate PDF
+    pdf_buffer = generate_certificate_pdf(certificate, request)
+    
+    # Create HTTP response
+    response = HttpResponse(pdf_buffer.read(), content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="certificate_{certificate.certificate_id}.pdf"'
+    
+    return response
+
+
 # ============================================
 # ADMIN VIEWS
 # ============================================
@@ -2251,10 +2452,66 @@ def admin_site_images(request):
 # ============================================
 
 @login_required
+def teacher_complete_profile(request):
+    """Complete teacher profile on first login"""
+    user = request.user
+    
+    # Check if user has teacher profile
+    if not hasattr(user, 'teacher_profile'):
+        messages.error(request, 'Teacher profile not found.')
+        return redirect('student_home')
+    
+    teacher = user.teacher_profile
+    
+    # If profile is already complete, redirect to dashboard
+    if not teacher.needs_profile_completion():
+        return redirect('teacher_dashboard')
+    
+    if request.method == 'POST':
+        # Get form data
+        specialization = request.POST.get('specialization', '').strip()
+        bio = request.POST.get('bio', '').strip()
+        years_experience = request.POST.get('years_experience', '0').strip() or '0'
+        
+        # Validation
+        if not specialization:
+            messages.error(request, 'Specialization is required.')
+            return render(request, 'teacher/complete_profile.html', {
+                'teacher': teacher,
+                'form_data': request.POST
+            })
+        
+        if not bio:
+            messages.error(request, 'Bio is required.')
+            return render(request, 'teacher/complete_profile.html', {
+                'teacher': teacher,
+                'form_data': request.POST
+            })
+        
+        # Update teacher profile
+        teacher.specialization = specialization
+        teacher.bio = bio
+        teacher.years_experience = int(years_experience) if years_experience.isdigit() else 0
+        teacher.save()
+        
+        messages.success(request, 'Profile completed successfully! Welcome to Fluentory!')
+        return redirect('teacher_dashboard')
+    
+    # GET request - show form
+    return render(request, 'teacher/complete_profile.html', {
+        'teacher': teacher
+    })
+
+
+@login_required
 def teacher_dashboard(request):
     """Teacher dashboard"""
     user = request.user
     profile = get_or_create_profile(user)
+    
+    # Check if profile needs completion (before allowing access)
+    if hasattr(user, 'teacher_profile') and user.teacher_profile.needs_profile_completion():
+        return redirect('teacher_complete_profile')
     
     # Allow admin/superuser to access teacher views automatically (godlike admin)
     is_superuser_or_admin = user.is_superuser or user.is_staff or profile.role == 'admin'
@@ -2318,15 +2575,38 @@ def teacher_dashboard(request):
             enrollment__course_id__in=course_ids,
             started_at__gte=week_ago
         ).values('enrollment__user').distinct().count() if course_ids else 0
-        upcoming_classes = LiveClassSession.objects.filter(
-            status='scheduled',
-            scheduled_start__gte=timezone.now()
-        ).select_related('course').order_by('scheduled_start')[:5]
+        try:
+            # Defer scheduled_end to avoid querying non-existent column
+            upcoming_classes = LiveClassSession.objects.filter(
+                status='scheduled',
+                scheduled_start__gte=timezone.now()
+            ).select_related('course').defer('scheduled_end').order_by('scheduled_start')[:5]
+        except Exception as e:
+            # Handle case where scheduled_end column doesn't exist
+            import logging
+            logger = logging.getLogger(__name__)
+            error_str = str(e).lower()
+            if 'scheduled_end' in error_str and ('does not exist' in error_str or 'no such column' in error_str):
+                logger.warning(f"LiveClassSession.scheduled_end column does not exist. Using empty queryset.")
+                upcoming_classes = LiveClassSession.objects.none()
+            else:
+                raise  # Re-raise other errors
         recent_announcements = CourseAnnouncement.objects.all().select_related('course').order_by('-created_at')[:5]
         unread_messages_count = 0
     else:
         # Normal teacher mode
-        assigned_courses = CourseTeacher.objects.filter(teacher=teacher).select_related('course')
+        try:
+            assigned_courses = CourseTeacher.objects.filter(teacher=teacher).select_related('course')
+        except Exception as e:
+            # Handle case where CourseTeacher table doesn't exist yet
+            import logging
+            logger = logging.getLogger(__name__)
+            error_str = str(e).lower()
+            if 'does not exist' in error_str or 'no such table' in error_str:
+                logger.warning(f"CourseTeacher table does not exist yet. Using empty queryset.")
+                assigned_courses = CourseTeacher.objects.none()  # Empty queryset
+            else:
+                raise  # Re-raise other errors
         course_ids = [ct.course.id for ct in assigned_courses]
         
         # KPIs
@@ -2343,11 +2623,23 @@ def teacher_dashboard(request):
         total_courses = len(course_ids)
         
         # Upcoming live classes
-        upcoming_classes = LiveClassSession.objects.filter(
-            teacher=teacher,
-            status='scheduled',
-            scheduled_start__gte=timezone.now()
-        ).select_related('course').order_by('scheduled_start')[:5]
+        try:
+            # Defer scheduled_end to avoid querying non-existent column
+            upcoming_classes = LiveClassSession.objects.filter(
+                teacher=teacher,
+                status='scheduled',
+                scheduled_start__gte=timezone.now()
+            ).select_related('course').defer('scheduled_end').order_by('scheduled_start')[:5]
+        except Exception as e:
+            # Handle case where scheduled_end column doesn't exist
+            import logging
+            logger = logging.getLogger(__name__)
+            error_str = str(e).lower()
+            if 'scheduled_end' in error_str and ('does not exist' in error_str or 'no such column' in error_str):
+                logger.warning(f"LiveClassSession.scheduled_end column does not exist. Using empty queryset.")
+                upcoming_classes = LiveClassSession.objects.none()
+            else:
+                raise  # Re-raise other errors
         
         # Recent announcements
         recent_announcements = CourseAnnouncement.objects.filter(
@@ -3049,7 +3341,7 @@ def teacher_schedule(request):
         messages.error(request, 'Teacher profile not found. Please contact support.')
         return redirect('teacher_dashboard')
     
-    live_classes = LiveClassSession.objects.filter(teacher=teacher_instance).select_related('course').order_by('-scheduled_start')
+    live_classes = LiveClassSession.objects.filter(teacher=teacher_instance).select_related('course').defer('scheduled_end').order_by('-scheduled_start')
     
     # Filters
     status = request.GET.get('status')
@@ -4295,7 +4587,7 @@ def teacher_schedule_calendar(request):
     availability_slots = TeacherAvailability.objects.filter(teacher=teacher).order_by('day_of_week', 'start_time', 'start_datetime')
     
     # Get all live class sessions
-    live_sessions = LiveClassSession.objects.filter(teacher=teacher).select_related('course').order_by('scheduled_start')
+    live_sessions = LiveClassSession.objects.filter(teacher=teacher).select_related('course').defer('scheduled_end').order_by('scheduled_start')
     
     # Get all bookings
     bookings = LiveClassBooking.objects.filter(

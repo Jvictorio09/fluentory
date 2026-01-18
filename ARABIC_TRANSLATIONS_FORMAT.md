@@ -154,3 +154,5 @@ msgstr ""
 When you add `{% trans %}` tags to templates and run `makemessages` again, new entries will be added automatically. Just fill in the `msgstr` fields with Arabic translations.
 
 
+
+

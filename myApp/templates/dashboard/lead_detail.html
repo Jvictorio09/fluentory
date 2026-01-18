@@ -90,7 +90,18 @@
                         <div>
                             <label class="block text-sm font-medium text-white/60 mb-1">Last Contact</label>
                             <p class="text-white">{{ lead.last_contact_date|date:"M d, Y H:i"|default:"Never" }}</p>
+                            {% if lead.infobip_channel %}
+                            <p class="text-xs text-emerald-400 mt-1">
+                                <i class="fas fa-sync-alt mr-1"></i>Synced from Infobip via {{ lead.infobip_channel }}
+                            </p>
+                            {% endif %}
                         </div>
+                        {% if lead.infobip_last_synced_at %}
+                        <div>
+                            <label class="block text-sm font-medium text-white/60 mb-1">Last Infobip Sync</label>
+                            <p class="text-white">{{ lead.infobip_last_synced_at|date:"M d, Y H:i" }}</p>
+                        </div>
+                        {% endif %}
                         <div>
                             <label class="block text-sm font-medium text-white/60 mb-1">Created</label>
                             <p class="text-white">{{ lead.created_at|date:"M d, Y H:i" }}</p>

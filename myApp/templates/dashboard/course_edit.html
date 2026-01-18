@@ -1,223 +1,2664 @@
 {% extends 'dashboard/base.html' %}
+{% load static %}
+
+{% block title %}Edit Course - {{ course.title }}{% endblock %}
+
+{% block extra_head %}
+<!-- Editor.js Core and Tools - Using jsDelivr CDN with correct @editorjs package format -->
+<script>
+// Define checkEditorJSReady BEFORE script tags that use it
+// Global flag to track when EditorJS is ready
+window.editorJSReady = false;
+
+// Function to check if all required tools are loaded
+window.checkEditorJSReady = function() {
+    // Check if tools are available (they might be on window or global scope)
+    const checkTool = (name) => {
+        return typeof window[name] !== 'undefined' || typeof eval(name) !== 'undefined';
+    };
+    
+    const required = ['EditorJS', 'Paragraph', 'Header'];
+    const missingRequired = required.filter(name => {
+        try {
+            return typeof window[name] === 'undefined' && typeof eval(name) === 'undefined';
+        } catch (e) {
+            return true;
+        }
+    });
+    
+    if (missingRequired.length === 0) {
+        window.editorJSReady = true;
+        console.log('✅ EditorJS and required tools are ready');
+        // Trigger custom event
+        window.dispatchEvent(new CustomEvent('editorjs:ready'));
+        return true;
+    } else {
+        console.warn('⚠️ Missing required tools:', missingRequired);
+        console.log('Debug - Available globals:', {
+            EditorJS: typeof EditorJS,
+            Paragraph: typeof Paragraph,
+            Header: typeof Header,
+            List: typeof List
+        });
+    }
+    return false;
+};
+
+// Check after all scripts have a chance to load
+setTimeout(function() {
+    window.checkEditorJSReady();
+}, 1000);
+</script>
+
+<!-- Load Editor.js scripts AFTER function is defined -->
+<!-- Using unpkg.com which works better with Editor.js packages -->
+<script src="https://unpkg.com/@editorjs/editorjs@2.28.2" 
+        onload="setTimeout(function() { if(typeof EditorJS !== 'undefined') { console.log('✅ EditorJS core loaded'); window.checkEditorJSReady(); } else { console.error('❌ EditorJS failed to load'); } }, 50);"
+        onerror="console.error('❌ Failed to load EditorJS core script');"></script>
+<script src="https://unpkg.com/@editorjs/header@2.8.1"
+        onload="setTimeout(function() { if(typeof Header !== 'undefined') { console.log('✅ Header loaded'); window.checkEditorJSReady(); } else { console.error('❌ Header failed to load'); } }, 50);"
+        onerror="console.error('❌ Failed to load Header tool');"></script>
+<script src="https://unpkg.com/@editorjs/paragraph@2.11.0"
+        onload="setTimeout(function() { if(typeof Paragraph !== 'undefined') { console.log('✅ Paragraph loaded'); window.checkEditorJSReady(); } else { console.error('❌ Paragraph failed to load'); } }, 50);"
+        onerror="console.error('❌ Failed to load Paragraph tool');"></script>
+<script src="https://unpkg.com/@editorjs/list@1.11.3"
+        onload="setTimeout(function() { if(typeof List !== 'undefined') { console.log('✅ List loaded'); window.checkEditorJSReady(); } else { console.warn('⚠️ List tool failed to load (optional)'); } }, 50);"
+        onerror="console.warn('⚠️ Failed to load List tool (optional)');"></script>
+<script src="https://unpkg.com/@editorjs/quote@2.6.0"
+        onload="setTimeout(function() { if(typeof Quote !== 'undefined') { console.log('✅ Quote loaded'); window.checkEditorJSReady(); } else { console.warn('⚠️ Quote tool failed to load (optional)'); } }, 50);"
+        onerror="console.warn('⚠️ Failed to load Quote tool (optional)');"></script>
+<script src="https://unpkg.com/@editorjs/code@2.9.0"
+        onload="setTimeout(function() { if(typeof Code !== 'undefined') { console.log('✅ Code loaded'); window.checkEditorJSReady(); } else { console.warn('⚠️ Code tool failed to load (optional)'); } }, 50);"
+        onerror="console.warn('⚠️ Failed to load Code tool (optional)');"></script>
+<script src="https://unpkg.com/@editorjs/table@2.2.2"
+        onload="setTimeout(function() { if(typeof Table !== 'undefined') { console.log('✅ Table loaded'); window.checkEditorJSReady(); } else { console.warn('⚠️ Table tool failed to load (optional)'); } }, 50);"
+        onerror="console.warn('⚠️ Failed to load Table tool (optional)');"></script>
+<script src="https://unpkg.com/@editorjs/delimiter@1.4.0"
+        onload="setTimeout(function() { if(typeof Delimiter !== 'undefined') { console.log('✅ Delimiter loaded'); window.checkEditorJSReady(); } else { console.warn('⚠️ Delimiter tool failed to load (optional)'); } }, 50);"
+        onerror="console.warn('⚠️ Failed to load Delimiter tool (optional)');"></script>
+<script src="https://unpkg.com/@editorjs/raw@2.5.1"
+        onload="setTimeout(function() { if(typeof Raw !== 'undefined') { console.log('✅ Raw loaded'); window.checkEditorJSReady(); } else { console.warn('⚠️ Raw tool failed to load (optional)'); } }, 50);"
+        onerror="console.warn('⚠️ Failed to load Raw tool (optional)');"></script>
+<script src="https://unpkg.com/@editorjs/image@2.9.0"
+        onload="setTimeout(function() { if(typeof ImageTool !== 'undefined') { console.log('✅ ImageTool loaded'); window.checkEditorJSReady(); } else { console.warn('⚠️ ImageTool failed to load (optional)'); } }, 50);"
+        onerror="console.warn('⚠️ Failed to load ImageTool (optional)');"></script>
+{% endblock %}
 
 {% block content %}
-<div class="w-full max-w-[1600px] mx-auto">
+<div class="p-6 lg:p-10">
     <!-- Header -->
-    <div class="mb-8 sm:mb-10 animate-fade-in-up stagger-1">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <div>
-                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-extralight text-white mb-3 tracking-[-0.02em]">
-                    Edit Course
-                </h1>
-                <p class="text-base sm:text-lg text-white/70 font-light">{{ course.title }}</p>
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+        <div>
+            <h1 class="text-3xl font-light text-white mb-2">Edit Course</h1>
+            <p class="text-white/70">{{ course.title }}</p>
+        </div>
+        <div class="flex gap-3">
+            <a href="{% url 'dashboard:courses' %}" class="px-6 py-2.5 bg-[#254346]/70 border border-white/10 text-white rounded-xl hover:bg-[#254346]/90 hover:border-[#82C293]/40 transition-all duration-300 font-medium hover:scale-105">
+                <i class="fas fa-arrow-left mr-2"></i>Back
+            </a>
+            {% if course.status == 'published' %}
+            <form method="post" action="{% url 'dashboard:course_toggle_publish' course.id %}" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="px-6 py-2.5 bg-[#f8da03]/20 border border-[#f8da03]/40 text-[#f8da03] rounded-xl font-medium hover:bg-[#f8da03]/30 transition-all duration-300 hover:scale-105">
+                    <i class="fas fa-eye-slash mr-2"></i>Unpublish
+                </button>
+            </form>
+            {% else %}
+            <form method="post" action="{% url 'dashboard:course_toggle_publish' course.id %}" class="inline">
+                {% csrf_token %}
+                <button type="submit" class="px-6 py-2.5 bg-[#259d78]/20 border border-[#259d78]/30 text-[#259d78] rounded-xl font-medium hover:bg-[#259d78]/30 transition-all duration-300 hover:scale-105">
+                    <i class="fas fa-eye mr-2"></i>Publish
+                </button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="bg-[#04363a]/90 backdrop-blur-xl rounded-2xl border border-white/10 mb-6">
+        <div class="flex border-b border-white/10 overflow-x-auto">
+            <button onclick="switchTab('details')" id="tab-details" class="tab-button active px-6 py-4 text-white/70 hover:text-white border-b-2 border-transparent hover:border-[#82C293]/50 transition-all">
+                <i class="fas fa-info-circle mr-2"></i>Course Details
+            </button>
+            {% if course.course_type == 'recorded' %}
+            <button onclick="switchTab('content')" id="tab-content" class="tab-button px-6 py-4 text-white/70 hover:text-white border-b-2 border-transparent hover:border-[#82C293]/50 transition-all">
+                <i class="fas fa-book mr-2"></i>Modules & Lessons
+            </button>
+            <button onclick="switchTab('quizzes')" id="tab-quizzes" class="tab-button px-6 py-4 text-white/70 hover:text-white border-b-2 border-transparent hover:border-[#82C293]/50 transition-all">
+                <i class="fas fa-question-circle mr-2"></i>Quizzes
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Tab Content: Course Details -->
+    <div id="tab-content-details" class="tab-content">
+        <div class="bg-[#04363a]/90 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] p-8">
+            <form method="post" enctype="multipart/form-data" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Basic Information -->
+                <div class="space-y-4">
+                    <h2 class="text-xl font-semibold text-white mb-4">Basic Information</h2>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-white/80 mb-2">Title <span class="text-red-400">*</span></label>
+                        <input type="text" name="title" value="{{ course.title }}" required class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-white/80 mb-2">Slug</label>
+                        <input type="text" name="slug" value="{{ course.slug }}" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-white/80 mb-2">Short Description</label>
+                        <input type="text" name="short_description" value="{{ course.short_description }}" maxlength="300" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-white/80 mb-2">Description <span class="text-red-400">*</span></label>
+                        <textarea name="description" rows="5" required class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">{{ course.description }}</textarea>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-white/80 mb-2">Outcome</label>
+                        <input type="text" name="outcome" value="{{ course.outcome }}" maxlength="300" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-white/80 mb-2">Thumbnail</label>
+                        <input type="file" name="thumbnail" accept="image/*" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                        {% if course.thumbnail %}
+                        <p class="text-xs text-white/50 mt-1">Current: <a href="{{ course.thumbnail.url }}" target="_blank" class="text-[#82C293] hover:underline">{{ course.thumbnail.name }}</a></p>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Classification -->
+                <div class="space-y-4 border-t border-white/10 pt-6">
+                    <h2 class="text-xl font-semibold text-white mb-4">Classification</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-white/80 mb-2">Category</label>
+                            <select name="category" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                                <option value="">Select Category</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}" {% if course.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-white/80 mb-2">Level</label>
+                            <select name="level" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                                <option value="beginner" {% if course.level == 'beginner' %}selected{% endif %}>Beginner</option>
+                                <option value="intermediate" {% if course.level == 'intermediate' %}selected{% endif %}>Intermediate</option>
+                                <option value="advanced" {% if course.level == 'advanced' %}selected{% endif %}>Advanced</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-white/80 mb-2">Course Type</label>
+                            <select name="course_type" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                                <option value="recorded" {% if course.course_type == 'recorded' %}selected{% endif %}>Recorded</option>
+                                <option value="live" {% if course.course_type == 'live' %}selected{% endif %}>Live</option>
+                                <option value="hybrid" {% if course.course_type == 'hybrid' %}selected{% endif %}>Hybrid</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-white/80 mb-2">Language</label>
+                            <select name="language" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                                <option value="en" {% if course.language == 'en' %}selected{% endif %}>English</option>
+                                <option value="es" {% if course.language == 'es' %}selected{% endif %}>Spanish</option>
+                                <option value="fr" {% if course.language == 'fr' %}selected{% endif %}>French</option>
+                                <option value="ar" {% if course.language == 'ar' %}selected{% endif %}>Arabic</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Pricing -->
+                <div class="space-y-4 border-t border-white/10 pt-6">
+                    <h2 class="text-xl font-semibold text-white mb-4">Pricing</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <label class="flex items-center gap-2 mb-4">
+                                <input type="checkbox" name="is_free" {% if course.is_free %}checked{% endif %} class="w-5 h-5 rounded border-white/20 bg-[#254346]/70 text-[#82C293] focus:ring-[#82C293]/40">
+                                <span class="text-sm font-medium text-white/80">Free Course</span>
+                            </label>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-white/80 mb-2">Price</label>
+                            <input type="number" name="price" step="0.01" min="0" value="{{ course.price }}" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-white/80 mb-2">Currency</label>
+                            <select name="currency" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                                <option value="USD" {% if course.currency == 'USD' %}selected{% endif %}>USD</option>
+                                <option value="EUR" {% if course.currency == 'EUR' %}selected{% endif %}>EUR</option>
+                                <option value="SAR" {% if course.currency == 'SAR' %}selected{% endif %}>SAR</option>
+                                <option value="AED" {% if course.currency == 'AED' %}selected{% endif %}>AED</option>
+                                <option value="JOD" {% if course.currency == 'JOD' %}selected{% endif %}>JOD</option>
+                                <option value="GBP" {% if course.currency == 'GBP' %}selected{% endif %}>GBP</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Settings -->
+                <div class="space-y-4 border-t border-white/10 pt-6">
+                    <h2 class="text-xl font-semibold text-white mb-4">Settings</h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-white/80 mb-2">Estimated Hours</label>
+                            <input type="number" name="estimated_hours" min="1" value="{{ course.estimated_hours }}" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-white/80 mb-2">Instructor</label>
+                            <select name="instructor" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                                <option value="">Select Instructor</option>
+                                {% for instructor in instructors %}
+                                <option value="{{ instructor.id }}" {% if course.instructor_id == instructor.id %}selected{% endif %}>{{ instructor.get_full_name|default:instructor.username }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2">
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" name="has_certificate" {% if course.has_certificate %}checked{% endif %} class="w-5 h-5 rounded border-white/20 bg-[#254346]/70 text-[#82C293] focus:ring-[#82C293]/40">
+                            <span class="text-sm font-medium text-white/80">Certificate of Completion</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" name="has_ai_tutor" {% if course.has_ai_tutor %}checked{% endif %} class="w-5 h-5 rounded border-white/20 bg-[#254346]/70 text-[#82C293] focus:ring-[#82C293]/40">
+                            <span class="text-sm font-medium text-white/80">AI Tutor Support</span>
+                        </label>
+                        <label class="flex items-center gap-2">
+                            <input type="checkbox" name="has_quizzes" {% if course.has_quizzes %}checked{% endif %} class="w-5 h-5 rounded border-white/20 bg-[#254346]/70 text-[#82C293] focus:ring-[#82C293]/40">
+                            <span class="text-sm font-medium text-white/80">Quizzes & Assessments</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Status -->
+                <div class="space-y-4 border-t border-white/10 pt-6">
+                    <h2 class="text-xl font-semibold text-white mb-4">Status</h2>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-white/80 mb-2">Status</label>
+                        <select name="status" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
+                            <option value="draft" {% if course.status == 'draft' %}selected{% endif %}>Draft</option>
+                            <option value="published" {% if course.status == 'published' %}selected{% endif %}>Published</option>
+                            <option value="archived" {% if course.status == 'archived' %}selected{% endif %}>Archived</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="flex items-center justify-end gap-4 border-t border-white/10 pt-6">
+                    <a href="{% url 'dashboard:courses' %}" class="px-6 py-2.5 bg-[#254346]/70 border border-white/10 text-white rounded-xl hover:bg-[#254346]/90 hover:border-[#82C293]/40 transition-all duration-300 font-medium hover:scale-105">
+                        Cancel
+                    </a>
+                    <button type="submit" class="px-6 py-2.5 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] transition-all duration-300 font-medium hover:scale-105">
+                        <i class="fas fa-save mr-2"></i>Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Tab Content: Modules & Lessons (Only for Recorded Courses) -->
+    {% if course.course_type == 'recorded' %}
+    <div id="tab-content-content" class="tab-content hidden">
+        <div class="bg-[#04363a]/90 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold text-white">Course Content</h2>
+                <button onclick="openModuleModal()" class="px-4 py-2 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl hover:opacity-90 transition font-medium">
+                    <i class="fas fa-plus mr-2"></i>Add Module
+                </button>
             </div>
-            <div class="flex gap-3">
-                <a href="{% url 'dashboard:courses' %}" class="inline-flex items-center gap-2 bg-[#254346]/70 border border-white/10 text-white px-6 py-3 rounded-xl no-underline font-medium hover:bg-[#254346]/90 hover:border-[#82C293]/40 transition-all duration-300 hover:scale-105">
-                    <i class="fas fa-arrow-left"></i>
-                    <span>Back</span>
-                </a>
-                {% if course.status == 'published' %}
-                <form method="post" action="{% url 'dashboard:course_toggle_publish' course.id %}" class="inline">
-                    {% csrf_token %}
-                    <button type="submit" class="inline-flex items-center gap-2 bg-[#f8da03]/20 border border-[#f8da03]/40 text-[#f8da03] px-6 py-3 rounded-xl font-medium hover:bg-[#f8da03]/30 transition-all duration-300 hover:scale-105">
-                        <i class="fas fa-eye-slash"></i>
-                        <span>Unpublish</span>
-                    </button>
-                </form>
-                {% else %}
-                <form method="post" action="{% url 'dashboard:course_toggle_publish' course.id %}" class="inline">
-                    {% csrf_token %}
-                    <button type="submit" class="inline-flex items-center gap-2 bg-[#259d78]/20 border border-[#259d78]/30 text-[#259d78] px-6 py-3 rounded-xl font-medium hover:bg-[#259d78]/30 transition-all duration-300 hover:scale-105">
-                        <i class="fas fa-eye"></i>
-                        <span>Publish</span>
-                    </button>
-                </form>
-                {% endif %}
+
+            <!-- Modules List -->
+            <div id="modules-container" class="space-y-4">
+                <!-- Modules will be loaded here via AJAX -->
+                <div class="text-center py-12 text-white/50">
+                    <i class="fas fa-spinner fa-spin text-3xl mb-4"></i>
+                    <p>Loading modules...</p>
+                </div>
             </div>
         </div>
     </div>
-    
-    <!-- Course Form -->
-    <div class="bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] p-8 animate-fade-in-up stagger-2">
-        <form method="post" enctype="multipart/form-data" class="space-y-6">
-            {% csrf_token %}
-            
-            <!-- Basic Information -->
-            <div class="space-y-4">
-                <h2 class="text-xl font-semibold text-white mb-4">Basic Information</h2>
-                
-                <div>
-                    <label class="block text-sm font-medium text-white/80 mb-2">Title <span class="text-red-400">*</span></label>
-                    <input type="text" name="title" value="{{ course.title }}" required class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-white/80 mb-2">Slug</label>
-                    <input type="text" name="slug" value="{{ course.slug }}" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-white/80 mb-2">Short Description</label>
-                    <input type="text" name="short_description" value="{{ course.short_description }}" maxlength="300" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-white/80 mb-2">Description <span class="text-red-400">*</span></label>
-                    <textarea name="description" rows="5" required class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">{{ course.description }}</textarea>
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-white/80 mb-2">Outcome</label>
-                    <input type="text" name="outcome" value="{{ course.outcome }}" maxlength="300" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-white/80 mb-2">Thumbnail</label>
-                    <input type="file" name="thumbnail" accept="image/*" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
-                    {% if course.thumbnail %}
-                    <p class="text-xs text-white/50 mt-1">Current: <a href="{{ course.thumbnail.url }}" target="_blank" class="text-[#82C293] hover:underline">{{ course.thumbnail.name }}</a></p>
-                    {% endif %}
+
+    <!-- Tab Content: Quizzes -->
+    <div id="tab-content-quizzes" class="tab-content hidden">
+        <div class="bg-[#04363a]/90 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-semibold text-white">Quizzes & Assessments</h2>
+                <button onclick="openQuizModal()" class="px-4 py-2 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl hover:opacity-90 transition font-medium">
+                    <i class="fas fa-plus mr-2"></i>Add Quiz
+                </button>
+            </div>
+
+            <!-- Quizzes List -->
+            <div id="quizzes-container" class="space-y-4">
+                <!-- Quizzes will be loaded here via AJAX -->
+                <div class="text-center py-12 text-white/50">
+                    <i class="fas fa-spinner fa-spin text-3xl mb-4"></i>
+                    <p>Loading quizzes...</p>
                 </div>
             </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Module Modal -->
+<div id="module-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-[#04363a] rounded-2xl border border-white/10 shadow-2xl max-w-2xl w-full my-8">
+        <div class="p-6 border-b border-white/10 flex justify-between items-center">
+            <h3 class="text-xl font-semibold text-white" id="module-modal-title">Add Module</h3>
+            <button onclick="closeModuleModal()" class="text-white/60 hover:text-white transition">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <form id="module-form" class="p-6 space-y-4 max-h-[calc(90vh-120px)] overflow-y-auto">
+            <div>
+                <label class="block text-sm font-medium text-white/80 mb-2">Module Title <span class="text-red-400">*</span></label>
+                <input type="text" id="module-title" required class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/40">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-white/80 mb-2">Description</label>
+                <textarea id="module-description" rows="3" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/40"></textarea>
+            </div>
+            <div class="flex items-center gap-2">
+                <input type="checkbox" id="module-is-locked" class="w-5 h-5 rounded border-white/20 bg-[#254346]/70 text-[#82C293]">
+                <label class="text-sm font-medium text-white/80">Lock Module</label>
+            </div>
+            <div class="flex justify-end gap-3 pt-4 border-t border-white/10">
+                <button type="button" onclick="closeModuleModal()" class="px-6 py-2.5 bg-[#254346]/70 border border-white/10 text-white rounded-xl hover:bg-[#254346]/90 transition">Cancel</button>
+                <button type="submit" class="px-6 py-2.5 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl hover:opacity-90 transition">Save Module</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Lesson Modal - Notion-style User-Friendly Design -->
+<div id="lesson-modal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-[#1a1a1a] rounded-2xl shadow-2xl max-w-4xl w-full my-8 border border-gray-200 dark:border-gray-800">
+        <!-- Header -->
+        <div class="px-8 py-6 border-b border-gray-200 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-[#1f1f1f] rounded-t-2xl">
+            <div>
+                <h3 class="text-2xl font-semibold text-gray-900 dark:text-white mb-1" id="lesson-modal-title">Add Lesson</h3>
+                <p class="text-sm text-gray-500 dark:text-gray-400">Create engaging content for your students</p>
+            </div>
+            <button onclick="closeLessonModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        
+        <form id="lesson-form" class="p-8 space-y-6 max-h-[calc(90vh-180px)] overflow-y-auto">
+            <input type="hidden" id="lesson-module-id">
             
-            <!-- Classification -->
-            <div class="space-y-4 border-t border-white/10 pt-6">
-                <h2 class="text-xl font-semibold text-white mb-4">Classification</h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-white/80 mb-2">Category</label>
-                        <select name="category" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
-                            <option value="">Select Category</option>
-                            {% for category in categories %}
-                            <option value="{{ category.id }}" {% if course.category_id == category.id %}selected{% endif %}>{{ category.name }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-white/80 mb-2">Level</label>
-                        <select name="level" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
-                            <option value="beginner" {% if course.level == 'beginner' %}selected{% endif %}>Beginner</option>
-                            <option value="intermediate" {% if course.level == 'intermediate' %}selected{% endif %}>Intermediate</option>
-                            <option value="advanced" {% if course.level == 'advanced' %}selected{% endif %}>Advanced</option>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-white/80 mb-2">Course Type</label>
-                        <select name="course_type" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
-                            <option value="recorded" {% if course.course_type == 'recorded' %}selected{% endif %}>Recorded</option>
-                            <option value="live" {% if course.course_type == 'live' %}selected{% endif %}>Live</option>
-                            <option value="hybrid" {% if course.course_type == 'hybrid' %}selected{% endif %}>Hybrid</option>
-                        </select>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-white/80 mb-2">Language</label>
-                        <select name="language" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
-                            <option value="en" {% if course.language == 'en' %}selected{% endif %}>English</option>
-                            <option value="es" {% if course.language == 'es' %}selected{% endif %}>Spanish</option>
-                            <option value="fr" {% if course.language == 'fr' %}selected{% endif %}>French</option>
-                            <option value="ar" {% if course.language == 'ar' %}selected{% endif %}>Arabic</option>
-                        </select>
-                    </div>
-                </div>
+            <!-- Lesson Title - Large, prominent like Notion -->
+            <div class="space-y-2">
+                <input 
+                    type="text" 
+                    id="lesson-title" 
+                    required 
+                    placeholder="Untitled Lesson"
+                    class="w-full text-3xl font-semibold bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:ring-0 p-0"
+                >
+                <p class="text-xs text-gray-500 dark:text-gray-400">Give your lesson a clear, descriptive title</p>
             </div>
             
-            <!-- Pricing -->
-            <div class="space-y-4 border-t border-white/10 pt-6">
-                <h2 class="text-xl font-semibold text-white mb-4">Pricing</h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                        <label class="flex items-center gap-2 mb-4">
-                            <input type="checkbox" name="is_free" {% if course.is_free %}checked{% endif %} class="w-5 h-5 rounded border-white/20 bg-[#254346]/70 text-[#82C293] focus:ring-[#82C293]/40">
-                            <span class="text-sm font-medium text-white/80">Free Course</span>
-                        </label>
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-white/80 mb-2">Price</label>
-                        <input type="number" name="price" step="0.01" min="0" value="{{ course.price }}" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-white/80 mb-2">Currency</label>
-                        <select name="currency" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
-                            <option value="USD" {% if course.currency == 'USD' %}selected{% endif %}>USD</option>
-                            <option value="EUR" {% if course.currency == 'EUR' %}selected{% endif %}>EUR</option>
-                            <option value="SAR" {% if course.currency == 'SAR' %}selected{% endif %}>SAR</option>
-                            <option value="AED" {% if course.currency == 'AED' %}selected{% endif %}>AED</option>
-                            <option value="JOD" {% if course.currency == 'JOD' %}selected{% endif %}>JOD</option>
-                            <option value="GBP" {% if course.currency == 'GBP' %}selected{% endif %}>GBP</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Settings -->
-            <div class="space-y-4 border-t border-white/10 pt-6">
-                <h2 class="text-xl font-semibold text-white mb-4">Settings</h2>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-medium text-white/80 mb-2">Estimated Hours</label>
-                        <input type="number" name="estimated_hours" min="1" value="{{ course.estimated_hours }}" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
-                    </div>
-                    
-                    <div>
-                        <label class="block text-sm font-medium text-white/80 mb-2">Instructor</label>
-                        <select name="instructor" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
-                            <option value="">Select Instructor</option>
-                            {% for instructor in instructors %}
-                            <option value="{{ instructor.id }}" {% if course.instructor_id == instructor.id %}selected{% endif %}>{{ instructor.get_full_name|default:instructor.username }}</option>
-                            {% endfor %}
-                        </select>
-                    </div>
-                </div>
-                
-                <div class="space-y-2">
-                    <label class="flex items-center gap-2">
-                        <input type="checkbox" name="has_certificate" {% if course.has_certificate %}checked{% endif %} class="w-5 h-5 rounded border-white/20 bg-[#254346]/70 text-[#82C293] focus:ring-[#82C293]/40">
-                        <span class="text-sm font-medium text-white/80">Certificate of Completion</span>
-                    </label>
-                    <label class="flex items-center gap-2">
-                        <input type="checkbox" name="has_ai_tutor" {% if course.has_ai_tutor %}checked{% endif %} class="w-5 h-5 rounded border-white/20 bg-[#254346]/70 text-[#82C293] focus:ring-[#82C293]/40">
-                        <span class="text-sm font-medium text-white/80">AI Tutor Support</span>
-                    </label>
-                    <label class="flex items-center gap-2">
-                        <input type="checkbox" name="has_quizzes" {% if course.has_quizzes %}checked{% endif %} class="w-5 h-5 rounded border-white/20 bg-[#254346]/70 text-[#82C293] focus:ring-[#82C293]/40">
-                        <span class="text-sm font-medium text-white/80">Quizzes & Assessments</span>
-                    </label>
-                </div>
-            </div>
-            
-            <!-- Status -->
-            <div class="space-y-4 border-t border-white/10 pt-6">
-                <h2 class="text-xl font-semibold text-white mb-4">Status</h2>
-                
-                <div>
-                    <label class="block text-sm font-medium text-white/80 mb-2">Status</label>
-                    <select name="status" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300">
-                        <option value="draft" {% if course.status == 'draft' %}selected{% endif %}>Draft</option>
-                        <option value="published" {% if course.status == 'published' %}selected{% endif %}>Published</option>
-                        <option value="archived" {% if course.status == 'archived' %}selected{% endif %}>Archived</option>
+            <!-- Quick Settings Bar - Like Notion's toolbar -->
+            <div class="flex items-center gap-4 p-4 bg-gray-50 dark:bg-[#1f1f1f] rounded-xl border border-gray-200 dark:border-gray-800">
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Type:</label>
+                    <select id="lesson-content-type" class="px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/40">
+                        <option value="video">📹 Video Lesson</option>
+                        <option value="text">📝 Article/Text</option>
+                        <option value="quiz">❓ Quiz</option>
+                        <option value="assignment">📋 Assignment</option>
+                        <option value="interactive">🎮 Interactive</option>
                     </select>
                 </div>
+                <div class="h-6 w-px bg-gray-300 dark:bg-gray-700"></div>
+                <div class="flex items-center gap-2">
+                    <label class="text-sm font-medium text-gray-700 dark:text-gray-300">Duration:</label>
+                    <input 
+                        type="number" 
+                        id="lesson-estimated-minutes" 
+                        min="1" 
+                        value="10" 
+                        placeholder="10"
+                        class="w-20 px-3 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/40"
+                    >
+                    <span class="text-xs text-gray-500 dark:text-gray-400">min</span>
+                </div>
+                <div class="flex-1"></div>
+                <div class="flex items-center gap-3">
+                    <label class="flex items-center gap-2 cursor-pointer group">
+                        <input type="checkbox" id="lesson-is-preview" class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-[#82C293] focus:ring-[#82C293]/40">
+                        <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition">Free Preview</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer group">
+                        <input type="checkbox" id="lesson-is-milestone" class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-[#2a2a2a] text-[#82C293] focus:ring-[#82C293]/40">
+                        <span class="text-sm text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white transition">Milestone</span>
+                    </label>
+                </div>
             </div>
             
-            <!-- Actions -->
-            <div class="flex items-center justify-end gap-4 border-t border-white/10 pt-6">
-                <a href="{% url 'dashboard:courses' %}" class="px-6 py-2.5 bg-[#254346]/70 border border-white/10 text-white rounded-xl hover:bg-[#254346]/90 hover:border-[#82C293]/40 transition-all duration-300 font-medium hover:scale-105">
+            <!-- Video Fields -->
+            <div id="lesson-video-fields" class="space-y-4">
+                <div class="p-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-xl">
+                    <div class="flex items-start gap-3 mb-4">
+                        <div class="p-2 bg-blue-100 dark:bg-blue-900/40 rounded-lg">
+                            <i class="fas fa-video text-blue-600 dark:text-blue-400"></i>
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-1">Video Content</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Add a video URL from YouTube, Vimeo, or your hosting platform</p>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Video URL</label>
+                            <input 
+                                type="url" 
+                                id="lesson-video-url" 
+                                placeholder="https://youtube.com/watch?v=..."
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293] transition"
+                            >
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Duration (in seconds)</label>
+                            <input 
+                                type="number" 
+                                id="lesson-video-duration" 
+                                min="0" 
+                                placeholder="600"
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293] transition"
+                            >
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Section-Based Text Editor - The One True System -->
+            <div id="lesson-text-fields" class="hidden">
+                <div class="space-y-4">
+                    <!-- Header Row: Title + Actions -->
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h4 class="font-semibold text-gray-900 dark:text-white mb-1">Lesson Content</h4>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Organize your lesson into sections with rich content blocks</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="convertLegacyContent()" id="convert-legacy-btn" class="hidden px-3 py-1.5 text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 rounded-lg hover:bg-yellow-200 dark:hover:bg-yellow-900/50 transition font-medium">
+                                <i class="fas fa-exchange-alt mr-1"></i>Convert Legacy
+                            </button>
+                            <button type="button" onclick="addLessonSection()" class="px-4 py-2 bg-[#82C293] hover:bg-[#6fa87f] text-white rounded-lg text-sm font-medium transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md">
+                                <i class="fas fa-plus"></i>
+                                <span>Add Section</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Sections Container - The Real Home -->
+                    <div id="lesson-sections" class="space-y-4">
+                        <!-- Empty State -->
+                        <div id="sections-empty-state" class="text-center py-12 px-4 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900/50">
+                            <i class="fas fa-file-alt text-4xl text-gray-400 dark:text-gray-600 mb-3"></i>
+                            <p class="text-gray-600 dark:text-gray-400 font-medium mb-1">No sections yet</p>
+                            <p class="text-sm text-gray-500 dark:text-gray-500">Add your first section to start building content</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Hidden Content Field - Always Sections Format -->
+                    <input type="hidden" id="lesson-content" name="content" value='{"sections":[]}'>
+                    
+                    <!-- Info Footer -->
+                    <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <i class="fas fa-info-circle"></i>
+                        <span>Click "Add Block" in each section to insert content • Drag images to upload</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Description - Optional, less prominent -->
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Short Description
+                    <span class="text-gray-400 dark:text-gray-600 font-normal ml-1">(optional)</span>
+                </label>
+                <textarea 
+                    id="lesson-description" 
+                    rows="3" 
+                    placeholder="A brief description of what students will learn in this lesson..."
+                    class="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#2a2a2a] text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293] transition resize-none"
+                ></textarea>
+            </div>
+            
+            <!-- Action Buttons - Clean, modern -->
+            <div class="flex justify-end gap-3 pt-6 border-t border-gray-200 dark:border-gray-800">
+                <button 
+                    type="button" 
+                    onclick="closeLessonModal()" 
+                    class="px-6 py-2.5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg font-medium transition"
+                >
                     Cancel
-                </a>
-                <button type="submit" class="px-6 py-2.5 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] transition-all duration-300 font-medium hover:scale-105">
-                    <i class="fas fa-save mr-2"></i>Save Changes
+                </button>
+                <button 
+                    type="submit" 
+                    class="px-6 py-2.5 bg-[#82C293] hover:bg-[#6fa87f] text-white rounded-lg font-medium shadow-sm hover:shadow-md transition-all duration-200"
+                >
+                    <i class="fas fa-check mr-2"></i>Save Lesson
                 </button>
             </div>
         </form>
     </div>
 </div>
-{% endblock %}
 
+<!-- Quiz Modal -->
+<div id="quiz-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-[#04363a] rounded-2xl border border-white/10 shadow-2xl max-w-2xl w-full my-8">
+        <div class="p-6 border-b border-white/10 flex justify-between items-center">
+            <h3 class="text-xl font-semibold text-white" id="quiz-modal-title">Add Quiz</h3>
+            <button onclick="closeQuizModal()" class="text-white/60 hover:text-white transition">
+                <i class="fas fa-times text-xl"></i>
+            </button>
+        </div>
+        <form id="quiz-form" class="p-6 space-y-4 max-h-[calc(90vh-120px)] overflow-y-auto">
+            <div>
+                <label class="block text-sm font-medium text-white/80 mb-2">Quiz Title <span class="text-red-400">*</span></label>
+                <input type="text" id="quiz-title" required class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/40">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-white/80 mb-2">Description</label>
+                <textarea id="quiz-description" rows="3" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/40"></textarea>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-white/80 mb-2">Quiz Type</label>
+                <select id="quiz-type" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/40">
+                    <option value="lesson">Lesson Quiz</option>
+                    <option value="module">Module Quiz</option>
+                    <option value="final">Final Assessment</option>
+                </select>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-white/80 mb-2">Passing Score (%)</label>
+                    <input type="number" id="quiz-passing-score" min="0" max="100" value="70" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/40">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-white/80 mb-2">Time Limit (minutes)</label>
+                    <input type="number" id="quiz-time-limit" min="0" placeholder="No limit" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/40">
+                </div>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-white/80 mb-2">Max Attempts</label>
+                <input type="number" id="quiz-max-attempts" min="1" value="3" class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 text-white focus:outline-none focus:ring-2 focus:ring-[#82C293]/40">
+            </div>
+            <div class="flex items-center gap-4">
+                <label class="flex items-center gap-2">
+                    <input type="checkbox" id="quiz-randomize" checked class="w-5 h-5 rounded border-white/20 bg-[#254346]/70 text-[#82C293]">
+                    <span class="text-sm font-medium text-white/80">Randomize Questions</span>
+                </label>
+                <label class="flex items-center gap-2">
+                    <input type="checkbox" id="quiz-show-answers" checked class="w-5 h-5 rounded border-white/20 bg-[#254346]/70 text-[#82C293]">
+                    <span class="text-sm font-medium text-white/80">Show Correct Answers</span>
+                </label>
+            </div>
+            <div class="flex justify-end gap-3 pt-4 border-t border-white/10">
+                <button type="button" onclick="closeQuizModal()" class="px-6 py-2.5 bg-[#254346]/70 border border-white/10 text-white rounded-xl hover:bg-[#254346]/90 transition">Cancel</button>
+                <button type="submit" class="px-6 py-2.5 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl hover:opacity-90 transition">Save Quiz</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Make courseId globally accessible
+window.courseId = {{ course.id }};
+const courseId = window.courseId;
+let currentModuleId = null;
+let currentLessonId = null;
+let currentQuizId = null;
+// Phase 0: Legacy single editor removed - section-based editor is the only system
+// No editorInstance variable needed - we use sectionEditors object instead
+
+// Tab switching
+function switchTab(tabName) {
+    // Hide all tabs
+    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+    document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('active', 'border-[#82C293]', 'text-white');
+        btn.classList.add('text-white/70');
+    });
+    
+    // Show selected tab
+    document.getElementById(`tab-content-${tabName}`).classList.remove('hidden');
+    const btn = document.getElementById(`tab-${tabName}`);
+    btn.classList.add('active', 'border-[#82C293]', 'text-white');
+    btn.classList.remove('text-white/70');
+    
+    // Load content if needed
+    if (tabName === 'content') {
+        loadModules();
+    } else if (tabName === 'quizzes') {
+        loadQuizzes();
+    }
+}
+
+// Load Modules
+function loadModules() {
+    fetch(`/en/dashboard/api/courses/${window.courseId || courseId}/modules/`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                renderModules(data.modules);
+            }
+        })
+        .catch(err => {
+            console.error('Error loading modules:', err);
+            document.getElementById('modules-container').innerHTML = '<p class="text-red-400">Error loading modules</p>';
+        });
+}
+
+// Render Modules
+function renderModules(modules) {
+    const container = document.getElementById('modules-container');
+    if (modules.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-12 text-white/50">
+                <i class="fas fa-folder-open text-4xl mb-4"></i>
+                <p>No modules yet. Create your first module to get started!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = modules.map(module => `
+        <div class="bg-[#254346]/50 rounded-xl border border-white/10 p-6" data-module-id="${module.id}">
+            <div class="flex justify-between items-start mb-4">
+                <div class="flex-1">
+                    <h3 class="text-lg font-semibold text-white mb-1">${escapeHtml(module.title)}</h3>
+                    ${module.description ? `<p class="text-sm text-white/60">${escapeHtml(module.description)}</p>` : ''}
+                    <div class="flex items-center gap-4 mt-2 text-xs text-white/50">
+                        <span><i class="fas fa-list mr-1"></i>${module.lessons_count} lesson${module.lessons_count !== 1 ? 's' : ''}</span>
+                        ${module.is_locked ? '<span class="text-yellow-400"><i class="fas fa-lock mr-1"></i>Locked</span>' : ''}
+                    </div>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="editModule(${module.id})" class="px-3 py-1.5 bg-[#254346] border border-white/10 text-white rounded-lg hover:bg-[#254346]/80 transition text-sm">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button onclick="deleteModule(${module.id})" class="px-3 py-1.5 bg-red-600/20 border border-red-500/30 text-red-400 rounded-lg hover:bg-red-600/30 transition text-sm">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="space-y-2">
+                ${module.lessons.map(lesson => `
+                    <div class="flex items-center justify-between bg-[#04363a]/50 rounded-lg p-3 border border-white/5">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-${getLessonIcon(lesson.content_type)} text-[#82C293]"></i>
+                            <div>
+                                <p class="text-sm font-medium text-white">${escapeHtml(lesson.title)}</p>
+                                <p class="text-xs text-white/50">${lesson.content_type} • ${lesson.estimated_minutes} min</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="edit-lesson-btn px-2 py-1 bg-[#254346] border border-white/10 text-white rounded hover:bg-[#254346]/80 transition text-xs" data-lesson-id="${lesson.id}" data-module-id="${module.id}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="delete-lesson-btn px-2 py-1 bg-red-600/20 border border-red-500/30 text-red-400 rounded hover:bg-red-600/30 transition text-xs" data-lesson-id="${lesson.id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('')}
+                <button class="add-lesson-btn w-full py-2 border-2 border-dashed border-white/20 text-white/60 rounded-lg hover:border-[#82C293]/50 hover:text-[#82C293] transition text-sm" data-module-id="${module.id}">
+                    <i class="fas fa-plus mr-2"></i>Add Lesson
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Load Quizzes
+function loadQuizzes() {
+    fetch(`/en/dashboard/api/courses/${window.courseId || courseId}/quizzes/`)
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                renderQuizzes(data.quizzes);
+            }
+        })
+        .catch(err => {
+            console.error('Error loading quizzes:', err);
+            document.getElementById('quizzes-container').innerHTML = '<p class="text-red-400">Error loading quizzes</p>';
+        });
+}
+
+// Render Quizzes
+function renderQuizzes(quizzes) {
+    const container = document.getElementById('quizzes-container');
+    if (quizzes.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-12 text-white/50">
+                <i class="fas fa-question-circle text-4xl mb-4"></i>
+                <p>No quizzes yet. Create your first quiz!</p>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = quizzes.map(quiz => `
+        <div class="bg-[#254346]/50 rounded-xl border border-white/10 p-6 flex justify-between items-center">
+            <div class="flex-1">
+                <h3 class="text-lg font-semibold text-white mb-1">${escapeHtml(quiz.title)}</h3>
+                ${quiz.description ? `<p class="text-sm text-white/60 mb-2">${escapeHtml(quiz.description)}</p>` : ''}
+                <div class="flex items-center gap-4 text-xs text-white/50">
+                    <span><i class="fas fa-tag mr-1"></i>${quiz.quiz_type.replace('_', ' ')}</span>
+                    <span><i class="fas fa-percent mr-1"></i>Passing: ${quiz.passing_score}%</span>
+                    <span><i class="fas fa-question mr-1"></i>${quiz.questions_count} question${quiz.questions_count !== 1 ? 's' : ''}</span>
+                    ${quiz.time_limit_minutes ? `<span><i class="fas fa-clock mr-1"></i>${quiz.time_limit_minutes} min</span>` : ''}
+                </div>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="editQuiz(${quiz.id})" class="px-4 py-2 bg-[#254346] border border-white/10 text-white rounded-lg hover:bg-[#254346]/80 transition">
+                    <i class="fas fa-edit mr-2"></i>Edit
+                </button>
+                <button onclick="manageQuizQuestions(${quiz.id})" class="px-4 py-2 bg-[#82C293]/20 border border-[#82C293]/30 text-[#82C293] rounded-lg hover:bg-[#82C293]/30 transition">
+                    <i class="fas fa-list mr-2"></i>Questions
+                </button>
+                <button onclick="deleteQuiz(${quiz.id})" class="px-4 py-2 bg-red-600/20 border border-red-500/30 text-red-400 rounded-lg hover:bg-red-600/30 transition">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Module Modal Functions
+function openModuleModal(moduleId = null) {
+    currentModuleId = moduleId;
+    const modal = document.getElementById('module-modal');
+    const form = document.getElementById('module-form');
+    const title = document.getElementById('module-modal-title');
+    
+    if (moduleId) {
+        title.textContent = 'Edit Module';
+        // Load module data
+        fetch(`/en/dashboard/api/modules/${moduleId}/update/`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({get: true})
+        }).then(r => r.json()).then(data => {
+            if (data.success) {
+                document.getElementById('module-title').value = data.module.title;
+                document.getElementById('module-description').value = data.module.description || '';
+                document.getElementById('module-is-locked').checked = data.module.is_locked;
+            }
+        });
+    } else {
+        title.textContent = 'Add Module';
+        form.reset();
+    }
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeModuleModal() {
+    document.getElementById('module-modal').classList.add('hidden');
+    document.getElementById('module-modal').classList.remove('flex');
+    document.getElementById('module-form').reset();
+    currentModuleId = null;
+}
+
+// Lesson Modal Functions
+// Phase 3: Proper Modal Lifecycle - Reset Everything
+window.openLessonModal = function(moduleId, lessonId = null) {
+    // STEP 1: Modal Reset (always) - Clear everything from prior opens
+    resetLessonModal();
+    
+    currentLessonId = lessonId;
+    currentModuleId = moduleId;
+    
+    const moduleIdInput = document.getElementById('lesson-module-id');
+    if (moduleIdInput) {
+        moduleIdInput.value = moduleId;
+    }
+    
+    const modal = document.getElementById('lesson-modal');
+    const title = document.getElementById('lesson-modal-title');
+    
+    if (!modal || !title) {
+        console.error('Lesson modal elements not found');
+        alert('Error: Lesson modal not found. Please refresh.');
+        return;
+    }
+    
+    // STEP 2: Determine Mode and Populate
+    if (lessonId) {
+        title.textContent = 'Edit Lesson';
+        loadExistingLesson(lessonId);
+    } else {
+        title.textContent = 'Add Lesson';
+        initializeNewLesson();
+    }
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    
+    // Focus title input
+    setTimeout(() => {
+        const titleInput = document.getElementById('lesson-title');
+        if (titleInput) titleInput.focus();
+    }, 150);
+};
+
+// Phase 3: Complete Reset Function
+function resetLessonModal() {
+    // Clear state arrays
+    lessonSections = [];
+    
+    // Destroy all editor instances
+    Object.keys(sectionEditors).forEach(sectionId => {
+        try {
+            if (sectionEditors[sectionId]) {
+                sectionEditors[sectionId].destroy();
+            }
+        } catch (e) {
+            console.error('Error destroying editor:', e);
+        }
+    });
+    sectionEditors = {};
+    
+    // Clear DOM containers
+    const sectionsContainer = document.getElementById('lesson-sections');
+    if (sectionsContainer) {
+        sectionsContainer.innerHTML = '';
+    }
+    
+    // Reset hidden field to sections format
+    const contentField = document.getElementById('lesson-content');
+    if (contentField) {
+        contentField.value = '{"sections":[]}';
+    }
+    
+    // Reset form
+    const form = document.getElementById('lesson-form');
+    if (form) {
+        form.reset();
+    }
+    
+    // Hide legacy convert button
+    const convertBtn = document.getElementById('convert-legacy-btn');
+    if (convertBtn) {
+        convertBtn.classList.add('hidden');
+    }
+    
+    // Reset empty state
+    updateEmptyState();
+    
+    // Clear legacy single editor if it exists (shouldn't, but defensive)
+    if (typeof editorInstance !== 'undefined' && editorInstance !== null) {
+        try {
+            editorInstance.destroy();
+        } catch (e) {
+            // Ignore
+        }
+        editorInstance = null;
+    }
+}
+
+// Phase 4: Load Existing Lesson with Legacy Conversion
+function loadExistingLesson(lessonId) {
+    // Show loading state
+    const sectionsContainer = document.getElementById('lesson-sections');
+    if (sectionsContainer) {
+        sectionsContainer.innerHTML = '<div class="text-center py-12"><i class="fas fa-spinner fa-spin text-2xl text-gray-400"></i><p class="text-sm text-gray-500 mt-2">Loading lesson...</p></div>';
+    }
+    
+    fetch(`/en/dashboard/api/lessons/${lessonId}/update/`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+        body: JSON.stringify({get: true})
+    }).then(r => r.json()).then(data => {
+        if (data.success) {
+            const lesson = data.lesson;
+            
+            // Populate form fields
+            populateLessonForm(lesson);
+            
+            // Handle content based on type
+            if (lesson.content_type === 'text') {
+                loadLessonContent(lesson.content || {});
+            } else {
+                toggleLessonFields(lesson.content_type || 'video');
+            }
+        } else {
+            showNotification('Error loading lesson: ' + (data.error || 'Unknown error'), 'error');
+            resetLessonModal();
+        }
+    }).catch(err => {
+        console.error('Error loading lesson:', err);
+        showNotification('Error loading lesson data', 'error');
+        resetLessonModal();
+    });
+}
+
+function populateLessonForm(lesson) {
+    const titleInput = document.getElementById('lesson-title');
+    const descInput = document.getElementById('lesson-description');
+    const contentTypeSelect = document.getElementById('lesson-content-type');
+    const videoUrlInput = document.getElementById('lesson-video-url');
+    const videoDurationInput = document.getElementById('lesson-video-duration');
+    const estimatedInput = document.getElementById('lesson-estimated-minutes');
+    const previewCheck = document.getElementById('lesson-is-preview');
+    const milestoneCheck = document.getElementById('lesson-is-milestone');
+    
+    if (titleInput) titleInput.value = lesson.title || '';
+    if (descInput) descInput.value = lesson.description || '';
+    if (contentTypeSelect) contentTypeSelect.value = lesson.content_type || 'video';
+    if (videoUrlInput) videoUrlInput.value = lesson.video_url || '';
+    if (videoDurationInput) videoDurationInput.value = lesson.video_duration || '';
+    if (estimatedInput) estimatedInput.value = lesson.estimated_minutes || 10;
+    if (previewCheck) previewCheck.checked = lesson.is_preview || false;
+    if (milestoneCheck) milestoneCheck.checked = lesson.is_milestone || false;
+}
+
+// Phase 4: Content Loading with Legacy Conversion
+function loadLessonContent(contentData) {
+    // Clear sections first
+    lessonSections = [];
+    const sectionsContainer = document.getElementById('lesson-sections');
+    if (sectionsContainer) {
+        sectionsContainer.innerHTML = '';
+    }
+    
+    // Case 1: New Format - { sections: [...] }
+    if (contentData && contentData.sections && Array.isArray(contentData.sections)) {
+        contentData.sections.forEach(section => {
+            addLessonSection(section);
+        });
+        updateEmptyState();
+        return;
+    }
+    
+    // Case 2: Legacy Format - { blocks: [...] }
+    if (contentData && contentData.blocks && Array.isArray(contentData.blocks)) {
+        // Show convert button
+        const convertBtn = document.getElementById('convert-legacy-btn');
+        if (convertBtn) {
+            convertBtn.classList.remove('hidden');
+        }
+        
+        // Auto-convert: Create one section with all legacy blocks
+        addLessonSection({
+            id: `section-${Date.now()}`,
+            title: 'Content',
+            content: contentData, // Legacy blocks format
+            order: 0
+        });
+        
+        showNotification('Legacy content detected. Converted to sections.', 'success');
+        updateEmptyState();
+        return;
+    }
+    
+    // Case 3: Empty/Null - Create default section
+    addLessonSection({
+        id: `section-${Date.now()}`,
+        title: '',
+        content: {},
+        order: 0
+    });
+    updateEmptyState();
+}
+
+function initializeNewLesson() {
+    // Set default content type to "text"
+    const contentTypeSelect = document.getElementById('lesson-content-type');
+    if (contentTypeSelect) {
+        contentTypeSelect.value = 'text';
+    }
+    
+    // Show text fields and create default section
+    toggleLessonFields('text');
+}
+
+window.closeLessonModal = function() {
+    // Check for unsaved changes (optional but good UX)
+    // For now, just close and reset
+    
+    // Reset everything
+    resetLessonModal();
+    
+    // Hide modal
+    const modal = document.getElementById('lesson-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+    }
+    
+    // Clear IDs
+    currentLessonId = null;
+    currentModuleId = null;
+};
+
+window.editLesson = function(lessonId, moduleId) {
+    openLessonModal(moduleId, lessonId);
+};
+
+// Phase 5: Content Type Toggle - Only Change Visibility + Ensure State
+function toggleLessonFields(contentType) {
+    const videoFields = document.getElementById('lesson-video-fields');
+    const textFields = document.getElementById('lesson-text-fields');
+    
+    if (!videoFields || !textFields) {
+        console.warn('Lesson field containers not found');
+        return;
+    }
+    
+    if (contentType === 'video') {
+        videoFields.classList.remove('hidden');
+        textFields.classList.add('hidden');
+        // Preserve text content state - don't destroy sections
+        // Just hide the UI
+    } else if (contentType === 'text') {
+        videoFields.classList.add('hidden');
+        textFields.classList.remove('hidden');
+        
+        // Ensure sections container exists
+        const sectionsContainer = document.getElementById('lesson-sections');
+        if (!sectionsContainer) {
+            console.error('Sections container not found!');
+            return;
+        }
+        
+        // If no sections exist, create a default one
+        if (lessonSections.length === 0) {
+            addLessonSection({
+                id: `section-${Date.now()}`,
+                title: '',
+                content: {},
+                order: 0
+            });
+        }
+        
+        // Do NOT initialize single editor - sections are the only system
+    } else {
+        // Other content types (quiz, assignment, interactive)
+        videoFields.classList.add('hidden');
+        textFields.classList.add('hidden');
+        // Preserve state but hide UI
+    }
+}
+
+// Phase 0: Legacy single editor function removed - sections are the only system
+// This function is deprecated and should never be called
+function initializeEditor_DEPRECATED(initialData) {
+    // Destroy existing instance if any
+    if (typeof editorInstance !== 'undefined' && editorInstance !== null) {
+        try {
+            editorInstance.destroy();
+        } catch (e) {
+            console.error('Error destroying existing editor:', e);
+        }
+        editorInstance = null;
+    }
+    
+    // Wait for scripts to load and DOM to be ready
+    const initEditor = async () => {
+        const editorHost = document.getElementById('editorHost');
+        if (!editorHost) {
+            console.error('Editor host element not found!');
+            return;
+        }
+        
+        // Make sure the editor host is visible
+        const textFields = document.getElementById('lesson-text-fields');
+        if (textFields && textFields.classList.contains('hidden')) {
+            console.warn('Text fields are hidden, cannot initialize editor');
+            return;
+        }
+        
+        // Check if EditorJS is loaded
+        if (typeof EditorJS === 'undefined') {
+            console.warn('EditorJS not loaded yet, retrying...');
+            setTimeout(initEditor, 200);
+            return;
+        }
+        
+        // Parse initial data
+        let blocks = {};
+        if (initialData && initialData.blocks) {
+            blocks = initialData;
+        } else if (typeof initialData === 'object' && Object.keys(initialData).length > 0) {
+            blocks = initialData;
+        }
+        
+        console.log('Initializing Editor.js with data:', blocks);
+        
+        // Check if all tools are loaded - try different possible global names
+        const checkTool = (names) => {
+            for (const name of names) {
+                if (typeof window[name] !== 'undefined') {
+                    return window[name];
+                }
+            }
+            return null;
+        };
+        
+        const tools = {
+            paragraph: checkTool(['Paragraph', 'paragraph']),
+            header: checkTool(['Header', 'header']),
+            list: checkTool(['List', 'NestedList', 'list']),
+            quote: checkTool(['Quote', 'quote']),
+            code: checkTool(['Code', 'CodeTool', 'code']),
+            table: checkTool(['Table', 'table']),
+            delimiter: checkTool(['Delimiter', 'delimiter']),
+            raw: checkTool(['Raw', 'RawTool', 'raw']),
+            image: checkTool(['ImageTool', 'Image', 'image'])
+        };
+        
+        const missingTools = Object.entries(tools)
+            .filter(([name, tool]) => !tool)
+            .map(([name]) => name);
+        
+        // Make some tools optional - continue without them if they fail to load
+        const optionalTools = ['list', 'code', 'raw'];
+        const criticalMissing = missingTools.filter(t => !optionalTools.includes(t));
+        const optionalMissing = missingTools.filter(t => optionalTools.includes(t));
+        
+        if (criticalMissing.length > 0) {
+            console.error('Missing critical Editor.js tools:', criticalMissing);
+            alert('Critical Editor.js tools are not loaded: ' + criticalMissing.join(', ') + '\n\nPlease refresh the page.');
+            return;
+        }
+        
+        if (optionalMissing.length > 0) {
+            console.warn('Some optional Editor.js tools are not loaded (will continue without them):', optionalMissing);
+            // Remove missing optional tools from the tools object
+            optionalMissing.forEach(tool => {
+                delete tools[tool];
+            });
+        }
+        
+        editorInstance = new EditorJS({
+            holder: 'editorHost',
+            placeholder: 'Start writing or type "/" to add blocks...',
+            data: blocks,
+            autofocus: true,
+            minHeight: 500,
+            defaultBlock: 'paragraph',
+            tools: {
+                paragraph: {
+                    class: tools.paragraph,
+                    inlineToolbar: true,
+                    config: {
+                        placeholder: 'Start writing your lesson content...'
+                    }
+                },
+                header: {
+                    class: tools.header,
+                    config: {
+                        levels: [1, 2, 3, 4],
+                        defaultLevel: 2,
+                        placeholder: 'Enter a heading'
+                    },
+                    shortcut: 'CMD+SHIFT+H'
+                },
+                list: {
+                    class: tools.list,
+                    inlineToolbar: true
+                },
+                quote: {
+                    class: tools.quote,
+                    inlineToolbar: true,
+                    shortcut: 'CMD+SHIFT+O',
+                    config: {
+                        quotePlaceholder: 'Enter a quote',
+                        captionPlaceholder: 'Quote\'s author'
+                    }
+                },
+                ...(tools.code ? {
+                    code: {
+                        class: tools.code,
+                        config: {
+                            placeholder: 'Enter code here...'
+                        }
+                    }
+                } : {}),
+                table: {
+                    class: tools.table,
+                    inlineToolbar: true,
+                    config: {
+                        rows: 2,
+                        cols: 2,
+                        withHeadings: true
+                    }
+                },
+                delimiter: {
+                    class: tools.delimiter
+                },
+                ...(tools.raw ? {
+                    raw: {
+                        class: tools.raw,
+                        config: {
+                            placeholder: 'Enter HTML code...'
+                        }
+                    }
+                } : {}),
+                image: {
+                    class: tools.image,
+                    config: {
+                        uploader: {
+                            async uploadByFile(file) {
+                                // Show upload progress
+                                showUploadProgress();
+                                
+                                const formData = new FormData();
+                                formData.append('file', file);
+                                
+                                try {
+                                    const response = await fetch('/en/dashboard/api/editor-image/', {
+                                        method: 'POST',
+                                        body: formData,
+                                        headers: {
+                                            'X-CSRFToken': getCookie('csrftoken')
+                                        }
+                                    });
+                                    
+                                    const result = await response.json();
+                                    hideUploadProgress();
+                                    
+                                    if (result.success && result.url) {
+                                        showNotification('Image uploaded successfully!', 'success');
+                                        return {
+                                            success: 1,
+                                            file: { url: result.url }
+                                        };
+                                    }
+                                    showNotification('Image upload failed. Please try again.', 'error');
+                                    return { success: 0 };
+                                } catch (error) {
+                                    console.error('Image upload error:', error);
+                                    hideUploadProgress();
+                                    showNotification('Error uploading image: ' + error.message, 'error');
+                                    return { success: 0 };
+                                }
+                            },
+                            async uploadByUrl(url) {
+                                // Support URL uploads too
+                                return {
+                                    success: 1,
+                                    file: { url: url }
+                                };
+                            }
+                        },
+                        captionPlaceholder: 'Add a caption (optional)',
+                        buttonContent: '📷 Upload Image',
+                        field: 'image',
+                        types: 'image/*'
+                    }
+                }
+            },
+            onChange: debounce(async () => {
+                try {
+                    if (editorInstance && editorInstance.save) {
+                        const outputData = await editorInstance.save();
+                        const contentField = document.getElementById('lesson-content');
+                        if (contentField) {
+                            contentField.value = JSON.stringify(outputData);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error saving editor content:', error);
+                }
+            }, 600),
+            onReady: () => {
+                console.log('✅ Editor.js is ready and ready to use!');
+            }
+        }).then(() => {
+            console.log('✅ Editor.js initialized successfully');
+        }).catch((error) => {
+            console.error('❌ Editor.js initialization error:', error);
+            alert('Error initializing editor. Please refresh the page and try again.\n\nError: ' + error.message);
+        });
+    };
+    
+    // Start initialization
+    setTimeout(initEditor, 300); // Give scripts time to load
+}
+
+// Phase 0: Legacy single editor functions removed
+// All editor functionality is now handled by section-based editors
+
+// Upload progress indicator
+function showUploadProgress() {
+    let progress = document.getElementById('upload-progress');
+    if (!progress) {
+        progress = document.createElement('div');
+        progress.id = 'upload-progress';
+        progress.className = 'fixed top-4 right-4 bg-blue-500 text-white px-6 py-3 rounded-xl shadow-lg z-50 flex items-center gap-3';
+        progress.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Uploading image...</span>';
+        document.body.appendChild(progress);
+    } else {
+        progress.classList.remove('hidden');
+    }
+}
+
+function hideUploadProgress() {
+    const progress = document.getElementById('upload-progress');
+    if (progress) {
+        progress.classList.add('hidden');
+    }
+}
+
+// Section Management for Lesson Content
+let lessonSections = [];
+let sectionEditors = {}; // Store Editor.js instances per section
+
+function addLessonSection(sectionData = null) {
+    const sectionsContainer = document.getElementById('lesson-sections');
+    if (!sectionsContainer) return;
+    
+    // Phase 8: Stable IDs - never depend on array index, use timestamp + random
+    const sectionId = sectionData?.id || `section-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const sectionIndex = lessonSections.length;
+    
+    const section = {
+        id: sectionId,
+        title: sectionData?.title || '',
+        content: sectionData?.content || {},
+        order: sectionData?.order || sectionIndex
+    };
+    
+    lessonSections.push(section);
+    
+    // Create section HTML with drag handle, duplicate, and actions menu
+    const sectionHtml = `
+        <div class="lesson-section bg-white dark:bg-[#1a1a1a] border-2 border-gray-200 dark:border-gray-800 rounded-xl p-6 transition-all hover:border-[#82C293]/50" data-section-id="${sectionId}">
+            <div class="flex items-center gap-3 mb-4">
+                <!-- Drag Handle -->
+                <div class="cursor-move text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition" title="Drag to reorder">
+                    <i class="fas fa-grip-vertical"></i>
+                </div>
+                <!-- Title Input -->
+                <input type="text" 
+                       class="section-title-input flex-1 text-lg font-semibold bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-600 focus:ring-0 p-0" 
+                       placeholder="Section Title (optional)"
+                       value="${section.title}"
+                       onchange="updateSectionTitle('${sectionId}', this.value)">
+                <!-- Actions Menu -->
+                <div class="flex items-center gap-1">
+                    <button type="button" onclick="moveSection('${sectionId}', 'up')" class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" title="Move Up">
+                        <i class="fas fa-arrow-up text-sm"></i>
+                    </button>
+                    <button type="button" onclick="moveSection('${sectionId}', 'down')" class="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" title="Move Down">
+                        <i class="fas fa-arrow-down text-sm"></i>
+                    </button>
+                    <button type="button" onclick="duplicateSection('${sectionId}')" class="p-2 text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" title="Duplicate Section">
+                        <i class="fas fa-copy text-sm"></i>
+                    </button>
+                    <button type="button" onclick="removeSection('${sectionId}')" class="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800" title="Remove Section">
+                        <i class="fas fa-trash text-sm"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="section-editor-container">
+                <!-- Simple Block Dropdown -->
+                <div class="mb-3 flex items-center gap-2">
+                    <div class="relative">
+                        <button type="button" onclick="toggleBlockMenu('${sectionId}')" class="px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition-all flex items-center gap-2">
+                            <i class="fas fa-plus"></i>
+                            <span>Add Block</span>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        <div id="block-menu-${sectionId}" class="hidden absolute top-full left-0 mt-2 w-64 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-20 py-2">
+                            <button type="button" onclick="addBlockToSection('${sectionId}', 'header', 1)" class="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center gap-3">
+                                <i class="fas fa-heading text-lg"></i>
+                                <div>
+                                    <div class="font-medium">Heading 1</div>
+                                    <div class="text-xs text-gray-500">Large heading</div>
+                                </div>
+                            </button>
+                            <button type="button" onclick="addBlockToSection('${sectionId}', 'header', 2)" class="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center gap-3">
+                                <i class="fas fa-heading text-base"></i>
+                                <div>
+                                    <div class="font-medium">Heading 2</div>
+                                    <div class="text-xs text-gray-500">Medium heading</div>
+                                </div>
+                            </button>
+                            <button type="button" onclick="addBlockToSection('${sectionId}', 'header', 3)" class="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center gap-3">
+                                <i class="fas fa-heading text-sm"></i>
+                                <div>
+                                    <div class="font-medium">Heading 3</div>
+                                    <div class="text-xs text-gray-500">Small heading</div>
+                                </div>
+                            </button>
+                            <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                            <button type="button" onclick="addBlockToSection('${sectionId}', 'paragraph')" class="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center gap-3">
+                                <i class="fas fa-paragraph"></i>
+                                <div>
+                                    <div class="font-medium">Paragraph</div>
+                                    <div class="text-xs text-gray-500">Text content</div>
+                                </div>
+                            </button>
+                            <button type="button" onclick="addBlockToSection('${sectionId}', 'link')" class="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center gap-3">
+                                <i class="fas fa-link"></i>
+                                <div>
+                                    <div class="font-medium">Link</div>
+                                    <div class="text-xs text-gray-500">Add a hyperlink</div>
+                                </div>
+                            </button>
+                            <button type="button" onclick="addBlockToSection('${sectionId}', 'list')" class="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center gap-3">
+                                <i class="fas fa-list-ul"></i>
+                                <div>
+                                    <div class="font-medium">Bullet List</div>
+                                    <div class="text-xs text-gray-500">Unordered list</div>
+                                </div>
+                            </button>
+                            <button type="button" onclick="addBlockToSection('${sectionId}', 'quote')" class="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center gap-3">
+                                <i class="fas fa-quote-left"></i>
+                                <div>
+                                    <div class="font-medium">Quote</div>
+                                    <div class="text-xs text-gray-500">Highlighted quote</div>
+                                </div>
+                            </button>
+                            <div class="border-t border-gray-200 dark:border-gray-700 my-1"></div>
+                            <button type="button" onclick="addBlockToSection('${sectionId}', 'image')" class="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center gap-3">
+                                <i class="fas fa-image"></i>
+                                <div>
+                                    <div class="font-medium">Image</div>
+                                    <div class="text-xs text-gray-500">Upload or paste image</div>
+                                </div>
+                            </button>
+                            <button type="button" onclick="addBlockToSection('${sectionId}', 'code')" class="w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 flex items-center gap-3">
+                                <i class="fas fa-code"></i>
+                                <div>
+                                    <div class="font-medium">Code Block</div>
+                                    <div class="text-xs text-gray-500">Code snippet</div>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div id="editor-${sectionId}" class="min-h-[300px] bg-white dark:bg-[#1a1a1a] border border-gray-200 dark:border-gray-700 rounded-lg p-4 cursor-text" 
+                     onclick="focusSectionEditor('${sectionId}')"
+                     ondrop="handleSectionDrop(event, '${sectionId}')" 
+                     ondragover="handleSectionDragOver(event)"
+                     ondragleave="handleSectionDragLeave(event)">
+                </div>
+                <div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Click "Add Block" to insert content • Drag images here</span>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    sectionsContainer.insertAdjacentHTML('beforeend', sectionHtml);
+    
+    // Hide empty state
+    updateEmptyState();
+    
+    // Initialize Editor.js for this section
+    setTimeout(() => {
+        initializeSectionEditor(sectionId, section.content);
+        
+        // Focus title input or first block
+        const sectionEl = document.querySelector(`[data-section-id="${sectionId}"]`);
+        if (sectionEl) {
+            const titleInput = sectionEl.querySelector('.section-title-input');
+            if (titleInput) {
+                setTimeout(() => titleInput.focus(), 100);
+            }
+        }
+    }, 100);
+    
+    updateLessonContent();
+}
+
+function updateEmptyState() {
+    const emptyState = document.getElementById('sections-empty-state');
+    if (emptyState) {
+        emptyState.style.display = lessonSections.length === 0 ? 'block' : 'none';
+    }
+}
+
+function removeSection(sectionId) {
+    // Confirmation modal
+    if (!confirm('Are you sure you want to remove this section? This action cannot be undone.')) return;
+    
+    // Remove from state array
+    lessonSections = lessonSections.filter(s => s.id !== sectionId);
+    
+    // Destroy editor instance properly
+    if (sectionEditors[sectionId]) {
+        try {
+            sectionEditors[sectionId].destroy();
+        } catch (e) {
+            console.error('Error destroying editor:', e);
+        }
+        delete sectionEditors[sectionId];
+    }
+    
+    // Remove from DOM
+    const sectionEl = document.querySelector(`[data-section-id="${sectionId}"]`);
+    if (sectionEl) {
+        sectionEl.remove();
+    }
+    
+    // Update empty state visibility
+    updateEmptyState();
+    
+    // Update hidden field
+    updateLessonContent();
+    
+    showNotification('Section removed', 'success');
+}
+
+function duplicateSection(sectionId) {
+    const sourceSection = lessonSections.find(s => s.id === sectionId);
+    if (!sourceSection) return;
+    
+    // Get current content from editor
+    let contentCopy = {};
+    if (sectionEditors[sectionId] && sectionEditors[sectionId].save) {
+        sectionEditors[sectionId].save().then(savedData => {
+            contentCopy = savedData || {};
+            createDuplicateSection(sourceSection, contentCopy);
+        }).catch(err => {
+            console.error('Error saving section before duplicate:', err);
+            createDuplicateSection(sourceSection, sourceSection.content);
+        });
+    } else {
+        createDuplicateSection(sourceSection, sourceSection.content);
+    }
+}
+
+function createDuplicateSection(sourceSection, contentCopy) {
+    const newSectionId = `section-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const insertIndex = lessonSections.findIndex(s => s.id === sourceSection.id) + 1;
+    
+    const duplicatedSection = {
+        id: newSectionId,
+        title: `${sourceSection.title} (Copy)`,
+        content: JSON.parse(JSON.stringify(contentCopy)), // Deep copy
+        order: insertIndex
+    };
+    
+    // Update order of subsequent sections
+    lessonSections.forEach((s, idx) => {
+        if (idx >= insertIndex) {
+            s.order = idx + 1;
+        }
+    });
+    
+    // Insert new section
+    lessonSections.splice(insertIndex, 0, duplicatedSection);
+    
+    // Re-render all sections to maintain order
+    const sectionsContainer = document.getElementById('lesson-sections');
+    sectionsContainer.innerHTML = '';
+    lessonSections.forEach(section => {
+        addLessonSection(section);
+    });
+    
+    updateEmptyState();
+    updateLessonContent();
+    showNotification('Section duplicated', 'success');
+}
+
+function moveSection(sectionId, direction) {
+    const index = lessonSections.findIndex(s => s.id === sectionId);
+    if (index === -1) return;
+    
+    if (direction === 'up' && index > 0) {
+        [lessonSections[index], lessonSections[index - 1]] = [lessonSections[index - 1], lessonSections[index]];
+    } else if (direction === 'down' && index < lessonSections.length - 1) {
+        [lessonSections[index], lessonSections[index + 1]] = [lessonSections[index + 1], lessonSections[index]];
+    } else {
+        return;
+    }
+    
+    // Re-render sections
+    const sectionsContainer = document.getElementById('lesson-sections');
+    sectionsContainer.innerHTML = '';
+    lessonSections.forEach(section => {
+        addLessonSection(section);
+    });
+    
+    updateLessonContent();
+}
+
+function updateSectionTitle(sectionId, title) {
+    const section = lessonSections.find(s => s.id === sectionId);
+    if (section) {
+        section.title = title;
+        updateLessonContent();
+    }
+}
+
+// Phase 8: Retry counter to prevent infinite loops
+const editorInitRetries = new Map(); // Track retries per section
+
+async function initializeSectionEditor(sectionId, initialData = {}, retryCount = 0) {
+    const MAX_RETRIES = 20; // Maximum 4 seconds (20 * 200ms)
+    
+    const editorHost = document.getElementById(`editor-${sectionId}`);
+    if (!editorHost) {
+        console.error(`Editor host not found for section: ${sectionId}`);
+        return;
+    }
+    
+    // Destroy existing editor if any
+    if (sectionEditors[sectionId]) {
+        try {
+            sectionEditors[sectionId].destroy();
+        } catch (e) {
+            console.error('Error destroying existing editor:', e);
+        }
+    }
+    
+    // Wait for EditorJS to be available with retry limit
+    // Check both the global flag and the actual EditorJS object
+    if (!window.editorJSReady || typeof EditorJS === 'undefined') {
+        if (retryCount >= MAX_RETRIES) {
+            console.error(`EditorJS failed to load after ${MAX_RETRIES} retries for section ${sectionId}`);
+            showNotification('Editor failed to load. Please refresh the page.', 'error');
+            editorInitRetries.delete(sectionId);
+            return;
+        }
+        
+        // Track retry count
+        editorInitRetries.set(sectionId, retryCount + 1);
+        
+        // Only log every 5th retry to avoid spam
+        if (retryCount % 5 === 0) {
+            console.warn(`EditorJS not ready, retrying section ${sectionId}... (${retryCount + 1}/${MAX_RETRIES})`);
+        }
+        
+        // Listen for ready event if not already listening
+        if (retryCount === 0) {
+            const readyHandler = () => {
+                window.removeEventListener('editorjs:ready', readyHandler);
+                setTimeout(() => initializeSectionEditor(sectionId, initialData, 0), 100);
+            };
+            window.addEventListener('editorjs:ready', readyHandler, { once: true });
+        }
+        
+        setTimeout(() => initializeSectionEditor(sectionId, initialData, retryCount + 1), 200);
+        return;
+    }
+    
+    // EditorJS is loaded - clear retry counter
+    editorInitRetries.delete(sectionId);
+    
+    // Get tools - jsDelivr exposes tools as globals, but we need to check carefully
+    const tools = {};
+    
+    // Helper to safely get tool class
+    const getTool = (name) => {
+        if (typeof window[name] !== 'undefined') return window[name];
+        // Try direct access (some CDNs expose as globals)
+        try {
+            return eval(name);
+        } catch (e) {
+            return undefined;
+        }
+    };
+    
+    // Required tools
+    const ParagraphClass = getTool('Paragraph');
+    if (ParagraphClass) {
+        tools.paragraph = { 
+            class: ParagraphClass, 
+            inlineToolbar: true,
+            config: {
+                placeholder: 'Start writing...'
+            }
+        };
+    } else {
+        console.error('Paragraph tool not available!');
+        showNotification('Editor tools not fully loaded. Please refresh.', 'error');
+        return;
+    }
+    
+    const HeaderClass = getTool('Header');
+    if (HeaderClass) {
+        tools.header = { 
+            class: HeaderClass, 
+            config: { 
+                levels: [1, 2, 3, 4],
+                defaultLevel: 2
+            } 
+        };
+    } else {
+        console.error('Header tool not available!');
+        showNotification('Editor tools not fully loaded. Please refresh.', 'error');
+        return;
+    }
+    
+    // Optional tools
+    const QuoteClass = getTool('Quote');
+    if (QuoteClass) {
+        tools.quote = { 
+            class: QuoteClass, 
+            inlineToolbar: true,
+            config: {
+                quotePlaceholder: 'Enter a quote',
+                captionPlaceholder: 'Quote author'
+            }
+        };
+    }
+    
+    const ListClass = getTool('List');
+    if (ListClass) {
+        tools.list = { 
+            class: ListClass, 
+            inlineToolbar: true 
+        };
+    }
+    
+    const ImageToolClass = getTool('ImageTool');
+    if (ImageToolClass) {
+        tools.image = {
+            class: ImageToolClass,
+            config: {
+                uploader: {
+                    async uploadByFile(file) {
+                        const formData = new FormData();
+                        formData.append('file', file);
+                        try {
+                            const response = await fetch('/en/dashboard/api/editor-image/', {
+                                method: 'POST',
+                                body: formData,
+                                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+                            });
+                            const result = await response.json();
+                            if (result.success && result.url) {
+                                return { success: 1, file: { url: result.url } };
+                            }
+                        } catch (error) {
+                            console.error('Image upload error:', error);
+                        }
+                        return { success: 0 };
+                    }
+                }
+            }
+        };
+    }
+    
+    // Parse initial data
+    let blocks = {};
+    if (initialData && initialData.blocks) {
+        blocks = initialData;
+    } else if (typeof initialData === 'object' && Object.keys(initialData).length > 0) {
+        blocks = initialData;
+    }
+    
+    try {
+        sectionEditors[sectionId] = new EditorJS({
+            holder: `editor-${sectionId}`,
+            placeholder: 'Start writing or type "/" to add blocks...',
+            data: blocks,
+            autofocus: false,
+            minHeight: 300,
+            defaultBlock: 'paragraph',
+            tools: tools,
+            onChange: debounce(async () => {
+                try {
+                    if (sectionEditors[sectionId] && sectionEditors[sectionId].save) {
+                        const outputData = await sectionEditors[sectionId].save();
+                        const section = lessonSections.find(s => s.id === sectionId);
+                        if (section) {
+                            section.content = outputData;
+                            updateLessonContent();
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error saving section content:', error);
+                }
+            }, 600)
+        });
+        
+        console.log(`✅ Editor initialized for section ${sectionId}`);
+    } catch (error) {
+        console.error(`❌ Error initializing editor for section ${sectionId}:`, error);
+    }
+}
+
+function focusSectionEditor(sectionId) {
+    if (sectionEditors[sectionId]) {
+        const editorHost = document.getElementById(`editor-${sectionId}`);
+        const firstBlock = editorHost?.querySelector('.ce-block');
+        if (firstBlock) {
+            const contentEditable = firstBlock.querySelector('[contenteditable="true"]');
+            if (contentEditable) {
+                contentEditable.focus();
+            } else {
+                firstBlock.click();
+            }
+        }
+    }
+}
+
+// Phase 8: Section-specific drag and drop handlers
+function handleSectionDragOver(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.add('border-[#82C293]', 'bg-[#82C293]/5');
+    return false;
+}
+
+function handleSectionDragLeave(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    e.currentTarget.classList.remove('border-[#82C293]', 'bg-[#82C293]/5');
+    return false;
+}
+
+function handleSectionDrop(e, sectionId) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Remove drag styling
+    e.currentTarget.classList.remove('border-[#82C293]', 'bg-[#82C293]/5');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0 && files[0].type.startsWith('image/')) {
+        showUploadProgress();
+        
+        const formData = new FormData();
+        formData.append('file', files[0]);
+        
+        fetch('/en/dashboard/api/editor-image/', {
+            method: 'POST',
+            body: formData,
+            headers: { 'X-CSRFToken': getCookie('csrftoken') }
+        }).then(r => r.json()).then(result => {
+            hideUploadProgress();
+            if (result.success && result.url && sectionEditors[sectionId]) {
+                sectionEditors[sectionId].blocks.insert('image', { 
+                    file: { url: result.url },
+                    caption: '',
+                    withBorder: false,
+                    withBackground: false,
+                    stretched: false
+                });
+                showNotification('Image uploaded and inserted!', 'success');
+            } else {
+                showNotification('Error uploading image', 'error');
+            }
+        }).catch(err => {
+            console.error('Upload error:', err);
+            hideUploadProgress();
+            showNotification('Error uploading image: ' + err.message, 'error');
+        });
+    } else {
+        showNotification('Please drop an image file', 'error');
+    }
+    return false;
+}
+
+function toggleBlockMenu(sectionId) {
+    const menu = document.getElementById(`block-menu-${sectionId}`);
+    if (menu) {
+        menu.classList.toggle('hidden');
+        
+        // Close other menus
+        document.querySelectorAll('[id^="block-menu-"]').forEach(m => {
+            if (m.id !== `block-menu-${sectionId}`) {
+                m.classList.add('hidden');
+            }
+        });
+    }
+}
+
+// Close block menus when clicking outside
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('[id^="block-menu-"]') && !e.target.closest('button[onclick*="toggleBlockMenu"]')) {
+        document.querySelectorAll('[id^="block-menu-"]').forEach(menu => {
+            menu.classList.add('hidden');
+        });
+    }
+});
+
+async function addBlockToSection(sectionId, blockType, level = null) {
+    // Close the menu
+    const menu = document.getElementById(`block-menu-${sectionId}`);
+    if (menu) menu.classList.add('hidden');
+    
+    if (!sectionEditors[sectionId]) {
+        console.error('Editor not initialized for section:', sectionId);
+        return;
+    }
+    
+    const editor = sectionEditors[sectionId];
+    
+    try {
+        let blockData = {};
+        
+        switch(blockType) {
+            case 'header':
+                blockData = {
+                    type: 'header',
+                    data: {
+                        text: '',
+                        level: level || 1
+                    }
+                };
+                break;
+            case 'paragraph':
+                blockData = {
+                    type: 'paragraph',
+                    data: {
+                        text: ''
+                    }
+                };
+                break;
+            case 'list':
+                blockData = {
+                    type: 'list',
+                    data: {
+                        style: 'unordered',
+                        items: ['']
+                    }
+                };
+                break;
+            case 'quote':
+                blockData = {
+                    type: 'quote',
+                    data: {
+                        text: '',
+                        caption: ''
+                    }
+                };
+                break;
+            case 'image':
+                blockData = {
+                    type: 'image',
+                    data: {
+                        file: { url: '' },
+                        caption: '',
+                        withBorder: false,
+                        withBackground: false,
+                        stretched: false
+                    }
+                };
+                break;
+            case 'code':
+                blockData = {
+                    type: 'code',
+                    data: {
+                        code: ''
+                    }
+                };
+                break;
+            default:
+                blockData = {
+                    type: 'paragraph',
+                    data: { text: '' }
+                };
+        }
+        
+        // Insert the block using Editor.js API
+        if (editor.blocks && editor.blocks.insert) {
+            try {
+                await editor.blocks.insert(blockData.type, blockData.data);
+                showNotification(`${blockType.charAt(0).toUpperCase() + blockType.slice(1)} block added!`, 'success');
+                
+                // Focus the newly added block
+                setTimeout(() => {
+                    const blocks = editor.blocks.getBlocksCount();
+                    if (blocks > 0) {
+                        const lastBlock = editor.blocks.getBlockByIndex(blocks - 1);
+                        if (lastBlock && lastBlock.holder) {
+                            const contentEditable = lastBlock.holder.querySelector('[contenteditable="true"]');
+                            if (contentEditable) {
+                                contentEditable.focus();
+                            }
+                        }
+                    }
+                }, 100);
+            } catch (error) {
+                console.error('Error inserting block:', error);
+                showNotification('Error adding block: ' + error.message, 'error');
+            }
+        } else {
+            console.error('Editor blocks API not available');
+            showNotification('Error adding block. Editor not ready. Please try again.', 'error');
+        }
+    } catch (error) {
+        console.error('Error adding block:', error);
+        showNotification('Error adding block: ' + error.message, 'error');
+    }
+}
+
+// Phase 2 & 7: Update Hidden Field from State - Single Source of Truth
+function updateLessonContent() {
+    const contentField = document.getElementById('lesson-content');
+    if (!contentField) return;
+    
+    // Normalize order values
+    lessonSections.forEach((section, index) => {
+        section.order = index;
+    });
+    
+    // Serialize to sections format
+    const content = {
+        sections: lessonSections.map(s => ({
+            id: s.id,
+            title: s.title || '',
+            content: s.content || {},
+            order: s.order
+        }))
+    };
+    
+    contentField.value = JSON.stringify(content);
+}
+
+// Phase 4: Legacy Conversion Function
+function convertLegacyContent() {
+    // This is called when user clicks "Convert Legacy" button
+    // The conversion already happened automatically in loadLessonContent
+    // This just hides the button and confirms
+    const convertBtn = document.getElementById('convert-legacy-btn');
+    if (convertBtn) {
+        convertBtn.classList.add('hidden');
+    }
+    showNotification('Content converted to sections format', 'success');
+}
+
+// This function is now replaced by loadLessonContent() which handles all cases
+// Keeping for backward compatibility but it's deprecated
+function loadLessonSections(sectionsData) {
+    loadLessonContent(sectionsData);
+}
+
+// Debounce function
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Quiz Modal Functions
+function openQuizModal(quizId = null) {
+    currentQuizId = quizId;
+    const modal = document.getElementById('quiz-modal');
+    const title = document.getElementById('quiz-modal-title');
+    
+    if (quizId) {
+        title.textContent = 'Edit Quiz';
+        // Load quiz data
+        fetch(`/en/dashboard/api/quizzes/${quizId}/update/`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({get: true})
+        }).then(r => r.json()).then(data => {
+            if (data.success) {
+                const quiz = data.quiz;
+                document.getElementById('quiz-title').value = quiz.title;
+                document.getElementById('quiz-description').value = quiz.description || '';
+                document.getElementById('quiz-type').value = quiz.quiz_type;
+                document.getElementById('quiz-passing-score').value = quiz.passing_score;
+                document.getElementById('quiz-time-limit').value = quiz.time_limit_minutes || '';
+                document.getElementById('quiz-max-attempts').value = quiz.max_attempts;
+                document.getElementById('quiz-randomize').checked = quiz.randomize_questions;
+                document.getElementById('quiz-show-answers').checked = quiz.show_correct_answers;
+            }
+        });
+    } else {
+        title.textContent = 'Add Quiz';
+        document.getElementById('quiz-form').reset();
+    }
+    
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+}
+
+function closeQuizModal() {
+    document.getElementById('quiz-modal').classList.add('hidden');
+    document.getElementById('quiz-modal').classList.remove('flex');
+    document.getElementById('quiz-form').reset();
+    currentQuizId = null;
+}
+
+// Form Submissions
+document.getElementById('module-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+        title: document.getElementById('module-title').value,
+        description: document.getElementById('module-description').value,
+        is_locked: document.getElementById('module-is-locked').checked,
+    };
+    
+    const url = currentModuleId 
+        ? `/en/dashboard/api/modules/${currentModuleId}/update/`
+        : `/en/dashboard/api/courses/${courseId}/modules/create/`;
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (result.success) {
+            closeModuleModal();
+            loadModules();
+            showNotification('Module saved successfully!', 'success');
+        } else {
+            showNotification(result.error || 'Error saving module', 'error');
+        }
+    } catch (err) {
+        showNotification('Error saving module', 'error');
+    }
+});
+
+// Phase 7: Saving Rules - Collect From All Editors First
+document.getElementById('lesson-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const moduleId = document.getElementById('lesson-module-id').value;
+    if (!moduleId) {
+        showNotification('Error: Module ID missing', 'error');
+        return;
+    }
+    
+    // STEP 1: Save all section editors before submitting
+    const savePromises = [];
+    for (const sectionId in sectionEditors) {
+        if (sectionEditors[sectionId] && sectionEditors[sectionId].save) {
+            savePromises.push(
+                sectionEditors[sectionId].save()
+                    .then(sectionData => {
+                        const section = lessonSections.find(s => s.id === sectionId);
+                        if (section) {
+                            section.content = sectionData || {};
+                        }
+                    })
+                    .catch(error => {
+                        console.error(`Error saving section ${sectionId}:`, error);
+                        // Continue with existing content
+                    })
+            );
+        }
+    }
+    
+    // Wait for all editors to save
+    await Promise.all(savePromises);
+    
+    // STEP 2: Normalize ordering and update hidden field
+    updateLessonContent();
+    
+    // STEP 3: Get final content from hidden field (single source of truth)
+    const contentField = document.getElementById('lesson-content');
+    let contentData = { sections: [] };
+    
+    if (contentField && contentField.value) {
+        try {
+            contentData = JSON.parse(contentField.value);
+        } catch (e) {
+            console.error('Error parsing content field:', e);
+            // Fallback: build from state
+            contentData = {
+                sections: lessonSections.map(s => ({
+                    id: s.id,
+                    title: s.title || '',
+                    content: s.content || {},
+                    order: s.order
+                }))
+            };
+        }
+    } else {
+        // Build from state as fallback
+        contentData = {
+            sections: lessonSections.map(s => ({
+                id: s.id,
+                title: s.title || '',
+                content: s.content || {},
+                order: s.order
+            }))
+        };
+    }
+    
+    // STEP 4: Prepare submission data
+    const contentType = document.getElementById('lesson-content-type').value;
+    const data = {
+        title: document.getElementById('lesson-title').value,
+        description: document.getElementById('lesson-description').value,
+        content_type: contentType,
+        video_url: contentType === 'video' ? document.getElementById('lesson-video-url').value : '',
+        video_duration: contentType === 'video' ? (parseInt(document.getElementById('lesson-video-duration').value) || 0) : 0,
+        text_content: '', // Legacy field - keep empty
+        content: contentData, // Always sections format
+        estimated_minutes: parseInt(document.getElementById('lesson-estimated-minutes').value) || 10,
+        is_preview: document.getElementById('lesson-is-preview').checked,
+        is_milestone: document.getElementById('lesson-is-milestone').checked,
+    };
+    
+    // STEP 5: Submit
+    const url = currentLessonId
+        ? `/en/dashboard/api/lessons/${currentLessonId}/update/`
+        : `/en/dashboard/api/modules/${moduleId}/lessons/create/`;
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+            body: JSON.stringify(data)
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+            closeLessonModal();
+            loadModules();
+            showNotification('Lesson saved successfully!', 'success');
+        } else {
+            showNotification(result.error || 'Error saving lesson', 'error');
+        }
+    } catch (err) {
+        console.error('Save error:', err);
+        showNotification('Error saving lesson: ' + err.message, 'error');
+    }
+});
+
+document.getElementById('lesson-content-type').addEventListener('change', (e) => {
+    toggleLessonFields(e.target.value);
+});
+
+// Initialize Editor.js when text content type is selected on page load
+document.addEventListener('DOMContentLoaded', () => {
+    const contentTypeSelect = document.getElementById('lesson-content-type');
+    if (contentTypeSelect && contentTypeSelect.value === 'text') {
+        toggleLessonFields('text');
+    }
+});
+
+document.getElementById('quiz-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+        title: document.getElementById('quiz-title').value,
+        description: document.getElementById('quiz-description').value,
+        quiz_type: document.getElementById('quiz-type').value,
+        passing_score: parseInt(document.getElementById('quiz-passing-score').value) || 70,
+        time_limit_minutes: parseInt(document.getElementById('quiz-time-limit').value) || null,
+        max_attempts: parseInt(document.getElementById('quiz-max-attempts').value) || 3,
+        randomize_questions: document.getElementById('quiz-randomize').checked,
+        show_correct_answers: document.getElementById('quiz-show-answers').checked,
+    };
+    
+    const url = currentQuizId
+        ? `/en/dashboard/api/quizzes/${currentQuizId}/update/`
+        : `/en/dashboard/api/courses/${courseId}/quizzes/create/`;
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken')},
+            body: JSON.stringify(data)
+        });
+        const result = await response.json();
+        if (result.success) {
+            closeQuizModal();
+            loadQuizzes();
+            showNotification('Quiz saved successfully!', 'success');
+        } else {
+            showNotification(result.error || 'Error saving quiz', 'error');
+        }
+    } catch (err) {
+        showNotification('Error saving quiz', 'error');
+    }
+});
+
+// Delete Functions
+async function deleteModule(moduleId) {
+    if (!confirm('Are you sure you want to delete this module? All lessons will be deleted too.')) return;
+    
+    try {
+        const response = await fetch(`/en/dashboard/api/modules/${moduleId}/delete/`, {
+            method: 'POST',
+            headers: {'X-CSRFToken': getCookie('csrftoken')}
+        });
+        const result = await response.json();
+        if (result.success) {
+            loadModules();
+            showNotification('Module deleted successfully!', 'success');
+        } else {
+            showNotification(result.error || 'Error deleting module', 'error');
+        }
+    } catch (err) {
+        showNotification('Error deleting module', 'error');
+    }
+}
+
+window.deleteLesson = async function(lessonId) {
+    if (!confirm('Are you sure you want to delete this lesson?')) return;
+    
+    try {
+        const response = await fetch(`/en/dashboard/api/lessons/${lessonId}/delete/`, {
+            method: 'POST',
+            headers: {'X-CSRFToken': getCookie('csrftoken')}
+        });
+        const result = await response.json();
+        if (result.success) {
+            loadModules();
+            showNotification('Lesson deleted successfully!', 'success');
+        } else {
+            showNotification(result.error || 'Error deleting lesson', 'error');
+        }
+    } catch (err) {
+        showNotification('Error deleting lesson', 'error');
+    }
+};
+
+async function deleteQuiz(quizId) {
+    if (!confirm('Are you sure you want to delete this quiz? All questions will be deleted too.')) return;
+    
+    try {
+        const response = await fetch(`/en/dashboard/api/quizzes/${quizId}/delete/`, {
+            method: 'POST',
+            headers: {'X-CSRFToken': getCookie('csrftoken')}
+        });
+        const result = await response.json();
+        if (result.success) {
+            loadQuizzes();
+            showNotification('Quiz deleted successfully!', 'success');
+        } else {
+            showNotification(result.error || 'Error deleting quiz', 'error');
+        }
+    } catch (err) {
+        showNotification('Error deleting quiz', 'error');
+    }
+}
+
+// Edit Functions
+function editModule(moduleId) {
+    openModuleModal(moduleId);
+}
+
+// editLesson is now defined above as window.editLesson
+
+function editQuiz(quizId) {
+    openQuizModal(quizId);
+}
+
+function manageQuizQuestions(quizId) {
+    // TODO: Implement question management modal/page
+    alert('Question management coming soon!');
+}
+
+// Helper Functions
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function getLessonIcon(contentType) {
+    const icons = {
+        'video': 'video',
+        'text': 'file-alt',
+        'quiz': 'question-circle',
+        'assignment': 'tasks',
+        'interactive': 'mouse-pointer'
+    };
+    return icons[contentType] || 'file';
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function showNotification(message, type = 'success') {
+    // Remove existing notifications
+    const existing = document.querySelectorAll('.notification-toast');
+    existing.forEach(n => n.remove());
+    
+    // Create new notification
+    const bg = type === 'success' ? 'bg-emerald-500' : 'bg-red-500';
+    const icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+    const notification = document.createElement('div');
+    notification.className = `notification-toast fixed top-4 right-4 ${bg} text-white px-6 py-4 rounded-xl shadow-lg z-50 flex items-center gap-3 animate-slide-in`;
+    notification.innerHTML = `<i class="fas ${icon}"></i><span>${message}</span>`;
+    document.body.appendChild(notification);
+    
+    // Auto remove after 3 seconds
+    setTimeout(() => {
+        notification.style.animation = 'slide-out 0.3s ease-out';
+        setTimeout(() => notification.remove(), 300);
+    }, 3000);
+    setTimeout(() => notification.remove(), 3000);
+}
+
+// Event delegation for dynamically created buttons
+document.addEventListener('click', function(e) {
+    // Handle "Add Lesson" buttons
+    const addLessonBtn = e.target.closest('.add-lesson-btn');
+    if (addLessonBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const moduleId = addLessonBtn.getAttribute('data-module-id');
+        console.log('Add Lesson button clicked, moduleId:', moduleId);
+        console.log('window.openLessonModal exists:', typeof window.openLessonModal);
+        if (moduleId) {
+            if (window.openLessonModal && typeof window.openLessonModal === 'function') {
+                console.log('Calling openLessonModal with moduleId:', moduleId);
+                window.openLessonModal(parseInt(moduleId));
+            } else {
+                console.error('openLessonModal function not found or not a function');
+                alert('Error: openLessonModal function not available. Please refresh the page.');
+            }
+        } else {
+            console.error('Module ID not found on button');
+        }
+        return false;
+    }
+    
+    // Handle "Edit Lesson" buttons
+    const editLessonBtn = e.target.closest('.edit-lesson-btn');
+    if (editLessonBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const lessonId = editLessonBtn.getAttribute('data-lesson-id');
+        const moduleId = editLessonBtn.getAttribute('data-module-id');
+        if (lessonId && moduleId && window.editLesson) {
+            window.editLesson(parseInt(lessonId), parseInt(moduleId));
+        }
+        return;
+    }
+    
+    // Handle "Delete Lesson" buttons
+    const deleteLessonBtn = e.target.closest('.delete-lesson-btn');
+    if (deleteLessonBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const lessonId = deleteLessonBtn.getAttribute('data-lesson-id');
+        if (lessonId && window.deleteLesson) {
+            window.deleteLesson(parseInt(lessonId));
+        }
+        return;
+    }
+});
+
+// Load modules on page load if on content tab
+{% if course.course_type == 'recorded' %}
+document.addEventListener('DOMContentLoaded', () => {
+    // Check if we should load content
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('tab') === 'content') {
+        switchTab('content');
+    } else if (urlParams.get('tab') === 'quizzes') {
+        switchTab('quizzes');
+    }
+});
+{% endif %}
+</script>
+
+<style>
+.tab-button.active {
+    border-bottom-color: #82C293;
+    color: white;
+}
+
+/* Notion-style Editor.js Styling */
+#editorHost .ce-block {
+    padding: 8px 0;
+    margin: 4px 0;
+}
+
+#editorHost .ce-block__content {
+    max-width: 100%;
+    margin: 0;
+}
+
+#editorHost .ce-paragraph {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #37352f;
+}
+
+.dark #editorHost .ce-paragraph {
+    color: #e8e6e3;
+}
+
+#editorHost .ce-header {
+    font-weight: 600;
+    margin: 24px 0 8px 0;
+}
+
+#editorHost .ce-header[data-level="1"] {
+    font-size: 2em;
+    font-weight: 700;
+}
+
+#editorHost .ce-header[data-level="2"] {
+    font-size: 1.5em;
+    font-weight: 600;
+}
+
+#editorHost .ce-header[data-level="3"] {
+    font-size: 1.25em;
+    font-weight: 600;
+}
+
+#editorHost .ce-toolbar__plus {
+    color: #8b8b8b;
+    transition: all 0.2s;
+}
+
+#editorHost .ce-toolbar__plus:hover {
+    color: #82C293;
+    background: #f0f0f0;
+}
+
+.dark #editorHost .ce-toolbar__plus:hover {
+    background: #2a2a2a;
+}
+
+#editorHost .ce-inline-toolbar {
+    background: white;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.dark #editorHost .ce-inline-toolbar {
+    background: #2a2a2a;
+    border-color: #404040;
+}
+
+#editorHost .ce-popover {
+    background: white;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.dark #editorHost .ce-popover {
+    background: #2a2a2a;
+    border-color: #404040;
+}
+
+#editorHost .ce-popover__item {
+    padding: 8px 12px;
+    transition: background 0.15s;
+}
+
+#editorHost .ce-popover__item:hover {
+    background: #f5f5f5;
+}
+
+.dark #editorHost .ce-popover__item:hover {
+    background: #3a3a3a;
+}
+
+#editorHost .ce-popover__item-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+}
+
+#editorHost .ce-toolbar__settings-btn,
+#editorHost .ce-toolbar__plus {
+    border-radius: 4px;
+}
+
+#editorHost .ce-block--selected {
+    background: transparent;
+}
+
+#editorHost .ce-block__content {
+    position: relative;
+}
+
+/* Better placeholder styling */
+#editorHost .ce-paragraph[data-placeholder]:empty::before {
+    color: #a0a0a0;
+    font-style: normal;
+}
+
+.dark #editorHost .ce-paragraph[data-placeholder]:empty::before {
+    color: #6b6b6b;
+}
+
+/* Smooth transitions */
+#editorHost * {
+    transition: background-color 0.15s, color 0.15s;
+}
+</style>
+{% endblock %}

@@ -1,0 +1,142 @@
+{% extends 'student/base.html' %}
+{% load static %}
+
+{% block title %}Certificate - {{ certificate.course.title }}{% endblock %}
+
+{% block content %}
+<div class="p-4 sm:p-6 lg:p-8 xl:p-10 w-full max-w-6xl mx-auto">
+    <!-- Certificate Display -->
+    <div class="bg-white rounded-3xl shadow-2xl overflow-hidden mb-8">
+        <!-- Certificate Header -->
+        <div class="bg-gradient-to-br from-[#00655F] to-[#82C293] p-8 text-center">
+            <div class="flex justify-center items-center gap-4 mb-4">
+                <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                    <i class="fas fa-certificate text-white text-3xl"></i>
+                </div>
+            </div>
+            <h2 class="text-4xl font-light text-white mb-2">Fluentory</h2>
+            <p class="text-white/90 text-lg">Certificate of Completion</p>
+        </div>
+
+        <!-- Certificate Body -->
+        <div class="p-12 text-center">
+            <!-- Decorative Border -->
+            <div class="border-4 border-[#82C293]/30 rounded-2xl p-8 mb-8">
+                <p class="text-gray-600 text-lg mb-6">This is to certify that</p>
+                
+                <h3 class="text-4xl font-light text-[#00655F] mb-6 border-b-2 border-[#82C293]/30 pb-4">
+                    {{ certificate.user.get_full_name|default:certificate.user.username }}
+                </h3>
+                
+                <p class="text-gray-600 text-lg mb-2">has successfully completed the course</p>
+                
+                <h4 class="text-2xl font-medium text-[#00655F] mb-8">
+                    {{ certificate.course.title }}
+                </h4>
+                
+                <div class="flex justify-center items-center gap-8 mb-8">
+                    <div class="text-center">
+                        <p class="text-gray-500 text-sm mb-1">Issued</p>
+                        <p class="text-gray-800 font-medium">{{ certificate.issued_at|date:"F d, Y" }}</p>
+                    </div>
+                    <div class="w-px h-12 bg-gray-300"></div>
+                    <div class="text-center">
+                        <p class="text-gray-500 text-sm mb-1">Certificate ID</p>
+                        <p class="text-gray-800 font-mono text-sm">{{ certificate.certificate_id }}</p>
+                    </div>
+                </div>
+
+                <!-- QR Code -->
+                {% if certificate.qr_code %}
+                <div class="flex justify-center mb-6">
+                    <div class="bg-gray-50 p-4 rounded-xl border-2 border-gray-200">
+                        <img src="{{ certificate.qr_code.url }}" alt="QR Code" class="w-32 h-32 mx-auto">
+                        <p class="text-xs text-gray-500 mt-2 text-center">Scan to verify</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Verification URL -->
+                {% if certificate.verification_url %}
+                <div class="bg-gray-50 rounded-xl p-4 mb-6">
+                    <p class="text-xs text-gray-500 mb-1">Verification URL:</p>
+                    <a href="{{ certificate.verification_url }}" target="_blank" class="text-sm text-[#00655F] hover:underline break-all">
+                        {{ certificate.verification_url }}
+                    </a>
+                </div>
+                {% endif %}
+
+                <!-- Verification Status -->
+                <div class="flex justify-center items-center gap-2 mb-6">
+                    {% if certificate.is_verified %}
+                    <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-emerald-100 text-emerald-700">
+                        <i class="fas fa-check-circle mr-2"></i>Verified
+                    </span>
+                    {% else %}
+                    <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-yellow-100 text-yellow-700">
+                        <i class="fas fa-clock mr-2"></i>Pending Verification
+                    </span>
+                    {% endif %}
+                    {% if certificate.verified_count > 0 %}
+                    <span class="text-sm text-gray-500">
+                        (Verified {{ certificate.verified_count }} time{{ certificate.verified_count|pluralize }})
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Certificate Info -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-left">
+                <div class="bg-gray-50 rounded-xl p-4">
+                    <p class="text-xs text-gray-500 mb-1">Student</p>
+                    <p class="text-gray-800 font-medium">{{ certificate.user.get_full_name|default:certificate.user.username }}</p>
+                    <p class="text-sm text-gray-600">{{ certificate.user.email }}</p>
+                </div>
+                <div class="bg-gray-50 rounded-xl p-4">
+                    <p class="text-xs text-gray-500 mb-1">Course</p>
+                    <p class="text-gray-800 font-medium">{{ certificate.course.title }}</p>
+                    <p class="text-sm text-gray-600">{{ certificate.course.category.name|default:"No category" }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Certificate Footer -->
+        <div class="bg-gray-50 p-6 border-t border-gray-200">
+            <div class="flex justify-between items-center">
+                <div class="text-sm text-gray-600">
+                    <p class="font-medium mb-1">Fluentory</p>
+                    <p class="text-xs">Online Learning Platform</p>
+                </div>
+                <div class="text-right text-sm text-gray-600">
+                    <p class="font-medium mb-1">Certificate ID</p>
+                    <p class="text-xs font-mono">{{ certificate.certificate_id }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex flex-wrap justify-center gap-4">
+        <a 
+            href="{% url 'download_certificate_pdf' certificate.certificate_id %}" 
+            class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl font-medium hover:opacity-90 transition"
+        >
+            <i class="fas fa-download mr-2"></i>Download PDF
+        </a>
+        <a 
+            href="{% url 'verify_certificate' certificate.certificate_id %}" 
+            target="_blank"
+            class="inline-flex items-center px-6 py-3 border border-white/20 text-white rounded-xl hover:bg-white/10 transition"
+        >
+            <i class="fas fa-external-link-alt mr-2"></i>View Verification Page
+        </a>
+        <a 
+            href="{% url 'student_certificates' %}" 
+            class="inline-flex items-center px-6 py-3 border border-white/20 text-white rounded-xl hover:bg-white/10 transition"
+        >
+            <i class="fas fa-arrow-left mr-2"></i>Back to Certificates
+        </a>
+    </div>
+</div>
+{% endblock %}
+

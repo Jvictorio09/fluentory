@@ -11,6 +11,16 @@
                 </h1>
                 <p class="text-base sm:text-lg text-gray-600 dark:text-white/70 font-light">Review and approve teacher applications</p>
             </div>
+            <div class="flex gap-3">
+                <a href="{% url 'dashboard:teacher_create' %}" class="inline-flex items-center gap-2 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg hover:scale-105 transition-all duration-300">
+                    <i class="fas fa-plus"></i>
+                    <span>Create Teacher</span>
+                </a>
+                <button id="bulkDeleteBtn" onclick="bulkDeleteTeachers()" class="hidden inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg hover:scale-105 transition-all duration-300">
+                    <i class="fas fa-trash"></i>
+                    <span>Delete Selected (<span id="selectedCount">0</span>)</span>
+                </button>
+            </div>
         </div>
         
         <!-- Filters -->
@@ -81,6 +91,9 @@
             <table class="w-full">
                 <thead class="bg-gray-50 dark:bg-[#254346]/50 border-b border-gray-200 dark:border-white/10">
                     <tr>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white w-12">
+                            <input type="checkbox" id="selectAll" onchange="toggleAllTeachers(this)" class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                        </th>
                         <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Teacher</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Contact</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Expertise</th>
@@ -93,6 +106,9 @@
                 <tbody class="divide-y divide-gray-200 dark:divide-white/10">
                     {% for teacher in teachers %}
                     <tr class="hover:bg-emerald-50 dark:hover:bg-[#82C293]/5 transition-all duration-300 animate-fade-in stagger-{{ forloop.counter|add:3 }} hover:scale-[1.01] group">
+                        <td class="px-6 py-4">
+                            <input type="checkbox" class="teacher-checkbox rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" value="{{ teacher.id }}" onchange="updateBulkDeleteButton()">
+                        </td>
                         <td class="px-6 py-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-12 h-12 rounded-full bg-emerald-100 dark:bg-[#82C293]/20 border border-emerald-300 dark:border-[#82C293]/30 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:bg-emerald-200 dark:group-hover:bg-[#82C293]/30">
@@ -185,7 +201,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="px-6 py-12 text-center">
+                        <td colspan="8" class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center gap-4">
                                 <div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-[#254346]/50 border border-gray-200 dark:border-white/10 flex items-center justify-center">
                                     <i class="fas fa-chalkboard-teacher text-3xl text-gray-400 dark:text-white/40"></i>
@@ -792,6 +808,70 @@ function getCookie(name) {
     display: none;
 }
 </style>
+
+<script>
+function updateBulkDeleteButton() {
+    const checkboxes = document.querySelectorAll('.teacher-checkbox:checked');
+    const btn = document.getElementById('bulkDeleteBtn');
+    const countSpan = document.getElementById('selectedCount');
+    
+    if (checkboxes.length > 0) {
+        btn.classList.remove('hidden');
+        countSpan.textContent = checkboxes.length;
+    } else {
+        btn.classList.add('hidden');
+    }
+}
+
+function toggleAllTeachers(checkbox) {
+    const checkboxes = document.querySelectorAll('.teacher-checkbox');
+    checkboxes.forEach(cb => cb.checked = checkbox.checked);
+    updateBulkDeleteButton();
+}
+
+function bulkDeleteTeachers() {
+    const checkboxes = document.querySelectorAll('.teacher-checkbox:checked');
+    const teacherIds = Array.from(checkboxes).map(cb => cb.value);
+    
+    if (teacherIds.length === 0) {
+        alert('Please select at least one teacher to delete.');
+        return;
+    }
+    
+    if (!confirm(`Are you sure you want to delete ${teacherIds.length} teacher(s)? This action cannot be undone!`)) {
+        return;
+    }
+    
+    const formData = new FormData();
+    teacherIds.forEach(id => formData.append('teacher_ids[]', id));
+    
+    const csrfToken = getCookie('csrftoken') || document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    if (csrfToken) {
+        formData.append('csrfmiddlewaretoken', csrfToken);
+    }
+    
+    fetch('{% url "dashboard:teachers_bulk_delete" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message || `Successfully deleted ${data.deleted} teacher(s)!`);
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Failed to delete teachers'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while deleting teachers.');
+    });
+}
+</script>
 
 {% endblock %}
 

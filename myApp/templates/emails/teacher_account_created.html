@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="x-apple-disable-message-reformatting" />
+    <title>Welcome to Fluentory - Teacher Account</title>
+    <style>
+      /* Some email clients support <style>, some don't. Keep it simple. */
+      @media (max-width: 640px) {
+        .container { width: 100% !important; }
+        .px { padding-left: 18px !important; padding-right: 18px !important; }
+        .hero-title { font-size: 26px !important; line-height: 1.2 !important; }
+        .hero-sub { font-size: 15px !important; }
+        .btn { width: 100% !important; }
+        .two-col { display: block !important; width: 100% !important; }
+      }
+    </style>
+  </head>
+
+  <body style="margin:0; padding:0; background:#f3f5f7;">
+    <!-- Preheader (hidden preview text) -->
+    <div style="display:none; max-height:0; overflow:hidden; opacity:0; color:transparent;">
+      Your Fluentory teacher account is ready. Set your password to get started.
+    </div>
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f3f5f7; padding:24px 0;">
+      <tr>
+        <td align="center">
+          <!-- Container -->
+          <table role="presentation" class="container" width="600" cellspacing="0" cellpadding="0" border="0" style="width:600px; max-width:600px;">
+            <!-- Card -->
+            <tr>
+              <td style="background:#ffffff; border-radius:16px; overflow:hidden; box-shadow:0 8px 24px rgba(16,24,40,.08);">
+                <!-- HERO -->
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                  <tr>
+                    <td
+                      class="px"
+                      style="
+                        padding:34px 34px 26px 34px;
+                        background: linear-gradient(135deg, #00655F 0%, #82C293 100%);
+                        color:#ffffff;
+                        text-align:left;
+                      "
+                    >
+                      <!-- Logo slot -->
+                      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                        <tr>
+                          <td style="vertical-align:middle;">
+                            <!-- Replace with your real logo image if you have one -->
+                            <div style="font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-weight:700; letter-spacing:.2px; font-size:16px;">
+                              Fluentory
+                            </div>
+                          </td>
+                          <td align="right" style="vertical-align:middle;">
+                            <div style="font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:13px; opacity:.92;">
+                              Teacher Account
+                            </div>
+                          </td>
+                        </tr>
+                      </table>
+
+                      <div style="height:18px; line-height:18px;">&nbsp;</div>
+
+                      <div class="hero-title" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:30px; line-height:1.15; font-weight:750; letter-spacing:-.5px;">
+                        🎓 Welcome to Fluentory
+                      </div>
+                      <div class="hero-sub" style="margin-top:10px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; font-size:16px; line-height:1.5; opacity:.95;">
+                        Your teacher account has been created — set your password to start teaching.
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+
+                <!-- BODY -->
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                  <tr>
+                    <td class="px" style="padding:28px 34px 10px 34px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; color:#101828;">
+                      <div style="font-size:15px; line-height:1.7;">
+                        <div style="font-size:16px;">
+                          Hello{% if teacher_name %} {{ teacher_name }}{% endif %},
+                        </div>
+                        <div style="margin-top:10px; color:#344054;">
+                          Great news! Your teacher account on Fluentory is ready. You can now start sharing knowledge with students around the world.
+                        </div>
+                      </div>
+
+                      <!-- Status / Details -->
+                      <div style="margin-top:18px; background:#F8FAFC; border:1px solid #EAECF0; border-radius:12px; padding:16px;">
+                        <div style="font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:#667085; font-weight:700; margin-bottom:10px;">
+                          Account Details
+                        </div>
+
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="font-size:14px; color:#101828;">
+                          <tr>
+                            <td style="padding:6px 0; color:#667085; width:140px;">Username</td>
+                            <td style="padding:6px 0; font-weight:600;">{{ username }}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding:6px 0; color:#667085;">Email</td>
+                            <td style="padding:6px 0; font-weight:600;">{{ email }}</td>
+                          </tr>
+                          <tr>
+                            <td style="padding:6px 0; color:#667085;">Status</td>
+                            <td style="padding:6px 0;">
+                              {% if is_approved %}
+                              <span style="display:inline-block; padding:3px 10px; border-radius:999px; background:#ECFDF3; color:#027A48; font-weight:700; font-size:12px;">✓ Approved</span>
+                              {% else %}
+                              <span style="display:inline-block; padding:3px 10px; border-radius:999px; background:#FFFAEB; color:#B54708; font-weight:700; font-size:12px;">Pending Approval</span>
+                              {% endif %}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td style="padding:6px 0; color:#667085;">Permission</td>
+                            <td style="padding:6px 0; font-weight:600;">{{ permission_level|title }}</td>
+                          </tr>
+                        </table>
+                      </div>
+
+                      <!-- Primary CTA block -->
+                      <div style="margin-top:18px; background:#F0FDFB; border:1px solid #BFE7D6; border-radius:12px; padding:16px;">
+                        <div style="font-size:15px; font-weight:800; color:#065F5B;">
+                          🔐 Next step: Set your password
+                        </div>
+                        <div style="margin-top:6px; font-size:14px; line-height:1.6; color:#0F3D3B;">
+                          For security, you’ll need to create a password before logging in.
+                        </div>
+
+                        <div style="margin-top:14px;">
+                          <!-- Bulletproof button (table) -->
+                          <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                              <td align="center" bgcolor="#00655F" style="border-radius:10px;">
+                                <a
+                                  href="{{ reset_url }}"
+                                  style="
+                                    display:inline-block;
+                                    padding:14px 18px;
+                                    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+                                    font-size:15px;
+                                    font-weight:800;
+                                    color:#ffffff;
+                                    text-decoration:none;
+                                    border-radius:10px;
+                                    background: linear-gradient(135deg, #00655F 0%, #82C293 100%);
+                                  "
+                                >
+                                  Set Your Password →
+                                </a>
+                              </td>
+                            </tr>
+                          </table>
+
+                          <div style="margin-top:10px; font-size:12px; color:#0F3D3B; opacity:.85;">
+                            If the button doesn’t work, copy and paste this link into your browser:<br />
+                            <span style="word-break:break-all;">{{ reset_url }}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- 2 quick actions -->
+                      <div style="margin-top:18px;">
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                          <tr>
+                            <td class="two-col" width="50%" style="padding:0 6px 10px 0;">
+                              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border:1px solid #EAECF0; border-radius:12px;">
+                                <tr>
+                                  <td style="padding:14px;">
+                                    <div style="font-weight:800; color:#101828; font-size:14px;">Complete your profile</div>
+                                    <div style="margin-top:6px; color:#667085; font-size:13px; line-height:1.5;">
+                                      Add your specialization, bio, experience, and photo.
+                                    </div>
+                                    <div style="margin-top:12px;">
+                                      <a href="{{ profile_url }}" style="color:#00655F; font-weight:800; text-decoration:none;">Open profile →</a>
+                                    </div>
+                                  </td>
+                                </tr>
+                              </table>
+                            </td>
+
+                            <td class="two-col" width="50%" style="padding:0 0 10px 6px;">
+                              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border:1px solid #EAECF0; border-radius:12px;">
+                                <tr>
+                                  <td style="padding:14px;">
+                                    <div style="font-weight:800; color:#101828; font-size:14px;">Log in anytime</div>
+                                    <div style="margin-top:6px; color:#667085; font-size:13px; line-height:1.5;">
+                                      Once your password is set, you can sign in.
+                                    </div>
+                                    <div style="margin-top:12px;">
+                                      <a href="{{ login_url }}" style="color:#00655F; font-weight:800; text-decoration:none;">Go to login →</a>
+                                    </div>
+                                  </td>
+                                </tr>
+                              </table>
+                            </td>
+                          </tr>
+                        </table>
+                      </div>
+
+                      <!-- What you can do -->
+                      <div style="margin-top:18px; background:#FFFAEB; border:1px solid #FDE68A; border-radius:12px; padding:16px;">
+                        <div style="font-size:14px; font-weight:900; color:#7A5A00; margin-bottom:8px;">💡 What you can do as a teacher</div>
+                        <div style="color:#6B5B00; font-size:14px; line-height:1.75;">
+                          • Create and manage courses<br />
+                          • Schedule live class sessions<br />
+                          • Set up one-on-one availability slots<br />
+                          • Track student progress and engagement<br />
+                          • Connect with students through messaging<br />
+                          • Access analytics and reports
+                        </div>
+                      </div>
+
+                      <!-- Help -->
+                      <div style="margin:18px 0 6px 0; font-size:13px; color:#667085; line-height:1.7;">
+                        <strong style="color:#344054;">Need help?</strong><br />
+                        Reach out anytime — we’re happy to help you get set up and succeed.
+                      </div>
+                    </td>
+                  </tr>
+
+                  <!-- Divider -->
+                  <tr>
+                    <td style="padding:0 34px;">
+                      <div style="height:1px; background:#EAECF0; width:100%;"></div>
+                    </td>
+                  </tr>
+
+                  <!-- Footer -->
+                  <tr>
+                    <td class="px" style="padding:18px 34px 26px 34px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;">
+                      <div style="font-size:13px; color:#667085; line-height:1.7;">
+                        <div style="font-weight:800; color:#101828;">Welcome to the Fluentory Teaching Community!</div>
+                        <div style="margin-top:6px;">
+                          <a href="{{ support_url }}" style="color:#00655F; font-weight:800; text-decoration:none;">Visit our Support Center →</a>
+                        </div>
+                        <div style="margin-top:12px; font-size:12px; color:#98A2B3;">
+                          © {{ current_year }} Fluentory. All rights reserved.
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <!-- Outer padding -->
+            <tr><td style="height:18px; line-height:18px;">&nbsp;</td></tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

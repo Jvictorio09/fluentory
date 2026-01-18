@@ -30,15 +30,18 @@ urlpatterns = [
     path('users/', dashboard_views.dashboard_users, name='users'),
     path('users/create/', dashboard_views.dashboard_user_create, name='user_create'),
     path('users/<int:user_id>/login-as/', dashboard_views.dashboard_login_as, name='login_as'),
+    path('users/students/bulk-delete/', dashboard_views.dashboard_students_bulk_delete, name='students_bulk_delete'),
     
     # Course Management (User-friendly interface)
     path('courses/', dashboard_views.dashboard_courses, name='courses'),
     path('courses/create/', dashboard_views.dashboard_course_create, name='course_create'),
     path('courses/<int:course_id>/edit/', dashboard_views.dashboard_course_edit, name='course_edit'),
     path('courses/<int:course_id>/toggle-publish/', dashboard_views.dashboard_course_toggle_publish, name='course_toggle_publish'),
+    path('courses/bulk-delete/', dashboard_views.dashboard_courses_bulk_delete, name='courses_bulk_delete'),
     
     # Teacher Management
     path('teachers/', dashboard_views.dashboard_teachers, name='teachers'),
+    path('teachers/create/', dashboard_views.dashboard_teacher_create, name='teacher_create'),
     path('teachers/<int:teacher_id>/details/', dashboard_views.dashboard_teacher_details, name='teacher_details'),
     path('teachers/<int:teacher_id>/reset-password/', dashboard_views.dashboard_teacher_reset_password, name='teacher_reset_password'),
     path('teachers/<int:teacher_id>/force-password-reset/', dashboard_views.dashboard_teacher_force_password_reset, name='teacher_force_password_reset'),
@@ -46,6 +49,7 @@ urlpatterns = [
     path('teachers/<int:teacher_id>/reject/', dashboard_views.dashboard_teacher_reject, name='teacher_reject'),
     path('teachers/<int:teacher_id>/assign-course/', dashboard_views.dashboard_teacher_assign_course, name='teacher_assign_course'),
     path('teachers/<int:teacher_id>/remove-course/<int:assignment_id>/', dashboard_views.dashboard_teacher_remove_course, name='teacher_remove_course'),
+    path('teachers/bulk-delete/', dashboard_views.dashboard_teachers_bulk_delete, name='teachers_bulk_delete'),
     
     # Manual Enrollment
     path('manual-enroll/', dashboard_views.dashboard_manual_enroll, name='manual_enroll'),
@@ -81,5 +85,32 @@ urlpatterns = [
     path('leads/<int:lead_id>/link-gift/', dashboard_views.dashboard_lead_link_gift, name='lead_link_gift'),
     path('leads/<int:lead_id>/link-enrollment/', dashboard_views.dashboard_lead_link_enrollment, name='lead_link_enrollment'),
     path('crm-analytics/', dashboard_views.dashboard_crm_analytics, name='crm_analytics'),
+    
+    # Infobip Integration
+    path('infobip-sync/', dashboard_views.dashboard_infobip_sync, name='infobip_sync'),
+    path('infobip-sync/test-connection/', dashboard_views.dashboard_infobip_test_connection, name='infobip_test_connection'),
+    
+    # Certificates Management
+    path('certificates/', dashboard_views.dashboard_certificates, name='certificates'),
+    path('certificates/<uuid:certificate_id>/preview/', dashboard_views.dashboard_certificate_preview, name='certificate_preview'),
+    
+    # Course Content Management (Modules, Lessons, Quizzes)
+    path('api/courses/<int:course_id>/modules/', dashboard_views.dashboard_api_modules, name='api_modules'),
+    path('api/courses/<int:course_id>/modules/create/', dashboard_views.dashboard_api_module_create, name='api_module_create'),
+    path('api/modules/<int:module_id>/update/', dashboard_views.dashboard_api_module_update, name='api_module_update'),
+    path('api/modules/<int:module_id>/delete/', dashboard_views.dashboard_api_module_delete, name='api_module_delete'),
+    path('api/modules/<int:module_id>/lessons/', dashboard_views.dashboard_api_lessons, name='api_lessons'),
+    path('api/modules/<int:module_id>/lessons/create/', dashboard_views.dashboard_api_lesson_create, name='api_lesson_create'),
+    path('api/lessons/<int:lesson_id>/update/', dashboard_views.dashboard_api_lesson_update, name='api_lesson_update'),
+    path('api/lessons/<int:lesson_id>/delete/', dashboard_views.dashboard_api_lesson_delete, name='api_lesson_delete'),
+    path('api/courses/<int:course_id>/quizzes/', dashboard_views.dashboard_api_quizzes, name='api_quizzes'),
+    path('api/courses/<int:course_id>/quizzes/create/', dashboard_views.dashboard_api_quiz_create, name='api_quiz_create'),
+    path('api/quizzes/<int:quiz_id>/update/', dashboard_views.dashboard_api_quiz_update, name='api_quiz_update'),
+    path('api/quizzes/<int:quiz_id>/delete/', dashboard_views.dashboard_api_quiz_delete, name='api_quiz_delete'),
+    path('api/quizzes/<int:quiz_id>/questions/', dashboard_views.dashboard_api_quiz_questions, name='api_quiz_questions'),
+    path('api/quizzes/<int:quiz_id>/questions/create/', dashboard_views.dashboard_api_question_create, name='api_question_create'),
+    
+    # Editor.js Image Upload
+    path('api/editor-image/', dashboard_views.dashboard_api_editor_image, name='api_editor_image'),
 ]
 

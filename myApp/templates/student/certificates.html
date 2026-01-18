@@ -7,33 +7,62 @@
         <p class="text-sm sm:text-base text-white/70">Verified credentials you can share globally</p>
     </div>
     
+    {% if certificates %}
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-        {% for i in "123456"|make_list %}
-        <div class="bg-[#04363a]/90 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.3)]">
-            <div class="h-32 bg-gradient-to-br from-[#254346] to-[#04363a] rounded-xl mb-4 relative">
-                <div class="absolute bottom-3 right-3 w-12 h-12 bg-[#254346] rounded-lg border border-white/10"></div>
+        {% for cert in certificates %}
+        <div class="bg-[#04363a]/90 backdrop-blur-xl rounded-2xl p-6 border border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.3)] hover:border-[#82C293]/50 transition">
+            <div class="h-32 bg-gradient-to-br from-[#254346] to-[#04363a] rounded-xl mb-4 relative flex items-center justify-center">
+                {% if cert.qr_code %}
+                <img src="{{ cert.qr_code.url }}" alt="QR Code" class="w-16 h-16 absolute bottom-3 right-3 bg-white p-2 rounded-lg">
+                {% else %}
+                <div class="absolute bottom-3 right-3 w-12 h-12 bg-[#254346] rounded-lg border border-white/10 flex items-center justify-center">
+                    <i class="fas fa-certificate text-white/60"></i>
+                </div>
+                {% endif %}
+                <div class="text-center">
+                    <i class="fas fa-certificate text-4xl text-[#82C293]/30"></i>
+                </div>
             </div>
             
-            <h3 class="text-lg font-medium text-white mb-2">Introduction to Data Science</h3>
-            <p class="text-sm text-white/70 mb-4">Earned on January 15, 2026</p>
+            <h3 class="text-lg font-medium text-white mb-2">{{ cert.course.title }}</h3>
+            <p class="text-sm text-white/70 mb-4">Earned on {{ cert.issued_at|date:"F d, Y" }}</p>
             
             <div class="flex items-center gap-2 mb-4">
+                {% if cert.is_verified %}
                 <span class="text-xs px-3 py-1 rounded-full bg-[#82C293]/20 text-[#82C293] border border-[#82C293]/30">
                     <i class="fas fa-check-circle mr-1"></i>Verified
                 </span>
+                {% else %}
+                <span class="text-xs px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
+                    <i class="fas fa-clock mr-1"></i>Pending
+                </span>
+                {% endif %}
+                {% if cert.verified_count > 0 %}
+                <span class="text-xs text-white/60">({{ cert.verified_count }} verification{{ cert.verified_count|pluralize }})</span>
+                {% endif %}
             </div>
             
             <div class="flex gap-3">
-                <button class="flex-1 px-4 py-2 border border-white/10 rounded-xl text-sm text-white hover:bg-[#254346]/50 transition">
+                <a href="{% url 'download_certificate_pdf' cert.certificate_id %}" class="flex-1 px-4 py-2 border border-white/10 rounded-xl text-sm text-white hover:bg-[#254346]/50 transition text-center">
                     <i class="fas fa-download mr-2"></i>Download
-                </button>
-                <button class="flex-1 px-4 py-2 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl text-sm hover:opacity-90 transition">
-                    <i class="fab fa-linkedin mr-2"></i>Share
-                </button>
+                </a>
+                <a href="{% url 'view_certificate' cert.certificate_id %}" class="flex-1 px-4 py-2 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl text-sm hover:opacity-90 transition text-center">
+                    <i class="fas fa-eye mr-2"></i>View
+                </a>
             </div>
         </div>
         {% endfor %}
     </div>
+    {% else %}
+    <div class="bg-[#04363a]/90 backdrop-blur-xl rounded-2xl p-12 border border-white/10 text-center">
+        <i class="fas fa-certificate text-6xl text-white/20 mb-4"></i>
+        <h3 class="text-xl font-medium text-white mb-2">No Certificates Yet</h3>
+        <p class="text-white/70 mb-6">Complete courses to earn certificates</p>
+        <a href="{% url 'student_home' %}" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl hover:opacity-90 transition">
+            <i class="fas fa-book mr-2"></i>Browse Courses
+        </a>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
 

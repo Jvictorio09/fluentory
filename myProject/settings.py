@@ -218,14 +218,40 @@ LOGOUT_REDIRECT_URL = 'home'
 # Email Configuration
 # For production, configure a real email service (SendGrid, Resend, AWS SES, etc.)
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
-EMAIL_HOST = os.getenv('EMAIL_HOST', 'localhost')
-EMAIL_PORT = int(os.getenv('EMAIL_PORT', '25'))
-EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'False').lower() == 'true'
-EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False').lower() == 'true'
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@fluentory.com')
-SERVER_EMAIL = DEFAULT_FROM_EMAIL
+
+# Check if Resend is configured (prioritize Resend if API key exists)
+RESEND_API_KEY = os.getenv('RESEND_API_KEY', '').strip()
+if RESEND_API_KEY:
+    # Resend SMTP Configuration
+    EMAIL_HOST = 'smtp.resend.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = 'resend'  # Resend SMTP username is always 'resend'
+    EMAIL_HOST_PASSWORD = RESEND_API_KEY
+    DEFAULT_FROM_EMAIL = os.getenv('RESEND_FROM', os.getenv('DEFAULT_FROM_EMAIL', 'noreply@fluentory.com')).strip('"').strip("'")
+    SERVER_EMAIL = DEFAULT_FROM_EMAIL
+    print(f"✓ Resend email configured: {EMAIL_HOST} (from: {DEFAULT_FROM_EMAIL})")
+else:
+    # Fallback to custom SMTP configuration
+    EMAIL_HOST = os.getenv('EMAIL_HOST', 'localhost')
+    EMAIL_PORT = int(os.getenv('EMAIL_PORT', '25'))
+    EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'False').lower() == 'true'
+    EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'False').lower() == 'true'
+    EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
+    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
+    DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'noreply@fluentory.com')
+    SERVER_EMAIL = DEFAULT_FROM_EMAIL
+    if EMAIL_HOST == 'localhost':
+        print("⚠ WARNING: Email configured for localhost - emails may not send. Set RESEND_API_KEY in .env to use Resend.")
 
 # OpenAI API Key
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY', '')
+
+# Infobip Configuration
+INFOBIP_API_KEY = os.getenv('INFOBIP_API_KEY', '')
+INFOBIP_BASE_URL = os.getenv('INFOBIP_BASE_URL', 'https://api.infobip.com')
+INFOBIP_ACCOUNT_ID = os.getenv('INFOBIP_ACCOUNT_ID', '')
+# Channels to sync (comma-separated: SMS,WHATSAPP,EMAIL,VIBER, etc.)
+INFOBIP_SYNC_CHANNELS = os.getenv('INFOBIP_SYNC_CHANNELS', 'SMS,WHATSAPP').split(',')
+# Auto-update lead status if contacted recently (days)
+INFOBIP_AUTO_UPDATE_STATUS_DAYS = int(os.getenv('INFOBIP_AUTO_UPDATE_STATUS_DAYS', '7'))

@@ -52,3 +52,5 @@ python manage.py compilemessages
 **You need to run `makemessages` first!** This extracts all the strings we wrapped with `{% trans %}` tags from your templates and adds them to the `.po` file.
 
 
+
+

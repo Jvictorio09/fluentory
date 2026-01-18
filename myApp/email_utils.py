@@ -233,3 +233,62 @@ def send_claim_success_email(gift_enrollment, enrollment, request=None, notify_b
     
     return recipient_result + buyer_result
 
+
+def send_teacher_account_creation_email(user, teacher, request=None):
+    """
+    Send teacher account creation email with password reset link and profile completion instructions.
+    
+    Args:
+        user: The created User object
+        teacher: The created Teacher object
+        request: Django request object (optional, for building absolute URLs)
+    
+    Returns:
+        Number of emails sent (0 or 1)
+    """
+    if not user or not user.email:
+        logger.error(f"Teacher account creation email: user email is empty!")
+        return 0
+    
+    from django.contrib.auth.tokens import default_token_generator
+    from django.utils.http import urlsafe_base64_encode
+    from django.utils.encoding import force_bytes
+    from django.urls import reverse
+    
+    # Generate password reset token
+    token = default_token_generator.make_token(user)
+    uid = urlsafe_base64_encode(force_bytes(user.pk))
+    
+    # Build password reset URL (using our custom password reset view)
+    if request:
+        reset_url = request.build_absolute_uri(
+            reverse('password_reset_confirm', kwargs={'uidb64': uid, 'token': token})
+        )
+        profile_url = request.build_absolute_uri(reverse('teacher_profile_edit'))
+        login_url = request.build_absolute_uri(reverse('login'))
+    else:
+        site_url = get_site_url()
+        reset_url = f"{site_url}{reverse('password_reset_confirm', kwargs={'uidb64': uid, 'token': token})}"
+        profile_url = f"{site_url}{reverse('teacher_profile_edit')}"
+        login_url = f"{site_url}{reverse('login')}"
+    
+    context = {
+        'teacher_name': user.get_full_name() or user.username,
+        'username': user.username,
+        'email': user.email,
+        'reset_url': reset_url,
+        'profile_url': profile_url,
+        'login_url': login_url,
+        'is_approved': teacher.is_approved if teacher else False,
+        'permission_level': teacher.permission_level if teacher else 'standard',
+    }
+    
+    subject = 'Welcome to Fluentory - Your Teacher Account is Ready!'
+    
+    return send_email_with_logging(
+        subject=subject,
+        recipient_list=[user.email],
+        html_template='emails/teacher_account_created.html',
+        text_template=None,
+        context=context,
+    )

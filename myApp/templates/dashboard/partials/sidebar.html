@@ -99,6 +99,10 @@
                     <i class="fas fa-credit-card"></i>
                     <span>Payments</span>
                 </a>
+                <a href="{% url 'dashboard:certificates' %}" class="sidebar-nav-link {% if 'certificates' in request.resolver_match.url_name or 'certificate_preview' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-certificate"></i>
+                    <span>Certificates</span>
+                </a>
                 <a href="{% url 'dashboard:gifted_courses' %}" class="sidebar-nav-link {% if 'gifted_courses' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-gift"></i>
                     <span>Gifted Courses</span>
@@ -106,6 +110,10 @@
                 <a href="{% url 'dashboard:leads' %}" class="sidebar-nav-link {% if 'lead' in request.resolver_match.url_name or 'crm' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-user-tag"></i>
                     <span>CRM / Leads</span>
+                </a>
+                <a href="{% url 'dashboard:infobip_sync' %}" class="sidebar-nav-link {% if 'infobip' in request.resolver_match.url_name %}active{% endif %}">
+                    <i class="fas fa-sync-alt"></i>
+                    <span>Infobip Sync</span>
                 </a>
                 <a href="{% url 'dashboard:analytics' %}" class="sidebar-nav-link {% if 'analytics' in request.resolver_match.url_name %}active{% endif %}">
                     <i class="fas fa-chart-bar"></i>

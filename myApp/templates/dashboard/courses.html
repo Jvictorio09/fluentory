@@ -11,10 +11,16 @@
                 </h1>
                 <p class="text-base sm:text-lg text-gray-600 dark:text-white/70 font-light">Manage all courses and content</p>
             </div>
-            <a href="{% url 'dashboard:course_create' %}" class="inline-flex items-center gap-2 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white px-6 py-3 rounded-xl no-underline font-medium hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] hover:scale-105 transition-all duration-300 group animate-scale-in">
-                <i class="fas fa-plus transition-transform duration-300 group-hover:rotate-90"></i>
-                <span>Create Course</span>
-            </a>
+            <div class="flex gap-3">
+                <button id="bulkDeleteBtn" onclick="bulkDeleteCourses()" class="hidden inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl font-medium hover:shadow-lg hover:scale-105 transition-all duration-300">
+                    <i class="fas fa-trash"></i>
+                    <span>Delete Selected (<span id="selectedCount">0</span>)</span>
+                </button>
+                <a href="{% url 'dashboard:course_create' %}" class="inline-flex items-center gap-2 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white px-6 py-3 rounded-xl no-underline font-medium hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] hover:scale-105 transition-all duration-300 group animate-scale-in">
+                    <i class="fas fa-plus transition-transform duration-300 group-hover:rotate-90"></i>
+                    <span>Create Course</span>
+                </a>
+            </div>
         </div>
         
         <!-- Filters -->
@@ -58,6 +64,9 @@
             <table class="w-full">
                 <thead class="bg-gray-50 dark:bg-[#254346]/50 border-b border-gray-200 dark:border-white/10">
                     <tr>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white w-12">
+                            <input type="checkbox" id="selectAll" onchange="toggleAllCourses(this)" class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                        </th>
                         <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Course</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Type</th>
                         <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Category</th>
@@ -70,6 +79,9 @@
                 <tbody class="divide-y divide-gray-200 dark:divide-white/10">
                     {% for course in courses %}
                     <tr class="hover:bg-emerald-50 dark:hover:bg-[#82C293]/5 transition-all duration-300 animate-fade-in stagger-{{ forloop.counter|add:3 }} hover:scale-[1.01] group">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <input type="checkbox" class="course-checkbox rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" value="{{ course.id }}" onchange="updateBulkDeleteButton()">
+                        </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="font-medium text-gray-900 dark:text-white">{{ course.title }}</div>
                             <div class="text-sm text-gray-500 dark:text-white/60">{{ course.short_description|truncatewords:10|default:course.description|truncatewords:10 }}</div>
@@ -122,7 +134,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="px-6 py-12 text-center text-gray-500 dark:text-white/60">
+                        <td colspan="8" class="px-6 py-12 text-center text-gray-500 dark:text-white/60">
                             <i class="fas fa-book text-4xl mb-4 text-gray-400 dark:text-white/40"></i>
                             <p>No courses found</p>
                         </td>
@@ -155,5 +167,73 @@
     </div>
     
 </div>
+
+<script>
+function updateBulkDeleteButton() {
+    const checkboxes = document.querySelectorAll('.course-checkbox:checked');
+    const btn = document.getElementById('bulkDeleteBtn');
+    const countSpan = document.getElementById('selectedCount');
+    
+    if (checkboxes.length > 0) {
+        btn.classList.remove('hidden');
+        countSpan.textContent = checkboxes.length;
+    } else {
+        btn.classList.add('hidden');
+    }
+}
+
+function toggleAllCourses(checkbox) {
+    const checkboxes = document.querySelectorAll('.course-checkbox');
+    checkboxes.forEach(cb => cb.checked = checkbox.checked);
+    updateBulkDeleteButton();
+}
+
+function bulkDeleteCourses() {
+    const checkboxes = document.querySelectorAll('.course-checkbox:checked');
+    const courseIds = Array.from(checkboxes).map(cb => cb.value);
+    
+    if (courseIds.length === 0) {
+        alert('Please select at least one course to delete.');
+        return;
+    }
+    
+    if (!confirm(`Are you sure you want to delete ${courseIds.length} course(s)? This action cannot be undone!`)) {
+        return;
+    }
+    
+    // Create form data
+    const formData = new FormData();
+    courseIds.forEach(id => formData.append('course_ids[]', id));
+    
+    // Add CSRF token
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                      document.cookie.match(/csrftoken=([^;]+)/)?.[1];
+    if (csrfToken) {
+        formData.append('csrfmiddlewaretoken', csrfToken);
+    }
+    
+    // Send AJAX request
+    fetch('{% url "dashboard:courses_bulk_delete" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': csrfToken
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message || `Successfully deleted ${data.deleted} course(s)!`);
+            location.reload();
+        } else {
+            alert('Error: ' + (data.error || 'Failed to delete courses'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while deleting courses.');
+    });
+}
+</script>
 {% endblock %}
 
