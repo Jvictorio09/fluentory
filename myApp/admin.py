@@ -8,7 +8,8 @@ from .models import (
     Notification, SiteSettings, Media,
     TeacherAvailability, Booking, OneOnOneBooking, BookingReminder,
     GiftEnrollment, LiveClassSession, LiveClassTeacherAssignment,
-    Lead, LeadTimelineEvent, GiftEnrollmentLeadLink, EnrollmentLeadLink
+    Lead, LeadTimelineEvent, GiftEnrollmentLeadLink, EnrollmentLeadLink,
+    HelpCategory, HelpArticle
 )
 
 
@@ -378,7 +379,7 @@ class SiteSettingsAdmin(admin.ModelAdmin):
             'fields': ('announcement_text', 'announcement_link', 'show_announcement')
         }),
         ('Contact & Social', {
-            'fields': ('support_email', 'linkedin_url', 'instagram_url', 'facebook_url', 'twitter_url')
+            'fields': ('support_email', 'linkedin_url', 'instagram_url', 'facebook_url', 'twitter_url', 'whatsapp_number')
         }),
     )
     
@@ -388,6 +389,39 @@ class SiteSettingsAdmin(admin.ModelAdmin):
     
     def has_delete_permission(self, request, obj=None):
         return False
+
+
+# ============================================
+# HELP CENTER ADMIN
+# ============================================
+
+@admin.register(HelpCategory)
+class HelpCategoryAdmin(admin.ModelAdmin):
+    list_display = ['title', 'slug', 'order', 'is_active']
+    list_filter = ['is_active']
+    search_fields = ['title', 'description']
+    prepopulated_fields = {'slug': ('title',)}
+    ordering = ['order', 'title']
+
+
+@admin.register(HelpArticle)
+class HelpArticleAdmin(admin.ModelAdmin):
+    list_display = ['title', 'category', 'is_featured', 'view_count', 'is_active', 'order']
+    list_filter = ['category', 'is_featured', 'is_active']
+    search_fields = ['title', 'excerpt', 'content']
+    prepopulated_fields = {'slug': ('title',)}
+    ordering = ['order', 'title']
+    fieldsets = (
+        ('Basic Info', {
+            'fields': ('title', 'slug', 'category', 'excerpt')
+        }),
+        ('Content', {
+            'fields': ('content',)
+        }),
+        ('Settings', {
+            'fields': ('is_featured', 'is_active', 'order')
+        }),
+    )
 
 
 # ============================================

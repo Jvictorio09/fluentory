@@ -25,6 +25,7 @@ urlpatterns += [
     path('api/notifications/read/', views.api_mark_notification_read, name='api_mark_notification_read'),
     path('api/update-language/', views.api_update_language, name='api_update_language'),
     path('api/teacher/activity-feed/', views.api_teacher_activity_feed, name='api_teacher_activity_feed'),
+    path('api/help/search/', views.help_search_suggestions, name='help_search_suggestions'),
 ]
 
 # URLs that need translation (wrapped in i18n_patterns)
@@ -35,11 +36,18 @@ urlpatterns += i18n_patterns(
     # Landing page
     path('', views.home, name='home'),
     
+    # AI Demo page
+    path('ai-demo/', views.ai_demo_page, name='ai_demo'),
+    
     # Static pages
     path('about/', views.about_page, name='about'),
     path('careers/', views.careers_page, name='careers'),
     path('blog/', views.blog_page, name='blog'),
     path('help-center/', views.help_center_page, name='help_center'),
+    path('help/search/', views.help_search_results, name='help_search'),
+    path('help/<slug:slug>/', views.help_article_detail, name='help_article'),
+    path('help/category/<slug:slug>/', views.help_category_detail, name='help_category'),
+    path('outcomes/', views.outcomes_page, name='outcomes'),
     path('contact/', views.contact_page, name='contact'),
     path('privacy/', views.privacy_page, name='privacy'),
     path('terms/', views.terms_page, name='terms'),

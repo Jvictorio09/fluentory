@@ -343,6 +343,7 @@
                     const targetElement = document.getElementById(targetId);
                     if (targetElement) {
                         e.preventDefault();
+                        console.log('sample-cta-click: Scrolling to', targetId);
                         const navbarHeight = document.querySelector('.navbar')?.offsetHeight || 72;
                         // Add extra offset for better spacing (navbar + 20px breathing room)
                         const offset = navbarHeight + 20;
@@ -352,6 +353,8 @@
                             top: Math.max(0, targetPosition),
                             behavior: 'smooth'
                         });
+                    } else {
+                        console.warn('sample-cta-click: Target element not found:', targetId);
                     }
                 }
             });

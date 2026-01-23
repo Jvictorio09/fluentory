@@ -1,9 +1,9 @@
 {% load i18n %}
-<section class="relative overflow-hidden py-16 lg:py-24"
+<section id="ai-demo" class="relative overflow-hidden py-16 lg:py-24"
   style="background-color: var(--bg-primary);">
 
   <!-- Daylight atmospheric wash -->
-  <div class="absolute inset-0">
+  <div class="absolute inset-0 pointer-events-none">
     <div class="absolute inset-0"
       style="background:
         radial-gradient(
@@ -16,10 +16,10 @@
   </div>
 
   <!-- Subtle ambient layers (fewer, slower, wider) -->
-  <div class="absolute -top-[30%] -right-[15%] w-[900px] h-[900px] rounded-full blur-[160px]"
+  <div class="absolute -top-[30%] -right-[15%] w-[900px] h-[900px] rounded-full blur-[160px] pointer-events-none"
        style="background-color: rgba(130,194,147,0.14);"></div>
 
-  <div class="absolute -bottom-[35%] -left-[20%] w-[950px] h-[950px] rounded-full blur-[180px]"
+  <div class="absolute -bottom-[35%] -left-[20%] w-[950px] h-[950px] rounded-full blur-[180px] pointer-events-none"
        style="background-color: rgba(0,101,95,0.10);"></div>
 
   <div class="max-w-[1400px] mx-auto px-6 sm:px-10 lg:px-16 relative z-10">
@@ -192,15 +192,183 @@
           <li style="color: var(--text-primary);">• {% trans "Supports multiple languages" %}</li>
         </ul>
 
-        <a href="#ai-demo"
-           class="inline-flex items-center gap-3 px-10 py-6 rounded-2xl font-semibold text-white transition-transform hover:scale-[1.02]"
-           style="background: linear-gradient(to right, var(--accent-cta), var(--accent-primary)); box-shadow: 0 24px 60px rgba(0,101,95,0.4);">
-          {% trans "Try a Sample Question" %}
-          <i class="fas fa-arrow-right"></i>
-        </a>
+        <div class="relative inline-block" style="position: relative; z-index: 10;">
+          {% if user.is_authenticated %}
+            <a href="{% url 'ai_demo' %}"
+               id="sample-question-cta"
+               data-debug="sample-cta"
+               class="sample-question-cta inline-flex items-center gap-3 px-10 py-6 rounded-2xl font-semibold text-white transition-transform hover:scale-[1.02]"
+               style="background: linear-gradient(to right, var(--accent-cta), var(--accent-primary)); box-shadow: 0 24px 60px rgba(0,101,95,0.4); position: relative; z-index: 10; pointer-events: auto;"
+               title="Try a Sample Question">
+              <span>{% trans "Try a Sample Question" %}</span>
+              <i class="fas fa-arrow-right"></i>
+            </a>
+          {% else %}
+            <a href="{% url 'login' %}?next={% url 'ai_demo' %}"
+               id="sample-question-cta"
+               data-debug="sample-cta"
+               class="sample-question-cta inline-flex items-center gap-3 px-10 py-6 rounded-2xl font-semibold text-white transition-transform hover:scale-[1.02]"
+               style="background: linear-gradient(to right, var(--accent-cta), var(--accent-primary)); box-shadow: 0 24px 60px rgba(0,101,95,0.4); position: relative; z-index: 10; pointer-events: auto;"
+               title="Try a Sample Question"
+               aria-describedby="login-required-tooltip">
+              <span>{% trans "Try a Sample Question" %}</span>
+              <i class="fas fa-arrow-right"></i>
+            </a>
+            <!-- Tooltip for logged-out users -->
+            <div id="login-required-tooltip"
+                 class="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1.5 rounded-lg text-xs font-medium text-white whitespace-nowrap opacity-0 invisible transition-opacity duration-200 pointer-events-none"
+                 style="background-color: rgba(0,0,0,0.85); z-index: 20;"
+                 role="tooltip">
+              {% trans "Login required" %}
+              <div class="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1 w-2 h-2 rotate-45"
+                   style="background-color: rgba(0,0,0,0.85);"></div>
+            </div>
+          {% endif %}
+        </div>
 
       </div>
 
     </div>
   </div>
 </section>
+
+<script>
+// "Try a Sample Question" CTA functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const sampleCta = document.getElementById('sample-question-cta');
+    const tooltip = document.getElementById('login-required-tooltip');
+    
+    // Tooltip show/hide for logged-out users
+    if (sampleCta && tooltip) {
+        const showTooltip = () => {
+            tooltip.classList.remove('opacity-0', 'invisible');
+            tooltip.classList.add('opacity-100', 'visible');
+        };
+        const hideTooltip = () => {
+            tooltip.classList.remove('opacity-100', 'visible');
+            tooltip.classList.add('opacity-0', 'invisible');
+        };
+        
+        sampleCta.addEventListener('mouseenter', showTooltip);
+        sampleCta.addEventListener('mouseleave', hideTooltip);
+        sampleCta.addEventListener('focus', showTooltip);
+        sampleCta.addEventListener('blur', hideTooltip);
+    }
+    
+    // Set session flag when authenticated user clicks CTA
+    if (sampleCta && !tooltip) {
+        // User is authenticated - set session flag via AJAX before navigation
+        sampleCta.addEventListener('click', function(e) {
+            // Set session flag via AJAX
+            fetch('{% url "ai_demo" %}?set_session_flag=1', {
+                method: 'GET',
+                credentials: 'same-origin',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                }
+            }).catch(err => console.log('Session flag set'));
+        });
+    }
+    
+    // Auto-open logic - check both query param and session (passed via context)
+    {% if auto_open_sample %}
+    // Auto-open triggered from server-side (session or query param)
+    const triggerSource = '{{ auto_open_source|default:"none" }}';
+    
+    // Debug badge (only in DEBUG mode)
+    {% if debug %}
+    const debugBadge = document.createElement('div');
+    debugBadge.id = 'autoopen-debug-badge';
+    debugBadge.style.cssText = 'position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.9); color: #0f0; padding: 12px 16px; border-radius: 8px; font-family: monospace; font-size: 11px; z-index: 99999; line-height: 1.6; box-shadow: 0 4px 12px rgba(0,0,0,0.5);';
+    debugBadge.innerHTML = '<div style="font-weight: bold; margin-bottom: 4px;">AUTOOPEN DEBUG</div>';
+    document.body.appendChild(debugBadge);
+    {% endif %}
+    
+    // Scroll to the AI demo section
+    const aiDemoSection = document.getElementById('ai-demo');
+    const foundSection = !!aiDemoSection;
+    
+    {% if debug %}
+    debugBadge.innerHTML += `<div>AUTOOPEN TRIGGERED: ${triggerSource}</div>`;
+    debugBadge.innerHTML += `<div>FOUND ai-demo section: ${foundSection ? 'yes' : 'no'}</div>`;
+    {% endif %}
+    
+    if (aiDemoSection) {
+        // Small delay to ensure page is fully loaded
+        setTimeout(() => {
+            const navbarHeight = document.querySelector('.navbar')?.offsetHeight || 72;
+            const offset = navbarHeight + 20;
+            const targetPosition = aiDemoSection.getBoundingClientRect().top + window.pageYOffset - offset;
+            
+            window.scrollTo({
+                top: Math.max(0, targetPosition),
+                behavior: 'smooth'
+            });
+            
+            // Try multiple selectors to find the input (could be preview div or actual input)
+            const chatInput = document.getElementById('ai-demo-input') || 
+                             document.querySelector('#ai-demo input[type="text"]') ||
+                             document.querySelector('#ai-demo input[placeholder*="Ask"]') ||
+                             document.querySelector('#ai-demo input[placeholder*="lesson"]') ||
+                             document.querySelector('#ai-demo .flex-1 input') ||
+                             document.querySelector('#ai-demo input');
+            
+            // Also check for the preview div that shows "Ask anything about this lesson…"
+            const previewDiv = document.querySelector('#ai-demo .flex-1.text-sm[style*="color"]');
+            
+            const foundInput = !!chatInput;
+            const foundPreview = !!previewDiv;
+            
+            {% if debug %}
+            debugBadge.innerHTML += `<div>FOUND input: ${foundInput ? 'yes' : 'no'}</div>`;
+            debugBadge.innerHTML += `<div>FOUND preview div: ${foundPreview ? 'yes' : 'no'}</div>`;
+            {% endif %}
+            
+            if (chatInput) {
+                // Real input found - focus and insert sample question
+                setTimeout(() => {
+                    chatInput.focus();
+                    const sampleQuestion = "Can you quiz me on this lesson?";
+                    if (chatInput.value === '') {
+                        chatInput.value = sampleQuestion;
+                    }
+                    
+                    {% if debug %}
+                    debugBadge.innerHTML += '<div style="color: #0f0; margin-top: 8px;">✓ Input focused & question inserted</div>';
+                    {% endif %}
+                }, 500);
+            } else if (previewDiv) {
+                // Preview div found - highlight it to show it's the target
+                setTimeout(() => {
+                    previewDiv.style.transition = 'all 0.3s';
+                    previewDiv.style.backgroundColor = 'rgba(130, 194, 147, 0.1)';
+                    previewDiv.style.border = '2px solid rgba(130, 194, 147, 0.3)';
+                    previewDiv.style.borderRadius = '8px';
+                    previewDiv.style.padding = '8px';
+                    
+                    {% if debug %}
+                    debugBadge.innerHTML += '<div style="color: #0f0; margin-top: 8px;">✓ Preview highlighted (static demo)</div>';
+                    {% endif %}
+                    
+                    // Remove highlight after 2 seconds
+                    setTimeout(() => {
+                        previewDiv.style.backgroundColor = '';
+                        previewDiv.style.border = '';
+                        previewDiv.style.borderRadius = '';
+                        previewDiv.style.padding = '';
+                    }, 2000);
+                }, 500);
+            } else {
+                {% if debug %}
+                debugBadge.innerHTML += '<div style="color: #f00; margin-top: 8px;">✗ No input or preview found</div>';
+                {% endif %}
+            }
+        }, 100);
+    } else {
+        {% if debug %}
+        debugBadge.innerHTML += '<div style="color: #f00; margin-top: 8px;">✗ Section not found</div>';
+        {% endif %}
+    }
+    {% endif %}
+});
+</script>

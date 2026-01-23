@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+{% block title %}Outcomes - Fluentory{% endblock %}
+
+{% block body_class %}public-footer-page{% endblock %}
+
+{% block content %}
+<div class="public-content-wrapper min-h-screen transition-colors duration-300">
+<section class="relative py-24 overflow-hidden">
+    <!-- Background gradient splashes in corners -->
+    <div class="absolute inset-0 pointer-events-none">
+      <div class="absolute top-0 left-0 w-[600px] h-[600px] bg-[radial-gradient(circle_at_0%_0%,rgba(0,101,95,0.12),transparent_70%)]"></div>
+      <div class="absolute bottom-0 right-0 w-[600px] h-[600px] bg-[radial-gradient(circle_at_100%_100%,rgba(130,194,147,0.10),transparent_70%)]"></div>
+    </div>
+    
+    <div class="max-w-6xl mx-auto px-8 relative z-10">
+        <div class="text-center mb-16 animate-fade-in-up">
+            <h1 class="text-5xl md:text-6xl font-extralight mb-6 text-slate-900 dark:text-white tracking-[-2px]">Learning Outcomes</h1>
+            <p class="text-xl text-[#82C293] dark:text-[#82C293] max-w-2xl mx-auto">Measurable results that drive your success</p>
+        </div>
+        
+        <!-- Outcomes Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-12">
+            <!-- Item -->
+            <div class="group flex items-center gap-4 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-5 py-4 backdrop-blur-md hover:bg-white/10 dark:hover:bg-white/8 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(130,194,147,0.15)] hover:border-[#82C293]/30">
+                <div class="w-12 h-12 rounded-xl bg-[#82C293]/10 border border-[#82C293]/20 grid place-items-center">
+                    <i class="fas fa-arrow-trend-up text-lg text-[#82C293]"></i>
+                </div>
+                <div class="leading-tight">
+                    <div class="text-sm uppercase tracking-wider text-slate-600 dark:text-slate-400">Outcome</div>
+                    <div class="text-base font-medium text-slate-900 dark:text-white">Faster Progress</div>
+                </div>
+            </div>
+
+            <!-- Item -->
+            <div class="group flex items-center gap-4 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-5 py-4 backdrop-blur-md hover:bg-white/10 dark:hover:bg-white/8 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(130,194,147,0.15)] hover:border-[#82C293]/30">
+                <div class="w-12 h-12 rounded-xl bg-[#82C293]/10 border border-[#82C293]/20 grid place-items-center">
+                    <i class="fas fa-brain text-lg text-[#82C293]"></i>
+                </div>
+                <div class="leading-tight">
+                    <div class="text-sm uppercase tracking-wider text-slate-600 dark:text-slate-400">Outcome</div>
+                    <div class="text-base font-medium text-slate-900 dark:text-white">Smarter Learning</div>
+                </div>
+            </div>
+
+            <!-- Item -->
+            <div class="group flex items-center gap-4 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-5 py-4 backdrop-blur-md hover:bg-white/10 dark:hover:bg-white/8 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(130,194,147,0.15)] hover:border-[#82C293]/30">
+                <div class="w-12 h-12 rounded-xl bg-[#82C293]/10 border border-[#82C293]/20 grid place-items-center">
+                    <i class="fas fa-certificate text-lg text-[#82C293]"></i>
+                </div>
+                <div class="leading-tight">
+                    <div class="text-sm uppercase tracking-wider text-slate-600 dark:text-slate-400">Outcome</div>
+                    <div class="text-base font-medium text-slate-900 dark:text-white">Verified Proof</div>
+                </div>
+            </div>
+
+            <!-- Item -->
+            <div class="group flex items-center gap-4 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 px-5 py-4 backdrop-blur-md hover:bg-white/10 dark:hover:bg-white/8 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(130,194,147,0.15)] hover:border-[#82C293]/30">
+                <div class="w-12 h-12 rounded-xl bg-[#82C293]/10 border border-[#82C293]/20 grid place-items-center">
+                    <i class="fas fa-language text-lg text-[#82C293]"></i>
+                </div>
+                <div class="leading-tight">
+                    <div class="text-sm uppercase tracking-wider text-slate-600 dark:text-slate-400">Outcome</div>
+                    <div class="text-base font-medium text-slate-900 dark:text-white">Global Access</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content Card -->
+        <div class="relative bg-white dark:bg-[#04363a]/70 backdrop-blur-xl rounded-3xl p-12 shadow-sm dark:shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-white/10 animate-fade-in-up">
+            <!-- Inner glow -->
+            <div class="absolute inset-0 rounded-3xl bg-gradient-to-br from-[#82C293]/10 to-transparent pointer-events-none"></div>
+            
+            <div class="relative z-10">
+                <h2 class="text-3xl font-light mb-6 text-slate-900 dark:text-white">Why Outcomes Matter</h2>
+                <p class="text-slate-700 dark:text-slate-200 leading-relaxed mb-4">
+                    At Fluentory, we focus on measurable learning outcomes that translate into real-world success. 
+                    Our platform is designed to help you achieve faster progress, smarter learning, verified proof of your skills, 
+                    and global access to opportunities.
+                </p>
+                <p class="text-slate-700 dark:text-slate-200 leading-relaxed">
+                    Every course, lesson, and assessment is crafted with your success in mind. We track your progress, 
+                    provide personalized feedback, and certify your achievements so you can confidently showcase your skills 
+                    to employers, clients, and the world.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+</div>
+{% endblock %}
+

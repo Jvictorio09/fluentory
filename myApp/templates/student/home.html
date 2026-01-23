@@ -155,10 +155,18 @@
             {{ rec_course.title }}
           </h3>
           <p class="text-xs sm:text-sm text-white/60 mb-3">Based on your placement test</p>
+          {% if rec_course.slug %}
           <a href="{% url 'student_course_detail' rec_course.slug %}"
              class="inline-flex items-center gap-2 text-sm text-[#82C293] font-medium hover:text-[#9be0ad] transition">
             View course <i class="fas fa-arrow-right text-xs"></i>
           </a>
+          {% else %}
+          <a href="{% url 'student_courses' %}"
+             class="inline-flex items-center gap-2 text-sm text-slate-400 dark:text-slate-500 font-medium opacity-60 cursor-not-allowed"
+             title="Course details unavailable">
+            View course <i class="fas fa-arrow-right text-xs"></i>
+          </a>
+          {% endif %}
           {% endwith %}
         </div>
         {% endif %}
@@ -277,11 +285,20 @@
               {{ course.outcome|truncatechars:70 }}
             </p>
 
+            {% if course.slug %}
             <a href="{% url 'student_course_detail' course.slug %}"
                class="inline-flex items-center gap-2 text-sm sm:text-base text-[#82C293] font-medium hover:text-[#9be0ad] transition">
               View program
               <i class="fas fa-arrow-right text-xs group-hover:translate-x-1 transition-transform"></i>
             </a>
+            {% else %}
+            <a href="{% url 'student_courses' %}"
+               class="inline-flex items-center gap-2 text-sm sm:text-base text-slate-400 dark:text-slate-500 font-medium opacity-60 cursor-not-allowed"
+               title="Course details unavailable">
+              View program
+              <i class="fas fa-arrow-right text-xs"></i>
+            </a>
+            {% endif %}
           </div>
         </div>
         {% endfor %}

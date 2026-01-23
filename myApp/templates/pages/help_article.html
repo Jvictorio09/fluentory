@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ article.title }} - Help Center - Fluentory{% endblock %}
+
+{% block body_class %}public-footer-page{% endblock %}
+
+{% block content %}
+<div class="public-content-wrapper min-h-screen transition-colors duration-300">
+<section class="relative py-24 overflow-hidden">
+    <!-- Background gradient splashes in corners -->
+    <div class="absolute inset-0 pointer-events-none">
+      <div class="absolute top-0 left-0 w-[600px] h-[600px] bg-[radial-gradient(circle_at_0%_0%,rgba(0,101,95,0.12),transparent_70%)]"></div>
+      <div class="absolute bottom-0 right-0 w-[600px] h-[600px] bg-[radial-gradient(circle_at_100%_100%,rgba(130,194,147,0.10),transparent_70%)]"></div>
+    </div>
+    
+    <div class="max-w-4xl mx-auto px-8 relative z-10">
+        <div class="mb-8">
+            <a href="{% url 'help_center' %}" class="inline-flex items-center gap-2 text-[#82C293] dark:text-[#82C293] hover:text-[#00655F] dark:hover:text-[#8abc59] transition-colors mb-4">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Help Center</span>
+            </a>
+            <div class="mb-4">
+                <a href="{% url 'help_category' slug=article.category.slug %}" class="inline-block px-4 py-2 bg-[#82C293]/20 border border-[#82C293]/30 rounded-lg text-[#82C293] text-sm font-medium hover:bg-[#82C293]/30 transition-colors">
+                    {{ article.category.title }}
+                </a>
+            </div>
+            <h1 class="text-4xl md:text-5xl font-extralight mb-4 text-slate-900 dark:text-white tracking-[-2px]" style="scroll-margin-top: 100px;">
+                {{ article.title }}
+            </h1>
+            {% if article.excerpt %}
+            <p class="text-xl text-slate-600 dark:text-slate-400">{{ article.excerpt }}</p>
+            {% endif %}
+        </div>
+        
+        <div class="relative bg-white dark:bg-[#04363a]/70 backdrop-blur-xl rounded-3xl p-8 md:p-12 shadow-sm dark:shadow-[0_20px_60px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-white/10">
+            <div class="absolute inset-0 rounded-3xl bg-gradient-to-br from-[#82C293]/10 to-transparent pointer-events-none"></div>
+            <div class="relative z-10 prose prose-slate dark:prose-invert max-w-none">
+                <div class="article-content">
+                    {{ article.content|safe|linebreaks }}
+                </div>
+            </div>
+        </div>
+        
+        {% if related_articles %}
+        <div class="mt-12">
+            <h2 class="text-2xl font-light mb-6 text-slate-900 dark:text-white">Related Articles</h2>
+            <div class="grid md:grid-cols-2 gap-4">
+                {% for related in related_articles %}
+                <a href="{% url 'help_article' slug=related.slug %}" class="block p-4 rounded-xl hover:bg-[#82C293]/10 transition border border-transparent hover:border-[#82C293]/30 bg-white dark:bg-[#04363a]/70 backdrop-blur-xl">
+                    <h3 class="font-semibold mb-2 text-slate-900 dark:text-white">{{ related.title }}</h3>
+                    {% if related.excerpt %}
+                    <p class="text-sm text-slate-600 dark:text-slate-400">{{ related.excerpt|truncatewords:20 }}</p>
+                    {% endif %}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+</div>
+
+<style>
+    /* Ensure headings have scroll offset for fixed navbar */
+    .article-content h1,
+    .article-content h2,
+    .article-content h3,
+    .article-content h4,
+    .article-content h5,
+    .article-content h6 {
+        scroll-margin-top: 100px;
+    }
+    
+    /* Style article content */
+    .article-content {
+        color: var(--text-primary);
+    }
+    
+    .article-content p {
+        margin-bottom: 1rem;
+        line-height: 1.7;
+    }
+    
+    .article-content ul,
+    .article-content ol {
+        margin-bottom: 1rem;
+        padding-left: 1.5rem;
+    }
+    
+    .article-content li {
+        margin-bottom: 0.5rem;
+    }
+</style>
+{% endblock %}
+

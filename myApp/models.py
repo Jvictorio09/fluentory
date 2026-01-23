@@ -1,12 +1,14 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.utils.text import slugify
 from django.core.validators import MinValueValidator, MaxValueValidator
 from datetime import timedelta
 import uuid
 import qrcode
 from io import BytesIO
 from django.core.files import File
+from django.db import transaction
 
 
 # ============================================
@@ -247,7 +249,9 @@ class CourseTeacher(models.Model):
     ]
     
     course = models.ForeignKey('Course', on_delete=models.CASCADE, related_name='course_teachers')
-    teacher = models.ForeignKey(Teacher, on_delete=models.CASCADE, related_name='course_assignments')
+    # CRITICAL: teacher FK points to User (auth_user), NOT Teacher model
+    # The database constraint shows it references auth_user(id)
+    teacher = models.ForeignKey(User, on_delete=models.CASCADE, related_name='course_assignments')
     
     # Permissions
     permission_level = models.CharField(max_length=20, choices=PERMISSION_CHOICES, default='view_only')
@@ -263,7 +267,8 @@ class CourseTeacher(models.Model):
         unique_together = ['course', 'teacher']
     
     def __str__(self):
-        return f"{self.teacher.user.username} - {self.course.title} ({self.permission_level})"
+        # teacher is now a User, not Teacher
+        return f"{self.teacher.username} - {self.course.title} ({self.permission_level})"
     
     def get_requires_approval(self):
         """Get approval requirement, checking teacher override first, then course setting"""
@@ -376,6 +381,120 @@ class Course(models.Model):
     
     def __str__(self):
         return self.title
+    
+    def generate_unique_slug(self, base_slug=None, exclude_id=None):
+        """
+        Generate a unique slug for the course.
+        If slug already exists, appends incrementing suffix (e.g., -2, -3, etc.)
+        
+        This method uses database queries to check for existing slugs. For concurrent
+        requests, the save() method's IntegrityError handling serves as a safety net.
+        
+        Args:
+            base_slug: The base slug to use. If None, generates from title.
+            exclude_id: Course ID to exclude from uniqueness check (for updates)
+        
+        Returns:
+            A unique slug string
+        """
+        if base_slug is None:
+            if self.title:
+                base_slug = slugify(self.title)
+            else:
+                base_slug = slugify(self.slug) if self.slug else 'course'
+        
+        if not base_slug:
+            base_slug = 'course'
+        
+        # Ensure base_slug is a valid slug
+        base_slug = slugify(base_slug) or 'course'
+        
+        # Start with the base slug
+        slug = base_slug
+        counter = 1
+        
+        # Check for existing slugs and append counter until unique
+        # Note: For concurrent requests, save() method will catch IntegrityError
+        queryset = Course.objects.filter(slug=slug)
+        if exclude_id:
+            queryset = queryset.exclude(id=exclude_id)
+        
+        while queryset.exists():
+            slug = f"{base_slug}-{counter}"
+            queryset = Course.objects.filter(slug=slug)
+            if exclude_id:
+                queryset = queryset.exclude(id=exclude_id)
+            counter += 1
+        
+        return slug
+    
+    def save(self, *args, **kwargs):
+        """
+        Override save to ensure slug is always unique.
+        Generates slug from title if not provided or if slug needs to be made unique.
+        Handles IntegrityError as a fallback for race conditions.
+        """
+        from django.db import IntegrityError
+        
+        # Normalize empty slug to None/empty string
+        if not self.slug or not self.slug.strip():
+            self.slug = ''
+        
+        # If this is a new object (no pk) or slug is empty, generate from title
+        if not self.pk and not self.slug:
+            if self.title:
+                self.slug = self.generate_unique_slug()
+            else:
+                # Fallback if no title
+                self.slug = self.generate_unique_slug(base_slug='course')
+        # If slug exists but might not be unique (for new objects)
+        elif not self.pk and self.slug:
+            self.slug = self.generate_unique_slug(base_slug=self.slug)
+        # If updating existing object
+        elif self.pk:
+            # Get the original slug from database
+            try:
+                original = Course.objects.get(pk=self.pk)
+                # If slug is empty or None, generate from title
+                if not self.slug or not self.slug.strip():
+                    if self.title:
+                        self.slug = self.generate_unique_slug(exclude_id=self.pk)
+                    else:
+                        self.slug = self.generate_unique_slug(base_slug='course', exclude_id=self.pk)
+                # If slug changed, ensure new slug is unique
+                elif self.slug != original.slug:
+                    self.slug = self.generate_unique_slug(base_slug=self.slug, exclude_id=self.pk)
+            except Course.DoesNotExist:
+                # Object doesn't exist yet (shouldn't happen, but safety check)
+                if not self.slug or not self.slug.strip():
+                    if self.title:
+                        self.slug = self.generate_unique_slug()
+                    else:
+                        self.slug = self.generate_unique_slug(base_slug='course')
+                else:
+                    self.slug = self.generate_unique_slug(base_slug=self.slug)
+        
+        # Attempt to save, retry with new slug if IntegrityError occurs (race condition)
+        max_retries = 5
+        for attempt in range(max_retries):
+            try:
+                super().save(*args, **kwargs)
+                break
+            except IntegrityError as e:
+                # Check if it's a slug uniqueness error
+                if 'slug' in str(e).lower() or 'unique constraint' in str(e).lower():
+                    if attempt < max_retries - 1:
+                        # Regenerate slug and retry
+                        if self.pk:
+                            self.slug = self.generate_unique_slug(base_slug=self.slug, exclude_id=self.pk)
+                        else:
+                            self.slug = self.generate_unique_slug(base_slug=self.slug)
+                    else:
+                        # Last attempt failed, re-raise the error
+                        raise
+                else:
+                    # Different integrity error, re-raise
+                    raise
     
     def update_lesson_count(self):
         self.lessons_count = self.modules.aggregate(
@@ -2171,10 +2290,11 @@ class SiteSettings(models.Model):
     support_email = models.EmailField(default='support@fluentory.com')
     
     # Social links
-    linkedin_url = models.URLField(blank=True)
-    instagram_url = models.URLField(blank=True)
-    facebook_url = models.URLField(blank=True)
-    twitter_url = models.URLField(blank=True)
+    linkedin_url = models.URLField(blank=True, help_text='Full LinkedIn profile/page URL')
+    instagram_url = models.URLField(blank=True, help_text='Full Instagram profile URL')
+    facebook_url = models.URLField(blank=True, help_text='Full Facebook page/profile URL')
+    twitter_url = models.URLField(blank=True, help_text='Full Twitter/X profile URL')
+    whatsapp_number = models.CharField(max_length=20, blank=True, help_text='WhatsApp number in international format (e.g., +1234567890)')
     
     class Meta:
         verbose_name = 'Site Settings'
@@ -2185,8 +2305,78 @@ class SiteSettings(models.Model):
     
     @classmethod
     def get_settings(cls):
+        """Get or create the singleton SiteSettings instance"""
         settings, _ = cls.objects.get_or_create(pk=1)
         return settings
+    
+    @classmethod
+    def get_solo(cls):
+        """Alias for get_settings() - ensures exactly one SiteSettings row exists"""
+        return cls.get_settings()
+
+
+# ============================================
+# HELP CENTER
+# ============================================
+
+class HelpCategory(models.Model):
+    """Help Center category"""
+    title = models.CharField(max_length=200)
+    slug = models.SlugField(unique=True, help_text='URL-friendly identifier')
+    description = models.TextField(blank=True, help_text='Category description')
+    icon = models.CharField(max_length=50, blank=True, help_text='Font Awesome icon class (e.g., fa-graduation-cap)')
+    order = models.PositiveIntegerField(default=0, help_text='Display order')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Help Category'
+        verbose_name_plural = 'Help Categories'
+        ordering = ['order', 'title']
+    
+    def __str__(self):
+        return self.title
+    
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('help_category', kwargs={'slug': self.slug})
+
+
+class HelpArticle(models.Model):
+    """Help Center article"""
+    title = models.CharField(max_length=200)
+    slug = models.SlugField(unique=True, help_text='URL-friendly identifier')
+    category = models.ForeignKey(HelpCategory, on_delete=models.CASCADE, related_name='articles')
+    excerpt = models.TextField(blank=True, help_text='Short summary for search results')
+    content = models.TextField(help_text='Full article content (HTML allowed)')
+    is_featured = models.BooleanField(default=False, help_text='Show in popular articles')
+    view_count = models.PositiveIntegerField(default=0)
+    order = models.PositiveIntegerField(default=0, help_text='Display order within category')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = 'Help Article'
+        verbose_name_plural = 'Help Articles'
+        ordering = ['order', 'title']
+        indexes = [
+            models.Index(fields=['category', 'is_active']),
+            models.Index(fields=['is_featured', 'is_active']),
+        ]
+    
+    def __str__(self):
+        return self.title
+    
+    def get_absolute_url(self):
+        from django.urls import reverse
+        return reverse('help_article', kwargs={'slug': self.slug})
+    
+    def increment_view_count(self):
+        """Increment view count"""
+        self.view_count += 1
+        self.save(update_fields=['view_count'])
 
 
 # ============================================

@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Search Results{% if query %} - {{ query }}{% endif %} - Help Center - Fluentory{% endblock %}
+
+{% block body_class %}public-footer-page{% endblock %}
+
+{% block content %}
+<div class="public-content-wrapper min-h-screen transition-colors duration-300">
+<section class="relative py-24 overflow-hidden">
+    <!-- Background gradient splashes in corners -->
+    <div class="absolute inset-0 pointer-events-none">
+      <div class="absolute top-0 left-0 w-[600px] h-[600px] bg-[radial-gradient(circle_at_0%_0%,rgba(0,101,95,0.12),transparent_70%)]"></div>
+      <div class="absolute bottom-0 right-0 w-[600px] h-[600px] bg-[radial-gradient(circle_at_100%_100%,rgba(130,194,147,0.10),transparent_70%)]"></div>
+    </div>
+    
+    <div class="max-w-6xl mx-auto px-8 relative z-10">
+        <div class="mb-8">
+            <a href="{% url 'help_center' %}" class="inline-flex items-center gap-2 text-[#82C293] dark:text-[#82C293] hover:text-[#00655F] dark:hover:text-[#8abc59] transition-colors mb-4">
+                <i class="fas fa-arrow-left"></i>
+                <span>Back to Help Center</span>
+            </a>
+            <h1 class="text-4xl md:text-5xl font-extralight mb-4 text-slate-900 dark:text-white tracking-[-2px]">
+                Search Results{% if query %}: "{{ query }}"{% endif %}
+            </h1>
+        </div>
+        
+        {% if has_results %}
+            <!-- Categories Results -->
+            {% if results.categories %}
+            <div class="mb-12">
+                <h2 class="text-2xl font-light mb-6 text-slate-900 dark:text-white">Categories</h2>
+                <div class="grid md:grid-cols-2 gap-6">
+                    {% for category in results.categories %}
+                    <a href="{% url 'help_category' slug=category.slug %}" class="relative bg-white dark:bg-[#04363a]/70 backdrop-blur-xl rounded-2xl p-6 shadow-sm dark:shadow-[0_10px_40px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-white/10 hover:border-[#82C293]/30 transition-all">
+                        <div class="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#82C293]/10 to-transparent pointer-events-none"></div>
+                        <div class="relative z-10">
+                            <div class="flex items-center gap-4 mb-3">
+                                <div class="w-12 h-12 bg-[#82C293]/20 border border-[#82C293]/30 rounded-full flex items-center justify-center">
+                                    <i class="fas {{ category.icon|default:'fa-folder' }} text-[#82C293]"></i>
+                                </div>
+                                <h3 class="text-xl font-semibold text-slate-900 dark:text-white">{{ category.title }}</h3>
+                            </div>
+                            {% if category.description %}
+                            <p class="text-slate-600 dark:text-slate-400 text-sm">{{ category.description }}</p>
+                            {% endif %}
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Articles Results -->
+            {% if results.articles %}
+            <div class="mb-12">
+                <h2 class="text-2xl font-light mb-6 text-slate-900 dark:text-white">Articles</h2>
+                <div class="space-y-4">
+                    {% for article in results.articles %}
+                    <a href="{% url 'help_article' slug=article.slug %}" class="block relative bg-white dark:bg-[#04363a]/70 backdrop-blur-xl rounded-2xl p-6 shadow-sm dark:shadow-[0_10px_40px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-white/10 hover:border-[#82C293]/30 transition-all">
+                        <div class="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#82C293]/10 to-transparent pointer-events-none"></div>
+                        <div class="relative z-10">
+                            <h3 class="text-xl font-semibold mb-2 text-slate-900 dark:text-white">{{ article.title }}</h3>
+                            {% if article.excerpt %}
+                            <p class="text-slate-600 dark:text-slate-400 text-sm mb-2">{{ article.excerpt }}</p>
+                            {% endif %}
+                            <p class="text-xs text-slate-500 dark:text-slate-400">{{ article.category.title }}</p>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        {% else %}
+            <!-- No Results -->
+            <div class="text-center py-12">
+                <div class="w-20 h-20 bg-[#82C293]/20 border border-[#82C293]/30 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <i class="fas fa-search text-[#82C293] text-3xl"></i>
+                </div>
+                <h2 class="text-2xl font-light mb-4 text-slate-900 dark:text-white">No results found</h2>
+                <p class="text-slate-600 dark:text-slate-400 mb-8">Try different keywords or browse our popular articles below.</p>
+                
+                {% if popular_articles %}
+                <div class="max-w-3xl mx-auto">
+                    <h3 class="text-xl font-semibold mb-6 text-slate-900 dark:text-white">Popular Articles</h3>
+                    <div class="grid md:grid-cols-2 gap-4">
+                        {% for article in popular_articles %}
+                        <a href="{% url 'help_article' slug=article.slug %}" class="block p-4 rounded-xl hover:bg-[#82C293]/10 transition border border-transparent hover:border-[#82C293]/30">
+                            <h4 class="font-semibold mb-2 text-slate-900 dark:text-white">{{ article.title }}</h4>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">{{ article.category.title }}</p>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</section>
+</div>
+{% endblock %}
+

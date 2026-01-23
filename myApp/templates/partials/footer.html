@@ -1,6 +1,6 @@
 <footer class="public-footer relative py-24 pb-12 overflow-hidden border-t border-slate-200 dark:border-white/10 transition-colors duration-300">
     <!-- Background Image -->
-    <div class="absolute inset-0">
+    <div class="absolute inset-0 pointer-events-none">
         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full opacity-20">
             <img
                 src="https://res.cloudinary.com/dkjtfjnlf/image/upload/v1766150311/fluentory_-_branding-05_bdghfn.png"
@@ -13,8 +13,8 @@
     </div>
     
     <!-- Background depth layers -->
-    <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(130,194,147,0.08),rgba(0,101,95,0.05),transparent_60%)]"></div>
-    <div class="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-[#82C293]/5 blur-[80px]"></div>
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(130,194,147,0.08),rgba(0,101,95,0.05),transparent_60%)] pointer-events-none"></div>
+    <div class="absolute bottom-0 right-0 w-[400px] h-[400px] rounded-full bg-[#82C293]/5 blur-[80px] pointer-events-none"></div>
     
     <div class="max-w-[1600px] mx-auto px-8 lg:px-20 relative z-10">
         <!-- Enhanced Email Subscription Section -->
@@ -140,19 +140,85 @@
         </div>
         
         <!-- Enhanced Social Media Icons -->
-        <div class="flex gap-4 justify-center mb-12">
-            <a href="#" class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-[#04363a]/60 border-2 border-slate-200 dark:border-[#254346]/70 backdrop-blur-md text-[#00655F] dark:text-[#82C293] hover:text-[#004d47] dark:hover:text-[#8abc59] hover:border-[#82C293]/40 hover:bg-slate-200 dark:hover:bg-[#04363a]/80 grid place-items-center text-lg transition-all duration-300 shadow-sm dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_6px_18px_rgba(130,194,147,0.2)] hover:scale-110" aria-label="LinkedIn">
+        <!-- DEBUG: Social Links Resolved URLs:
+             LinkedIn: {{ social_links.linkedin|default:"(none)" }} [{{ social_links_debug_source.linkedin|default:"unknown" }}]
+             Instagram: {{ social_links.instagram|default:"(none)" }} [{{ social_links_debug_source.instagram|default:"unknown" }}]
+             Facebook: {{ social_links.facebook|default:"(none)" }} [{{ social_links_debug_source.facebook|default:"unknown" }}]
+             Twitter: {{ social_links.twitter|default:"(none)" }} [{{ social_links_debug_source.twitter|default:"unknown" }}]
+             WhatsApp: {{ social_links.whatsapp|default:"(none)" }} [{{ social_links_debug_source.whatsapp|default:"unknown" }}]
+        -->
+        <div class="flex gap-4 justify-center mb-12" style="position: relative; z-index: 10;">
+            <!-- LinkedIn -->
+            {% if social_links.linkedin %}
+            <a href="{{ social_links.linkedin }}" 
+               target="_blank" 
+               rel="noopener noreferrer"
+               class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-[#04363a]/60 border-2 border-slate-200 dark:border-[#254346]/70 backdrop-blur-md text-[#00655F] dark:text-[#82C293] hover:text-[#004d47] dark:hover:text-[#8abc59] hover:border-[#82C293]/40 hover:bg-slate-200 dark:hover:bg-[#04363a]/80 grid place-items-center text-lg transition-all duration-300 shadow-sm dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_6px_18px_rgba(130,194,147,0.2)] hover:scale-110" 
+               aria-label="LinkedIn"
+               style="pointer-events: auto; position: relative; z-index: 10;">
                 <i class="fab fa-linkedin"></i>
             </a>
-            <a href="#" class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-[#04363a]/60 border-2 border-slate-200 dark:border-[#254346]/70 backdrop-blur-md text-[#00655F] dark:text-[#82C293] hover:text-[#004d47] dark:hover:text-[#8abc59] hover:border-[#82C293]/40 hover:bg-slate-200 dark:hover:bg-[#04363a]/80 grid place-items-center text-lg transition-all duration-300 shadow-sm dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_6px_18px_rgba(130,194,147,0.2)] hover:scale-110" aria-label="Instagram">
+            {% else %}
+            <span class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-[#04363a]/60 border-2 border-slate-200 dark:border-[#254346]/70 backdrop-blur-md text-[#00655F] dark:text-[#82C293] grid place-items-center text-lg opacity-40 cursor-not-allowed" 
+                  aria-label="LinkedIn (not configured)"
+                  style="pointer-events: none; position: relative; z-index: 10;">
+                <i class="fab fa-linkedin"></i>
+            </span>
+            {% endif %}
+            
+            <!-- Instagram -->
+            {% if social_links.instagram %}
+            <a href="{{ social_links.instagram }}" 
+               target="_blank" 
+               rel="noopener noreferrer"
+               class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-[#04363a]/60 border-2 border-slate-200 dark:border-[#254346]/70 backdrop-blur-md text-[#00655F] dark:text-[#82C293] hover:text-[#004d47] dark:hover:text-[#8abc59] hover:border-[#82C293]/40 hover:bg-slate-200 dark:hover:bg-[#04363a]/80 grid place-items-center text-lg transition-all duration-300 shadow-sm dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_6px_18px_rgba(130,194,147,0.2)] hover:scale-110" 
+               aria-label="Instagram"
+               style="pointer-events: auto; position: relative; z-index: 10;">
                 <i class="fab fa-instagram"></i>
             </a>
-            <a href="#" class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-[#04363a]/60 border-2 border-slate-200 dark:border-[#254346]/70 backdrop-blur-md text-[#00655F] dark:text-[#82C293] hover:text-[#004d47] dark:hover:text-[#8abc59] hover:border-[#82C293]/40 hover:bg-slate-200 dark:hover:bg-[#04363a]/80 grid place-items-center text-lg transition-all duration-300 shadow-sm dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_6px_18px_rgba(130,194,147,0.2)] hover:scale-110" aria-label="Facebook">
+            {% else %}
+            <span class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-[#04363a]/60 border-2 border-slate-200 dark:border-[#254346]/70 backdrop-blur-md text-[#00655F] dark:text-[#82C293] grid place-items-center text-lg opacity-40 cursor-not-allowed" 
+                  aria-label="Instagram (not configured)"
+                  style="pointer-events: none; position: relative; z-index: 10;">
+                <i class="fab fa-instagram"></i>
+            </span>
+            {% endif %}
+            
+            <!-- Facebook -->
+            {% if social_links.facebook %}
+            <a href="{{ social_links.facebook }}" 
+               target="_blank" 
+               rel="noopener noreferrer"
+               class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-[#04363a]/60 border-2 border-slate-200 dark:border-[#254346]/70 backdrop-blur-md text-[#00655F] dark:text-[#82C293] hover:text-[#004d47] dark:hover:text-[#8abc59] hover:border-[#82C293]/40 hover:bg-slate-200 dark:hover:bg-[#04363a]/80 grid place-items-center text-lg transition-all duration-300 shadow-sm dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_6px_18px_rgba(130,194,147,0.2)] hover:scale-110" 
+               aria-label="Facebook"
+               style="pointer-events: auto; position: relative; z-index: 10;">
                 <i class="fab fa-facebook"></i>
             </a>
-            <a href="#" class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-[#04363a]/60 border-2 border-slate-200 dark:border-[#254346]/70 backdrop-blur-md text-[#00655F] dark:text-[#82C293] hover:text-[#004d47] dark:hover:text-[#8abc59] hover:border-[#82C293]/40 hover:bg-slate-200 dark:hover:bg-[#04363a]/80 grid place-items-center text-lg transition-all duration-300 shadow-sm dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_6px_18px_rgba(130,194,147,0.2)] hover:scale-110" aria-label="WhatsApp">
+            {% else %}
+            <span class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-[#04363a]/60 border-2 border-slate-200 dark:border-[#254346]/70 backdrop-blur-md text-[#00655F] dark:text-[#82C293] grid place-items-center text-lg opacity-40 cursor-not-allowed" 
+                  aria-label="Facebook (not configured)"
+                  style="pointer-events: none; position: relative; z-index: 10;">
+                <i class="fab fa-facebook"></i>
+            </span>
+            {% endif %}
+            
+            <!-- WhatsApp -->
+            {% if social_links.whatsapp %}
+            <a href="{{ social_links.whatsapp }}" 
+               target="_blank" 
+               rel="noopener noreferrer"
+               class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-[#04363a]/60 border-2 border-slate-200 dark:border-[#254346]/70 backdrop-blur-md text-[#00655F] dark:text-[#82C293] hover:text-[#004d47] dark:hover:text-[#8abc59] hover:border-[#82C293]/40 hover:bg-slate-200 dark:hover:bg-[#04363a]/80 grid place-items-center text-lg transition-all duration-300 shadow-sm dark:shadow-[0_4px_12px_rgba(0,0,0,0.3)] dark:hover:shadow-[0_6px_18px_rgba(130,194,147,0.2)] hover:scale-110" 
+               aria-label="WhatsApp"
+               style="pointer-events: auto; position: relative; z-index: 10;">
                 <i class="fab fa-whatsapp"></i>
             </a>
+            {% else %}
+            <span class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-[#04363a]/60 border-2 border-slate-200 dark:border-[#254346]/70 backdrop-blur-md text-[#00655F] dark:text-[#82C293] grid place-items-center text-lg opacity-40 cursor-not-allowed" 
+                  aria-label="WhatsApp (not configured)"
+                  style="pointer-events: none; position: relative; z-index: 10;">
+                <i class="fab fa-whatsapp"></i>
+            </span>
+            {% endif %}
         </div>
         
         <!-- Enhanced Copyright -->

@@ -6,7 +6,7 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.urls import reverse, reverse_lazy
 from django.db.models import Count, Avg, Sum, Q
-from django.db import connection, transaction
+from django.db import connection, transaction, IntegrityError
 from django.utils import timezone
 from django.views.decorators.http import require_POST, require_GET
 from django.core.paginator import Paginator
@@ -25,6 +25,7 @@ from .models import (
     TeacherAvailability, Booking, OneOnOneBooking, BookingReminder,
     LiveClassBooking, TeacherBookingPolicy, BookingSeries, BookingSeriesItem, SessionWaitlist
 )
+from .forms import CourseCreateForm
 
 
 # ============================================
@@ -140,6 +141,73 @@ def teacher_approved_required(view_func):
 # LANDING PAGE
 # ============================================
 
+def ai_demo_page(request):
+    """AI Demo page - shows the AI tutor section with optional auto-open"""
+    # Handle setting session flag via AJAX request
+    if request.GET.get('set_session_flag') == '1':
+        request.session['open_sample'] = True
+        return JsonResponse({'status': 'ok'})
+    
+    # Check if we should auto-open from query param or session flag
+    should_auto_open = (
+        request.GET.get('open_sample') == '1' or
+        request.session.get('open_sample_after_login') or
+        request.session.get('open_sample')
+    )
+    
+    # Clear session flags after reading (but keep for this request)
+    session_source = None
+    if request.session.get('open_sample_after_login'):
+        session_source = 'session_after_login'
+        # Don't delete yet - will delete after template renders
+    elif request.session.get('open_sample'):
+        session_source = 'session'
+        # Don't delete yet - will delete after template renders
+    
+    # Use the same context as home page but with auto-open flag
+    site_settings = get_site_settings()
+    
+    # Featured courses
+    featured_courses = Course.objects.filter(
+        status='published'
+    ).select_related('category', 'instructor').order_by('-enrolled_count')[:6]
+    
+    # FAQs
+    faqs = FAQ.objects.filter(is_active=True, is_featured=True).order_by('order')[:6]
+    
+    # Categories
+    categories = Category.objects.annotate(
+        course_count=Count('courses', filter=Q(courses__status='published'))
+    ).order_by('order')
+    
+    # Reviews/Testimonials
+    reviews = Review.objects.filter(
+        is_approved=True, 
+        is_featured=True
+    ).select_related('user', 'course').order_by('-created_at')[:5]
+    
+    context = {
+        'site_settings': site_settings,
+        'featured_courses': featured_courses,
+        'faqs': faqs,
+        'categories': categories,
+        'reviews': reviews,
+        'auto_open_sample': should_auto_open,
+        'auto_open_source': 'query' if request.GET.get('open_sample') == '1' else (session_source or 'none'),
+        'debug': settings.DEBUG,  # Pass DEBUG flag for debug badges
+    }
+    
+    response = render(request, 'landing.html', context)
+    
+    # Clear session flags after rendering
+    if 'open_sample_after_login' in request.session:
+        del request.session['open_sample_after_login']
+    if 'open_sample' in request.session:
+        del request.session['open_sample']
+    
+    return response
+
+
 def home(request):
     """Public landing page"""
     site_settings = get_site_settings()
@@ -194,7 +262,172 @@ def blog_page(request):
 
 def help_center_page(request):
     """Help Center page"""
-    return render(request, 'pages/help_center.html')
+    from .models import HelpCategory, HelpArticle
+    categories = HelpCategory.objects.filter(is_active=True).order_by('order', 'title')
+    featured_articles = HelpArticle.objects.filter(is_active=True, is_featured=True).order_by('-view_count', 'title')[:6]
+    
+    context = {
+        'categories': categories,
+        'featured_articles': featured_articles,
+    }
+    return render(request, 'pages/help_center.html', context)
+
+
+def help_search_suggestions(request):
+    """API endpoint for live search suggestions"""
+    from .models import HelpCategory, HelpArticle
+    
+    query = request.GET.get('q', '').strip()
+    
+    if len(query) < 1:
+        return JsonResponse({'suggestions': []})
+    
+    suggestions = []
+    query_lower = query.lower()
+    query_words = query_lower.split()
+    
+    # Search categories
+    categories = HelpCategory.objects.filter(is_active=True)
+    for category in categories:
+        title_lower = category.title.lower()
+        # Prefix match gets highest priority
+        if title_lower.startswith(query_lower):
+            suggestions.append({
+                'label': category.title,
+                'type': 'category',
+                'url': category.get_absolute_url(),
+                'subtitle': None,
+                'score': 100,  # High score for prefix match
+            })
+        # Contains match
+        elif all(word in title_lower for word in query_words):
+            suggestions.append({
+                'label': category.title,
+                'type': 'category',
+                'url': category.get_absolute_url(),
+                'subtitle': None,
+                'score': 50,  # Lower score for contains match
+            })
+    
+    # Search articles
+    articles = HelpArticle.objects.filter(is_active=True).select_related('category')
+    for article in articles:
+        title_lower = article.title.lower()
+        excerpt_lower = (article.excerpt or '').lower()
+        content_lower = (article.content or '').lower()
+        
+        score = 0
+        # Title prefix match - highest priority
+        if title_lower.startswith(query_lower):
+            score = 90
+        # Title contains all words
+        elif all(word in title_lower for word in query_words):
+            score = 70
+        # Excerpt contains
+        elif any(word in excerpt_lower for word in query_words):
+            score = 40
+        # Content contains (weakest)
+        elif any(word in content_lower for word in query_words):
+            score = 20
+        
+        if score > 0:
+            suggestions.append({
+                'label': article.title,
+                'type': 'article',
+                'url': article.get_absolute_url(),
+                'subtitle': article.category.title,
+                'score': score,
+            })
+    
+    # Sort by score (descending) and limit to top 10
+    suggestions.sort(key=lambda x: x['score'], reverse=True)
+    suggestions = suggestions[:10]
+    
+    # Remove score from response
+    for suggestion in suggestions:
+        del suggestion['score']
+    
+    return JsonResponse({'suggestions': suggestions})
+
+
+def help_search_results(request):
+    """Search results page"""
+    from .models import HelpCategory, HelpArticle
+    from django.db.models import Q
+    
+    query = request.GET.get('q', '').strip()
+    results = {
+        'categories': [],
+        'articles': [],
+    }
+    
+    if query:
+        query_lower = query.lower()
+        query_words = query_lower.split()
+        
+        # Search categories
+        category_q = Q(is_active=True)
+        for word in query_words:
+            category_q &= (Q(title__icontains=word) | Q(description__icontains=word))
+        results['categories'] = HelpCategory.objects.filter(category_q).distinct()
+        
+        # Search articles
+        article_q = Q(is_active=True)
+        for word in query_words:
+            article_q &= (Q(title__icontains=word) | Q(excerpt__icontains=word) | Q(content__icontains=word))
+        results['articles'] = HelpArticle.objects.filter(article_q).select_related('category').distinct()
+    
+    # Get popular articles for "no results" state
+    popular_articles = HelpArticle.objects.filter(is_active=True, is_featured=True).order_by('-view_count')[:6]
+    
+    context = {
+        'query': query,
+        'results': results,
+        'popular_articles': popular_articles,
+        'has_results': len(results['categories']) > 0 or len(results['articles']) > 0,
+    }
+    return render(request, 'pages/help_search_results.html', context)
+
+
+def help_article_detail(request, slug):
+    """Help article detail page"""
+    from .models import HelpArticle
+    from django.shortcuts import get_object_or_404
+    
+    article = get_object_or_404(HelpArticle, slug=slug, is_active=True)
+    article.increment_view_count()
+    
+    # Get related articles from same category
+    related_articles = HelpArticle.objects.filter(
+        category=article.category,
+        is_active=True
+    ).exclude(id=article.id).order_by('order', 'title')[:5]
+    
+    context = {
+        'article': article,
+        'related_articles': related_articles,
+    }
+    return render(request, 'pages/help_article.html', context)
+
+
+def help_category_detail(request, slug):
+    """Help category detail page"""
+    from .models import HelpCategory
+    from django.shortcuts import get_object_or_404
+    
+    category = get_object_or_404(HelpCategory, slug=slug, is_active=True)
+    articles = category.articles.filter(is_active=True).order_by('order', 'title')
+    
+    context = {
+        'category': category,
+        'articles': articles,
+    }
+    return render(request, 'pages/help_category.html', context)
+
+
+def outcomes_page(request):
+    """Outcomes page"""
+    return render(request, 'pages/outcomes.html')
 
 
 def contact_page(request):
@@ -256,6 +489,11 @@ def login_view(request):
             # Redirect based on role
             next_url = request.GET.get('next')
             if next_url:
+                # Check if redirecting to ai_demo - set session flag for auto-open
+                from urllib.parse import urlparse
+                parsed = urlparse(next_url)
+                if parsed.path == '/ai-demo/' or parsed.path.endswith('/ai-demo/'):
+                    request.session['open_sample_after_login'] = True
                 return redirect(next_url)
             return redirect_by_role(user)
         else:
@@ -557,9 +795,7 @@ def redirect_by_role(user):
         if hasattr(user, 'teacher_profile'):
             teacher = user.teacher_profile
             if teacher.is_approved:
-                # Check if profile needs completion
-                if teacher.needs_profile_completion():
-                    return redirect('teacher_complete_profile')
+                # Always redirect to dashboard first - show banner if profile incomplete
                 return redirect('teacher_dashboard')
             # Pending teacher - redirect to pending page
             return redirect('teacher_signup_pending')
@@ -602,24 +838,36 @@ def student_home(request):
             profile.refresh_from_db()
             profile.update_streak()
         
-        # Current enrollment (continue learning)
+        # Current enrollment (continue learning) - exclude courses with empty slugs
         current_enrollment = Enrollment.objects.filter(
             user=user,
             status='active'
+        ).exclude(
+            course__slug__isnull=True
+        ).exclude(
+            course__slug=''
         ).select_related('course', 'current_lesson', 'current_module').first()
         
-        # All active enrollments
+        # All active enrollments - exclude courses with empty slugs
         enrollments = Enrollment.objects.filter(
             user=user,
             status__in=['active', 'completed']
+        ).exclude(
+            course__slug__isnull=True
+        ).exclude(
+            course__slug=''
         ).select_related('course').order_by('-enrolled_at')[:5]
         
-        # Recommended courses (not enrolled)
+        # Recommended courses (not enrolled) - exclude courses with empty slugs
         enrolled_course_ids = Enrollment.objects.filter(user=user).values_list('course_id', flat=True)
         recommended_courses = Course.objects.filter(
             status='published'
         ).exclude(
             id__in=enrolled_course_ids
+        ).exclude(
+            slug__isnull=True
+        ).exclude(
+            slug=''
         ).order_by('-enrolled_count')[:6]
         
         # Placement test result
@@ -716,10 +964,24 @@ def student_courses(request):
     course_ids = list(courses.values_list('id', flat=True))
     logger.info(f"Student Course Catalog Query - Found {len(course_ids)} published courses. Course IDs: {course_ids}")
     
-    # Get categories for filter
-    categories = Category.objects.annotate(
-        course_count=Count('courses', filter=Q(courses__status='published'))
-    ).filter(course_count__gt=0)
+    # Get categories for filter with safe fallback
+    try:
+        categories = Category.objects.annotate(
+            course_count=Count('courses', filter=Q(courses__status='published'))
+        ).filter(course_count__gt=0)
+    except Exception as e:
+        # Fallback: compute count separately if annotate fails
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Category annotate failed: {e}. Using fallback method.")
+        # Get all categories and compute count manually
+        all_categories = Category.objects.all()
+        categories = []
+        for cat in all_categories:
+            published_count = cat.courses.filter(status='published').count()
+            if published_count > 0:
+                cat.course_count = published_count
+                categories.append(cat)
     
     # Get user's enrolled courses
     enrolled_course_ids = list(Enrollment.objects.filter(user=user).values_list('course_id', flat=True))
@@ -733,7 +995,7 @@ def student_courses(request):
     from django.utils import timezone
     now = timezone.now()
     from myApp.models import LiveClassSession
-    from django.db.models import Count
+    # Count is already imported at the top of the file - don't re-import here
     live_course_ids = [c.id for c in courses if c.course_type == 'live']
     upcoming_sessions_count = {}
     if live_course_ids:
@@ -2509,9 +2771,10 @@ def teacher_dashboard(request):
     user = request.user
     profile = get_or_create_profile(user)
     
-    # Check if profile needs completion (before allowing access)
+    # Check if profile needs completion - show banner instead of redirecting
+    needs_completion = False
     if hasattr(user, 'teacher_profile') and user.teacher_profile.needs_profile_completion():
-        return redirect('teacher_complete_profile')
+        needs_completion = True
     
     # Allow admin/superuser to access teacher views automatically (godlike admin)
     is_superuser_or_admin = user.is_superuser or user.is_staff or profile.role == 'admin'
@@ -2596,7 +2859,7 @@ def teacher_dashboard(request):
     else:
         # Normal teacher mode
         try:
-            assigned_courses = CourseTeacher.objects.filter(teacher=teacher).select_related('course')
+            assigned_courses = CourseTeacher.objects.filter(teacher=user).select_related('course')
         except Exception as e:
             # Handle case where CourseTeacher table doesn't exist yet
             import logging
@@ -2664,6 +2927,7 @@ def teacher_dashboard(request):
         'recent_announcements': recent_announcements,
         'unread_messages_count': unread_messages_count,
         'assigned_courses': assigned_courses,
+        'needs_completion': needs_completion,
     }
     return render(request, 'teacher/dashboard.html', context)
 
@@ -2693,8 +2957,8 @@ def teacher_courses(request):
         return redirect('student_home')
     teacher = user.teacher_profile
     
-    # Get assigned courses
-    course_assignments = CourseTeacher.objects.filter(teacher=teacher).select_related('course')
+    # Get assigned courses - teacher FK now points to User, not Teacher
+    course_assignments = CourseTeacher.objects.filter(teacher=user).select_related('course')
     
     # Filters
     status = request.GET.get('status')
@@ -2718,11 +2982,46 @@ def teacher_courses(request):
 @teacher_approved_required
 def teacher_course_create(request):
     """Create new course (only for teachers with 'full' permission)"""
+    import logging
+    from django.db import IntegrityError
+    from django.utils.text import slugify
+    
+    logger = logging.getLogger(__name__)
+    
+    # Strict guard: Ensure user is authenticated
+    if not request.user.is_authenticated:
+        message_app(request, messages.ERROR, 'You must be logged in to create a course.')
+        return redirect('login')
+    
     user = request.user
-    teacher, _ = Teacher.objects.get_or_create(
-        user=user,
-        defaults={'permission_level': 'standard', 'is_approved': True}
-    )
+    
+    # Strict guard: Ensure user exists in database (should always be true, but safety check)
+    try:
+        User.objects.get(pk=user.pk)
+    except User.DoesNotExist:
+        message_app(request, messages.ERROR, 'User account not found. Please contact support.')
+        return redirect('teacher_courses')
+    
+    # Get or create Teacher profile - ensure it's properly linked to the User
+    try:
+        teacher, created = Teacher.objects.get_or_create(
+            user=user,
+            defaults={'permission_level': 'standard', 'is_approved': True}
+        )
+        
+        # Strict guard: Verify teacher.user points to a valid User
+        if not teacher.user or teacher.user.pk != user.pk:
+            message_app(request, messages.ERROR, 'Teacher profile is not properly linked to your account. Please contact support.')
+            return redirect('teacher_courses')
+        
+        # Ensure teacher is saved (in case it was just created)
+        if created:
+            teacher.save()
+        
+    except Exception as e:
+        logger.error(f"Error accessing teacher profile for user {user.pk}: {str(e)}", exc_info=True)
+        message_app(request, messages.ERROR, f'Error accessing teacher profile: {str(e)}')
+        return redirect('teacher_courses')
     
     # Double-check approval (shouldn't reach here if not approved due to decorator, but safety check)
     if not teacher.is_approved and not (user.is_superuser or user.is_staff):
@@ -2730,38 +3029,167 @@ def teacher_course_create(request):
         return render(request, 'auth/teacher_pending.html')
     
     if request.method == 'POST':
-        # Create course
-        course = Course.objects.create(
-            title=request.POST.get('title'),
-            slug=request.POST.get('slug'),
-            description=request.POST.get('description'),
-            short_description=request.POST.get('short_description', ''),
-            outcome=request.POST.get('outcome', ''),
-            category_id=request.POST.get('category'),
-            level=request.POST.get('level', 'beginner'),
-            course_type=request.POST.get('course_type', 'recorded'),
-            instructor=user,
-            price=float(request.POST.get('price', 0)),
-            is_free=request.POST.get('is_free') == 'on',
-            status='draft'
-        )
+        logger.info(f"[COURSE_CREATE] POST request from user {user.pk} (teacher {teacher.pk})")
+        logger.info(f"[COURSE_CREATE] POST data keys: {list(request.POST.keys())}")
+        logger.info(f"[COURSE_CREATE] POST data: title={request.POST.get('title')}, description={request.POST.get('description')[:50] if request.POST.get('description') else 'None'}...")
+        logger.info(f"[COURSE_CREATE] POST currency value: {request.POST.get('currency')}")
+        logger.info(f"[COURSE_CREATE] POST level value: {request.POST.get('level')}")
         
-        # Assign teacher with full permissions
-        CourseTeacher.objects.create(
-            course=course,
-            teacher=teacher,
-            permission_level='full',
-            can_create_live_classes=True,
-            can_manage_schedule=True,
-            assigned_by=user
-        )
+        form = CourseCreateForm(request.POST, request.FILES)
         
-        message_app(request, messages.SUCCESS, f'Course "{course.title}" created successfully!')
-        return redirect('teacher_course_edit', course_id=course.id)
+        # Generate slug from title if not provided (before validation)
+        if 'title' in form.data and not form.data.get('slug'):
+            title = form.data.get('title', '').strip()
+            if title:
+                # Create mutable copy of POST data to set slug
+                mutable_post = form.data.copy()
+                mutable_post['slug'] = slugify(title)
+                form = CourseCreateForm(mutable_post, request.FILES)
+        
+        logger.info(f"[COURSE_CREATE] Form is_valid() = {form.is_valid()}")
+        if not form.is_valid():
+            logger.warning(f"[COURSE_CREATE] Form validation failed for user {user.pk}")
+            logger.warning(f"[COURSE_CREATE] Form errors: {form.errors}")
+            logger.warning(f"[COURSE_CREATE] Form non_field_errors: {form.non_field_errors}")
+            for field_name, errors in form.errors.items():
+                logger.warning(f"[COURSE_CREATE] Field '{field_name}' errors: {errors}")
+            
+            categories = Category.objects.all()
+            context = {
+                'categories': categories,
+                'form': form,
+            }
+            return render(request, 'teacher/course_create.html', context)
+        
+        # Wrap entire creation in transaction
+        try:
+            with transaction.atomic():
+                logger.info(f"[COURSE_CREATE] Starting transaction for user {user.pk}")
+                
+                # Create course from form - save() method will ensure slug is unique
+                course = form.save(commit=False)
+                course.instructor = user
+                course.status = 'draft'
+                
+                # Ensure currency and level have defaults (form clean methods should handle this, but double-check)
+                # Currency should come from form (required field), but set default if missing
+                currency_value = form.cleaned_data.get('currency') or request.POST.get('currency') or 'USD'
+                course.currency = currency_value
+                logger.info(f"[COURSE_CREATE] Course currency set to: {course.currency} (from form: {form.cleaned_data.get('currency')}, from POST: {request.POST.get('currency')})")
+                
+                if not course.level:
+                    course.level = 'beginner'
+                
+                # Generate slug if not provided (model save() will ensure uniqueness)
+                if not course.slug:
+                    course.slug = slugify(course.title) if course.title else 'course'
+                
+                # Save course - model's save() method will automatically ensure slug uniqueness
+                course.save()
+                logger.info(f"[COURSE_CREATE] Course saved with pk={course.pk}, title='{course.title}'")
+                
+                # Verify persistence immediately
+                if not Course.objects.filter(pk=course.pk).exists():
+                    raise Exception(f"Course {course.pk} was not persisted to database after save()")
+                
+                logger.info(f"[COURSE_CREATE] Course persistence verified: pk={course.pk}")
+                
+                # Strict guard: Verify teacher still exists and is valid before creating CourseTeacher
+                teacher.refresh_from_db()
+                if not teacher.pk or not teacher.user or teacher.user.pk != user.pk:
+                    raise Exception(f"Teacher {teacher.pk} validation failed: user mismatch")
+                
+                logger.info(f"[COURSE_CREATE] Teacher validation passed: teacher.pk={teacher.pk}, teacher.user.pk={teacher.user.pk}")
+                
+                # CRITICAL: CourseTeacher.teacher FK points to User (auth_user), NOT Teacher model
+                # The database constraint shows it references auth_user(id), so we MUST use request.user
+                # Validate that teacher profile exists for the user, but store user.id in CourseTeacher.teacher
+                logger.info(f"[COURSE_CREATE] Creating CourseTeacher link: course.pk={course.pk}, user.pk={user.pk}")
+                
+                # Assign teacher with full permissions - use get_or_create to prevent duplicates
+                # IMPORTANT: Use user (request.user) directly, NOT teacher.id
+                # The DB constraint expects a User ID, not a Teacher ID
+                assignment, assignment_created = CourseTeacher.objects.get_or_create(
+                    course=course,
+                    teacher=user,  # Use request.user directly, not teacher
+                    defaults={
+                        'permission_level': 'full',
+                        'can_create_live_classes': True,
+                        'can_manage_schedule': True,
+                        'assigned_by': user
+                    }
+                )
+                
+                logger.info(f"[COURSE_CREATE] CourseTeacher assignment: created={assignment_created}, assignment.pk={assignment.pk}")
+                
+                # Update if assignment already existed
+                if not assignment_created:
+                    assignment.permission_level = 'full'
+                    assignment.can_create_live_classes = True
+                    assignment.can_manage_schedule = True
+                    assignment.assigned_by = user
+                    assignment.save()
+                    logger.info(f"[COURSE_CREATE] CourseTeacher assignment updated: pk={assignment.pk}")
+                
+                # Final verification: course and assignment both exist
+                if not Course.objects.filter(pk=course.pk).exists():
+                    raise Exception(f"Course {course.pk} disappeared after CourseTeacher creation")
+                
+                if not CourseTeacher.objects.filter(course=course, teacher=user).exists():
+                    raise Exception(f"CourseTeacher assignment not found after creation")
+                
+                logger.info(f"[COURSE_CREATE] Transaction successful: course.pk={course.pk}, assignment.pk={assignment.pk}")
+                
+                # Success - redirect to course list (so user can see the new course)
+                logger.info(f"[COURSE_CREATE] Success! Redirecting to course list for course.pk={course.pk}")
+                message_app(request, messages.SUCCESS, f'Course "{course.title}" created successfully!')
+                return redirect('teacher_courses')
+                
+        except IntegrityError as e:
+            # Handle foreign key constraint violations
+            error_msg = str(e)
+            logger.error(f"[COURSE_CREATE] IntegrityError for user {user.pk}: {error_msg}", exc_info=True)
+            
+            if 'teacher_id' in error_msg.lower() or 'foreign key' in error_msg.lower():
+                message_app(request, messages.ERROR, 'Error linking teacher to course. Please ensure your teacher profile is valid and try again.')
+            elif 'slug' in error_msg.lower() or 'unique constraint' in error_msg.lower():
+                message_app(request, messages.ERROR, 'A course with this slug already exists. Please use a different slug.')
+            else:
+                message_app(request, messages.ERROR, f'Database error: {error_msg}')
+            
+            # Re-create form with errors for display
+            form = CourseCreateForm(request.POST, request.FILES)
+            form.add_error(None, f'Database error: {error_msg}')
+            
+            categories = Category.objects.all()
+            context = {
+                'categories': categories,
+                'form': form,
+            }
+            return render(request, 'teacher/course_create.html', context)
+            
+        except Exception as e:
+            # Log the full exception with traceback
+            logger.error(f"[COURSE_CREATE] Exception for user {user.pk}: {str(e)}", exc_info=True)
+            message_app(request, messages.ERROR, f'Error creating course: {str(e)}')
+            
+            # Re-create form with errors for display
+            form = CourseCreateForm(request.POST, request.FILES)
+            form.add_error(None, f'Error: {str(e)}')
+            
+            categories = Category.objects.all()
+            context = {
+                'categories': categories,
+                'form': form,
+            }
+            return render(request, 'teacher/course_create.html', context)
     
+    # GET request - show form
+    form = CourseCreateForm()
     categories = Category.objects.all()
     context = {
         'categories': categories,
+        'form': form,
     }
     return render(request, 'teacher/course_create.html', context)
 
@@ -2776,13 +3204,15 @@ def teacher_course_edit(request, course_id):
         defaults={'permission_level': 'standard'}
     )
     
-    # Check permissions
-    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    # Check permissions - teacher FK now points to User
+    assignment = CourseTeacher.objects.filter(teacher=user, course=course).first()
     if not assignment or assignment.permission_level == 'view_only':
         message_app(request, messages.ERROR, 'You do not have permission to edit this course.')
         return redirect('teacher_courses')
     
     if request.method == 'POST':
+        from django.utils.text import slugify
+        
         old_status = course.status
         course.title = request.POST.get('title', course.title)
         course.description = request.POST.get('description', course.description)
@@ -2796,6 +3226,14 @@ def teacher_course_edit(request, course_id):
         new_status = request.POST.get('status', course.status)
         course.status = new_status
         
+        # Handle slug update - save() method will ensure uniqueness
+        new_slug = request.POST.get('slug', '').strip()
+        if new_slug:
+            course.slug = new_slug
+        elif course.title and not course.slug:
+            # Generate slug from title if slug is empty
+            course.slug = slugify(course.title)
+        
         # Set published_at when status changes to 'published'
         if new_status == 'published' and old_status != 'published' and not course.published_at:
             from django.utils import timezone
@@ -2804,6 +3242,7 @@ def teacher_course_edit(request, course_id):
         if request.FILES.get('thumbnail'):
             course.thumbnail = request.FILES.get('thumbnail')
         
+        # save() method will automatically ensure slug is unique
         course.save()
         message_app(request, messages.SUCCESS, 'Course updated successfully!')
         return redirect('teacher_course_edit', course_id=course.id)
@@ -2831,7 +3270,7 @@ def teacher_lessons(request, course_id):
     )
     
     # Check permissions
-    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    assignment = CourseTeacher.objects.filter(teacher=user, course=course).first()
     if not assignment or assignment.permission_level == 'view_only':
         messages.error(request, 'You do not have permission to manage lessons.')
         return redirect('teacher_courses')
@@ -2858,7 +3297,7 @@ def teacher_lesson_create(request, course_id):
     )
     
     # Check permissions
-    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    assignment = CourseTeacher.objects.filter(teacher=user, course=course).first()
     if not assignment or assignment.permission_level == 'view_only':
         messages.error(request, 'You do not have permission to create lessons.')
         return redirect('teacher_courses')
@@ -2918,7 +3357,7 @@ def teacher_lesson_edit(request, course_id, lesson_id):
     )
     
     # Check permissions
-    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    assignment = CourseTeacher.objects.filter(teacher=user, course=course).first()
     if not assignment or assignment.permission_level == 'view_only':
         messages.error(request, 'You do not have permission to edit lessons.')
         return redirect('teacher_courses')
@@ -2962,7 +3401,7 @@ def teacher_lesson_delete(request, course_id, lesson_id):
     )
     
     # Check permissions
-    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    assignment = CourseTeacher.objects.filter(teacher=user, course=course).first()
     if not assignment or assignment.permission_level == 'view_only':
         messages.error(request, 'You do not have permission to delete lessons.')
         return redirect('teacher_courses')
@@ -2983,7 +3422,7 @@ def teacher_quizzes(request, course_id):
     )
     
     # Check permissions
-    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    assignment = CourseTeacher.objects.filter(teacher=user, course=course).first()
     if not assignment or assignment.permission_level == 'view_only':
         messages.error(request, 'You do not have permission to manage quizzes.')
         return redirect('teacher_courses')
@@ -3013,7 +3452,7 @@ def teacher_quiz_create(request, course_id):
     )
     
     # Check permissions
-    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    assignment = CourseTeacher.objects.filter(teacher=user, course=course).first()
     if not assignment or assignment.permission_level == 'view_only':
         messages.error(request, 'You do not have permission to create quizzes.')
         return redirect('teacher_courses')
@@ -3050,7 +3489,7 @@ def teacher_quiz_edit(request, course_id, quiz_id):
     )
     
     # Check permissions
-    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    assignment = CourseTeacher.objects.filter(teacher=user, course=course).first()
     if not assignment or assignment.permission_level == 'view_only':
         messages.error(request, 'You do not have permission to edit quizzes.')
         return redirect('teacher_courses')
@@ -3087,7 +3526,7 @@ def teacher_quiz_delete(request, course_id, quiz_id):
     )
     
     # Check permissions
-    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    assignment = CourseTeacher.objects.filter(teacher=user, course=course).first()
     if not assignment or assignment.permission_level == 'view_only':
         messages.error(request, 'You do not have permission to delete quizzes.')
         return redirect('teacher_courses')
@@ -3110,7 +3549,7 @@ def teacher_quiz_questions(request, course_id, quiz_id):
     )
     
     # Check permissions
-    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    assignment = CourseTeacher.objects.filter(teacher=user, course=course).first()
     if not assignment or assignment.permission_level == 'view_only':
         messages.error(request, 'You do not have permission to manage quiz questions.')
         return redirect('teacher_courses')
@@ -3228,7 +3667,7 @@ def teacher_my_students(request):
     )
     
     # Get assigned courses
-    assigned_courses = CourseTeacher.objects.filter(teacher=teacher).select_related('course')
+    assigned_courses = CourseTeacher.objects.filter(teacher=user).select_related('course')
     course_ids = [ca.course.id for ca in assigned_courses]
     
     # Get all enrollments
@@ -3289,7 +3728,7 @@ def teacher_students(request, course_id):
     )
     
     # Check permissions
-    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    assignment = CourseTeacher.objects.filter(teacher=user, course=course).first()
     if not assignment:
         messages.error(request, 'You do not have access to this course.')
         return redirect('teacher_courses')
@@ -3341,7 +3780,16 @@ def teacher_schedule(request):
         messages.error(request, 'Teacher profile not found. Please contact support.')
         return redirect('teacher_dashboard')
     
-    live_classes = LiveClassSession.objects.filter(teacher=teacher_instance).select_related('course').defer('scheduled_end').order_by('-scheduled_start')
+    # LiveClassSession.teacher is FK to Teacher model, so use teacher_instance directly
+    # But add defensive check for empty state
+    try:
+        live_classes = LiveClassSession.objects.filter(teacher=teacher_instance).select_related('course').defer('scheduled_end').order_by('-scheduled_start')
+    except Exception as e:
+        # If query fails (e.g., column doesn't exist), show empty state
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning(f"Error querying LiveClassSession: {e}")
+        live_classes = LiveClassSession.objects.none()
     
     # Filters
     status = request.GET.get('status')
@@ -3354,7 +3802,8 @@ def teacher_schedule(request):
         course = get_object_or_404(Course, id=course_id)
         
         # Check if teacher has permission
-        assignment = CourseTeacher.objects.filter(teacher=teacher_instance, course=course).first()
+        # CRITICAL: CourseTeacher.teacher is FK to User, not Teacher - use user directly
+        assignment = CourseTeacher.objects.filter(teacher=user, course=course).first()
         if not assignment or not assignment.can_create_live_classes:
             message_app(request, messages.ERROR, 'You do not have permission to create live classes for this course.')
             return redirect('teacher_schedule')
@@ -3490,8 +3939,9 @@ def teacher_schedule(request):
     
     # Get courses teacher can create live classes for
     # Include courses where teacher is assigned with permission, OR courses the teacher created themselves
+    # CRITICAL: CourseTeacher.teacher is FK to User, not Teacher - use user, not teacher_instance
     assigned_courses = CourseTeacher.objects.filter(
-        teacher=teacher_instance,
+        teacher=user,  # Use user (request.user), not teacher_instance
         can_create_live_classes=True
     ).select_related('course')
     
@@ -3506,36 +3956,67 @@ def teacher_schedule(request):
     # Add teacher-created courses to the queryset (create CourseTeacher entries if needed)
     # Only create if teacher object is valid and saved
     if teacher_instance.id:
-        for course in teacher_created_courses:
-            try:
-                # Verify teacher exists in database before creating relationship
-                # Use the module-level Teacher import (already imported at top of file)
-                if not Teacher.objects.filter(id=teacher_instance.id).exists():
-                    continue
-                    
-                assignment, created = CourseTeacher.objects.get_or_create(
-                    course=course,
-                    teacher=teacher_instance,
-                    defaults={
-                        'permission_level': 'full',
-                        'can_create_live_classes': True,
-                        'can_manage_schedule': True,
-                        'assigned_by': user
-                    }
-                )
-                if not assignment.can_create_live_classes:
-                    assignment.can_create_live_classes = True
-                    assignment.save()
-            except Exception as e:
-                # Log error but don't break the page - database schema issue
+        # Strict guard: Verify teacher and teacher.user exist before creating relationships
+        try:
+            teacher_instance.refresh_from_db()
+            if not teacher_instance.user:
                 import logging
                 logger = logging.getLogger(__name__)
-                logger.error(f"Error creating CourseTeacher for course {course.id}, teacher {teacher_instance.id if hasattr(teacher_instance, 'id') else 'N/A'}: {e}")
-                continue
+                logger.warning(f"Teacher {teacher_instance.id} has no user linked. Skipping CourseTeacher creation.")
+            elif not User.objects.filter(pk=teacher_instance.user.pk).exists():
+                import logging
+                logger = logging.getLogger(__name__)
+                logger.warning(f"Teacher {teacher_instance.id} user {teacher_instance.user.pk} does not exist. Skipping CourseTeacher creation.")
+            else:
+                for course in teacher_created_courses:
+                    try:
+                        # Verify teacher exists in database before creating relationship
+                        if not Teacher.objects.filter(id=teacher_instance.id).exists():
+                            continue
+                        
+                        # Verify teacher.user is still valid
+                        teacher_instance.refresh_from_db()
+                        if not teacher_instance.user or not User.objects.filter(pk=teacher_instance.user.pk).exists():
+                            continue
+                            
+                        assignment, created = CourseTeacher.objects.get_or_create(
+                            course=course,
+                            teacher=user,  # CRITICAL: Use user (request.user), not teacher_instance.user
+                            defaults={
+                                'permission_level': 'full',
+                                'can_create_live_classes': True,
+                                'can_manage_schedule': True,
+                                'assigned_by': user
+                            }
+                        )
+                        if not assignment.can_create_live_classes:
+                            assignment.can_create_live_classes = True
+                            assignment.save()
+                    except IntegrityError as e:
+                        # Handle foreign key constraint violations
+                        import logging
+                        logger = logging.getLogger(__name__)
+                        error_msg = str(e)
+                        if 'teacher_id' in error_msg.lower() or 'foreign key' in error_msg.lower():
+                            logger.error(f"Foreign key error creating CourseTeacher for course {course.id}, teacher {teacher_instance.id}: {error_msg}")
+                        else:
+                            logger.error(f"IntegrityError creating CourseTeacher for course {course.id}, teacher {teacher_instance.id}: {error_msg}")
+                        continue
+                    except Exception as e:
+                        # Log error but don't break the page - database schema issue
+                        import logging
+                        logger = logging.getLogger(__name__)
+                        logger.error(f"Error creating CourseTeacher for course {course.id}, teacher {teacher_instance.id if hasattr(teacher_instance, 'id') else 'N/A'}: {e}")
+                        continue
+        except Exception as e:
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.error(f"Error validating teacher {teacher_instance.id if hasattr(teacher_instance, 'id') else 'N/A'}: {e}")
     
     # Refresh the queryset to include newly created assignments
+    # CRITICAL: CourseTeacher.teacher is FK to User, not Teacher - use user directly
     assigned_courses = CourseTeacher.objects.filter(
-        teacher=teacher_instance,
+        teacher=user,  # Use user (request.user), not teacher_instance
         can_create_live_classes=True
     ).select_related('course').distinct()
     
@@ -3714,7 +4195,7 @@ def teacher_live_classes(request, course_id):
     )
     
     # Check permissions
-    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    assignment = CourseTeacher.objects.filter(teacher=user, course=course).first()
     if not assignment:
         messages.error(request, 'You do not have access to this course.')
         return redirect('teacher_courses')
@@ -3742,7 +4223,7 @@ def teacher_announcements(request, course_id):
     )
     
     # Check permissions
-    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    assignment = CourseTeacher.objects.filter(teacher=user, course=course).first()
     if not assignment:
         messages.error(request, 'You do not have access to this course.')
         return redirect('teacher_courses')
@@ -3795,7 +4276,7 @@ def teacher_ai_settings(request, course_id):
     )
     
     # Check permissions - only teachers with edit or full access can configure AI settings
-    assignment = CourseTeacher.objects.filter(teacher=teacher, course=course).first()
+    assignment = CourseTeacher.objects.filter(teacher=user, course=course).first()
     if not assignment or assignment.permission_level == 'view_only':
         messages.error(request, 'You do not have permission to configure AI settings for this course.')
         return redirect('teacher_courses')
@@ -3839,7 +4320,7 @@ def api_teacher_activity_feed(request):
     )
     
     # Get assigned courses
-    assigned_courses = CourseTeacher.objects.filter(teacher=teacher).select_related('course')
+    assigned_courses = CourseTeacher.objects.filter(teacher=user).select_related('course')
     course_ids = [ca.course.id for ca in assigned_courses]
     
     activities = []
@@ -4463,7 +4944,7 @@ def teacher_availability(request):
     
     # Get teacher's courses for course-specific availability
     # Include courses where teacher is instructor OR assigned via CourseTeacher
-    assigned_course_ids = CourseTeacher.objects.filter(teacher=teacher).values_list('course_id', flat=True)
+    assigned_course_ids = CourseTeacher.objects.filter(teacher=user).values_list('course_id', flat=True)
     courses = Course.objects.filter(
         Q(instructor=user) | Q(id__in=assigned_course_ids)
     ).distinct().order_by('title')
@@ -4867,7 +5348,7 @@ def student_teacher_profile(request, teacher_id):
     
     # Get teacher's courses (published only)
     teacher_courses = Course.objects.filter(
-        course_teachers__teacher=teacher,
+        course_teachers__teacher=teacher.user,  # teacher FK now points to User
         status='published'
     ).distinct().select_related('category').prefetch_related('course_teachers')
     
@@ -5265,7 +5746,7 @@ def student_book_one_on_one_submit(request, availability_id):
     else:
         # Fallback to course-level setting
         requires_approval = course.requires_booking_approval
-        course_teacher = CourseTeacher.objects.filter(course=course, teacher=availability.teacher).first()
+        course_teacher = CourseTeacher.objects.filter(course=course, teacher=availability.teacher.user).first()
         if course_teacher and course_teacher.get_requires_approval():
             requires_approval = True
     

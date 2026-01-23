@@ -47,8 +47,13 @@
             display: none;
         }
         body {
-            background: linear-gradient(to bottom, var(--bg-gradient-top) 0%, var(--bg-gradient-middle) 50%, var(--bg-gradient-bottom) 100%);
+            /* Black-dominant background with subtle teal glow - matches Admin */
+            background: linear-gradient(to bottom, #000000 0%, #021a1c 20%, #0a1f22 50%, #021a1c 80%, #000000 100%);
             min-height: 100vh;
+        }
+        
+        [data-theme="light"] body {
+            background: linear-gradient(to bottom, var(--bg-gradient-top) 0%, var(--bg-gradient-middle) 50%, var(--bg-gradient-bottom) 100%);
         }
         
         /* Light mode: Ensure navbar has proper shadow and crisp appearance */

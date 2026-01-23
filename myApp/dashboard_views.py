@@ -797,12 +797,8 @@ def dashboard_course_create(request):
             if not slug:
                 slug = slugify(title) or 'course-' + str(timezone.now().timestamp())
             
-            # Ensure unique slug
-            base_slug = slug
-            counter = 1
-            while Course.objects.filter(slug=slug).exists():
-                slug = f"{base_slug}-{counter}"
-                counter += 1
+            # Note: The Course.save() method will automatically ensure slug uniqueness
+            # This pre-check is kept for performance optimization, but save() is the safety net
             
             # Convert price to float
             try:
@@ -1557,6 +1553,8 @@ def dashboard_create_course_api(request):
         
         # Generate slug
         slug = data.get('slug', '').strip() or slugify(title)
+        # Note: The Course.save() method will automatically ensure slug uniqueness
+        # This pre-check is kept for performance optimization, but save() is the safety net
         base_slug = slug
         counter = 1
         while Course.objects.filter(slug=slug).exists():
@@ -3302,7 +3300,41 @@ def dashboard_teacher_force_password_reset(request, teacher_id):
 @require_POST
 def dashboard_teacher_assign_course(request, teacher_id):
     """Assign course to teacher"""
-    teacher = get_object_or_404(Teacher, id=teacher_id)
+    from django.db import IntegrityError
+    from django.contrib.auth.models import User
+    
+    # Strict guard: Ensure user is authenticated
+    if not request.user.is_authenticated:
+        if request.content_type == 'application/json':
+            return JsonResponse({'error': 'Authentication required'}, status=401)
+        messages.error(request, 'You must be logged in.')
+        return redirect('dashboard:teachers')
+    
+    # Get teacher and validate it exists and has a valid user
+    try:
+        teacher = Teacher.objects.select_related('user').get(id=teacher_id)
+    except Teacher.DoesNotExist:
+        if request.content_type == 'application/json':
+            return JsonResponse({'error': 'Teacher not found'}, status=404)
+        messages.error(request, 'Teacher not found.')
+        return redirect('dashboard:teachers')
+    
+    # Strict guard: Verify teacher.user points to a valid User
+    if not teacher.user:
+        if request.content_type == 'application/json':
+            return JsonResponse({'error': 'Teacher profile is not linked to a user account'}, status=400)
+        messages.error(request, 'Teacher profile is not properly linked to a user account.')
+        return redirect('dashboard:teachers')
+    
+    # Verify the user exists
+    try:
+        teacher_user = User.objects.get(pk=teacher.user.pk)
+    except User.DoesNotExist:
+        if request.content_type == 'application/json':
+            return JsonResponse({'error': 'Teacher user account not found'}, status=400)
+        messages.error(request, 'Teacher user account not found.')
+        return redirect('dashboard:teachers')
+    
     data = json.loads(request.body) if request.content_type == 'application/json' else request.POST
     
     course_id = data.get('course_id')
@@ -3310,28 +3342,64 @@ def dashboard_teacher_assign_course(request, teacher_id):
     can_create_live_classes = data.get('can_create_live_classes', 'false') == 'true'
     can_manage_schedule = data.get('can_manage_schedule', 'false') == 'true'
     
-    course = get_object_or_404(Course, id=course_id)
+    if not course_id:
+        if request.content_type == 'application/json':
+            return JsonResponse({'error': 'Course ID is required'}, status=400)
+        messages.error(request, 'Course ID is required.')
+        return redirect('dashboard:teachers')
     
-    # Check if already assigned
-    assignment, created = CourseTeacher.objects.get_or_create(
-        course=course,
-        teacher=teacher,
-        defaults={
-            'permission_level': permission_level,
-            'can_create_live_classes': can_create_live_classes,
-            'can_manage_schedule': can_manage_schedule,
-            'assigned_by': request.user
-        }
-    )
+    try:
+        course = Course.objects.get(id=course_id)
+    except Course.DoesNotExist:
+        if request.content_type == 'application/json':
+            return JsonResponse({'error': 'Course not found'}, status=404)
+        messages.error(request, 'Course not found.')
+        return redirect('dashboard:teachers')
     
-    if not created:
-        assignment.permission_level = permission_level
-        assignment.can_create_live_classes = can_create_live_classes
-        assignment.can_manage_schedule = can_manage_schedule
-        assignment.save()
-        messages.info(request, 'Assignment updated.')
-    else:
-        messages.success(request, f'Course "{course.title}" assigned to {teacher.user.username}!')
+    # Check if already assigned - use get_or_create to prevent duplicates
+    try:
+        assignment, created = CourseTeacher.objects.get_or_create(
+            course=course,
+            teacher=teacher_user,  # Use teacher.user, not Teacher instance
+            defaults={
+                'permission_level': permission_level,
+                'can_create_live_classes': can_create_live_classes,
+                'can_manage_schedule': can_manage_schedule,
+                'assigned_by': request.user
+            }
+        )
+        
+        if not created:
+            assignment.permission_level = permission_level
+            assignment.can_create_live_classes = can_create_live_classes
+            assignment.can_manage_schedule = can_manage_schedule
+            assignment.assigned_by = request.user
+            assignment.save()
+            if request.content_type == 'application/json':
+                return JsonResponse({'success': True, 'message': 'Assignment updated'})
+            messages.info(request, 'Assignment updated.')
+        else:
+            if request.content_type == 'application/json':
+                return JsonResponse({'success': True, 'message': f'Course "{course.title}" assigned to {teacher.user.username}!'})
+            messages.success(request, f'Course "{course.title}" assigned to {teacher.user.username}!')
+    
+    except IntegrityError as e:
+        error_msg = str(e)
+        if 'teacher_id' in error_msg.lower() or 'foreign key' in error_msg.lower():
+            error_message = 'Error linking teacher to course. The teacher profile may be invalid.'
+        else:
+            error_message = f'Database error: {error_msg}'
+        
+        if request.content_type == 'application/json':
+            return JsonResponse({'error': error_message}, status=400)
+        messages.error(request, error_message)
+        return redirect('dashboard:teachers')
+    except Exception as e:
+        error_message = f'Error assigning course: {str(e)}'
+        if request.content_type == 'application/json':
+            return JsonResponse({'error': error_message}, status=500)
+        messages.error(request, error_message)
+        return redirect('dashboard:teachers')
     
     if request.content_type == 'application/json':
         return JsonResponse({'success': True})
@@ -3507,10 +3575,31 @@ def dashboard_manual_enroll(request):
 def dashboard_course_create(request):
     """Create new course (admin)"""
     if request.method == 'POST':
+        from django.utils.text import slugify
+        
+        # Get title and generate slug if not provided
+        title = request.POST.get('title', '').strip()
+        if not title:
+            messages.error(request, 'Course title is required.')
+            categories = Category.objects.all()
+            instructors = User.objects.filter(profile__role='instructor').order_by('username')
+            context = {
+                'categories': categories,
+                'instructors': instructors,
+            }
+            return render(request, 'dashboard/course_create.html', context)
+        
+        # Generate slug from title if not provided
+        # The save() method will ensure uniqueness automatically
+        slug = request.POST.get('slug', '').strip()
+        if not slug:
+            slug = slugify(title)
+        
+        # Create course - save() method will ensure slug is unique
         course = Course.objects.create(
-            title=request.POST.get('title'),
-            slug=request.POST.get('slug'),
-            description=request.POST.get('description'),
+            title=title,
+            slug=slug,
+            description=request.POST.get('description', ''),
             short_description=request.POST.get('short_description', ''),
             outcome=request.POST.get('outcome', ''),
             category_id=request.POST.get('category'),

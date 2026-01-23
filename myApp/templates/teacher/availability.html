@@ -15,17 +15,19 @@
     <div class="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent mb-8"></div>
     
     <!-- Add Availability Form -->
-    <div class="bg-white/5 backdrop-blur-2xl border border-white/8 rounded-2xl p-8 sm:p-10 shadow-xl">
+    <div class="bg-white/60 dark:bg-white/5 backdrop-blur-md border border-slate-200/60 dark:border-white/10 rounded-2xl p-8 sm:p-10 shadow-xl">
         <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-8 tracking-tight flex items-center gap-3">
-            <i class="fas fa-plus-circle text-emerald-600 dark:text-emerald-400 text-xl"></i>
-            Add Availability Slot
+            <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/15 flex items-center justify-center">
+                <i class="fas fa-plus-circle text-emerald-600 dark:text-emerald-300 text-xl"></i>
+            </div>
+            <span>Add Availability Slot</span>
         </h2>
         <form method="post" class="space-y-5">
             {% csrf_token %}
             
             <!-- Slot Type -->
             <div>
-                <label class="block mb-2 text-slate-800 dark:text-white font-medium">Slot Type <span class="text-red-500">*</span></label>
+                <label class="block mb-2 text-slate-700 dark:text-slate-200 font-semibold tracking-tight">Slot Type <span class="text-red-500">*</span></label>
                 <select name="slot_type" id="slot_type" required class="form-select">
                     <option value="recurring">Recurring (Weekly)</option>
                     <option value="one_time">One-Time Slot</option>
@@ -36,7 +38,7 @@
             <div id="recurring_fields">
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div>
-                        <label class="form-label">Day of Week <span class="text-red-500">*</span></label>
+                        <label class="block mb-2 text-slate-700 dark:text-slate-200 font-semibold tracking-tight">Day of Week <span class="text-red-500">*</span></label>
                         <select name="day_of_week" class="form-select">
                             <option value="0">Monday</option>
                             <option value="1">Tuesday</option>
@@ -48,21 +50,21 @@
                         </select>
                     </div>
                     <div>
-                        <label class="form-label">Start Time <span class="text-red-500">*</span></label>
+                        <label class="block mb-2 text-slate-700 dark:text-slate-200 font-semibold tracking-tight">Start Time <span class="text-red-500">*</span></label>
                         <input type="time" name="start_time" class="form-input">
                     </div>
                     <div>
-                        <label class="form-label">End Time <span class="text-red-500">*</span></label>
+                        <label class="block mb-2 text-slate-700 dark:text-slate-200 font-semibold tracking-tight">End Time <span class="text-red-500">*</span></label>
                         <input type="time" name="end_time" class="form-input">
                     </div>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
                     <div>
-                        <label class="form-label">Valid From</label>
+                        <label class="block mb-2 text-slate-700 dark:text-slate-200 font-semibold tracking-tight">Valid From</label>
                         <input type="date" name="valid_from" class="form-input">
                     </div>
                     <div>
-                        <label class="form-label">Valid Until</label>
+                        <label class="block mb-2 text-slate-700 dark:text-slate-200 font-semibold tracking-tight">Valid Until</label>
                         <input type="date" name="valid_until" class="form-input">
                     </div>
                 </div>
@@ -72,11 +74,11 @@
             <div id="one_time_fields" style="display: none;">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="form-label">Start Date & Time <span class="text-red-500">*</span></label>
+                        <label class="block mb-2 text-slate-700 dark:text-slate-200 font-semibold tracking-tight">Start Date & Time <span class="text-red-500">*</span></label>
                         <input type="datetime-local" name="start_datetime" class="form-input">
                     </div>
                     <div>
-                        <label class="form-label">End Date & Time <span class="text-red-500">*</span></label>
+                        <label class="block mb-2 text-slate-700 dark:text-slate-200 font-semibold tracking-tight">End Date & Time <span class="text-red-500">*</span></label>
                         <input type="datetime-local" name="end_datetime" class="form-input">
                     </div>
                 </div>
@@ -85,7 +87,7 @@
             <!-- Common Fields -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label class="form-label">Course (Optional)</label>
+                    <label class="block mb-2 text-slate-700 dark:text-slate-200 font-semibold tracking-tight">Course (Optional)</label>
                     <select name="course" class="form-select">
                         <option value="">All Courses</option>
                         {% for course in courses %}
@@ -94,7 +96,7 @@
                     </select>
                 </div>
                 <div>
-                    <label class="form-label">Timezone <span class="text-red-500">*</span></label>
+                    <label class="block mb-2 text-slate-700 dark:text-slate-200 font-semibold tracking-tight">Timezone <span class="text-red-500">*</span></label>
                     <select name="timezone" class="form-select">
                         <option value="UTC">UTC</option>
                         <option value="America/New_York">Eastern Time (ET)</option>
@@ -116,10 +118,12 @@
     </div>
     
     <!-- Existing Availability Slots -->
-    <div class="bg-white/5 backdrop-blur-2xl border border-white/8 rounded-2xl p-8 sm:p-10 shadow-xl">
+    <div class="bg-white/60 dark:bg-white/5 backdrop-blur-md border border-slate-200/60 dark:border-white/10 rounded-2xl p-8 sm:p-10 shadow-xl">
         <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-8 tracking-tight flex items-center gap-3">
-            <i class="fas fa-list text-emerald-600 dark:text-emerald-400 text-xl"></i>
-            Your Availability Slots
+            <div class="flex-shrink-0 w-10 h-10 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/15 flex items-center justify-center">
+                <i class="fas fa-list text-emerald-600 dark:text-emerald-300 text-xl"></i>
+            </div>
+            <span>Your Availability Slots</span>
         </h2>
         
         {% if availability_slots %}
@@ -211,7 +215,7 @@
         <form id="blockForm" method="post" class="space-y-4">
             {% csrf_token %}
             <div>
-                <label class="form-label">Reason (Optional)</label>
+                <label class="block mb-2 text-slate-700 dark:text-slate-200 font-semibold tracking-tight">Reason (Optional)</label>
                 <textarea name="blocked_reason" rows="3" class="form-textarea" placeholder="Enter reason for blocking this slot..."></textarea>
             </div>
             <div class="flex gap-3">

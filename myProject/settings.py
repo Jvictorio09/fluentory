@@ -76,6 +76,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'myApp.context_processors.currency_context',
                 'myApp.context_processors.hide_switch_view_context',
+                'myApp.context_processors.social_links_context',
             ],
         },
     },
@@ -255,3 +256,13 @@ INFOBIP_ACCOUNT_ID = os.getenv('INFOBIP_ACCOUNT_ID', '')
 INFOBIP_SYNC_CHANNELS = os.getenv('INFOBIP_SYNC_CHANNELS', 'SMS,WHATSAPP').split(',')
 # Auto-update lead status if contacted recently (days)
 INFOBIP_AUTO_UPDATE_STATUS_DAYS = int(os.getenv('INFOBIP_AUTO_UPDATE_STATUS_DAYS', '7'))
+
+# Social Media Links - Default fallback URLs for development
+# These are used ONLY when database values are blank/None
+SOCIAL_LINKS_DEFAULT = {
+    'linkedin': 'https://www.linkedin.com/company/fluentory',
+    'instagram': 'https://www.instagram.com/fluentory',
+    'facebook': 'https://www.facebook.com/fluentory',
+    'twitter': 'https://twitter.com/fluentory',
+    'whatsapp': 'https://wa.me/962775003006',  # Default WhatsApp number
+}

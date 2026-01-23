@@ -6,70 +6,76 @@
 <div class="p-4 sm:p-6 lg:p-8 xl:p-10 w-full max-w-4xl mx-auto">
     <!-- Welcome Header -->
     <div class="mb-8 sm:mb-10 animate-fade-in-up stagger-1">
-        <div class="bg-gradient-to-r from-[#00655F] to-[#82C293] rounded-2xl border border-white/10 shadow-[0_8px_24px_rgba(0,0,0,0.3)] p-8 mb-6 text-center">
-            <div class="mb-4">
-                <i class="fas fa-user-edit text-6xl text-white/90"></i>
+        <div class="bg-gradient-to-r from-[#00655F] via-[#82C293] to-[#00655F] rounded-2xl border border-white/20 shadow-[0_8px_32px_rgba(0,101,95,0.4)] p-8 sm:p-10 mb-6 text-center relative overflow-hidden">
+            <!-- Subtle glow effect -->
+            <div class="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent pointer-events-none"></div>
+            <div class="relative z-10">
+                <div class="mb-4">
+                    <div class="inline-flex items-center justify-center w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-white/20 backdrop-blur-sm border-2 border-white/30 shadow-lg">
+                        <i class="fas fa-user-edit text-4xl sm:text-5xl text-white"></i>
+                    </div>
+                </div>
+                <h1 class="text-3xl sm:text-4xl lg:text-5xl font-semibold text-white mb-3 tracking-tight">
+                    Welcome to Fluentory!
+                </h1>
+                <p class="text-base sm:text-lg text-white/95 font-medium max-w-2xl mx-auto">
+                    Let's complete your teacher profile so students can get to know you
+                </p>
             </div>
-            <h1 class="text-3xl sm:text-4xl font-light text-white mb-3 tracking-[-0.02em]">
-                Welcome to Fluentory!
-            </h1>
-            <p class="text-lg text-white/80 font-light">
-                Let's complete your teacher profile so students can get to know you
-            </p>
         </div>
     </div>
 
     <!-- Complete Profile Form -->
-    <div class="bg-[#04363a]/90 backdrop-blur-xl rounded-2xl border border-white/10 shadow-[0_15px_40px_rgba(0,0,0,0.3)] overflow-hidden animate-fade-in-up stagger-2">
+    <div class="bg-white dark:bg-[#04363a]/90 backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)] overflow-hidden animate-fade-in-up stagger-2">
         <form method="post" class="p-6 sm:p-8 space-y-6">
             {% csrf_token %}
             
             <!-- Professional Information -->
-            <div class="border-b border-white/10 pb-6">
-                <h2 class="text-xl font-semibold text-white mb-4 flex items-center gap-2">
+            <div class="border-b border-slate-200 dark:border-white/10 pb-6">
+                <h2 class="text-xl font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
                     <i class="fas fa-briefcase text-[#82C293]"></i>
                     Professional Information
                 </h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-white/70 mb-2">
+                        <label class="block text-sm font-semibold text-slate-900 dark:text-white mb-2 tracking-tight">
                             Specialization <span class="text-red-400">*</span>
-                            <span class="text-xs text-white/50 ml-2">(e.g., English, Math, Science)</span>
+                            <span class="text-xs text-slate-500 dark:text-slate-400 ml-2 font-normal">(e.g., English, Math, Science)</span>
                         </label>
                         <input type="text" name="specialization" required
                             value="{{ form_data.specialization|default:teacher.specialization|default:'' }}"
-                            class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300"
+                            class="form-input"
                             placeholder="Enter your teaching specialization">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-white/70 mb-2">
+                        <label class="block text-sm font-semibold text-slate-900 dark:text-white mb-2 tracking-tight">
                             Years of Experience
                         </label>
                         <input type="number" name="years_experience" min="0"
                             value="{{ form_data.years_experience|default:teacher.years_experience|default:'0' }}"
-                            class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300"
+                            class="form-input"
                             placeholder="0">
                     </div>
                     <div class="md:col-span-2">
-                        <label class="block text-sm font-medium text-white/70 mb-2">
+                        <label class="block text-sm font-semibold text-slate-900 dark:text-white mb-2 tracking-tight">
                             Bio <span class="text-red-400">*</span>
-                            <span class="text-xs text-white/50 ml-2">Tell students about yourself and your teaching style</span>
+                            <span class="text-xs text-slate-500 dark:text-slate-400 ml-2 font-normal">Tell students about yourself and your teaching style</span>
                         </label>
                         <textarea name="bio" rows="5" required
-                            class="w-full px-4 py-2.5 rounded-xl border border-white/10 bg-[#254346]/70 backdrop-blur-md text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-[#82C293]/40 focus:border-[#82C293]/50 transition-all duration-300"
+                            class="form-textarea"
                             placeholder="Write a brief biography about yourself, your teaching experience, and what makes you a great teacher...">{{ form_data.bio|default:teacher.bio|default:'' }}</textarea>
-                        <p class="text-xs text-white/50 mt-1">This will be visible to students, so make it engaging and professional.</p>
+                        <p class="form-helper mt-1">This will be visible to students, so make it engaging and professional.</p>
                     </div>
                 </div>
             </div>
 
             <!-- Help Text -->
-            <div class="bg-[#254346]/30 border border-[#82C293]/20 rounded-xl p-5">
+            <div class="bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-[#82C293]/30 rounded-xl p-5 backdrop-blur-sm">
                 <div class="flex items-start gap-3">
-                    <i class="fas fa-info-circle text-[#82C293] mt-1"></i>
-                    <div class="text-sm text-white/80">
-                        <strong class="text-white">Quick Tips:</strong>
-                        <ul class="list-disc list-inside mt-2 space-y-1 ml-4">
+                    <i class="fas fa-info-circle text-[#82C293] dark:text-[#82C293] mt-1 flex-shrink-0"></i>
+                    <div class="text-sm text-slate-700 dark:text-slate-200">
+                        <strong class="text-slate-900 dark:text-white font-semibold">Quick Tips:</strong>
+                        <ul class="list-disc list-inside mt-2 space-y-1 ml-4 text-slate-600 dark:text-slate-300">
                             <li>Your specialization helps students find courses in their areas of interest</li>
                             <li>A complete bio builds trust and helps students choose the right teacher</li>
                             <li>You can update your profile anytime from your settings</li>
