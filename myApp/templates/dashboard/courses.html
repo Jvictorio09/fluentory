@@ -24,8 +24,8 @@
         </div>
         
         <!-- Filters -->
-        <div class="flex flex-wrap gap-4 mb-6 animate-fade-in-up stagger-2">
-            <form method="get" class="flex flex-wrap gap-4 items-end">
+        <div class="quick-filter-container flex flex-wrap gap-4 mb-6 animate-fade-in-up stagger-2">
+            <div class="flex flex-wrap gap-4 items-end">
                 <div>
                     <label class="block text-xs uppercase tracking-wider text-gray-500 dark:text-white/60 mb-2 font-medium">Status</label>
                     <select name="status" class="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 backdrop-blur-md text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 dark:focus:ring-[#82C293]/40 focus:border-emerald-400 dark:focus:border-[#82C293]/50 transition-all duration-300 shadow-sm dark:shadow-none">
@@ -46,126 +46,17 @@
                 </div>
                 <div>
                     <label class="block text-xs uppercase tracking-wider text-gray-500 dark:text-white/60 mb-2 font-medium">Search</label>
-                    <input type="text" name="search" value="{{ search_query }}" placeholder="Search courses..." class="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 backdrop-blur-md text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 dark:focus:ring-[#82C293]/40 focus:border-emerald-400 dark:focus:border-[#82C293]/50 transition-all duration-300 shadow-sm dark:shadow-none">
+                    <input type="text" name="q" value="{{ search_query }}" placeholder="Search courses..." class="px-4 py-2.5 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 backdrop-blur-md text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-white/40 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 dark:focus:ring-[#82C293]/40 focus:border-emerald-400 dark:focus:border-[#82C293]/50 transition-all duration-300 shadow-sm dark:shadow-none">
                 </div>
-                <button type="submit" class="px-6 py-2.5 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-xl hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] hover:scale-105 transition-all duration-300 font-medium group">
-                    <i class="fas fa-search mr-2 transition-transform duration-300 group-hover:scale-110"></i>Filter
-                </button>
-                <a href="{% url 'dashboard:courses' %}" class="px-6 py-2.5 bg-white dark:bg-[#254346]/70 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-xl hover:bg-gray-50 dark:hover:bg-[#254346]/90 hover:border-emerald-300 dark:hover:border-[#82C293]/40 transition-all duration-300 font-medium hover:scale-105 shadow-sm dark:shadow-none">
+                <a href="{% url 'dashboard:courses' %}" onclick="if(window.quickFilter){window.quickFilter.clearFilters(); return false;}" class="px-6 py-2.5 bg-white dark:bg-[#254346]/70 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-xl hover:bg-gray-50 dark:hover:bg-[#254346]/90 hover:border-emerald-300 dark:hover:border-[#82C293]/40 transition-all duration-300 font-medium hover:scale-105 shadow-sm dark:shadow-none">
                     <i class="fas fa-times mr-2"></i>Clear
                 </a>
-            </form>
+            </div>
         </div>
     </div>
     
     <!-- Courses Table -->
-    <div class="bg-white dark:bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)] overflow-hidden animate-fade-in-up stagger-3 hover:shadow-xl dark:hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] transition-all duration-300">
-        <div class="overflow-x-auto">
-            <table class="w-full">
-                <thead class="bg-gray-50 dark:bg-[#254346]/50 border-b border-gray-200 dark:border-white/10">
-                    <tr>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white w-12">
-                            <input type="checkbox" id="selectAll" onchange="toggleAllCourses(this)" class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
-                        </th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Course</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Type</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Category</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Students</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Status</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Created</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Actions</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-200 dark:divide-white/10">
-                    {% for course in courses %}
-                    <tr class="hover:bg-emerald-50 dark:hover:bg-[#82C293]/5 transition-all duration-300 animate-fade-in stagger-{{ forloop.counter|add:3 }} hover:scale-[1.01] group">
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <input type="checkbox" class="course-checkbox rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" value="{{ course.id }}" onchange="updateBulkDeleteButton()">
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="font-medium text-gray-900 dark:text-white">{{ course.title }}</div>
-                            <div class="text-sm text-gray-500 dark:text-white/60">{{ course.short_description|truncatewords:10|default:course.description|truncatewords:10 }}</div>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 dark:bg-[#82C293]/20 text-emerald-700 dark:text-[#82C293] border border-emerald-300 dark:border-[#82C293]/30">
-                                {{ course.get_course_type_display }}
-                            </span>
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-white/70">
-                            {{ course.category.name|default:"—" }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-white/70">
-                            {{ course.enrolled_count|default:0 }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
-                            {% if course.status == 'published' %}
-                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 dark:bg-[#259d78]/20 text-emerald-700 dark:text-[#259d78] border border-emerald-300 dark:border-[#259d78]/30">Published</span>
-                            {% elif course.status == 'draft' %}
-                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 dark:bg-[#f8da03]/20 text-yellow-700 dark:text-[#f8da03] border border-yellow-300 dark:border-[#f8da03]/40">Draft</span>
-                            {% else %}
-                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-[#254346]/70 text-gray-700 dark:text-white/70 border border-gray-300 dark:border-white/20">{{ course.status|title }}</span>
-                            {% endif %}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-white/70">
-                            {{ course.created_at|date:"M d, Y" }}
-                        </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm">
-                            <div class="flex items-center gap-3">
-                                <a href="{% url 'dashboard:course_edit' course.id %}" class="text-emerald-600 dark:text-[#82C293] hover:text-emerald-700 dark:hover:text-[#8abc59] transition-all duration-300 hover:scale-110 inline-block" title="Edit">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                {% if course.status == 'published' %}
-                                <form method="post" action="{% url 'dashboard:course_toggle_publish' course.id %}" class="inline">
-                                    {% csrf_token %}
-                                    <button type="submit" class="text-yellow-600 dark:text-[#f8da03] hover:text-yellow-700 dark:hover:text-[#f8da03]/80 transition-all duration-300 hover:scale-110 inline-block" title="Unpublish">
-                                        <i class="fas fa-eye-slash"></i>
-                                    </button>
-                                </form>
-                                {% else %}
-                                <form method="post" action="{% url 'dashboard:course_toggle_publish' course.id %}" class="inline">
-                                    {% csrf_token %}
-                                    <button type="submit" class="text-emerald-600 dark:text-[#259d78] hover:text-emerald-700 dark:hover:text-[#259d78]/80 transition-all duration-300 hover:scale-110 inline-block" title="Publish">
-                                        <i class="fas fa-eye"></i>
-                                    </button>
-                                </form>
-                                {% endif %}
-                            </div>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="8" class="px-6 py-12 text-center text-gray-500 dark:text-white/60">
-                            <i class="fas fa-book text-4xl mb-4 text-gray-400 dark:text-white/40"></i>
-                            <p>No courses found</p>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-        
-        <!-- Pagination -->
-        {% if courses.has_other_pages %}
-        <div class="px-6 py-4 border-t border-gray-200 dark:border-white/10 flex items-center justify-between">
-            <div class="text-sm text-gray-600 dark:text-white/60">
-                Showing {{ courses.start_index }} to {{ courses.end_index }} of {{ courses.paginator.count }} courses
-            </div>
-            <div class="flex gap-2">
-                {% if courses.has_previous %}
-                <a href="?page={{ courses.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" class="px-4 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 text-gray-900 dark:text-white hover:bg-emerald-50 dark:hover:bg-[#82C293]/20 hover:border-emerald-300 dark:hover:border-[#82C293]/40 transition-all duration-300 hover:scale-110 group shadow-sm dark:shadow-none">
-                    <i class="fas fa-chevron-left transition-transform duration-300 group-hover:-translate-x-1"></i>
-                </a>
-                {% endif %}
-                {% if courses.has_next %}
-                <a href="?page={{ courses.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}{% if type_filter %}&type={{ type_filter }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" class="px-4 py-2 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#254346]/70 text-gray-900 dark:text-white hover:bg-emerald-50 dark:hover:bg-[#82C293]/20 hover:border-emerald-300 dark:hover:border-[#82C293]/40 transition-all duration-300 hover:scale-110 group shadow-sm dark:shadow-none">
-                    <i class="fas fa-chevron-right transition-transform duration-300 group-hover:translate-x-1"></i>
-                </a>
-                {% endif %}
-            </div>
-        </div>
-        {% endif %}
-    </div>
-    
+    {% include 'dashboard/partials/courses_table.html' %}
 </div>
 
 <script>

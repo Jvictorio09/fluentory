@@ -155,6 +155,8 @@
             }
         }
     </script>
+    {% load static %}
+    <script src="{% static 'js/quick-filter.js' %}"></script>
     {% block extra_head %}{% endblock %}
 </head>
 <body class="font-sans" style="background-color: var(--bg-primary); color: var(--text-primary);">

@@ -1,0 +1,170 @@
+<div class="table-container">
+    <!-- Teachers Table -->
+    <div class="bg-white dark:bg-[#04363a]/70 backdrop-blur-xl rounded-2xl border border-gray-200 dark:border-white/10 shadow-lg dark:shadow-[0_15px_40px_rgba(0,0,0,0.3)] overflow-hidden animate-fade-in-up stagger-3 hover:shadow-xl dark:hover:shadow-[0_20px_50px_rgba(130,194,147,0.2)] transition-all duration-300">
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-gray-50 dark:bg-[#254346]/50 border-b border-gray-200 dark:border-white/10">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white w-12">
+                            <input type="checkbox" id="selectAll" onchange="toggleAllTeachers(this)" class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                        </th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Teacher</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Contact</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Expertise</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Experience</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Applied</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Status</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-gray-900 dark:text-white">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200 dark:divide-white/10">
+                    {% for teacher in teachers %}
+                    <tr class="hover:bg-emerald-50 dark:hover:bg-[#82C293]/5 transition-all duration-300 animate-fade-in stagger-{{ forloop.counter|add:3 }} hover:scale-[1.01] group">
+                        <td class="px-6 py-4">
+                            <input type="checkbox" class="teacher-checkbox rounded border-gray-300 text-emerald-600 focus:ring-emerald-500" value="{{ teacher.id }}" onchange="updateBulkDeleteButton()">
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-full bg-emerald-100 dark:bg-[#82C293]/20 border border-emerald-300 dark:border-[#82C293]/30 flex items-center justify-center transition-all duration-300 group-hover:scale-110 group-hover:bg-emerald-200 dark:group-hover:bg-[#82C293]/30">
+                                    <i class="fas fa-chalkboard-teacher text-emerald-600 dark:text-[#82C293]"></i>
+                                </div>
+                                <div>
+                                    <div class="font-medium text-gray-900 dark:text-white">{{ teacher.user.get_full_name|default:teacher.user.username }}</div>
+                                    <div class="text-sm text-gray-500 dark:text-white/60">@{{ teacher.user.username }}</div>
+                                    {% if teacher.bio %}
+                                    <div class="text-xs text-gray-400 dark:text-white/50 mt-1 line-clamp-1">{{ teacher.bio|truncatewords:15 }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-600 dark:text-white/70">{{ teacher.user.email }}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if teacher.specialization %}
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 dark:bg-[#82C293]/20 text-emerald-700 dark:text-[#82C293] border border-emerald-300 dark:border-[#82C293]/30">
+                                {{ teacher.specialization }}
+                            </span>
+                            {% else %}
+                            <span class="text-sm text-gray-400 dark:text-white/50">—</span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4">
+                            <span class="text-sm text-gray-600 dark:text-white/70">
+                                {% if teacher.years_experience %}
+                                    {{ teacher.years_experience }} year{{ teacher.years_experience|pluralize }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="text-sm text-gray-600 dark:text-white/70">{{ teacher.created_at|date:"M d, Y" }}</div>
+                            <div class="text-xs text-gray-400 dark:text-white/50">{{ teacher.created_at|date:"g:i A" }}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                            {% if teacher.is_approved %}
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 dark:bg-[#259d78]/20 text-emerald-700 dark:text-[#259d78] border border-emerald-300 dark:border-[#259d78]/30 flex items-center gap-1 w-fit">
+                                <i class="fas fa-check-circle"></i>
+                                Approved
+                            </span>
+                            {% if teacher.approved_at %}
+                            <div class="text-xs text-gray-400 dark:text-white/50 mt-1">Approved {{ teacher.approved_at|timesince }} ago</div>
+                            {% endif %}
+                            {% else %}
+                            <span class="px-3 py-1 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-500/30 flex items-center gap-1 w-fit">
+                                <i class="fas fa-clock"></i>
+                                Pending
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center gap-2 flex-wrap">
+                                <button 
+                                    type="button"
+                                    onclick="openTeacherDetails({{ teacher.id }})"
+                                    class="px-3 py-2 bg-white dark:bg-[#254346]/70 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-[#254346]/90 hover:border-emerald-300 dark:hover:border-[#82C293]/40 transition-all duration-300 text-sm hover:scale-105 shadow-sm dark:shadow-none"
+                                    title="View full details">
+                                    <i class="fas fa-eye mr-1"></i>View Details
+                                </button>
+                                {% if not teacher.is_approved %}
+                                <form method="post" action="{% url 'dashboard:teacher_approve' teacher.id %}" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" 
+                                        class="px-4 py-2 bg-gradient-to-r from-[#00655F] to-[#82C293] text-white rounded-lg hover:shadow-[0_8px_25px_rgba(130,194,147,0.4)] transition-all duration-300 font-medium hover:scale-105 text-sm"
+                                        data-confirm="Approve {{ teacher.user.get_full_name|default:teacher.user.username }} as a teacher?">
+                                        <i class="fas fa-check mr-1"></i>Approve
+                                    </button>
+                                </form>
+                                <form method="post" action="{% url 'dashboard:teacher_reject' teacher.id %}" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" 
+                                        class="px-4 py-2 bg-red-100 dark:bg-red-500/20 border border-red-300 dark:border-red-500/30 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-200 dark:hover:bg-red-500/30 transition-all duration-300 font-medium hover:scale-105 text-sm"
+                                        data-confirm="Reject {{ teacher.user.get_full_name|default:teacher.user.username }}'s application?">
+                                        <i class="fas fa-times mr-1"></i>Reject
+                                    </button>
+                                </form>
+                                {% else %}
+                                <span class="text-sm text-gray-400 dark:text-white/50">Approved</span>
+                                {% if teacher.approved_by %}
+                                <span class="text-xs text-gray-400 dark:text-white/40">by {{ teacher.approved_by.username }}</span>
+                                {% endif %}
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="px-6 py-12 text-center">
+                            <div class="flex flex-col items-center gap-4">
+                                <div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-[#254346]/50 border border-gray-200 dark:border-white/10 flex items-center justify-center">
+                                    <i class="fas fa-chalkboard-teacher text-3xl text-gray-400 dark:text-white/40"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-1">No teachers found</h3>
+                                    <p class="text-sm text-gray-500 dark:text-white/60">
+                                        {% if selected_status == 'pending' %}
+                                            No pending teacher applications at this time.
+                                        {% elif selected_status == 'approved' %}
+                                            No approved teachers found.
+                                        {% else %}
+                                            Try adjusting your filters or search query.
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        {% if teachers.has_other_pages %}
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-white/10 flex items-center justify-between">
+            <div class="text-sm text-gray-600 dark:text-white/60">
+                Showing {{ teachers.start_index }} to {{ teachers.end_index }} of {{ teachers.paginator.count }} teachers
+            </div>
+            <div class="flex items-center gap-2">
+                {% if teachers.has_previous %}
+                <a href="?page={{ teachers.previous_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" 
+                   class="px-4 py-2 bg-white dark:bg-[#254346]/70 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-[#254346]/90 hover:border-emerald-300 dark:hover:border-[#82C293]/40 transition-all duration-300 shadow-sm dark:shadow-none">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+                {% endif %}
+                <span class="px-4 py-2 text-gray-600 dark:text-white/70">
+                    Page {{ teachers.number }} of {{ teachers.paginator.num_pages }}
+                </span>
+                {% if teachers.has_next %}
+                <a href="?page={{ teachers.next_page_number }}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if search_query %}&q={{ search_query }}{% endif %}" 
+                   class="px-4 py-2 bg-white dark:bg-[#254346]/70 border border-gray-200 dark:border-white/10 text-gray-900 dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-[#254346]/90 hover:border-emerald-300 dark:hover:border-[#82C293]/40 transition-all duration-300 shadow-sm dark:shadow-none">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+

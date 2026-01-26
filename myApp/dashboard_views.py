@@ -414,10 +414,10 @@ def dashboard_users(request):
     # Get all users, handling those without profiles
     users = User.objects.all().order_by('-date_joined')
     
-    # Filters
+    # Filters - support both 'q' and 'search' for consistency
     role = request.GET.get('role')
     status = request.GET.get('status')
-    search = request.GET.get('search')
+    search = request.GET.get('q') or request.GET.get('search')
     
     if role:
         # Filter by role, including users without profiles (treat as 'student')
@@ -457,6 +457,11 @@ def dashboard_users(request):
         'selected_status': status,
         'search_query': search,
     }
+    
+    # Return partial template for AJAX requests
+    if request.GET.get('ajax') == '1' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render(request, 'dashboard/partials/users_table.html', context)
+    
     return render(request, 'dashboard/users.html', context)
 
 
@@ -474,7 +479,7 @@ def dashboard_courses(request):
     
     status = request.GET.get('status')
     course_type = request.GET.get('type')
-    search = request.GET.get('search')
+    search = request.GET.get('q') or request.GET.get('search')
     
     if status:
         courses = courses.filter(status=status)
@@ -500,6 +505,11 @@ def dashboard_courses(request):
         'type_filter': course_type,
         'search_query': search,
     }
+    
+    # Return partial template for AJAX requests
+    if request.GET.get('ajax') == '1' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render(request, 'dashboard/partials/courses_table.html', context)
+    
     return render(request, 'dashboard/courses.html', context)
 
 
@@ -978,12 +988,12 @@ def dashboard_live_classes(request):
     
     live_classes = LiveClassSession.objects.select_related('course', 'teacher__user').order_by('-scheduled_start')
     
-    # Filters
+    # Filters - support both 'q' and 'search' for consistency
     status = request.GET.get('status')
     course_id = request.GET.get('course')
     teacher_id = request.GET.get('teacher')
     date_filter = request.GET.get('date_filter')
-    search = request.GET.get('search')
+    search = request.GET.get('q') or request.GET.get('search')
     
     if status:
         live_classes = live_classes.filter(status=status)
@@ -1026,6 +1036,11 @@ def dashboard_live_classes(request):
         'courses': courses,
         'teachers': teachers,
     }
+    
+    # Return partial template for AJAX requests
+    if request.GET.get('ajax') == '1' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render(request, 'dashboard/partials/live_classes_table.html', context)
+    
     return render(request, 'dashboard/live_classes.html', context)
 
 
@@ -1716,11 +1731,11 @@ def dashboard_leads(request):
         'enrollments__enrollment__course'
     ).order_by('-updated_at')
     
-    # Filters
+    # Filters - support both 'q' and 'search' for consistency
     status = request.GET.get('status')
     source = request.GET.get('source')
     owner_id = request.GET.get('owner')
-    search = request.GET.get('search')
+    search = request.GET.get('q') or request.GET.get('search')
     sort = request.GET.get('sort', 'updated')
     
     if status:
@@ -1765,6 +1780,11 @@ def dashboard_leads(request):
         'sort': sort,
         'owners': owners,
     }
+    
+    # Return partial template for AJAX requests
+    if request.GET.get('ajax') == '1' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render(request, 'dashboard/partials/leads_table.html', context)
+    
     return render(request, 'dashboard/leads.html', context)
 
 
@@ -2170,7 +2190,7 @@ def dashboard_payments(request):
     payments = Payment.objects.select_related('user', 'course').order_by('-created_at')
     
     status = request.GET.get('status')
-    search = request.GET.get('search')
+    search = request.GET.get('q') or request.GET.get('search')
     
     if status:
         payments = payments.filter(status=status)
@@ -2187,7 +2207,14 @@ def dashboard_payments(request):
     
     context = {
         'payments': payments,
+        'status_filter': status,
+        'search_query': search,
     }
+    
+    # Return partial template for AJAX requests
+    if request.GET.get('ajax') == '1' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render(request, 'dashboard/partials/payments_table.html', context)
+    
     return render(request, 'dashboard/payments.html', context)
 
 
@@ -2234,9 +2261,9 @@ def dashboard_gifted_courses(request):
     
     gifts = GiftEnrollment.objects.select_related('buyer', 'course', 'payment', 'enrollment').order_by('-created_at')
     
-    # Filters
+    # Filters - support both 'q' and 'search' for consistency
     status = request.GET.get('status')
-    search = request.GET.get('search')
+    search = request.GET.get('q') or request.GET.get('search')
     
     if status:
         gifts = gifts.filter(status=status)
@@ -2277,6 +2304,11 @@ def dashboard_gifted_courses(request):
         'total_count': total_count,
         'table_missing': False,
     }
+    
+    # Return partial template for AJAX requests
+    if request.GET.get('ajax') == '1' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render(request, 'dashboard/partials/gifted_courses_table.html', context)
+    
     return render(request, 'dashboard/gifted_courses.html', context)
 
 
@@ -2452,9 +2484,9 @@ def dashboard_teachers(request):
     pending_count = Teacher.objects.filter(is_approved=False).count()
     approved_count = Teacher.objects.filter(is_approved=True).count()
     
-    # Filters
+    # Filters - support both 'q' and 'search' for consistency
     status = request.GET.get('status')
-    search = request.GET.get('search')
+    search = request.GET.get('q') or request.GET.get('search')
     
     if status == 'approved':
         teachers = teachers.filter(is_approved=True)
@@ -2483,6 +2515,11 @@ def dashboard_teachers(request):
         'pending_count': pending_count,
         'approved_count': approved_count,
     }
+    
+    # Return partial template for AJAX requests
+    if request.GET.get('ajax') == '1' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render(request, 'dashboard/partials/teachers_table.html', context)
+    
     return render(request, 'dashboard/teachers.html', context)
 
 
@@ -4155,8 +4192,8 @@ def dashboard_certificates(request):
     
     certificates = Certificate.objects.select_related('user', 'course').order_by('-issued_at')
     
-    # Filters
-    search = request.GET.get('search')
+    # Filters - support both 'q' and 'search' for consistency
+    search = request.GET.get('q') or request.GET.get('search')
     course_filter = request.GET.get('course')
     verified_filter = request.GET.get('verified')
     
@@ -4198,6 +4235,11 @@ def dashboard_certificates(request):
         'verified_filter': verified_filter,
         'total_count': certificates.count(),
     }
+    
+    # Return partial template for AJAX requests
+    if request.GET.get('ajax') == '1' or request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return render(request, 'dashboard/partials/certificates_table.html', context)
+    
     return render(request, 'dashboard/certificates.html', context)
 
 
